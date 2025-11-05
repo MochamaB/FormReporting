@@ -1,0 +1,5325 @@
+================================================================================
+ANALYZING EXCEL FILE
+================================================================================
+{
+  "filename": "SUMMARY AS AT END OF SEPTEMBER 2025 Final.xlsx",
+  "sheets": [
+    {
+      "name": "Infrastructure and Systems",
+      "rows": 119,
+      "columns": 18,
+      "data_sample": [
+        {
+          "row": 1,
+          "values": [
+            null,
+            "Regions 1-7",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 2,
+          "values": [
+            null,
+            "Region 1",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            "2025-09-30 00:00:00",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 3,
+          "values": [
+            "No.",
+            "Item",
+            "KAMBAA",
+            "KAGWE",
+            "THETA",
+            "NDARUGU",
+            "GACHEGE",
+            "MATAARA",
+            "NGERE",
+            "NJUNU",
+            "MAKOS",
+            "NDUTI",
+            "IKUMBI",
+            "GACHARAGE",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 4,
+          "values": [
+            1,
+            "Local Area Network (LAN)",
+            "LAN Upgrade completed",
+            "LAN Upgrade not done",
+            "LAN Upgrade not done",
+            "LAN Upgrade not done",
+            "LAN Upgrade not done",
+            "LAN Upgrade not done",
+            "LAN Upgrade completed",
+            "LAN Upgrade not done",
+            "LAN Upgrade not done",
+            "LAN Upgrade not done",
+            "LAN Upgrade completed",
+            "LAN Upgrade not done",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 5,
+          "values": [
+            2,
+            "Wide Area Network (WAN)",
+            "on Last mile Fibre ",
+            "Microwave-Viable on last mile Fibre",
+            "Microwave-Viable on last mile Fibre",
+            "on Last mile Fibre ",
+            "Microwave-Viable on last mile Fibre",
+            "Microwave-Viable on last mile Fibre",
+            "on Microwave",
+            "on Microwave",
+            "Microwave-Viable on last mile Fibre",
+            "on Microwave",
+            "Microwave-Viable on last mile Fibre",
+            "on Microwave",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 6,
+          "values": [
+            3,
+            "Safaricom Backup VPN Line Status",
+            "ok",
+            "ok",
+            "ok",
+            "ok",
+            "ok",
+            "ok",
+            "ok",
+            "ok",
+            "ok",
+            "ok",
+            "ok",
+            "ok",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 7,
+          "values": [
+            4,
+            "Firewall",
+            "Sophos License Expired",
+            "Sophos License Expired",
+            "Sophos License Valid",
+            "Sophos License Valid",
+            "Sophos License Expired",
+            "Sophos License Expired",
+            "Sophos License Expired",
+            "Sophos License Expired",
+            "Sophos License Expired",
+            "Sophos License Expired",
+            "Sophos License Expired",
+            "Sophos License Expired",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 8,
+          "values": [
+            5,
+            "E-Mail Server",
+            "Lotus Domino ",
+            "Lotus Domino ",
+            "Lotus Domino ",
+            "Lotus Domino ",
+            "Lotus Domino ",
+            "Lotus Domino ",
+            "Lotus Domino ",
+            "Lotus Domino ",
+            "Lotus Domino ",
+            "Lotus Domino ",
+            "Lotus Domino ",
+            "Lotus Domino ",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 9,
+          "values": [
+            6,
+            "Business Servers (EWS, Chaipro)",
+            "Working",
+            "Working",
+            "Working",
+            "Working",
+            "Working",
+            "Working",
+            "Working",
+            "Working",
+            "Working",
+            "Working",
+            "Working",
+            "Working",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 10,
+          "values": [
+            7,
+            "Electronic Weighment Solution (EWS Version)",
+            "1.0.52",
+            "1.0.52",
+            "1.0.52",
+            "1.0.52",
+            "1.0.52",
+            "1.0.52",
+            "1.0.52",
+            "1.0.57",
+            "1.0.52",
+            "1.0.52",
+            "1.0.52",
+            "1.0.52",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 11,
+          "values": [
+            8,
+            "EWS Kits",
+            "EWS Kits10+ 2 Spare Kits ",
+            "EWS Kits 9+ 2 Spare Kits ",
+            "EWS Kits 7+ 2 Spare Kits ",
+            "EWS Kits 7+ 1 Spare Kits ",
+            "EWS Kits 8+ 2 Spare Kits ",
+            "EWS Kits 8+ 2 Spare Kits ",
+            "EWS Kits15+ 1 Spare Kit ",
+            "EWS Kits 7+ 1 Spare Kit ",
+            "EWS Kits14+ 1 Spare Kits ",
+            "EWS Kits 6+ 1 Spare Kit",
+            "EWS Kits10+ 2 Spare Kits ",
+            "EWS Kits 8+ 1 Spare Kit ",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 12,
+          "values": [
+            9,
+            "Printer (NFC Card & DFX)",
+            "Fully Operational  ",
+            "Fully Operational  ",
+            "Fully Operational  ",
+            "Fully Operational  ",
+            "Fully Operational  ",
+            "Fully Operational  ",
+            "Fully Operational  ",
+            "Fully Operational  ",
+            "Fully Operational  ",
+            "Fully Operational  ",
+            "Fully Operational  ",
+            "Fully Operational  ",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 13,
+          "values": [
+            10,
+            "WeighBridge Status",
+            "Fully Operational  ",
+            "Fully Operational  ",
+            "Fully Operational  ",
+            "Fully Operational  ",
+            "Fully Operational  ",
+            "Weighbridge not Installed",
+            "Fully Operational  ",
+            "Fully Operational  ",
+            "Fully Operational  ",
+            "Fully Operational  ",
+            "Fully Operational  ",
+            "Fully Operational  ",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 14,
+          "values": [
+            11,
+            "CCTV",
+            "NVR has issues of hanging and thus having issues with retrieving data.",
+            "30 CAMERAS WORKING OK.3 CAMERAS UNDER REPAIR. ",
+            "CCTV is not functional \u2013 Faulty NVR and 2 cameras",
+            "OK- no of cameras-25 and 20working\\ 5not working",
+            "Fully Operational  ",
+            "17 CAMERA NOT WORKING DUE TO ONGOING CONTRUCTION DEMOLISION OF OLD STORE",
+            "NOT ADEQUATE- Request sent via RICTM to KTDA security manager for CCTV Assessment for additional cameras and repair of faulty ones",
+            "Request for upgrade done by KTDA security Manager and RICTM",
+            "32 cameras installed 29 working",
+            "32 cameras 28 working 4 faulty",
+            "41 CAMERAS IN OPERATION",
+            "Operational, 5 Cameras not working. Needs an Upgrade",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 15,
+          "values": [
+            12,
+            "SAP Connection (PRD,PSM)",
+            "WORKING OK",
+            "WORKING OK",
+            "WORKING OK",
+            "WORKING OK",
+            "WORKING OK",
+            "WORKING OK",
+            "WORKING OK",
+            "WORKING OK",
+            "WORKING OK",
+            "WORKING OK",
+            "WORKING OK",
+            "WORKING OK",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 16,
+          "values": [
+            13,
+            "AFMS",
+            "Not Installed",
+            "Installed",
+            "Not Installed",
+            "Not Installed",
+            "Not Installed",
+            "Not Installed",
+            "Not Installed",
+            "Not Installed",
+            "Not Installed",
+            "Not Installed",
+            "Not Installed",
+            "Not Installed",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 17,
+          "values": [
+            14,
+            "Any other",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 18,
+          "values": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 19,
+          "values": [
+            null,
+            "Region 2",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 20,
+          "values": [
+            "No.",
+            "Item",
+            "Ragati",
+            "Gathuthi",
+            "Gitugi",
+            "Iriaini",
+            "Chinga",
+            "Kiru",
+            "Gatunguru",
+            "Kanyenyaini",
+            "Githambo",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Chaipro-SAP",
+      "rows": 85,
+      "columns": 20,
+      "data_sample": [
+        {
+          "row": 1,
+          "values": [
+            null,
+            "Region 1",
+            null,
+            null,
+            null,
+            null,
+            "2025-09-30 00:00:00",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 2,
+          "values": [
+            "No.",
+            "Item",
+            "KAMBAA",
+            "KAGWE",
+            "THETA",
+            "NDARUGU",
+            "GACHEGE",
+            "MATAARA",
+            "NGERE",
+            "NJUNU",
+            "MAKOS",
+            "NDUTI",
+            "IKUMBI",
+            "GACHARAGE",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 3,
+          "values": [
+            1,
+            "Chaipro Financials",
+            "SAP Module-FICO/MM",
+            "SAP Module-FICO/MM",
+            "SAP Module-FICO/MM",
+            "SAP Module-FICO/MM",
+            "SAP Module-FICO/MM",
+            "SAP Module-FICO/MM",
+            "SAP Module-FICO/MM",
+            "SAP Module-FICO/MM",
+            "SAP Module-FICO/MM",
+            "SAP Module-FICO/MM",
+            "SAP Module-FICO/MM",
+            "SAP Module-FICO/MM",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 4,
+          "values": [
+            2,
+            "Chaipro Factory/TVAP",
+            "SAP Module-PP/PM",
+            "SAP Module-PP/PM",
+            "SAP Module-PP/PM",
+            "SAP Module-PP/PM",
+            "SAP Module-PP/PM",
+            "SAP Module-PP/PM",
+            "SAP Module-PP/PM",
+            "SAP Module-PP/PM",
+            "SAP Module-PP/PM",
+            "SAP Module-PP/PM",
+            "SAP Module-PP/PM",
+            "SAP Module-PP/PM",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 5,
+          "values": [
+            3,
+            "Chaipro Farmers",
+            "2.8.0.0",
+            "2.8.0.0",
+            "2.8.0.0",
+            "2.8.0.0",
+            "2.8.0.0",
+            "2.8.0.0",
+            "2.8.0.0",
+            "2.8.0.0",
+            "2.8.0.0",
+            "2.8.0.0",
+            "2.8.0.0",
+            "2.8.0.0",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 6,
+          "values": [
+            4,
+            "Chaipro Fleet",
+            "3.2.5.1",
+            "3.2.5.1",
+            "3.2.5.1",
+            "3.2.5.1",
+            "3.2.5.1",
+            "3.2.5.1",
+            "3.2.5.1",
+            "3.2.5.1",
+            "3.2.5.1",
+            "3.2.5.1",
+            "3.2.5.1",
+            "3.2.5.1",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 7,
+          "values": [
+            6,
+            "KTDA Replicator",
+            "Version 10 fully operational ",
+            "Version 10 fully operational ",
+            "Version 10 fully operational ",
+            "Version 10 fully operational ",
+            "Version 10 fully operational ",
+            "Version 10 fully operational ",
+            "Version 10 fully operational ",
+            "Version 10 fully operational ",
+            "Version 10 fully operational ",
+            "Version 10 fully operational ",
+            "Version 10 fully operational ",
+            "Version 10 fully operational ",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 8,
+          "values": [
+            7,
+            "Chai Data",
+            "1.0.0.3",
+            "1.0.0.3",
+            "1.0.0.3",
+            "1.0.0.3",
+            "1.0.0.3",
+            "1.0.0.3",
+            "1.0.0.3",
+            "1.0.0.3",
+            "1.0.0.3",
+            "1.0.0.3",
+            "1.0.0.3",
+            "1.0.0.3",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 9,
+          "values": [
+            8,
+            "ETR Device",
+            "OPERATIONAL",
+            "OPERATIONAL",
+            "OPERATIONAL",
+            "OPERATIONAL",
+            "OPERATIONAL",
+            "OPERATIONAL",
+            "OPERATIONAL",
+            "OPERATIONAL",
+            "OPERATIONAL",
+            "OPERATIONAL",
+            "OPERATIONAL",
+            "OPERATIONAL",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 10,
+          "values": [
+            9,
+            "SMS Portal/USSD \n(Date growers received)",
+            "3rd October",
+            "3rd October",
+            "3rd October",
+            "3rd October",
+            "3rd October",
+            "3rd October",
+            "3rd October",
+            "3rd October",
+            "3rd October",
+            "3rd October",
+            "3rd October",
+            "3rd October",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 11,
+          "values": [
+            10,
+            "% NFC Card Usage",
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 12,
+          "values": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 13,
+          "values": [
+            null,
+            "Region 2",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 14,
+          "values": [
+            "No.",
+            "Item",
+            "Ragati",
+            "Gathuthi",
+            "Gitugi",
+            "Iriaini",
+            "Chinga",
+            "Kiru",
+            "Gatunguru",
+            "Kanyenyaini",
+            "Githambo",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 15,
+          "values": [
+            1,
+            "Chaipro Financials",
+            "2.5.5.8 -fully utilized.",
+            "2.5.5.8 -fully utilized.",
+            "2.5.5.8 -fully utilized.",
+            "2.5.5.8 -fully utilized.",
+            "2.5.5.8 -fully utilized.",
+            "2.5.5.8 -fully utilized.",
+            "2.5.5.8-fully utilized.",
+            "2.5.5.8 -fully utilized.",
+            "2.5.5.8 -fully utilized.",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 16,
+          "values": [
+            2,
+            "Chaipro Factory/TVAP",
+            "2.5.2.7 - fully utilized. ",
+            "2.5.2.7 - fully utilized.",
+            "2.5.2.7 - fully utilized.",
+            "2.5.2.7 - fully utilized.",
+            "2.5.2.7 - fully utilized.",
+            "2.5.2.7 - fully utilized.",
+            "2.5.2.7 - fully utilized.",
+            "2.5.2.7 - fully utilized.",
+            "2.5.2.7 - fully utilized.",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 17,
+          "values": [
+            3,
+            "Chaipro Farmers",
+            "2.8.0.0 - fully utilized.",
+            "2.8.0.0 - fully utilized.",
+            "2.8.0.0 - fully utilized.",
+            "2.8.0.0 - fully utilized.",
+            "2.8.0.0 - fully utilized.",
+            "2.8.0.0 - fully utilized.",
+            "2.8.0.0 - fully utilized.",
+            "2.8.0.0 - fully utilized.",
+            "2.8.0.0 - fully utilized.",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 18,
+          "values": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 19,
+          "values": [
+            4,
+            "Chaipro Fleet",
+            "3.2.5.1 - fully utilized.",
+            "3.2.5.1 - fully utilized.",
+            "3.2.5.1 - fully utilized.",
+            "3.2.5.1 - fully utilized.",
+            "3.2.5.1 - fully utilized.",
+            "3.2.5.1 - fully utilized.",
+            "3.2.5.1 - fully utilized.",
+            "3.2.5.1 - fully utilized.",
+            "3.2.5.1 - fully utilized.",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 20,
+          "values": [
+            6,
+            "KTDA Replicator",
+            "Functional.",
+            "Fully utilized.",
+            "Fully utilized.",
+            "Fully utilized.",
+            "Fully utilized.",
+            "Fully utilized.",
+            "Fully utilized.",
+            "Fully utilized.",
+            "Fully utilized.",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ICT Inventory",
+      "rows": 142,
+      "columns": 18,
+      "data_sample": [
+        {
+          "row": 1,
+          "values": [
+            null,
+            "Region 1",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            "2025-09-30 00:00:00",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 2,
+          "values": [
+            "No.",
+            "Item/Factory",
+            "KAMBAA",
+            "KAGWE",
+            "THETA",
+            "Ndarugu",
+            "GACHEGE",
+            "MATAARA",
+            "NGERE",
+            "NJUNU",
+            "MAKOS",
+            "NDUTI",
+            "IKUMBI",
+            "GACHARAGE",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 3,
+          "values": [
+            1,
+            "Network Equipment\u00a0(e.g. Switches and routers functionality and any other additional information)",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 4,
+          "values": [
+            2,
+            "Software (e.g. 3rd party, Licenses, etc.)",
+            "Procured 10 Licences for Microsoft 2016",
+            "Procured 5 Licences for Microsoft 2016 ",
+            "Procured 6 Licences for Microsoft 2016 ",
+            "Procured 5 Licences for Microsoft 2016 ",
+            "Procured 10 Licences for icrosoft 2016",
+            "EWS software, Windows server software, Office 2016.",
+            "Procured 5 Licences for Microsoft 2016",
+            "Procured 5 Licences for microsoft 2016",
+            "Procured 10 Licenses for Microsoft 2016 in October",
+            "\u00a0Raised an order of 7 Microsoft 2016 office",
+            "OPERATIONALIZED for MS office licenses",
+            "Procured 7 Licences for Microsoft 2016",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 5,
+          "values": [
+            3,
+            "Hardware (e.g. Servers,",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 6,
+          "values": [
+            null,
+            " PCs, ",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 7,
+          "values": [
+            null,
+            "Laptops,",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 8,
+          "values": [
+            null,
+            "UPS's",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 9,
+          "values": [
+            null,
+            " Das,",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 10,
+          "values": [
+            null,
+            " Printers, ",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 11,
+          "values": [
+            null,
+            "Scanners, ",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 12,
+          "values": [
+            null,
+            "ESD, ",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 13,
+          "values": [
+            null,
+            "Fiscal Printers)",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 14,
+          "values": [
+            4,
+            "Firewall",
+            "Sophos License Expired",
+            "Sophos License Expired",
+            "Sophos License Valid",
+            "Sophos License Valid",
+            "Sophos License Expired",
+            "Sophos License Expired",
+            "Sophos License Expired",
+            "Sophos License Expired",
+            "Sophos License Expired",
+            "Sophos License Expired",
+            "Sophos License Expired",
+            "Sophos License Expired",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 15,
+          "values": [
+            5,
+            "Tablets",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            "Fully Operational",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 16,
+          "values": [
+            6,
+            "EWS              (Working)",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 17,
+          "values": [
+            null,
+            "PDA",
+            10,
+            9,
+            7,
+            8,
+            8,
+            8,
+            null,
+            7,
+            14,
+            7,
+            10,
+            8,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 18,
+          "values": [
+            null,
+            "SCALE",
+            10,
+            9,
+            7,
+            8,
+            8,
+            8,
+            null,
+            7,
+            14,
+            7,
+            10,
+            8,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 19,
+          "values": [
+            null,
+            "PRINTER",
+            10,
+            9,
+            7,
+            8,
+            8,
+            8,
+            null,
+            7,
+            14,
+            7,
+            10,
+            8,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 20,
+          "values": [
+            7,
+            " Other Equipment\u00a0(please specify)",
+            "none",
+            "none",
+            "none",
+            "none",
+            "none",
+            "none",
+            "none",
+            "none",
+            "none",
+            "none",
+            "none",
+            "none",
+            null,
+            null,
+            null,
+            null
+          ]
+        }
+      ]
+    },
+    {
+      "name": "BCP",
+      "rows": 42,
+      "columns": 25,
+      "data_sample": [
+        {
+          "row": 1,
+          "values": [
+            null,
+            "Region 1",
+            null,
+            null,
+            null,
+            "2025-09-30 00:00:00",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 2,
+          "values": [
+            "No.",
+            "Item/Factory",
+            "KAMBAA",
+            "KAGWE",
+            "THETA",
+            "NDARUGU",
+            "GACHEGE",
+            "MATAARA",
+            "NGERE",
+            "NJUNU",
+            "MAKOS",
+            "NDUTI",
+            "IKUMBI",
+            "GACHEGE",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 3,
+          "values": [
+            1,
+            "Onsite Backup",
+            "In place",
+            "In place",
+            "In place",
+            "In place",
+            "In place",
+            "In place",
+            "In place",
+            "In place",
+            "In place",
+            "In place",
+            "In place",
+            "In place",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 4,
+          "values": [
+            2,
+            "Remote Backup",
+            "In place",
+            "In place",
+            "In place",
+            "In place",
+            "In place",
+            "In place",
+            "In place",
+            "In place",
+            "In place",
+            "In place",
+            "In place",
+            "In place",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 5,
+          "values": [
+            3,
+            "Mail Server Backup (Date)",
+            "2025-10-01 00:00:00",
+            "2025-10-01 00:00:00",
+            "2025-10-01 00:00:00",
+            "2025-10-01 00:00:00",
+            "2025-10-01 00:00:00",
+            "2025-10-01 00:00:00",
+            "2025-10-01 00:00:00",
+            "2025-10-01 00:00:00",
+            "2025-10-01 00:00:00",
+            "2025-10-01 00:00:00",
+            "2025-10-01 00:00:00",
+            "2025-10-01 00:00:00",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 6,
+          "values": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 7,
+          "values": [
+            null,
+            "Region 2",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 8,
+          "values": [
+            "No.",
+            "Item/Factory",
+            "Ragati",
+            "Gathuthi",
+            "Gitugi",
+            "Iriaini",
+            "Chinga",
+            "Kiru",
+            "Gatunguru",
+            "Kanyenyaini",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 9,
+          "values": [
+            1,
+            "Onsite Backup",
+            "SQL chaipro backup EWS 2 Backup",
+            "SQL chaipro backup EWS 2 Backup",
+            "SQL chaipro backup EWS 2 Backup",
+            "SQL chaipro backup EWS 2 Backup",
+            "SQL chaipro backup EWS 2 Backup",
+            "SQL chaipro backup EWS 2 Backup",
+            "SQL chaipro backup EWS 2 Backup",
+            "SQL chaipro backup EWS 2 Backup",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 10,
+          "values": [
+            2,
+            "Remote Backup",
+            "SQL chaipro backup EWS 2 Backup",
+            "SQL chaipro backup EWS 2 Backup",
+            "SQL chaipro backup EWS 2 Backup",
+            "SQL chaipro backup EWS 2 Backup",
+            "SQL chaipro backup EWS 2 Backup",
+            "SQL chaipro backup EWS 2 Backup",
+            "SQL chaipro backup EWS 2 Backup",
+            "SQL chaipro backup EWS 2 Backup",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 11,
+          "values": [
+            3,
+            "Mail Server Backup (Date)",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 12,
+          "values": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 13,
+          "values": [
+            null,
+            "Region 3",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 14,
+          "values": [
+            "No.",
+            "Item/Factory",
+            "NDIMA",
+            "MUNUNGA",
+            "KANGAITA",
+            "KIMUNYE",
+            "THUMAITA",
+            "KATHANGARIRI",
+            "MUNGANIA",
+            "RUKURIRI",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 15,
+          "values": [
+            1,
+            "Onsite Backup",
+            "Automated Full Back up on external hard drive ",
+            "Weighbridge PC",
+            "Done at the weighbridge pc",
+            "Ok",
+            "In place",
+            "Okay",
+            "Ok",
+            "Ok",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 16,
+          "values": [
+            2,
+            "Remote Backup",
+            "Region office 4:00am",
+            "Region office 4:00am",
+            "Regional office 10:50 pm",
+            "Regional office 2:50 pm",
+            "In place",
+            "Okay",
+            "Regional office 11:55 pm",
+            "Regional office 10:05 pm",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 17,
+          "values": [
+            3,
+            "Mail Server Backup (Date)",
+            null,
+            "2025-09-04 00:00:00",
+            "[3.10.2025]",
+            "Ok",
+            "[03.10.2025]",
+            "[03.10.2025]",
+            "[03.10.2025]",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 18,
+          "values": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 19,
+          "values": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 20,
+          "values": [
+            null,
+            "Region 4",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        }
+      ]
+    },
+    {
+      "name": "ICT Cost",
+      "rows": 77,
+      "columns": 22,
+      "data_sample": [
+        {
+          "row": 1,
+          "values": [
+            "Region 1",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            " ",
+            "2025-09-30 00:00:00",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 2,
+          "values": [
+            "Item",
+            "Kambaa",
+            "Kagwe",
+            "Theta",
+            "Gachege",
+            "Ndarugu",
+            "Mataara",
+            "Ngere",
+            "Gacharage",
+            "Ikumbi",
+            "Nduti",
+            "Makos",
+            "Njunu",
+            "Total",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 3,
+          "values": [
+            "Recurrent costs for the month",
+            168896.79,
+            181420,
+            116487.47,
+            24000.75,
+            26783,
+            70121.37,
+            507991.43,
+            92217.6,
+            168896.79,
+            25100,
+            62309.6,
+            63741.26,
+            1507966.0600000003,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 4,
+          "values": [
+            "Capital costs for the month",
+            0,
+            "-",
+            396253.80000000005,
+            0,
+            0,
+            "-",
+            0,
+            0,
+            0,
+            889000,
+            0,
+            0,
+            1285253.8,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 5,
+          "values": [
+            "Total Cost for month",
+            168896.79,
+            181420,
+            512741.27,
+            24000.75,
+            26783,
+            70121.37,
+            507991.43,
+            92217.6,
+            168896.79,
+            914100,
+            62309.6,
+            63741.26,
+            2793219.86,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 6,
+          "values": [
+            "Recurrent to date as at AUG 25",
+            465516.79000000004,
+            538470,
+            175977.09,
+            234062.5,
+            370125,
+            292859.37,
+            1084650.43,
+            175635.24,
+            223971.79,
+            249158,
+            169619.6,
+            348741.26,
+            4328787.07,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 7,
+          "values": [
+            "Capital to date as at AUG 25",
+            null,
+            null,
+            396253.80000000005,
+            1331680,
+            null,
+            null,
+            null,
+            null,
+            null,
+            889000,
+            null,
+            null,
+            2616933.8,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 8,
+          "values": [
+            "Total Cost As at AUG FOR  ICT Fin. Yr 25.26",
+            465516.79000000004,
+            538470,
+            572230.89,
+            1565742.5,
+            370125,
+            292859.37,
+            1084650.43,
+            175635.24,
+            223971.79,
+            1138158,
+            169619.6,
+            348741.26,
+            6945720.87,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 9,
+          "values": [
+            "Comments",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 10,
+          "values": [
+            "BUDGET 25.26",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            0,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 11,
+          "values": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 12,
+          "values": [
+            "Region 2",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 13,
+          "values": [
+            "Item/Factory",
+            "Ragati",
+            "Gathuthi",
+            "Gitugi",
+            "Iriaini",
+            "Chinga",
+            "Kiru",
+            "Gatunguru",
+            "Kanyenyaini",
+            "Githambo",
+            "TOTALS",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 14,
+          "values": [
+            "Recurrent costs (month)",
+            16700,
+            "0\u00a0",
+            "0\u00a0",
+            "0\u00a0",
+            "0\u00a0",
+            "18,100\u00a0",
+            110000,
+            "0\u00a0",
+            66368,
+            193068,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 15,
+          "values": [
+            "Capital costs (month)",
+            "0\u00a0",
+            "0\u00a0",
+            "0\u00a0",
+            "0\u00a0",
+            "0\u00a0",
+            "0\u00a0",
+            "0\u00a0",
+            "218,080\u00a0",
+            "48,000\u00a0",
+            0,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 16,
+          "values": [
+            "Total Cost (month)",
+            16700,
+            "0\u00a0",
+            "0\u00a0",
+            "0\u00a0",
+            "0\u00a0",
+            50168,
+            110000,
+            "0\u00a0",
+            114368,
+            291236,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 17,
+          "values": [
+            "Recurrent (To Date) ",
+            43900,
+            "0\u00a0",
+            "39560\u00a0",
+            "6420\u00a0",
+            "27168\u00a0",
+            50168,
+            "260,000\u00a0",
+            "0\u00a0",
+            "183,816\u00a0",
+            94068,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 18,
+          "values": [
+            "Capital Costs (To Date)",
+            "\u00a00",
+            "\u00a00",
+            "\u00a00",
+            "\u00a00",
+            "\u00a00",
+            "\u00a00",
+            "\u00a00",
+            "\u00a00",
+            "\u00a0415,810",
+            0,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 19,
+          "values": [
+            "Total Cost to date (2025/2026)",
+            43900,
+            "\u00a00",
+            "\u00a039560",
+            "\u00a06420",
+            "\u00a027168",
+            "\u00a050,168",
+            "\u00a0260,000",
+            "\u00a0218,080",
+            599626,
+            643526,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 20,
+          "values": [
+            "Comments",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        }
+      ]
+    },
+    {
+      "name": "R1",
+      "rows": 48,
+      "columns": 9,
+      "data_sample": [
+        {
+          "row": 1,
+          "values": [
+            null,
+            "Region 1",
+            null,
+            null,
+            null,
+            null,
+            "2025-06-30 00:00:00",
+            null,
+            null
+          ]
+        },
+        {
+          "row": 2,
+          "values": [
+            null,
+            "Infrastructure",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 3,
+          "values": [
+            "No.",
+            "Service",
+            "No of \nFactories",
+            "Region 1",
+            "% Uptime\nService",
+            "Factories  \nHaving Issues",
+            "Summary of Issues",
+            "Duration\n(days)",
+            "Tickets Raised"
+          ]
+        },
+        {
+          "row": 4,
+          "values": [
+            1,
+            "Local Area Network (LAN)",
+            12,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 5,
+          "values": [
+            2,
+            "Wide Area Network (WAN)",
+            12,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 6,
+          "values": [
+            4,
+            "Firewall",
+            12,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 7,
+          "values": [
+            5,
+            "E-Mail Server",
+            12,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 8,
+          "values": [
+            6,
+            "Business Servers (EWS, Chaipro)",
+            12,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 9,
+          "values": [
+            7,
+            "Electronic Weighment Solution (EWS Version)",
+            12,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 10,
+          "values": [
+            "#REF!",
+            "#REF!",
+            12,
+            "#REF!",
+            "#REF!",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 11,
+          "values": [
+            null,
+            "Average",
+            null,
+            null,
+            "#REF!",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 12,
+          "values": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 13,
+          "values": [
+            null,
+            "ChaiPro/SAP",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 14,
+          "values": [
+            "No",
+            "Service",
+            "No of \nFactories",
+            "Region 1",
+            "% Uptime\nService",
+            "Factories  \nAffected",
+            "Issue",
+            null,
+            null
+          ]
+        },
+        {
+          "row": 15,
+          "values": [
+            1,
+            "Chaipro Financials",
+            12,
+            12,
+            1,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 16,
+          "values": [
+            2,
+            "Chaipro Factory/TVAP",
+            12,
+            12,
+            1,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 17,
+          "values": [
+            3,
+            "Chaipro Farmers",
+            12,
+            12,
+            1,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 18,
+          "values": [
+            4,
+            "Chaipro Fleet",
+            12,
+            12,
+            1,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 19,
+          "values": [
+            6,
+            "KTDA Replicator",
+            12,
+            12,
+            1,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 20,
+          "values": [
+            7,
+            "Chai Data",
+            12,
+            12,
+            1,
+            null,
+            null,
+            null,
+            null
+          ]
+        }
+      ]
+    },
+    {
+      "name": "R2",
+      "rows": 41,
+      "columns": 9,
+      "data_sample": [
+        {
+          "row": 1,
+          "values": [
+            null,
+            "Region 2",
+            null,
+            null,
+            null,
+            45838,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 2,
+          "values": [
+            null,
+            "Infrastructure",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 3,
+          "values": [
+            "No.",
+            "Service",
+            "No of \nFactories",
+            "Region 2",
+            "% Uptime\nService",
+            "Factories  \nHaving Issues",
+            "Summary of Issues",
+            "Duration\n(days)",
+            "Tickets Raised"
+          ]
+        },
+        {
+          "row": 4,
+          "values": [
+            1,
+            "Local Area Network (LAN)",
+            9,
+            9,
+            1,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 5,
+          "values": [
+            2,
+            "Wide Area Network (WAN)",
+            9,
+            9,
+            1,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 6,
+          "values": [
+            4,
+            "Firewall",
+            9,
+            9,
+            1,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 7,
+          "values": [
+            5,
+            "E-Mail Server",
+            9,
+            9,
+            1,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 8,
+          "values": [
+            6,
+            "Business Servers (EWS, Chaipro)",
+            9,
+            9,
+            1,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 9,
+          "values": [
+            7,
+            "Electronic Weighment Solution (EWS Version)",
+            9,
+            9,
+            1,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 10,
+          "values": [
+            "#REF!",
+            "#REF!",
+            9,
+            9,
+            1,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 11,
+          "values": [
+            null,
+            "Average",
+            null,
+            null,
+            1,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 12,
+          "values": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 13,
+          "values": [
+            null,
+            "ChaiPro",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 14,
+          "values": [
+            "No",
+            "Service",
+            "No of \nFactories",
+            "Region 2",
+            "% Uptime\nService",
+            "Factories  \nAffected",
+            "Issue",
+            null,
+            null
+          ]
+        },
+        {
+          "row": 15,
+          "values": [
+            1,
+            "Chaipro Financials",
+            9,
+            "#REF!",
+            "#REF!",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 16,
+          "values": [
+            2,
+            "Chaipro Factory/TVAP",
+            9,
+            "#REF!",
+            "#REF!",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 17,
+          "values": [
+            3,
+            "Chaipro Farmers",
+            9,
+            "#REF!",
+            "#REF!",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 18,
+          "values": [
+            4,
+            "Chaipro Fleet",
+            9,
+            "#REF!",
+            "#REF!",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 19,
+          "values": [
+            6,
+            "KTDA Replicator",
+            9,
+            "#REF!",
+            "#REF!",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 20,
+          "values": [
+            7,
+            "Chai Data",
+            9,
+            "#REF!",
+            "#REF!",
+            null,
+            null,
+            null,
+            null
+          ]
+        }
+      ]
+    },
+    {
+      "name": "R3",
+      "rows": 44,
+      "columns": 9,
+      "data_sample": [
+        {
+          "row": 1,
+          "values": [
+            null,
+            "Region 3",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 2,
+          "values": [
+            null,
+            "Infrastructure",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 3,
+          "values": [
+            "No.",
+            "Service",
+            "No of \nFactories",
+            "Region 3",
+            "% Uptime\nService",
+            "Factories  \nHaving Issues",
+            "Summary of Issues",
+            "Duration\n(days)",
+            "Tickets Raised"
+          ]
+        },
+        {
+          "row": 4,
+          "values": [
+            1,
+            "Local Area Network (LAN)",
+            8,
+            "#REF!",
+            "#REF!",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 5,
+          "values": [
+            2,
+            "Wide Area Network (WAN)",
+            8,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 6,
+          "values": [
+            4,
+            "Firewall",
+            8,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 7,
+          "values": [
+            5,
+            "E-Mail Server",
+            8,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 8,
+          "values": [
+            6,
+            "Business Servers (EWS, Chaipro)",
+            8,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 9,
+          "values": [
+            7,
+            "Electronic Weighment Solution (EWS Version)",
+            8,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 10,
+          "values": [
+            "#REF!",
+            "#REF!",
+            8,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 11,
+          "values": [
+            null,
+            "Average",
+            null,
+            null,
+            "#REF!",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 12,
+          "values": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 13,
+          "values": [
+            null,
+            "ChaiPro",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 14,
+          "values": [
+            "No",
+            "Service",
+            "No of \nFactories",
+            "Region 3",
+            "% Uptime\nService",
+            "Factories  \nAffected",
+            "Issue",
+            null,
+            null
+          ]
+        },
+        {
+          "row": 15,
+          "values": [
+            1,
+            "Chaipro Financials",
+            8,
+            2,
+            0.25,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 16,
+          "values": [
+            2,
+            "Chaipro Factory/TVAP",
+            8,
+            2,
+            0.25,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 17,
+          "values": [
+            3,
+            "Chaipro Farmers",
+            8,
+            2,
+            0.25,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 18,
+          "values": [
+            4,
+            "Chaipro Fleet",
+            8,
+            2,
+            0.25,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 19,
+          "values": [
+            6,
+            "KTDA Replicator",
+            8,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 20,
+          "values": [
+            7,
+            "Chai Data",
+            8,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        }
+      ]
+    },
+    {
+      "name": "R4",
+      "rows": 41,
+      "columns": 9,
+      "data_sample": [
+        {
+          "row": 1,
+          "values": [
+            null,
+            "Region 4",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 2,
+          "values": [
+            null,
+            "Infrastructure",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 3,
+          "values": [
+            "No.",
+            "Service",
+            "No of \nFactories",
+            "Region 4",
+            "% Uptime\nService",
+            "Factories  \nHaving Issues",
+            "Summary of Issues",
+            "Duration\n(days)",
+            "Tickets Raised"
+          ]
+        },
+        {
+          "row": 4,
+          "values": [
+            1,
+            "Local Area Network (LAN)",
+            8,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 5,
+          "values": [
+            2,
+            "Wide Area Network (WAN)",
+            8,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 6,
+          "values": [
+            4,
+            "Firewall",
+            8,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 7,
+          "values": [
+            5,
+            "E-Mail Server",
+            8,
+            0,
+            "#REF!",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 8,
+          "values": [
+            6,
+            "Business Servers (EWS, Chaipro)",
+            8,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 9,
+          "values": [
+            7,
+            "Electronic Weighment Solution (EWS Version)",
+            8,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 10,
+          "values": [
+            "#REF!",
+            "#REF!",
+            8,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 11,
+          "values": [
+            null,
+            "Average",
+            null,
+            null,
+            "#REF!",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 12,
+          "values": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 13,
+          "values": [
+            null,
+            "ChaiPro",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 14,
+          "values": [
+            "No",
+            "Service",
+            "No of \nFactories",
+            "Region 4",
+            "% Uptime\nService",
+            "Factories  \nAffected",
+            "Issue",
+            null,
+            null
+          ]
+        },
+        {
+          "row": 15,
+          "values": [
+            1,
+            "Chaipro Financials",
+            8,
+            "#REF!",
+            "#REF!",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 16,
+          "values": [
+            2,
+            "Chaipro Factory/TVAP",
+            8,
+            "#REF!",
+            "#REF!",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 17,
+          "values": [
+            3,
+            "Chaipro Farmers",
+            8,
+            "#REF!",
+            "#REF!",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 18,
+          "values": [
+            4,
+            "Chaipro Fleet",
+            8,
+            "#REF!",
+            "#REF!",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 19,
+          "values": [
+            6,
+            "KTDA Replicator",
+            8,
+            "#REF!",
+            "#REF!",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 20,
+          "values": [
+            7,
+            "Chai Data",
+            8,
+            "#REF!",
+            "#REF!",
+            null,
+            null,
+            null,
+            null
+          ]
+        }
+      ]
+    },
+    {
+      "name": "R5",
+      "rows": 41,
+      "columns": 11,
+      "data_sample": [
+        {
+          "row": 1,
+          "values": [
+            null,
+            "Region 5 & 7",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 2,
+          "values": [
+            null,
+            "Infrastructure",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 3,
+          "values": [
+            "No.",
+            "Service",
+            "No of \nFactories",
+            "Region 5",
+            "% Uptime\nService",
+            "Factories  \nHaving Issues",
+            "Summary of Issues",
+            "Duration\n(days)",
+            "Tickets Raised",
+            null,
+            null
+          ]
+        },
+        {
+          "row": 4,
+          "values": [
+            1,
+            "Local Area Network (LAN)",
+            14,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 5,
+          "values": [
+            2,
+            "Wide Area Network (WAN)",
+            14,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 6,
+          "values": [
+            4,
+            "Firewall",
+            14,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 7,
+          "values": [
+            5,
+            "E-Mail Server",
+            14,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 8,
+          "values": [
+            6,
+            "Business Servers (EWS, Chaipro)",
+            14,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 9,
+          "values": [
+            7,
+            "Electronic Weighment Solution (EWS Version)",
+            14,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 10,
+          "values": [
+            "#REF!",
+            "#REF!",
+            14,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 11,
+          "values": [
+            null,
+            "Average",
+            null,
+            null,
+            0,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 12,
+          "values": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 13,
+          "values": [
+            null,
+            "ChaiPro",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 14,
+          "values": [
+            "No",
+            "Service",
+            "No of \nFactories",
+            "Region 5",
+            "% Uptime\nService",
+            "Factories  \nAffected",
+            "Issue",
+            null,
+            null,
+            null,
+            0
+          ]
+        },
+        {
+          "row": 15,
+          "values": [
+            1,
+            "Chaipro Financials",
+            14,
+            6,
+            0.42857142857142855,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 16,
+          "values": [
+            2,
+            "Chaipro Factory/TVAP",
+            14,
+            6,
+            0.42857142857142855,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 17,
+          "values": [
+            3,
+            "Chaipro Farmers",
+            14,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 18,
+          "values": [
+            4,
+            "Chaipro Fleet",
+            14,
+            6,
+            0.42857142857142855,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 19,
+          "values": [
+            6,
+            "KTDA Replicator",
+            14,
+            4,
+            0.2857142857142857,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 20,
+          "values": [
+            7,
+            "Chai Data",
+            14,
+            1,
+            0.07142857142857142,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        }
+      ]
+    },
+    {
+      "name": "R6",
+      "rows": 41,
+      "columns": 9,
+      "data_sample": [
+        {
+          "row": 1,
+          "values": [
+            null,
+            "Region 6",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 2,
+          "values": [
+            null,
+            "Infrastructure",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 3,
+          "values": [
+            "No.",
+            "Service",
+            "No of \nFactories",
+            "Region 6",
+            "% Uptime\nService",
+            "Factories  \nHaving Issues",
+            "Summary of Issues",
+            "Duration\n(days)",
+            "Tickets Raised"
+          ]
+        },
+        {
+          "row": 4,
+          "values": [
+            1,
+            "Local Area Network (LAN)",
+            14,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 5,
+          "values": [
+            2,
+            "Wide Area Network (WAN)",
+            13,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 6,
+          "values": [
+            4,
+            "Firewall",
+            13,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 7,
+          "values": [
+            5,
+            "E-Mail Server",
+            13,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 8,
+          "values": [
+            6,
+            "Business Servers (EWS, Chaipro)",
+            13,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 9,
+          "values": [
+            7,
+            "Electronic Weighment Solution (EWS Version)",
+            13,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 10,
+          "values": [
+            "#REF!",
+            "#REF!",
+            13,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 11,
+          "values": [
+            null,
+            "Average",
+            null,
+            null,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 12,
+          "values": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 13,
+          "values": [
+            null,
+            "ChaiPro",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 14,
+          "values": [
+            "No",
+            "Service",
+            "No of \nFactories",
+            "Region 6",
+            "% Uptime\nService",
+            "Factories  \nAffected",
+            "Issue",
+            null,
+            null
+          ]
+        },
+        {
+          "row": 15,
+          "values": [
+            1,
+            "Chaipro Financials",
+            13,
+            "#REF!",
+            "#REF!",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 16,
+          "values": [
+            2,
+            "Chaipro Factory/TVAP",
+            13,
+            "#REF!",
+            "#REF!",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 17,
+          "values": [
+            3,
+            "Chaipro Farmers",
+            13,
+            "#REF!",
+            "#REF!",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 18,
+          "values": [
+            4,
+            "Chaipro Fleet",
+            13,
+            "#REF!",
+            "#REF!",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 19,
+          "values": [
+            6,
+            "KTDA Replicator",
+            13,
+            "#REF!",
+            "#REF!",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 20,
+          "values": [
+            7,
+            "Chai Data",
+            13,
+            "#REF!",
+            "#REF!",
+            null,
+            null,
+            null,
+            null
+          ]
+        }
+      ]
+    },
+    {
+      "name": "R7",
+      "rows": 41,
+      "columns": 9,
+      "data_sample": [
+        {
+          "row": 1,
+          "values": [
+            null,
+            "Region 7",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 2,
+          "values": [
+            null,
+            "Infrastructure",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 3,
+          "values": [
+            "No.",
+            "Service",
+            "No of \nFactories",
+            "Region 7",
+            "% Uptime\nService",
+            "Factories  \nHaving Issues",
+            "Summary of Issues",
+            "Duration\n(days)",
+            "Tickets Raised"
+          ]
+        },
+        {
+          "row": 4,
+          "values": [
+            1,
+            "Local Area Network (LAN)",
+            4,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 5,
+          "values": [
+            2,
+            "Wide Area Network (WAN)",
+            4,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 6,
+          "values": [
+            4,
+            "Firewall",
+            4,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 7,
+          "values": [
+            5,
+            "E-Mail Server",
+            4,
+            4,
+            1,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 8,
+          "values": [
+            6,
+            "Business Servers (EWS, Chaipro)",
+            4,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 9,
+          "values": [
+            7,
+            "Electronic Weighment Solution (EWS Version)",
+            4,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 10,
+          "values": [
+            "#REF!",
+            "#REF!",
+            4,
+            0,
+            0,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 11,
+          "values": [
+            null,
+            "Average",
+            null,
+            null,
+            0.14285714285714285,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 12,
+          "values": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 13,
+          "values": [
+            null,
+            "ChaiPro",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 14,
+          "values": [
+            "No",
+            "Service",
+            "No of \nFactories",
+            "Region 7",
+            "% Uptime\nService",
+            "Factories  \nAffected",
+            "Issue",
+            null,
+            null
+          ]
+        },
+        {
+          "row": 15,
+          "values": [
+            1,
+            "Chaipro Financials",
+            1,
+            "#REF!",
+            "#REF!",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 16,
+          "values": [
+            2,
+            "Chaipro Factory/TVAP",
+            1,
+            "#REF!",
+            "#REF!",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 17,
+          "values": [
+            3,
+            "Chaipro Farmers",
+            1,
+            "#REF!",
+            "#REF!",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 18,
+          "values": [
+            4,
+            "Chaipro Fleet",
+            1,
+            "#REF!",
+            "#REF!",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 19,
+          "values": [
+            6,
+            "KTDA Replicator",
+            1,
+            "#REF!",
+            "#REF!",
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 20,
+          "values": [
+            7,
+            "Chai Data",
+            1,
+            "#REF!",
+            "#REF!",
+            null,
+            null,
+            null,
+            null
+          ]
+        }
+      ]
+    },
+    {
+      "name": "SUM PERFORMANCE",
+      "rows": 13,
+      "columns": 14,
+      "data_sample": [
+        {
+          "row": 1,
+          "values": [
+            null,
+            "All Regions Performance",
+            null,
+            null,
+            null,
+            null,
+            null,
+            "2025-09-30 00:00:00",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 2,
+          "values": [
+            null,
+            "Overall Performance",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 3,
+          "values": [
+            "Service",
+            "Region 1",
+            "Region 2",
+            "Region 3",
+            "Region 4",
+            "Region 5",
+            "Region 6",
+            "Region 7",
+            "Common Issues /Trend Noted",
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 4,
+          "values": [
+            "Infrastructure and Systems",
+            1,
+            1,
+            0.9928571428571429,
+            1,
+            0.9979591836734694,
+            1,
+            1,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 5,
+          "values": [
+            "ChaiPro/SAP",
+            0.9857142857142858,
+            0.9968253968253968,
+            1,
+            1,
+            1,
+            1,
+            1,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 6,
+          "values": [
+            "Inventory",
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 7,
+          "values": [
+            "BCP",
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            1,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 8,
+          "values": [
+            "Total ICT costs for the Month",
+            6945720.87,
+            643526,
+            2274787.09,
+            2103542.97,
+            2894127.93,
+            2274787.09,
+            2274787.09,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 9,
+          "values": [
+            "Average",
+            0.9964285714285714,
+            0.9992063492063492,
+            0.9982142857142857,
+            1,
+            0.9994897959183673,
+            1,
+            1,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 10,
+          "values": [
+            "Target Performance",
+            0.99,
+            0.99,
+            0.99,
+            0.99,
+            0.99,
+            0.99,
+            0.99,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 11,
+          "values": [
+            "Variance",
+            0.00642857142857145,
+            0.009206349206349218,
+            0.00821428571428573,
+            0.010000000000000009,
+            0.009489795918367294,
+            0.010000000000000009,
+            0.010000000000000009,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 12,
+          "values": [
+            "Purchases Total To date 2025/2026",
+            6945720.87,
+            0,
+            0,
+            774899,
+            2894127.93,
+            2274787.09,
+            1170132.14,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 13,
+          "values": [
+            "Budget Total To date 2025/2026",
+            0,
+            0,
+            153855313,
+            110421960,
+            348325500,
+            41920000,
+            57352702,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Pending Issues-SEPT 2025",
+      "rows": 63,
+      "columns": 15,
+      "data_sample": [
+        {
+          "row": 1,
+          "values": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            "ALL REGIONS",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 2,
+          "values": [
+            "LANSUPPORT/ITSM PENDING ISSUES  AS AT \nEND OF SEPT 2025",
+            null,
+            null,
+            null,
+            null,
+            null,
+            "FIELD REPORT PENDING ISSUES FIELD AS AT \nEND OF SEPT 2025",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 3,
+          "values": [
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 4,
+          "values": [
+            "Regions",
+            "Client",
+            "Ref. #",
+            "Subject ",
+            "Date",
+            "Appears on Field Report",
+            "Client",
+            "Ref. #",
+            "Subject ",
+            "Appears on \nLansupport \nReport",
+            "Remarks",
+            "Assigned",
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 5,
+          "values": [
+            "Region 1",
+            "Ikumbi Tea Factory Co. Ltd",
+            18414,
+            "Faulty laptop L540",
+            "2019-12-16 00:00:00",
+            "Yes",
+            "Ikumbi Tea Factory Co. Ltd",
+            18414,
+            "Faulty laptop L540",
+            "Yes",
+            "Faulty laptop awaiting to sent back to factory",
+            "Winfred Kabuuri",
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 6,
+          "values": [
+            null,
+            "Ikumbi Tea Factory Co. Ltd",
+            37884,
+            "Faulty Directors tablet",
+            "2024-04-22 00:00:00",
+            "yes",
+            "Ikumbi Tea Factory Co. Ltd",
+            37884,
+            "Faulty Directors tablet",
+            "Yes",
+            "technical report attached",
+            "Anthony Wanjau",
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 7,
+          "values": [
+            null,
+            "Theta Tea Factory Co. Ltd",
+            39100,
+            "HP PRO DESK COMPUTER FAILURE",
+            "2025-05-07 00:00:00",
+            "No",
+            "Theta Tea Factory Co. Ltd",
+            39100,
+            "HP PRO DESK COMPUTER FAILURE",
+            "Yes",
+            "Vendor picked up the machine.",
+            "Denis Nganga",
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 8,
+          "values": [
+            null,
+            "region 1 ndakaini",
+            28063,
+            "Monitor display faulty",
+            "2021-03-05 00:00:00",
+            "yes",
+            "region 1 ndakaini",
+            28063,
+            "Monitor display faulty",
+            "yes",
+            null,
+            "Peter Kibe",
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 9,
+          "values": [
+            null,
+            "Kagwe Tea Factory Co. Ltd",
+            38622,
+            "SAP GL Variance ",
+            "2024-11-25 00:00:00",
+            "No",
+            "Kagwe Tea Factory Co. Ltd",
+            38622,
+            "SAP GL Variance ",
+            "No",
+            "The issue is now resolved. Need to be closed",
+            "Avelline Ondari",
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 10,
+          "values": [
+            null,
+            "Kagwe Tea Factory Co. Ltd",
+            38427,
+            "Lenovo E590 laptop not booting",
+            "2024-09-09 00:00:00",
+            "yes",
+            "Kagwe Tea Factory Co. Ltd",
+            38427,
+            "Lenovo E590 laptop not booting",
+            "No",
+            "The issue is now resolved. Need to be closed",
+            "Peter Kibe",
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 11,
+          "values": [
+            null,
+            "Ndarugu Tea Factory Co. Ltd",
+            38889,
+            "Insured damaged tablet sreen",
+            "2025-02-27 00:00:00",
+            "No",
+            "Ndarugu Tea Factory Co. Ltd",
+            38889,
+            "Insured damaged tablet sreen",
+            "Yes",
+            "Waiting a response from the factory whether the issue was resolved",
+            "Sheila Maina",
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 12,
+          "values": [
+            null,
+            "Nduti Tea Factory Co. Ltd",
+            39446,
+            "FAULTY LAPTOP BATTERY S/N PF-4HRDEN\u00a0",
+            "2025-08-09 00:00:00",
+            "No",
+            "Nduti Tea Factory Co. Ltd",
+            39446,
+            "FAULTY LAPTOP BATTERY S/N PF-4HRDEN\u00a0",
+            "Yes",
+            "awaiting laptop to be sent to HQ",
+            "Peter Kibe",
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 13,
+          "values": [
+            null,
+            "Nduti Tea Factory Co. Ltd",
+            39447,
+            "FAULTY LAPTOP S/N PF-2Z6BWD",
+            "2025-08-30 00:00:00",
+            "No",
+            "Nduti Tea Factory Co. Ltd",
+            39447,
+            "FAULTY LAPTOP S/N PF-2Z6BWD",
+            "Yes",
+            "Laptop received at HO and forwarded to ICT hardware for further diagnosis",
+            "John Maroko",
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 14,
+          "values": [
+            null,
+            "Njunu Tea Factory Co. Ltd",
+            39238,
+            "Loss of HP Probook UMA G7 Laptop",
+            "2025-06-18 00:00:00",
+            "yes",
+            "Njunu Tea Factory Co. Ltd",
+            39238,
+            "Loss of HP Probook UMA G7 Laptop",
+            "Yes",
+            "Awaiting proforma invoice of a similar model",
+            "Sheila Maina",
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 15,
+          "values": [
+            null,
+            null,
+            null,
+            "Total - 5- Lansupport",
+            null,
+            null,
+            "Total -8 - ",
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 16,
+          "values": [
+            "Region 2",
+            "Gatunguru Tea Factory Co. Ltd",
+            36405,
+            "mail server faulty",
+            "2023-07-31 00:00:00",
+            "Yes",
+            "Gatunguru Tea Factory Co. Ltd",
+            36405,
+            "mail server faulty",
+            null,
+            "Awaiting confirmation from RICTM",
+            "Erick Kinyeki",
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 17,
+          "values": [
+            null,
+            "Githambo Tea Factory Co. Ltd",
+            34395,
+            "DAMAGE OF FUM LAPTOP BY RAIN WATER",
+            "2022-08-24 00:00:00",
+            "Yes",
+            "Githambo Tea Factory Co. Ltd",
+            34395,
+            "DAMAGE OF FUM LAPTOP BY RAIN WATER",
+            null,
+            "The claim remains unattended to.",
+            "Erick Kinyeki",
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 18,
+          "values": [
+            null,
+            "Githambo Tea Factory Co. Ltd",
+            38340,
+            "WAn Connectivity Down",
+            "2024-08-12 00:00:00",
+            "Yes",
+            "Githambo Tea Factory Co. Ltd",
+            38340,
+            "WAn Connectivity Down",
+            null,
+            "Affected services: - SAP - Emails - Internet - data replication/uploads",
+            "Erick Kinyeki",
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 19,
+          "values": [
+            null,
+            "Githambo Tea Factory Co. Ltd",
+            38695,
+            "NEW LAPTOP- OVERHEATING",
+            "2024-12-20 00:00:00",
+            "Yes",
+            "Githambo Tea Factory Co. Ltd",
+            38695,
+            "NEW LAPTOP- OVERHEATING",
+            null,
+            "laptop is yet to be dispatched to HQ",
+            "Erick Kinyeki",
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "row": 20,
+          "values": [
+            null,
+            "Githambo Tea Factory Co. Ltd",
+            39064,
+            "KTDA Leaf Buying application  ",
+            "2025-04-24 00:00:00",
+            "Yes",
+            "Githambo Tea Factory Co. Ltd",
+            39064,
+            "KTDA Leaf Buying application  ",
+            null,
+            "Awaiting confirmation from Simon",
+            "Simon Kiragu",
+            null,
+            null,
+            null
+          ]
+        }
+      ]
+    }
+  ]
+}
+
+================================================================================
+ANALYZING WORD DOCUMENT
+================================================================================
+Traceback (most recent call last):
+  File "C:\Users\KTDA\Documents\FieldReports\analyze_documents.py", line 92, in <module>
+    word_analysis = analyze_word(word_file)
+  File "C:\Users\KTDA\Documents\FieldReports\analyze_documents.py", line 37, in analyze_word
+    doc = Document(filename)
+  File "C:\Users\KTDA\AppData\Roaming\Python\Python313\site-packages\docx\api.py", line 30, in Document
+    raise ValueError(tmpl % (docx, document_part.content_type))
+ValueError: file 'KTDA Factory ICT Report -  TBESONIK  MONTHLY - September 2025.doc' is not a Word file, content type is 'application/vnd.openxmlformats-officedocument.themeManager+xml'

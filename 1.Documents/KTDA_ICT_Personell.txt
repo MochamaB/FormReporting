@@ -1,0 +1,109 @@
+Name	Department	Designation	Roles
+ICT-O			
+Martin Mwarangu	ICT-O	Group General Manager	
+Sheila Maina	ICT-O	Admin Assistant	
+ICT-S			
+Rogers Nyamweya	ICT-S	ICT Services Coordinator	
+Agnes W. Mwangi	ICT-S	ICT Services Coordinator	
+Beatrice Kairo	ICT-S	ICT Services Coordinator	
+Rhoda Sainah	ICT-S	ICT Services Coordinator	
+Denis Nganga	ICT-S	ICT Services Coordinator	
+Kelvin Munene	ICT-S	ICT Services Coordinator	
+Philemon Langat 	ICT-S	ICT Services Coordinator	
+ICT- I 			
+Samuel Kinyua	ICT-I	ICT Hardware Engineer	
+Joseph Ndungu	ICT-I	ICT Hardware Engineer	
+ Antony Wanjau	ICT-I	ICT Hardware Engineer	
+ John Maroko	ICT-I	ICT Hardware Engineer	
+Winfred Kabuuri	ICT-I	Network Support Coordinator	
+Edwin Mwosa	ICT-I	Head of Infrastructure and Services	
+Stephen Michino	ICT-I	Network Support Coordinator	
+Charles Bett	ICT-I	Network Support Coordinator	
+Brenda Mucheru	ICT-I	ICT Security Coordinator	
+Veronica Nderitu	ICT-I	ICT Security Coordinator	
+Ben Thuo	ICT-1	ICT Security Coordinator	
+Florence Barasa	ICT-I	ICT Security Coordinator	
+1CT-B			
+Ken Nyaribo	ICT-B	Head of Business systems	
+Felix Mugambi	ICT-B	Systems Developer	
+Antony Kuria	ICT-B	Systems Developer	
+Martin Kariuki	ICT-B	Systems Developer	
+Samuel Ngambi	ICT-B	Systems Developer	
+Simon Kiragu	ICT-B	Systems Developer	
+Paul Gathogo	ICT-B	Systems Developer	
+Brian Mochama	ICT-B	Systems Developer	
+Ezra Kungu	ICT-B	Systems Developer	
+Elias Mugo	ICT-B	Systems Developer	
+REGION 1			
+Peter Kibe 	RICTM_R1	Regional ICT Manager	
+Mercy N. Gitari	 Kambaa	Field Systems Administrator	
+Andrew Kariuki	 Kagwe	Field Systems Administrator	
+Beth N. Muiruri	 Theta	Field Systems Administrator	
+Jackline Kerubo 	 Ndarugu	Field Systems Administrator	
+Samuel Muchiri	 Gachege	Field Systems Administrator	
+Cecilia Maina 	Mataara	Field Systems Administrator	
+Anne Muriithi	 Ngere	Field Systems Administrator	
+George Mau	Makomboki	Field Systems Administrator	
+Diana Opondo	 Nduti	Field Systems Administrator	
+Mary Ndichu	Ikumbi	Field Systems Administrator	
+John F Mathenge 	Gacharage	Field Systems Administrator	
+REGION 2			
+Benjamin K. Ndungu	RICTM_R2	Regional ICT Manager	
+Paul Makori	Kanyenyaini	Field Systems Administrator	
+Ann Maina	Chinga	Field Systems Administrator	
+Nicholas Nyamu Muraguri	Kiru	Field Systems Administrator	
+David Njoroge Githinji	Githambo	Field Systems Administrator	
+Mikenathan Ngugi	Gatunguru	Field Systems Administrator	
+Daniel M. Muigai	Ragati	Field Systems Administrator	
+Dedan Kariuki Kamuto	Gitugi	Field Systems Administrator	
+Philip Murage Kinyua	Iriaini	Field Systems Administrator	
+Vincent Koech	Gathuthi	Field Systems Administrator	
+REGION 3			
+Eric Kinyeki	RICTM_R3	Regional ICT Manager	
+Gideon Rotich	Ndima	Field Systems Administrator	
+Zipporah Karimi 	Mununga	Field Systems Administrator	
+Elizabeth Ndegwa  	Kangaita	Field Systems Administrator	
+Millicent Kagunda	Kimunye	Field Systems Administrator	
+Michael Thoronjo	Thumaita	Field Systems Administrator	
+Dickson Kariuki 	Kathangariri	Field Systems Administrator	
+Gilbert Mwaniki	Mungania	Field Systems Administrator	
+Joseph Njogu	Rukuriri	Field Systems Administrator	
+REGION 4			
+Jackson Gachuki	RICTM_R4	Regional ICT Manager	
+David Mwangi	Weru	Field Systems Administrator	
+George Kinyua	Kinoro	Field Systems Administrator	
+Simon Thuku	Imenti	Field Systems Administrator	
+Ezekiel Leting	Githongo	Field Systems Administrator	
+Timothy T Kajuki	 Michimikuru	Field Systems Administrator	
+John Muthamia	 Kiegoi	Field Systems Administrator	
+REGION 5			
+Enock O. Ogara	RICTM_R5	Regional ICT Manager	
+Vincent Onsongo	Kapkatet	Field Systems Administrator	
+Wilbon Yegon	Tegat 	Field Systems Administrator	
+Vincent Ruto	Litein	Field Systems Administrator	
+Andrew Tonui	Toror	Field Systems Administrator	
+Lonah Jerono	Momul	Field Systems Administrator	
+Eric Machogu	Kapset	Field Systems Administrator	
+Fred Kegoro	Mogogosiek	Field Systems Administrator	
+Beatrice Bii	Kobel	Field Systems Administrator	
+Nicholas Eddy	Tirgaga	Field Systems Administrator	
+Alexander Kerich	Motigo	Field Systems Administrator	
+Philemon Langat	Olenguruone	Field Systems Administrator	
+REGION 6			
+Richard S. Olume	RICTM_R6	Regional ICT Manager	
+Cyrus Vogg	Rianyamwamu	Field Systems Administrator	
+Preston Nyaundi	Kiamokama	Field Systems Administrator	
+John Sang	Ogembo Group	Field Systems Administrator	
+Nicodemus Siro	Kebirigo	Field Systems Administrator	
+James Ogamba	Nyankoba	Field Systems Administrator	
+Loice Mecheo	Itumbe	Field Systems Administrator	
+Cecilia Chemutai	Gianchore	Field Systems Administrator	
+Steve Kendagor 	Nyamache	Field Systems Administrator	
+Peter Kibet	Sanganyi	Field Systems Administrator	
+Polycarp Okora	Nyansiongo Group	Field Systems Administrator	
+Peter Langat	Tombe Group	Field Systems Administrator	
+REGION 7			
+Eric  Ngetich	RICTM_R7	Regional ICT Manager	
+Anthony Getugi	Mudete	Field Systems Administrator	
+Enock Kosgey	Kaptumo	Field Systems Administrator	
+Linet Barus	Kapsara	Field Systems Administrator	

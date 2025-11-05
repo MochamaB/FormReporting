@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en" data-layout="vertical" data-topbar="light" data-sidebar="dark" data-sidebar-size="lg" data-sidebar-image="none" data-preloader="disable" data-theme="default" data-theme-colors="default">
+<head>
+    <meta charset="utf-8" />
+    <title>@ViewData["Title"] - KTDA ICT Reporting System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="KTDA ICT Reporting & Form Management System" name="description" />
+    <meta content="KTDA IT Department" name="author" />
+
+    @* Include CSS Styles *@
+    <partial name="_Styles" />
+    
+    @* Page-specific CSS *@
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+
+<body>
+
+    <!-- Begin page -->
+    <div id="layout-wrapper">
+
+        @* Top Navbar *@
+        <partial name="_Navbar" />
+
+        @* Sidebar Navigation *@
+        <partial name="_Sidebar" />
+
+        <!-- ============================================================== -->
+        <!-- Start right Content here -->
+        <!-- ============================================================== -->
+        <div class="main-content">
+
+            <div class="page-content">
+                <div class="container-fluid">
+
+                    @* Breadcrumb *@
+                    <partial name="_Breadcrumb" />
+
+                    @* Main Content *@
+                    @RenderBody()
+
+                </div>
+                <!-- container-fluid -->
+            </div>
+            <!-- End Page-content -->
+
+            @* Footer *@
+            <partial name="_Footer" />
+
+        </div>
+        <!-- end main content-->
+
+    </div>
+    <!-- END layout-wrapper -->
+
+    @* Include JavaScript *@
+    <partial name="_Scripts" />
+    
+    @* Page-specific JavaScript *@
+    @await RenderSectionAsync("Scripts", required: false)
+
+</body>
+</html>

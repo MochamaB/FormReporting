@@ -1,0 +1,281 @@
+/*
+ * KTDA Custom Theme Colors
+ * Main: Green #324721
+ * Secondary: Yellow #ffaf00
+ * Tertiary: Grey #f3f3f9
+ */
+
+:root {
+    /* Primary/Main Color - Green */
+    --vz-primary: #324721;
+    --vz-primary-rgb: 50, 71, 33;
+    --vz-primary-subtle: rgba(50, 71, 33, 0.1);
+    --vz-primary-text-emphasis: #1e2b14;
+    --vz-primary-bg-subtle: #e8ebe6;
+    --vz-primary-border-subtle: #d1d7cc;
+    
+    /* Success Color - Also Green */
+    --vz-success: #324721;
+    --vz-success-rgb: 50, 71, 33;
+    --vz-success-subtle: rgba(50, 71, 33, 0.1);
+    --vz-success-text-emphasis: #1e2b14;
+    --vz-success-bg-subtle: #e8ebe6;
+    --vz-success-border-subtle: #d1d7cc;
+    
+    /* Secondary Color - Yellow */
+    --vz-secondary: #ffaf00;
+    --vz-secondary-rgb: 255, 175, 0;
+    --vz-secondary-subtle: rgba(255, 175, 0, 0.1);
+    --vz-secondary-text-emphasis: #cc8c00;
+    --vz-secondary-bg-subtle: #fff5e0;
+    --vz-secondary-border-subtle: #ffe4b3;
+    
+    /* Warning Color - Yellow */
+    --vz-warning: #ffaf00;
+    --vz-warning-rgb: 255, 175, 0;
+    --vz-warning-subtle: rgba(255, 175, 0, 0.1);
+    --vz-warning-text-emphasis: #cc8c00;
+    --vz-warning-bg-subtle: #fff5e0;
+    --vz-warning-border-subtle: #ffe4b3;
+    
+    /* Light/Tertiary Color - Grey */
+    --vz-light: #f3f3f9;
+    --vz-light-rgb: 243, 243, 249;
+    --vz-light-text-emphasis: #495057;
+    --vz-light-bg-subtle: #fcfcfd;
+    --vz-light-border-subtle: #e9ecef;
+}
+
+/* Sidebar Customization - Main Green Background */
+[data-sidebar="dark"] .app-menu {
+    background-color: #324721 !important;
+}
+
+[data-sidebar="dark"] .navbar-menu {
+    background-color: #324721 !important;
+}
+
+[data-sidebar="dark"] .app-menu .navbar-nav .nav-link {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+[data-sidebar="dark"] .app-menu .navbar-nav .nav-link:hover,
+[data-sidebar="dark"] .app-menu .navbar-nav .nav-link:focus {
+    color: #ffaf00;
+    background-color: rgba(255, 175, 0, 0.1);
+}
+
+[data-sidebar="dark"] .app-menu .navbar-nav .nav-link.active {
+    color: #ffaf00;
+    background-color: rgba(255, 175, 0, 0.15);
+}
+
+[data-sidebar="dark"] .app-menu .menu-title {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Sidebar dropdown menu items */
+[data-sidebar="dark"] .app-menu .menu-dropdown .nav-link {
+    color: rgba(255, 255, 255, 0.75);
+}
+
+[data-sidebar="dark"] .app-menu .menu-dropdown .nav-link:hover {
+    color: #ffaf00;
+    background-color: rgba(255, 175, 0, 0.08);
+}
+
+/* Sidebar background gradient */
+.sidebar-background {
+    background: linear-gradient(to bottom, #324721 0%, #1e2b14 100%) !important;
+}
+
+/* Logo area in sidebar */
+.navbar-brand-box {
+    background-color: rgba(30, 43, 20, 0.3);
+}
+
+/* Button Colors */
+.btn-primary {
+    background-color: #324721;
+    border-color: #324721;
+}
+
+.btn-primary:hover,
+.btn-primary:focus,
+.btn-primary:active {
+    background-color: #1e2b14;
+    border-color: #1e2b14;
+}
+
+.btn-secondary {
+    background-color: #ffaf00;
+    border-color: #ffaf00;
+    color: #000;
+}
+
+.btn-secondary:hover,
+.btn-secondary:focus,
+.btn-secondary:active {
+    background-color: #cc8c00;
+    border-color: #cc8c00;
+    color: #000;
+}
+
+.btn-success {
+    background-color: #324721;
+    border-color: #324721;
+}
+
+.btn-success:hover,
+.btn-success:focus,
+.btn-success:active {
+    background-color: #1e2b14;
+    border-color: #1e2b14;
+}
+
+/* Badge Colors */
+.badge.bg-primary {
+    background-color: #324721 !important;
+}
+
+.badge.bg-secondary {
+    background-color: #ffaf00 !important;
+    color: #000 !important;
+}
+
+.badge.bg-success {
+    background-color: #324721 !important;
+}
+
+/* Links */
+a {
+    color: #324721;
+}
+
+a:hover {
+    color: #1e2b14;
+}
+
+/* Card header with primary background */
+.card-header.bg-primary {
+    background-color: #324721 !important;
+}
+
+/* Alert Colors */
+.alert-success {
+    background-color: rgba(50, 71, 33, 0.1);
+    border-color: #324721;
+    color: #1e2b14;
+}
+
+.alert-warning {
+    background-color: rgba(255, 175, 0, 0.1);
+    border-color: #ffaf00;
+    color: #cc8c00;
+}
+
+/* Progress bars */
+.progress-bar {
+    background-color: #324721;
+}
+
+/* Form controls focus state */
+.form-control:focus,
+.form-select:focus {
+    border-color: #324721;
+    box-shadow: 0 0 0 0.2rem rgba(50, 71, 33, 0.25);
+}
+
+/* Navbar/Header customization */
+.navbar-header {
+    background-color: #ffffff;
+    border-bottom: 1px solid #f3f3f9;
+}
+
+/* Page title background */
+.page-title-box.bg-galaxy-transparent {
+    background-color: transparent;
+}
+
+/* Counter value animation color */
+.counter-value {
+    color: #324721;
+}
+
+/* Sidebar user dropdown */
+[data-sidebar="dark"] .app-menu .dropdown-menu {
+    background-color: #1e2b14;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+[data-sidebar="dark"] .app-menu .dropdown-item {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+[data-sidebar="dark"] .app-menu .dropdown-item:hover {
+    background-color: rgba(255, 175, 0, 0.1);
+    color: #ffaf00;
+}
+
+/* Navigation active state */
+.navbar-nav .nav-link.active {
+    color: #324721 !important;
+}
+
+/* Breadcrumb customization */
+.breadcrumb-item.active {
+    color: #324721;
+}
+
+.breadcrumb-item a {
+    color: #6c757d;
+}
+
+.breadcrumb-item a:hover {
+    color: #324721;
+}
+
+/* Icon colors for stats cards */
+.avatar-title.bg-info-subtle {
+    background-color: rgba(50, 71, 33, 0.1) !important;
+}
+
+.text-info {
+    color: #324721 !important;
+}
+
+.avatar-title.bg-success-subtle {
+    background-color: rgba(50, 71, 33, 0.1) !important;
+}
+
+.avatar-title.bg-warning-subtle {
+    background-color: rgba(255, 175, 0, 0.1) !important;
+}
+
+.text-warning {
+    color: #ffaf00 !important;
+}
+
+/* Table hover effects */
+.table-hover tbody tr:hover {
+    background-color: rgba(50, 71, 33, 0.03);
+}
+
+/* Custom scrollbar for sidebar */
+[data-sidebar="dark"] #scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(255, 175, 0, 0.3);
+}
+
+[data-sidebar="dark"] #scrollbar::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(255, 175, 0, 0.5);
+}
+
+/* Topbar notification badge */
+.topbar-badge {
+    background-color: #324721 !important;
+}
+
+/* Card animation hover effect */
+.card-animate:hover {
+    border-color: #324721 !important;
+}

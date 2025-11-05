@@ -1,0 +1,140 @@
+@{
+    ViewData["Title"] = "Dashboard";
+    ViewData["Breadcrumbs"] = new List<(string Title, string? Url)>
+    {
+        ("Dashboards", null),
+        ("Analytics", null)
+    };
+}
+
+<div class="row">
+    <div class="col-xl-3 col-md-6">
+        <!-- card -->
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Total Tenants</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span class="counter-value" data-target="80">0</span></h4>
+                        <span class="badge bg-success-subtle text-success mb-0">
+                            <i class="ri-arrow-up-line align-middle"></i> Active
+                        </span>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-info-subtle rounded fs-3">
+                            <i class="ri-building-line text-info"></i>
+                        </span>
+                    </div>
+                </div>
+            </div><!-- end card body -->
+        </div><!-- end card -->
+    </div><!-- end col -->
+
+    <div class="col-xl-3 col-md-6">
+        <!-- card -->
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Active Users</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span class="counter-value" data-target="156">0</span></h4>
+                        <span class="badge bg-success-subtle text-success mb-0">
+                            <i class="ri-arrow-up-line align-middle"></i> +12 this month
+                        </span>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-success-subtle rounded fs-3">
+                            <i class="ri-user-line text-success"></i>
+                        </span>
+                    </div>
+                </div>
+            </div><!-- end card body -->
+        </div><!-- end card -->
+    </div><!-- end col -->
+
+    <div class="col-xl-3 col-md-6">
+        <!-- card -->
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Pending Submissions</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span class="counter-value" data-target="23">0</span></h4>
+                        <span class="badge bg-warning-subtle text-warning mb-0">
+                            <i class="ri-time-line align-middle"></i> Awaiting Review
+                        </span>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-warning-subtle rounded fs-3">
+                            <i class="ri-file-list-line text-warning"></i>
+                        </span>
+                    </div>
+                </div>
+            </div><!-- end card body -->
+        </div><!-- end card -->
+    </div><!-- end col -->
+
+    <div class="col-xl-3 col-md-6">
+        <!-- card -->
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Open Tickets</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4"><span class="counter-value" data-target="15">0</span></h4>
+                        <span class="badge bg-danger-subtle text-danger mb-0">
+                            <i class="ri-alert-line align-middle"></i> Needs Attention
+                        </span>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-danger-subtle rounded fs-3">
+                            <i class="ri-ticket-2-line text-danger"></i>
+                        </span>
+                    </div>
+                </div>
+            </div><!-- end card body -->
+        </div><!-- end card -->
+    </div><!-- end col -->
+</div> <!-- end row-->
+
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-header align-items-center d-flex">
+                <h4 class="card-title mb-0 flex-grow-1">Welcome to KTDA ICT Reporting System</h4>
+            </div><!-- end card header -->
+
+            <div class="card-body">
+                <p class="text-muted">This is your central hub for managing ICT infrastructure reporting across all KTDA facilities.</p>
+                <div class="alert alert-success alert-dismissible alert-label-icon label-arrow fade show" role="alert">
+                    <i class="ri-check-double-line label-icon"></i><strong>Success</strong> - Velzon template has been successfully integrated!
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+                <h5>Quick Actions:</h5>
+                <div class="hstack gap-2">
+                    <button type="button" class="btn btn-primary">Submit Monthly Report</button>
+                    <button type="button" class="btn btn-success">View Reports</button>
+                    <button type="button" class="btn btn-info">Create Ticket</button>
+                    <button type="button" class="btn btn-secondary">Manage Templates</button>
+                </div>
+            </div><!-- end card-body -->
+        </div><!-- end card -->
+    </div>
+    <!-- end col -->
+</div>

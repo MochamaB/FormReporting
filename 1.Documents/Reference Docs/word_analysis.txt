@@ -1,0 +1,160 @@
+Document: KTDA Factory ICT Report -  TBESONIK  MONTHLY - September 2025.doc
+Paragraphs: 382
+Tables: 7
+
+================================================================================
+FIRST 50 PARAGRAPHS:
+================================================================================
+
+Paragraph 2: KTDA GROUP
+
+Paragraph 3: 
+
+Paragraph 4: [TEBESONIK]
+
+Paragraph 5: MONTHLY ICT STATUS REPORT.
+
+Paragraph 6: 
+
+Paragraph 7: ICT SERVICES
+
+Paragraph 9: [09/2025]
+
+Paragraph 10: 
+
+Paragraph 11: 
+
+Paragraph 12: 
+
+Paragraph 14: FACTORY NAME: KAPKATET
+
+Paragraph 16: This report gives the status of the Factory’s ICT resources as at 02.10.2025
+
+Paragraph 18: ICT INFRASTRUCTURE, SYSTEMS AND SERVICES:
+
+Paragraph 20: 1.1 SERVICES STATUS
+
+Paragraph 22: No.
+
+Paragraph 23: Item
+
+Paragraph 24: Current Status
+
+Paragraph 25: Remarks
+
+Paragraph 26: 
+
+Paragraph 27: 1
+
+Paragraph 28: Local Area Network (LAN)
+
+Paragraph 29: Okay
+
+Paragraph 30: 
+
+Paragraph 31: 
+
+Paragraph 32: 2
+
+Paragraph 33: Wide Area Network (WAN)
+
+Paragraph 34: Okay
+
+Paragraph 35: 
+
+Paragraph 36: 
+
+Paragraph 37: 3
+
+Paragraph 38: Safaricom Backup VPN Line Status
+
+Paragraph 39: None
+
+Paragraph 40: 
+
+Paragraph 41: 
+
+Paragraph 42: 4
+
+Paragraph 43: Firewall
+
+Paragraph 44: Not installed
+
+Paragraph 45: 
+
+Paragraph 46: 
+
+Paragraph 47: 5
+
+Paragraph 48: E-Mail Server
+
+Paragraph 49: Okay
+
+Paragraph 50: 
+
+================================================================================
+TABLES STRUCTURE:
+================================================================================
+
+Table 1:
+  Rows: 4
+  Columns: 1
+  Sample data (first 10 rows):
+    Row 1: ['KTDA GROUP\r\x07']
+    Row 2: ['[TEBESONIK]\r MONTHLY ICT STATUS REPORT.\r\x07']
+    Row 3: ['ICT SERVICES\r\r[09/2025]\r\x07']
+    Row 4: ['\x07']
+
+Table 2:
+  Rows: 15
+  Columns: 4
+  Sample data (first 10 rows):
+    Row 1: ['No.\r\x07', 'Item\r\x07', 'Current Status\r\x07', 'Remarks\r\x07']
+    Row 2: ['1\r\x07', 'Local Area Network (LAN)\r\x07', 'Okay\r\x07', '\x07']
+    Row 3: ['2\r\x07', 'Wide Area Network (WAN)\r\x07', 'Okay\r\x07', '\x07']
+    Row 4: ['3\r\x07', 'Safaricom Backup VPN Line Status\r\x07', 'None\r\x07', '\x07']
+    Row 5: ['4\r\x07', 'Firewall\r\x07', 'Not installed\r\x07', '\x07']
+    Row 6: ['5\r\x07', 'E-Mail Server\r\x07', 'Okay\r\x07', '\x07']
+    Row 7: ['6\r\x07', 'Business Servers (EWS, Chaipro)\r\x07', 'GMS In Use\r\x07', '\x07']
+    Row 8: ['7\r\x07', 'Electronic Weighment Solution (EWS Version)\r\x07', '3.1.5.6\r\x07', '\x07']
+    Row 9: ['8\r\x07', 'EWS Kits\r\x07', '9\r\r\x07', '\x07']
+    Row 10: ['9\r\x07', 'Printer (NFC Card & DFX)\r\x07', 'Both Okay\r\x07', '\x07']
+
+Table 3:
+  Rows: 11
+  Columns: 4
+  Sample data (first 10 rows):
+    Row 1: ['No.\r\x07', 'Item\r\x07', 'Current Status & Version\r\x07', 'Remarks\r\x07']
+    Row 2: ['1\r\x07', 'Chaipro Financials\r\x07', '2.5.5.9\r\x07', '\x07']
+    Row 3: ['2\r\x07', 'Chaipro Factory/TVAP\r\x07', '2.5.2.7\r\x07', '\x07']
+    Row 4: ['3\r\x07', 'Chaipro Farmers\r\x07', '3.0.0.1\r\x07', '\x07']
+    Row 5: ['4\r\x07', 'Chaipro Fleet\r\x07', '3.2.5.1\r\x07', '\x07']
+    Row 6: ['6\r\x07', 'KTDA Replicator\r\x07', '0.0.0.1\r\x07', '\x07']
+    Row 7: ['7\r\x07', 'Chai Data\r\x07', 'N/A\r\x07', '\x07']
+    Row 8: ['8\r\x07', 'ETR Device\r\x07', '2\r\x07', '\x07']
+    Row 9: ['9\r\x07', 'SMS Portal/USSD (Date the growers received)\r\x07', '02.10.2025\r\x07', '\x07']
+    Row 10: ['10\r\x07', '% NFC Card Usage\r\x07', '100\r\x07', '\x07']
+
+Table 4:
+  Rows: 15
+  Columns: 4
+  Sample data (first 10 rows):
+    Row 1: ['No.\r\x07', 'Item\r\x07', 'Location & Current Status\r\x07', 'Remarks\r\x07']
+    Row 2: ['1\r\x07', 'Network Equipment\xa0(e.g. Switches and routers funct', '3 Switches (Management Office, Server Room)\r\x07', '\x07']
+    Row 3: ['2\r\x07', 'Software (e.g. 3rd party, Licenses, etc.)\r\x07', 'Assorted\r\x07', '\x07']
+    Row 4: ['3\r\x07', 'Hardware (Servers, PCs, Laptops, UPS, Printers, Sc', 'No Server\r\x07', '\x07']
+    Row 5: ['[merged/error]', '[merged/error]', '5 Laptops\r\x07', '\x07']
+    Row 6: ['[merged/error]', '[merged/error]', '12 Pcs\r\x07', '\x07']
+    Row 7: ['[merged/error]', '[merged/error]', '6 Assorted Printers\r\x07', '\x07']
+    Row 8: ['[merged/error]', '[merged/error]', '\x07', '\x07']
+    Row 9: ['4\r\x07', 'Firewall \r\x07', 'None\r\x07', '\x07']
+    Row 10: ['6\r\x07', 'Tablets\r\x07', '1\r\x07', '\x07']
+
+Table 5:
+  Rows: 4
+  Columns: 4
+  Sample data (first 10 rows):
+    Row 1: ['No.\r\x07', 'Item\r\x07', 'Current Status/Test\r\x07', 'Remarks\r\x07']
+    Row 2: ['1\r\x07', 'Onsite Backup\r\x07', 'In Place\r\x07', '\x07']
+    Row 3: ['2\r\x07', 'Remote Backup\r\x07', '\x07', '\x07']
+    Row 4: ['3\r\x07', 'Mail Server Backup (Date)\r\x07', '30.09.2025\r\x07', '\x07']
