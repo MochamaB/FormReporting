@@ -1,0 +1,71 @@
+@model List<FormReporting.Models.ViewModels.Components.StatCardViewModel>
+
+@*
+    CRMWidgetCard Partial View
+
+    Features:
+    - Single card containing multiple statistics
+    - Horizontal layout with border separators
+    - Title with arrow indicator at top
+    - Icon on left, value on right
+    - Responsive: stacks on mobile
+
+    Used for: Grouped CRM metrics, related statistics that should stay together
+
+    Example from Velzon: "Campaign Sent 197 | Annual Profit $489.4k | Lead Conversion 32.89%"
+
+    IMPORTANT: This card is different - it receives a LIST of StatCardViewModels
+    and renders them all in a single card with columns.
+*@
+
+@if (Model != null && Model.Any())
+{
+    <div class="col-xl-12">
+        <div class="card crm-widget">
+            <div class="card-body p-0">
+                <div class="row row-cols-md-@Model.Count row-cols-1">
+
+                    @for (int i = 0; i < Model.Count; i++)
+                    {
+                        var card = Model[i];
+                        var hasBorder = i < Model.Count - 1; // All except last have right border
+
+                        <div class="col col-lg @(hasBorder ? "border-end" : "")">
+                            <div class="py-4 px-3 @(i > 0 ? "mt-3 mt-md-0" : "")">
+
+                                @* Title with Arrow Indicator *@
+                                <h5 class="text-muted text-uppercase fs-13">
+                                    @card.Title
+                                    @if (!string.IsNullOrEmpty(card.TrendPercentage))
+                                    {
+                                        var iconClass = card.TrendDirection == FormReporting.Models.ViewModels.Components.TrendDirection.Up
+                                            ? "ri-arrow-up-circle-line text-success"
+                                            : card.TrendDirection == FormReporting.Models.ViewModels.Components.TrendDirection.Down
+                                                ? "ri-arrow-down-circle-line text-danger"
+                                                : "ri-subtract-line text-muted";
+
+                                        <i class="@iconClass fs-18 float-end align-middle"></i>
+                                    }
+                                </h5>
+
+                                @* Icon and Value *@
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        <i class="@card.Icon display-6 text-muted"></i>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <h2 class="mb-0">
+                                            <span class="counter-value" data-target="@card.Value">@card.Value</span>
+                                        </h2>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    }
+
+                </div>
+            </div>
+        </div>
+    </div>
+}

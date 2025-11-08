@@ -1,0 +1,143 @@
+@model FormReporting.Models.ViewModels.Components.FormFieldViewModel
+
+@*
+    Signature Field - Canvas-based signature capture
+*@
+
+<div class="mb-3 col-md-@Model.ColumnWidth">
+    <label for="@Model.InputId" class="form-label">
+        @Model.FieldName
+        @if (Model.IsRequired)
+        {
+            <span class="text-danger">*</span>
+        }
+    </label>
+
+    <div class="signature-pad-wrapper border rounded p-2 bg-white">
+        <canvas id="@(Model.InputId)_canvas"
+                class="signature-canvas border"
+                width="400"
+                height="150"
+                style="touch-action: none; cursor: crosshair;">
+        </canvas>
+
+        <div class="mt-2 d-flex gap-2">
+            <button type="button"
+                    class="btn btn-sm btn-outline-secondary"
+                    onclick="clearSignature('@Model.InputId')">
+                <i class="ri-eraser-line me-1"></i>Clear
+            </button>
+        </div>
+    </div>
+
+    @* Hidden input to store signature data *@
+    <input type="hidden"
+           id="@Model.InputId"
+           name="@Model.InputName"
+           value="@Model.CurrentValue"
+           @(Model.IsRequired ? "required" : "")
+           data-field-id="@Model.FieldId"
+           @if (!string.IsNullOrEmpty(Model.ValidationDataAttribute))
+           {
+               <text>data-validation='@Model.ValidationDataAttribute'</text>
+           }
+           @if (!string.IsNullOrEmpty(Model.ConditionalLogicDataAttribute))
+           {
+               <text>data-conditional='@Model.ConditionalLogicDataAttribute'</text>
+           } />
+
+    @if (!string.IsNullOrEmpty(Model.HelpText))
+    {
+        <div class="form-text">@Model.HelpText</div>
+    }
+
+    <div class="invalid-feedback"></div>
+</div>
+
+<script>
+    // Simple signature pad implementation
+    (function() {
+        const canvas = document.getElementById('@(Model.InputId)_canvas');
+        const input = document.getElementById('@Model.InputId');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+        let isDrawing = false;
+        let lastX = 0;
+        let lastY = 0;
+
+        // Load existing signature if any
+        const currentValue = input?.value;
+        if (currentValue) {
+            const img = new Image();
+            img.onload = function() {
+                ctx.drawImage(img, 0, 0);
+            };
+            img.src = currentValue;
+        }
+
+        function getCoordinates(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = (e.clientX || e.touches?.[0]?.clientX) - rect.left;
+            const y = (e.clientY || e.touches?.[0]?.clientY) - rect.top;
+            return { x, y };
+        }
+
+        function startDrawing(e) {
+            isDrawing = true;
+            const coords = getCoordinates(e);
+            lastX = coords.x;
+            lastY = coords.y;
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+
+            const coords = getCoordinates(e);
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+            ctx.lineTo(coords.x, coords.y);
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+
+            lastX = coords.x;
+            lastY = coords.y;
+        }
+
+        function stopDrawing() {
+            if (isDrawing) {
+                isDrawing = false;
+                // Save signature as data URL
+                if (input) {
+                    input.value = canvas.toDataURL('image/png');
+                }
+            }
+        }
+
+        // Mouse events
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+
+        // Touch events
+        canvas.addEventListener('touchstart', startDrawing);
+        canvas.addEventListener('touchmove', draw);
+        canvas.addEventListener('touchend', stopDrawing);
+    })();
+
+    function clearSignature(fieldId) {
+        const canvas = document.getElementById(fieldId + '_canvas');
+        const input = document.getElementById(fieldId);
+        if (canvas) {
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+        if (input) {
+            input.value = '';
+        }
+    }
+</script>

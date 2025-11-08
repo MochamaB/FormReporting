@@ -1,0 +1,247 @@
+@using FormReporting.Extensions
+@using FormReporting.Models.ViewModels.Components
+
+@*
+    Test View for All Statistic Card Types
+
+    This view demonstrates all 4 card types with default test data.
+    Copy the relevant section to your view and customize with your own data.
+
+    To use this test view:
+    1. Create a controller action that returns this view
+    2. Or include it in any existing view: <partial name="~/Views/Shared/Components/StatisticCards/_TestAllCards.cshtml" />
+*@
+
+<div class="container-fluid">
+
+    <div class="row">
+        <div class="col-12">
+            <h4 class="mb-3">Statistic Cards - Test Showcase</h4>
+            <p class="text-muted">All card types with default test data</p>
+        </div>
+    </div>
+
+    <!-- ========== TILEBOX CARDS ========== -->
+    <div class="row">
+        <div class="col-12">
+            <h5 class="text-decoration-underline mb-3 mt-4">Type 1: TileBox Cards</h5>
+            <p class="text-muted">Used for dashboard overview metrics. Features: trend indicator, bottom link, icon on right.</p>
+        </div>
+    </div>
+
+    @{
+        var tileBoxConfig = StatCardExtensions.CreateDefaultTestConfig(CardType.TileBoxCard);
+        var tileBoxCards = tileBoxConfig.BuildStatsRow();
+    }
+
+    <div class="row">
+        @foreach (var card in tileBoxCards)
+        {
+            <partial name="~/Views/Shared/Components/StatisticCards/_TileBoxCard.cshtml" model="card" />
+        }
+    </div>
+
+    <!-- TileBox with Background Color -->
+    <div class="row mt-3">
+        <div class="col-12">
+            <p class="text-muted"><strong>Variation:</strong> With background color (2nd card)</p>
+        </div>
+    </div>
+
+    @{
+        var tileBoxBgCards = tileBoxConfig.BuildStatsRow();
+        tileBoxBgCards[1].HasBackgroundColor = true; // Make "Orders" card have bg-info background
+    }
+
+    <div class="row">
+        @foreach (var card in tileBoxBgCards)
+        {
+            <partial name="~/Views/Shared/Components/StatisticCards/_TileBoxCard.cshtml" model="card" />
+        }
+    </div>
+
+    <!-- ========== STATISTICS CARDS ========== -->
+    <div class="row">
+        <div class="col-12">
+            <h5 class="text-decoration-underline mb-3 mt-5">Type 2: Statistics Cards</h5>
+            <p class="text-muted">Used for analytics metrics. Features: comparison badge, "vs. previous month" text, icon top right.</p>
+        </div>
+    </div>
+
+    @{
+        var statisticsConfig = StatCardExtensions.CreateDefaultTestConfig(CardType.StatisticsCard);
+        var statisticsCards = statisticsConfig.BuildStatsRow();
+    }
+
+    <div class="row">
+        @foreach (var card in statisticsCards)
+        {
+            <partial name="~/Views/Shared/Components/StatisticCards/_StatisticsCard.cshtml" model="card" />
+        }
+    </div>
+
+    <!-- Statistics with Background Color -->
+    <div class="row mt-3">
+        <div class="col-12">
+            <p class="text-muted"><strong>Variation:</strong> With background color (3rd card)</p>
+        </div>
+    </div>
+
+    @{
+        var statisticsBgCards = statisticsConfig.BuildStatsRow();
+        statisticsBgCards[2].HasBackgroundColor = true; // Make "Avg. Visit Duration" card have bg-primary
+    }
+
+    <div class="row">
+        @foreach (var card in statisticsBgCards)
+        {
+            <partial name="~/Views/Shared/Components/StatisticCards/_StatisticsCard.cshtml" model="card" />
+        }
+    </div>
+
+    <!-- ========== ICON LEFT CARDS ========== -->
+    <div class="row">
+        <div class="col-12">
+            <h5 class="text-decoration-underline mb-3 mt-5">Type 3: Icon Left Cards</h5>
+            <p class="text-muted">Used for summary metrics. Features: icon on left, subtitle, trend badge on far right.</p>
+        </div>
+    </div>
+
+    @{
+        var iconLeftConfig = StatCardExtensions.CreateDefaultTestConfig(CardType.IconLeftCard);
+        var iconLeftCards = iconLeftConfig.BuildStatsRow();
+    }
+
+    <div class="row">
+        @foreach (var card in iconLeftCards)
+        {
+            <partial name="~/Views/Shared/Components/StatisticCards/_IconLeftCard.cshtml" model="card" />
+        }
+    </div>
+
+    <!-- Icon Left with Background Color -->
+    <div class="row mt-3">
+        <div class="col-12">
+            <p class="text-muted"><strong>Variation:</strong> With background color (1st card)</p>
+        </div>
+    </div>
+
+    @{
+        var iconLeftBgCards = iconLeftConfig.BuildStatsRow();
+        iconLeftBgCards[0].HasBackgroundColor = true; // Make "Total Sales" card have bg-success
+    }
+
+    <div class="row">
+        @foreach (var card in iconLeftBgCards)
+        {
+            <partial name="~/Views/Shared/Components/StatisticCards/_IconLeftCard.cshtml" model="card" />
+        }
+    </div>
+
+    <!-- ========== CRM WIDGET CARD ========== -->
+    <div class="row">
+        <div class="col-12">
+            <h5 class="text-decoration-underline mb-3 mt-5">Type 4: CRM Widget Card</h5>
+            <p class="text-muted">Used for grouped metrics. Features: single card with multiple columns, borders between items.</p>
+        </div>
+    </div>
+
+    @{
+        // CRM Widget requires manual setup as it's a special case
+        var crmCards = new List<StatCardViewModel>
+        {
+            new StatCardViewModel
+            {
+                Title = "Campaign Sent",
+                Value = "197",
+                Icon = "ri-space-ship-line",
+                TrendPercentage = "16.24",
+                TrendDirection = TrendDirection.Up
+            },
+            new StatCardViewModel
+            {
+                Title = "Annual Profit",
+                Value = "$489.4k",
+                Icon = "ri-exchange-dollar-line",
+                TrendPercentage = "12.5",
+                TrendDirection = TrendDirection.Up
+            },
+            new StatCardViewModel
+            {
+                Title = "Lead Conversion",
+                Value = "32.89%",
+                Icon = "ri-pulse-line",
+                TrendPercentage = "3.2",
+                TrendDirection = TrendDirection.Down
+            },
+            new StatCardViewModel
+            {
+                Title = "Daily Average Income",
+                Value = "$1,596.5",
+                Icon = "ri-trophy-line",
+                TrendPercentage = "8.7",
+                TrendDirection = TrendDirection.Up
+            },
+            new StatCardViewModel
+            {
+                Title = "Annual Deals",
+                Value = "2,659",
+                Icon = "ri-service-line",
+                TrendPercentage = "5.1",
+                TrendDirection = TrendDirection.Down
+            }
+        };
+    }
+
+    <div class="row">
+        <partial name="~/Views/Shared/Components/StatisticCards/_CRMWidgetCard.cshtml" model="crmCards" />
+    </div>
+
+    <!-- ========== USAGE INSTRUCTIONS ========== -->
+    <div class="row mt-5">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h5 class="alert-heading">How to Use These Cards</h5>
+                <hr>
+                <p><strong>Step 1: Controller</strong> - Calculate your statistics and store in ViewBag:</p>
+                <pre class="bg-light p-2 rounded">ViewBag.TotalUsers = users.Count;
+ViewBag.ActiveUsers = users.Count(u => u.IsActive);</pre>
+
+                <p class="mt-3"><strong>Step 2: View</strong> - Create StatsRowConfig with your data:</p>
+                <pre class="bg-light p-2 rounded">@@using FormReporting.Extensions
+@@using FormReporting.Models.ViewModels.Components
+
+@@{
+    var config = new StatsRowConfig
+    {
+        Titles = new List&lt;string&gt; { "Total Users", "Active Users" },
+        Values = new List&lt;string&gt; { ViewBag.TotalUsers.ToString(), ViewBag.ActiveUsers.ToString() },
+        Icons = new List&lt;string&gt; { "ri-user-line", "ri-checkbox-circle-line" },
+        ColorThemes = new List&lt;string&gt; { "primary", "success" },
+        CardType = CardType.TileBoxCard
+    };
+    var cards = config.BuildStatsRow();
+}
+
+&lt;div class="row"&gt;
+    @@foreach (var card in cards)
+    {
+        &lt;partial name="~/Views/Shared/Components/StatisticCards/_TileBoxCard.cshtml" model="card" /&gt;
+    }
+&lt;/div&gt;</pre>
+
+                <p class="mt-3"><strong>Or use fluent API for advanced features:</strong></p>
+                <pre class="bg-light p-2 rounded">var config = new StatsRowConfig { ... }
+    .WithTrends(
+        new List&lt;string&gt; { "16.24", "12.5" },
+        new List&lt;TrendDirection&gt; { TrendDirection.Up, TrendDirection.Up }
+    )
+    .WithLinks(
+        new List&lt;string&gt; { "View details", "See all" },
+        new List&lt;string&gt; { "/users", "/users/active" }
+    );</pre>
+            </div>
+        </div>
+    </div>
+
+</div>

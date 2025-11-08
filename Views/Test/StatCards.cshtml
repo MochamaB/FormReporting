@@ -1,0 +1,254 @@
+@using FormReporting.Extensions
+@using FormReporting.Models.ViewModels.Components
+
+@{
+    ViewData["Title"] = "Statistic Cards Test";
+    ViewData["Breadcrumbs"] = new List<(string Title, string? Url)>
+    {
+        ("Components", null),
+        ("Statistic Cards Test", null)
+    };
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Statistic Cards - All Types Test</h4>
+        </div>
+    </div>
+</div>
+
+<!-- ========== TILEBOX CARDS ========== -->
+<div class="row">
+    <div class="col-12">
+        <h5 class="text-decoration-underline mb-3 mt-2">Type 1: TileBox Cards</h5>
+        <p class="text-muted">Dashboard overview metrics with trend indicator and bottom link</p>
+    </div>
+</div>
+
+@{
+    var tileBoxConfig = StatCardExtensions.CreateDefaultTestConfig(CardType.TileBoxCard);
+    var tileBoxCards = tileBoxConfig.BuildStatsRow();
+}
+
+<div class="row">
+    @foreach (var card in tileBoxCards)
+    {
+        <partial name="~/Views/Shared/Components/StatisticCards/_TileBoxCard.cshtml" model="card" />
+    }
+</div>
+
+<!-- TileBox with Background Color -->
+<div class="row mt-3">
+    <div class="col-12">
+        <p class="text-muted"><strong>Variation:</strong> With background color (2nd card)</p>
+    </div>
+</div>
+
+@{
+    var tileBoxBgCards = tileBoxConfig.BuildStatsRow();
+    tileBoxBgCards[1].HasBackgroundColor = true;
+}
+
+<div class="row">
+    @foreach (var card in tileBoxBgCards)
+    {
+        <partial name="~/Views/Shared/Components/StatisticCards/_TileBoxCard.cshtml" model="card" />
+    }
+</div>
+
+<!-- ========== STATISTICS CARDS ========== -->
+<div class="row">
+    <div class="col-12">
+        <h5 class="text-decoration-underline mb-3 mt-5">Type 2: Statistics Cards</h5>
+        <p class="text-muted">Analytics metrics with comparison badge</p>
+    </div>
+</div>
+
+@{
+    var statisticsConfig = StatCardExtensions.CreateDefaultTestConfig(CardType.StatisticsCard);
+    var statisticsCards = statisticsConfig.BuildStatsRow();
+}
+
+<div class="row">
+    @foreach (var card in statisticsCards)
+    {
+        <partial name="~/Views/Shared/Components/StatisticCards/_StatisticsCard.cshtml" model="card" />
+    }
+</div>
+
+<!-- Statistics with Background Color -->
+<div class="row mt-3">
+    <div class="col-12">
+        <p class="text-muted"><strong>Variation:</strong> With background color (3rd card)</p>
+    </div>
+</div>
+
+@{
+    var statisticsBgCards = statisticsConfig.BuildStatsRow();
+    statisticsBgCards[2].HasBackgroundColor = true;
+}
+
+<div class="row">
+    @foreach (var card in statisticsBgCards)
+    {
+        <partial name="~/Views/Shared/Components/StatisticCards/_StatisticsCard.cshtml" model="card" />
+    }
+</div>
+
+<!-- ========== ICON LEFT CARDS ========== -->
+<div class="row">
+    <div class="col-12">
+        <h5 class="text-decoration-underline mb-3 mt-5">Type 3: Icon Left Cards</h5>
+        <p class="text-muted">Summary metrics with icon on left and trend badge</p>
+    </div>
+</div>
+
+@{
+    var iconLeftConfig = StatCardExtensions.CreateDefaultTestConfig(CardType.IconLeftCard);
+    var iconLeftCards = iconLeftConfig.BuildStatsRow();
+}
+
+<div class="row">
+    @foreach (var card in iconLeftCards)
+    {
+        <partial name="~/Views/Shared/Components/StatisticCards/_IconLeftCard.cshtml" model="card" />
+    }
+</div>
+
+<!-- Icon Left with Background Color -->
+<div class="row mt-3">
+    <div class="col-12">
+        <p class="text-muted"><strong>Variation:</strong> With background color (1st card)</p>
+    </div>
+</div>
+
+@{
+    var iconLeftBgCards = iconLeftConfig.BuildStatsRow();
+    iconLeftBgCards[0].HasBackgroundColor = true;
+}
+
+<div class="row">
+    @foreach (var card in iconLeftBgCards)
+    {
+        <partial name="~/Views/Shared/Components/StatisticCards/_IconLeftCard.cshtml" model="card" />
+    }
+</div>
+
+<!-- ========== CRM WIDGET CARD ========== -->
+<div class="row">
+    <div class="col-12">
+        <h5 class="text-decoration-underline mb-3 mt-5">Type 4: CRM Widget Card</h5>
+        <p class="text-muted">Grouped metrics in a single card with borders</p>
+    </div>
+</div>
+
+@{
+    var crmCards = new List<StatCardViewModel>
+    {
+        new StatCardViewModel
+        {
+            Title = "Campaign Sent",
+            Value = "197",
+            Icon = "ri-space-ship-line",
+            TrendPercentage = "16.24",
+            TrendDirection = TrendDirection.Up
+        },
+        new StatCardViewModel
+        {
+            Title = "Annual Profit",
+            Value = "$489.4k",
+            Icon = "ri-exchange-dollar-line",
+            TrendPercentage = "12.5",
+            TrendDirection = TrendDirection.Up
+        },
+        new StatCardViewModel
+        {
+            Title = "Lead Conversion",
+            Value = "32.89%",
+            Icon = "ri-pulse-line",
+            TrendPercentage = "3.2",
+            TrendDirection = TrendDirection.Down
+        },
+        new StatCardViewModel
+        {
+            Title = "Daily Average Income",
+            Value = "$1,596.5",
+            Icon = "ri-trophy-line",
+            TrendPercentage = "8.7",
+            TrendDirection = TrendDirection.Up
+        },
+        new StatCardViewModel
+        {
+            Title = "Annual Deals",
+            Value = "2,659",
+            Icon = "ri-service-line",
+            TrendPercentage = "5.1",
+            TrendDirection = TrendDirection.Down
+        }
+    };
+}
+
+<div class="row">
+    <partial name="~/Views/Shared/Components/StatisticCards/_CRMWidgetCard.cshtml" model="crmCards" />
+</div>
+
+<!-- ========== USAGE INFO ========== -->
+<div class="row mt-5">
+    <div class="col-12">
+        <div class="alert alert-success">
+            <h5 class="alert-heading"><i class="ri-check-double-line"></i> Component Test Successful!</h5>
+            <hr>
+            <p><strong>What you're seeing:</strong></p>
+            <ul class="mb-0">
+                <li>4 TileBoxCards (with variations including background colors)</li>
+                <li>4 StatisticsCards (with comparison badges)</li>
+                <li>4 IconLeftCards (with subtitles and trend badges)</li>
+                <li>1 CRMWidgetCard (5 grouped metrics)</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Quick Usage Example</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">To use these cards in your views:</p>
+                <pre class="bg-light p-3 rounded"><code>@@using FormReporting.Extensions
+@@using FormReporting.Models.ViewModels.Components
+
+@@{
+    // Controller sets ViewBag data
+    ViewBag.TotalTenants = 77;
+    ViewBag.ActiveTenants = 69;
+
+    // View creates config
+    var config = new StatsRowConfig
+    {
+        Titles = new List&lt;string&gt; { "Total Tenants", "Active" },
+        Values = new List&lt;string&gt; { ViewBag.TotalTenants.ToString(), ViewBag.ActiveTenants.ToString() },
+        Icons = new List&lt;string&gt; { "ri-building-line", "ri-check-line" },
+        ColorThemes = new List&lt;string&gt; { "primary", "success" },
+        CardType = CardType.TileBoxCard
+    };
+    var cards = config.BuildStatsRow();
+}
+
+&lt;div class="row"&gt;
+    @@foreach (var card in cards)
+    {
+        &lt;partial name="~/Views/Shared/Components/StatisticCards/_TileBoxCard.cshtml" model="card" /&gt;
+    }
+&lt;/div&gt;</code></pre>
+                <div class="mt-3">
+                    <a href="/ComponentTest/RealDataExample" class="btn btn-primary">View Real Data Example</a>
+                    <a href="/" class="btn btn-secondary">Back to Dashboard</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

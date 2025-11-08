@@ -1,0 +1,82 @@
+@model FormReporting.Models.ViewModels.Components.FormFieldViewModel
+
+@*
+    Checkbox Field - Single checkbox or checkbox group
+*@
+
+<div class="mb-3 col-md-@Model.ColumnWidth">
+    <label class="form-label">
+        @Model.FieldName
+        @if (Model.IsRequired)
+        {
+            <span class="text-danger">*</span>
+        }
+    </label>
+
+    @if (Model.Options != null && Model.Options.Any())
+    {
+        @* Multiple checkboxes *@
+        <div class="checkbox-group" data-field-id="@Model.FieldId">
+            @foreach (var option in Model.Options)
+            {
+                var currentValueStr = Model.CurrentValue?.ToString() ?? string.Empty;
+                var isChecked = !string.IsNullOrEmpty(currentValueStr) &&
+                               currentValueStr.Split(',').Contains(option.Value);
+
+                <div class="form-check">
+                    <input type="checkbox"
+                           class="form-check-input"
+                           id="@(Model.InputId)_@option.Value"
+                           name="@Model.InputName"
+                           value="@option.Value"
+                           @(isChecked ? "checked" : "")
+                           @(Model.IsDisabled ? "disabled" : "")
+                           @if (!string.IsNullOrEmpty(Model.ValidationDataAttribute))
+                           {
+                               <text>data-validation='@Model.ValidationDataAttribute'</text>
+                           }
+                           @if (!string.IsNullOrEmpty(Model.ConditionalLogicDataAttribute))
+                           {
+                               <text>data-conditional='@Model.ConditionalLogicDataAttribute'</text>
+                           } />
+                    <label class="form-check-label" for="@(Model.InputId)_@option.Value">
+                        @option.Label
+                    </label>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        @* Single checkbox *@
+        <div class="form-check">
+            <input type="checkbox"
+                   class="form-check-input"
+                   id="@Model.InputId"
+                   name="@Model.InputName"
+                   value="true"
+                   @(Model.CurrentValue?.ToString() == "true" ? "checked" : "")
+                   @(Model.IsRequired ? "required" : "")
+                   @(Model.IsDisabled ? "disabled" : "")
+                   data-field-id="@Model.FieldId"
+                   @if (!string.IsNullOrEmpty(Model.ValidationDataAttribute))
+                   {
+                       <text>data-validation='@Model.ValidationDataAttribute'</text>
+                   }
+                   @if (!string.IsNullOrEmpty(Model.ConditionalLogicDataAttribute))
+                   {
+                       <text>data-conditional='@Model.ConditionalLogicDataAttribute'</text>
+                   } />
+            <label class="form-check-label" for="@Model.InputId">
+                @Model.PlaceholderText
+            </label>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.HelpText))
+    {
+        <div class="form-text">@Model.HelpText</div>
+    }
+
+    <div class="invalid-feedback"></div>
+</div>

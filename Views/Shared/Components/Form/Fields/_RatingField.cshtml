@@ -1,0 +1,113 @@
+@model FormReporting.Models.ViewModels.Components.FormFieldViewModel
+
+@*
+    Rating Field - Star rating input (1-5 or custom)
+*@
+
+@{
+    var maxRating = 5; // Default to 5 stars
+    var currentRating = 0;
+    var currentValueStr = Model.CurrentValue?.ToString() ?? string.Empty;
+    if (!string.IsNullOrEmpty(currentValueStr) && int.TryParse(currentValueStr, out var rating))
+    {
+        currentRating = rating;
+    }
+}
+
+<div class="mb-3 col-md-@Model.ColumnWidth">
+    <label for="@Model.InputId" class="form-label">
+        @Model.FieldName
+        @if (Model.IsRequired)
+        {
+            <span class="text-danger">*</span>
+        }
+    </label>
+
+    <div class="rating-field" data-field-id="@Model.FieldId">
+        <div class="rating-stars d-flex gap-1" id="@(Model.InputId)_stars">
+            @for (int i = 1; i <= maxRating; i++)
+            {
+                <i class="ri-star-line rating-star fs-4"
+                   data-rating="@i"
+                   style="cursor: pointer; color: @(i <= currentRating ? "#f1b44c" : "#ccc");"
+                   onclick="setRating('@Model.InputId', @i)"></i>
+            }
+        </div>
+
+        <input type="hidden"
+               id="@Model.InputId"
+               name="@Model.InputName"
+               value="@Model.CurrentValue"
+               @(Model.IsRequired ? "required" : "")
+               @(Model.IsDisabled ? "disabled" : "")
+               @if (!string.IsNullOrEmpty(Model.ValidationDataAttribute))
+               {
+                   <text>data-validation='@Model.ValidationDataAttribute'</text>
+               }
+               @if (!string.IsNullOrEmpty(Model.ConditionalLogicDataAttribute))
+               {
+                   <text>data-conditional='@Model.ConditionalLogicDataAttribute'</text>
+               } />
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.HelpText))
+    {
+        <div class="form-text">@Model.HelpText</div>
+    }
+
+    <div class="invalid-feedback"></div>
+</div>
+
+<script>
+    function setRating(fieldId, rating) {
+        const input = document.getElementById(fieldId);
+        const container = document.getElementById(fieldId + '_stars');
+
+        if (input && !input.disabled) {
+            input.value = rating;
+
+            // Update star display
+            if (container) {
+                const stars = container.querySelectorAll('.rating-star');
+                stars.forEach((star, index) => {
+                    if (index < rating) {
+                        star.classList.remove('ri-star-line');
+                        star.classList.add('ri-star-fill');
+                        star.style.color = '#f1b44c';
+                    } else {
+                        star.classList.remove('ri-star-fill');
+                        star.classList.add('ri-star-line');
+                        star.style.color = '#ccc';
+                    }
+                });
+            }
+        }
+    }
+
+    // Hover effect
+    document.getElementById('@(Model.InputId)_stars')?.addEventListener('mouseover', function(e) {
+        if (e.target.classList.contains('rating-star')) {
+            const rating = parseInt(e.target.dataset.rating);
+            const stars = this.querySelectorAll('.rating-star');
+            stars.forEach((star, index) => {
+                if (index < rating) {
+                    star.style.color = '#f1b44c';
+                } else {
+                    star.style.color = '#ccc';
+                }
+            });
+        }
+    });
+
+    document.getElementById('@(Model.InputId)_stars')?.addEventListener('mouseout', function() {
+        const currentRating = parseInt(document.getElementById('@Model.InputId')?.value || '0');
+        const stars = this.querySelectorAll('.rating-star');
+        stars.forEach((star, index) => {
+            if (index < currentRating) {
+                star.style.color = '#f1b44c';
+            } else {
+                star.style.color = '#ccc';
+            }
+        });
+    });
+</script>

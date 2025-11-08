@@ -1,0 +1,72 @@
+@model FormReporting.Models.ViewModels.Components.StatCardViewModel
+@using FormReporting.Extensions
+@using FormReporting.Models.ViewModels.Components
+
+@*
+    IconLeftCard Partial View
+
+    Features:
+    - Icon on far left
+    - Title and value in center (vertical stack)
+    - Subtitle below value
+    - Trend badge on far right
+    - Optional background color
+
+    Used for: Summary metrics (Total Sales, Users, Revenue, Stores)
+
+    Example from Velzon: "Total Sales 2,045 From 1930 last year ▲6.11%"
+*@
+
+@{
+    var hasBackground = !string.IsNullOrEmpty(Model.ColorTheme) && Model.HasBackgroundColor;
+    var bgClass = hasBackground ? $"bg-{Model.ColorTheme}" : "";
+    var textColorClass = hasBackground ? "text-white-50" : "text-muted";
+    var valueColorClass = hasBackground ? "text-white" : "";
+    var iconBgClass = hasBackground ? "bg-white bg-opacity-25 text-white" : $"bg-{Model.ColorTheme}-subtle text-{Model.ColorTheme}";
+
+    // Trend badge
+    var (trendIcon, trendColor) = Model.TrendDirection.GetTrendIndicator();
+    var badgeBgClass = hasBackground ? "bg-white bg-opacity-25 text-white" :
+                       (Model.TrendDirection == TrendDirection.Up ? "bg-success-subtle text-success" :
+                        Model.TrendDirection == TrendDirection.Down ? "bg-danger-subtle text-danger" :
+                        "bg-secondary-subtle text-secondary");
+}
+
+<div class="@Model.ColumnClass">
+    <div class="card card-height-100 @bgClass">
+        <div class="card-body">
+            <div class="d-flex align-items-center">
+
+                @* Icon on Left *@
+                <div class="avatar-sm flex-shrink-0">
+                    <span class="avatar-title @iconBgClass rounded-2 fs-2 material-shadow">
+                        <i class="@Model.Icon"></i>
+                    </span>
+                </div>
+
+                @* Title, Value, Subtitle in Center *@
+                <div class="flex-grow-1 ms-3">
+                    <p class="text-uppercase fw-medium @textColorClass mb-3">@Model.Title</p>
+                    <h4 class="fs-4 mb-3 @valueColorClass">
+                        <span class="counter-value" data-target="@Model.Value">@Model.Value</span>
+                    </h4>
+                    @if (!string.IsNullOrEmpty(Model.Subtitle))
+                    {
+                        <p class="@textColorClass mb-0">@Model.Subtitle</p>
+                    }
+                </div>
+
+                @* Trend Badge on Right *@
+                @if (!string.IsNullOrEmpty(Model.TrendPercentage))
+                {
+                    <div class="flex-shrink-0 align-self-center">
+                        <span class="badge @badgeBgClass fs-12">
+                            <i class="@trendIcon fs-13 align-middle me-1"></i>@Model.TrendPercentage %
+                        </span>
+                    </div>
+                }
+
+            </div>
+        </div>
+    </div>
+</div>

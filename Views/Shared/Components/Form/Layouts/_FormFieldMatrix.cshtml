@@ -1,0 +1,258 @@
+@model List<FormReporting.Models.ViewModels.Components.FormFieldViewModel>
+@using FormReporting.Models.Common
+
+@*
+    Matrix Layout Component
+    Renders multiple fields in a matrix/grid layout with rows and columns
+
+    Use case: Rating scales, comparison grids, multi-item responses
+    Example: Rate the following services (Excellent, Good, Fair, Poor)
+             - Network Connectivity: [radio buttons]
+             - System Availability: [radio buttons]
+             - Support Response: [radio buttons]
+
+    Requirements:
+    - All fields in Model list should have the same MatrixGroupId
+    - All fields should have MatrixRowLabel set
+    - All fields should have the same Options (column headers)
+    - Typically used with Radio or Checkbox field types
+*@
+
+@if (Model == null || !Model.Any())
+{
+    <div class="alert alert-warning" role="alert">
+        <i class="ri-alert-line me-2"></i>
+        No fields provided for matrix layout
+    </div>
+    return;
+}
+
+@{
+    // Get column headers from first field's options
+    var columnHeaders = Model.First().Options?.ToList() ?? new List<FormReporting.Models.ViewModels.Components.FormFieldOption>();
+    var matrixGroupId = Model.First().FieldId; // Use for unique ID generation
+}
+
+<div class="matrix-field-group mb-4">
+    @* Matrix Label (if first field has a name that represents the group) *@
+    @if (!string.IsNullOrEmpty(Model.First().FieldName))
+    {
+        <label class="form-label fw-semibold">
+            @Model.First().FieldName
+            @if (Model.Any(f => f.IsRequired))
+            {
+                <span class="text-danger">*</span>
+            }
+        </label>
+    }
+
+    @* Help text for the entire matrix *@
+    @if (!string.IsNullOrEmpty(Model.First().HelpText))
+    {
+        <div class="form-text mb-2">@Model.First().HelpText</div>
+    }
+
+    @* Matrix Table *@
+    <div class="table-responsive">
+        <table class="table table-bordered matrix-table">
+            <thead class="table-light">
+                <tr>
+                    <th style="min-width: 200px;">@* Row label column *@</th>
+                    @foreach (var header in columnHeaders)
+                    {
+                        <th class="text-center" style="min-width: 100px;">@header.Label</th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var field in Model)
+                {
+                    <tr>
+                        <td class="align-middle">
+                            <strong>@field.MatrixRowLabel</strong>
+                            @if (field.IsRequired)
+                            {
+                                <span class="text-danger ms-1">*</span>
+                            }
+                        </td>
+
+                        @* Render field options as table cells *@
+                        @if (field.FieldType == FormFieldType.Radio)
+                        {
+                            @* Radio buttons - one per column *@
+                            var currentValueStr = field.CurrentValue?.ToString() ?? string.Empty;
+                            @foreach (var option in columnHeaders)
+                            {
+                                <td class="text-center align-middle">
+                                    <div class="form-check d-flex justify-content-center">
+                                        <input type="radio"
+                                               class="form-check-input"
+                                               id="@(field.InputId)_@option.Value"
+                                               name="@field.InputName"
+                                               value="@option.Value"
+                                               @(option.Value == currentValueStr ? "checked" : "")
+                                               @(field.IsRequired ? "required" : "")
+                                               @(field.IsDisabled ? "disabled" : "")
+                                               data-field-id="@field.FieldId"
+                                               @if (!string.IsNullOrEmpty(field.ValidationDataAttribute))
+                                               {
+                                                   <text>data-validation='@field.ValidationDataAttribute'</text>
+                                               }
+                                               @if (!string.IsNullOrEmpty(field.ConditionalLogicDataAttribute))
+                                               {
+                                                   <text>data-conditional='@field.ConditionalLogicDataAttribute'</text>
+                                               } />
+                                    </div>
+                                </td>
+                            }
+                        }
+                        else if (field.FieldType == FormFieldType.Checkbox)
+                        {
+                            @* Checkboxes - one per column *@
+                            var currentValueStr = field.CurrentValue?.ToString() ?? string.Empty;
+                            var selectedValues = !string.IsNullOrEmpty(currentValueStr)
+                                ? currentValueStr.Split(',')
+                                : Array.Empty<string>();
+
+                            @foreach (var option in columnHeaders)
+                            {
+                                <td class="text-center align-middle">
+                                    <div class="form-check d-flex justify-content-center">
+                                        <input type="checkbox"
+                                               class="form-check-input"
+                                               id="@(field.InputId)_@option.Value"
+                                               name="@field.InputName"
+                                               value="@option.Value"
+                                               @(selectedValues.Contains(option.Value) ? "checked" : "")
+                                               @(field.IsDisabled ? "disabled" : "")
+                                               data-field-id="@field.FieldId"
+                                               @if (!string.IsNullOrEmpty(field.ValidationDataAttribute))
+                                               {
+                                                   <text>data-validation='@field.ValidationDataAttribute'</text>
+                                               }
+                                               @if (!string.IsNullOrEmpty(field.ConditionalLogicDataAttribute))
+                                               {
+                                                   <text>data-conditional='@field.ConditionalLogicDataAttribute'</text>
+                                               } />
+                                    </div>
+                                </td>
+                            }
+                        }
+                        else if (field.FieldType == FormFieldType.Rating)
+                        {
+                            @* Rating stars - one per column *@
+                            @for (int i = 0; i < columnHeaders.Count; i++)
+                            {
+                                var option = columnHeaders[i];
+                                var starRating = i + 1;
+                                var currentValueStr = field.CurrentValue?.ToString() ?? string.Empty;
+                                var isSelected = !string.IsNullOrEmpty(currentValueStr) &&
+                                               int.Parse(currentValueStr) >= starRating;
+
+                                <td class="text-center align-middle">
+                                    <i class="@(isSelected ? "ri-star-fill" : "ri-star-line") fs-5"
+                                       style="color: @(isSelected ? "#f1b44c" : "#ccc"); cursor: pointer;"
+                                       data-field-id="@field.FieldId"
+                                       data-rating="@starRating"
+                                       onclick="setMatrixRating('@field.InputId', @starRating)"></i>
+                                </td>
+                            }
+                            <input type="hidden"
+                                   id="@field.InputId"
+                                   name="@field.InputName"
+                                   value="@field.CurrentValue"
+                                   data-field-id="@field.FieldId" />
+                        }
+                        else
+                        {
+                            @* Unsupported field type for matrix layout *@
+                            <td colspan="@columnHeaders.Count" class="text-center text-muted">
+                                <small>Field type @field.FieldType not supported in matrix layout</small>
+                            </td>
+                        }
+                    </tr>
+
+                    @* Validation feedback row *@
+                    <tr class="validation-row d-none" id="@(field.InputId)_validation">
+                        <td colspan="@(columnHeaders.Count + 1)">
+                            <div class="invalid-feedback d-block"></div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<style>
+    .matrix-table {
+        margin-bottom: 0;
+    }
+
+    .matrix-table thead th {
+        background-color: #f3f6f9;
+        font-weight: 600;
+        font-size: 0.875rem;
+        padding: 0.75rem;
+        vertical-align: middle;
+    }
+
+    .matrix-table tbody td {
+        padding: 0.75rem;
+        vertical-align: middle;
+    }
+
+    .matrix-table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+
+    .matrix-table .form-check-input {
+        margin: 0;
+        cursor: pointer;
+    }
+
+    .matrix-table .validation-row td {
+        padding: 0.5rem 0.75rem;
+        background-color: #fff3cd;
+    }
+
+    /* Responsive adjustments */
+    @@media (max-width: 768px) {
+        .matrix-table {
+            font-size: 0.875rem;
+        }
+
+        .matrix-table thead th,
+        .matrix-table tbody td {
+            padding: 0.5rem;
+        }
+    }
+</style>
+
+<script>
+    // Matrix rating helper function
+    function setMatrixRating(fieldId, rating) {
+        const input = document.getElementById(fieldId);
+        if (input && !input.disabled) {
+            input.value = rating;
+
+            // Update star display for this row
+            const row = input.closest('tr');
+            if (row) {
+                const stars = row.querySelectorAll('i[data-field-id="' + input.dataset.fieldId + '"]');
+                stars.forEach((star, index) => {
+                    const starRating = parseInt(star.dataset.rating);
+                    if (starRating <= rating) {
+                        star.classList.remove('ri-star-line');
+                        star.classList.add('ri-star-fill');
+                        star.style.color = '#f1b44c';
+                    } else {
+                        star.classList.remove('ri-star-fill');
+                        star.classList.add('ri-star-line');
+                        star.style.color = '#ccc';
+                    }
+                });
+            }
+        }
+    }
+</script>

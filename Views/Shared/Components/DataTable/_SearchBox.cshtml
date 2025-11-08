@@ -1,0 +1,37 @@
+@model FormReporting.Models.ViewModels.Components.SearchBoxViewModel
+
+@*
+    SearchBox Component
+
+    Features:
+    - Text input for searching
+    - Optional search button
+    - Preserves existing query parameters
+    - Auto-submit on Enter key
+*@
+
+<form method="get" action="@Model.ActionUrl" class="search-box-form">
+    @* Preserve existing query parameters *@
+    @if (Model.PreserveQueryParams != null)
+    {
+        @foreach (var param in Model.PreserveQueryParams)
+        {
+            <input type="hidden" name="@param.Key" value="@param.Value" />
+        }
+    }
+
+    <div class="input-group" style="max-width: 250px;">
+        <input type="text"
+               name="@Model.ParameterName"
+               class="form-control"
+               placeholder="@Model.PlaceholderText"
+               value="@Model.CurrentValue"
+               id="@Model.InputId">
+        @if (Model.ShowButton)
+        {
+            <button class="btn btn-primary" type="submit">
+                <i class="ri-search-line"></i>
+            </button>
+        }
+    </div>
+</form>

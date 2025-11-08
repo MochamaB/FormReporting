@@ -1,0 +1,72 @@
+@model FormReporting.Models.ViewModels.Components.StatCardViewModel
+
+@*
+    StatisticsCard Partial View
+
+    Features:
+    - Title at top left
+    - Large value below title
+    - Comparison badge with arrow indicator ("vs. previous month")
+    - Icon on top right
+    - Optional background color
+
+    Used for: Analytics metrics (Users, Sessions, Visit Duration, Bounce Rate)
+
+    Example from Velzon: "Users 28.05k ▲ 16.24% vs. previous month"
+*@
+
+@{
+    var hasBackground = !string.IsNullOrEmpty(Model.ColorTheme) && Model.HasBackgroundColor;
+    var bgClass = hasBackground ? $"bg-{Model.ColorTheme}" : "";
+    var textColorClass = hasBackground ? "text-white" : "text-muted";
+    var textColor50Class = hasBackground ? "text-white-50" : "text-muted";
+    var iconBgClass = hasBackground ? "bg-white bg-opacity-25" : $"bg-{Model.ColorTheme}-subtle";
+    var iconTextClass = hasBackground ? "text-white" : $"text-{Model.ColorTheme}";
+
+    // Badge styling
+    var badgeColor = Model.BadgeColor ?? "success";
+    var badgeBgClass = hasBackground ? "bg-white bg-opacity-25" : $"bg-light";
+    var badgeTextClass = hasBackground ? "text-white" : $"text-{badgeColor}";
+    var arrowIcon = badgeColor == "danger" ? "ri-arrow-down-line" : "ri-arrow-up-line";
+}
+
+<div class="@Model.ColumnClass">
+    <div class="card card-animate @bgClass">
+        <div class="card-body">
+            <div class="d-flex justify-content-between">
+                <div>
+                    @* Title *@
+                    <p class="fw-medium @textColorClass mb-0">@Model.Title</p>
+
+                    @* Value *@
+                    <h2 class="mt-4 ff-secondary fw-semibold @(hasBackground ? "text-white" : "")">
+                        <span class="counter-value" data-target="@Model.Value">@Model.Value</span>
+                    </h2>
+
+                    @* Comparison Badge *@
+                    @if (!string.IsNullOrEmpty(Model.BadgeValue))
+                    {
+                        <p class="mb-0 @textColorClass">
+                            <span class="badge @badgeBgClass @badgeTextClass mb-0">
+                                <i class="@arrowIcon align-middle"></i> @Model.BadgeValue
+                            </span>
+                            @if (!string.IsNullOrEmpty(Model.ComparisonText))
+                            {
+                                <span> @Model.ComparisonText</span>
+                            }
+                        </p>
+                    }
+                </div>
+
+                @* Icon *@
+                <div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title @iconBgClass rounded-circle fs-2 material-shadow">
+                            <i data-feather="@Model.Icon.Replace("ri-", "").Replace("-line", "")" class="@iconTextClass"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

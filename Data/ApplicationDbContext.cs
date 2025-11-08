@@ -1,7 +1,19 @@
 using FormReporting.Data.Configurations.Identity;
 using FormReporting.Data.Configurations.Organizational;
+using FormReporting.Data.Configurations.Metrics;
+using FormReporting.Data.Configurations.Forms;
+using FormReporting.Data.Configurations.Software;
+using FormReporting.Data.Configurations.Hardware;
+using FormReporting.Data.Configurations.Tickets;
+using FormReporting.Data.Configurations.Financial;
 using FormReporting.Models.Entities.Identity;
 using FormReporting.Models.Entities.Organizational;
+using FormReporting.Models.Entities.Metrics;
+using FormReporting.Models.Entities.Forms;
+using FormReporting.Models.Entities.Software;
+using FormReporting.Models.Entities.Hardware;
+using FormReporting.Models.Entities.Tickets;
+using FormReporting.Models.Entities.Financial;
 using Microsoft.EntityFrameworkCore;
 
 namespace FormReporting.Data
@@ -105,13 +117,216 @@ namespace FormReporting.Data
         public DbSet<UserGroupMember> UserGroupMembers { get; set; } = null!;
 
         // ============================================================================
+        // SECTION 3: METRICS & KPI TRACKING
+        // ============================================================================
+
+        /// <summary>
+        /// Metric definitions with KPI thresholds
+        /// </summary>
+        public DbSet<MetricDefinition> MetricDefinitions { get; set; } = null!;
+
+        /// <summary>
+        /// Time-series metric data for tenants
+        /// </summary>
+        public DbSet<TenantMetric> TenantMetrics { get; set; } = null!;
+
+        /// <summary>
+        /// System metric logs from automated jobs
+        /// </summary>
+        public DbSet<SystemMetricLog> SystemMetricLogs { get; set; } = null!;
+
+        // ============================================================================
+        // SECTION 4: FORM TEMPLATES & SUBMISSIONS
+        // ============================================================================
+
+        /// <summary>
+        /// Form template categories
+        /// </summary>
+        public DbSet<FormCategory> FormCategories { get; set; } = null!;
+
+        /// <summary>
+        /// Reusable field library
+        /// </summary>
+        public DbSet<FieldLibrary> FieldLibraries { get; set; } = null!;
+
+        /// <summary>
+        /// Form templates
+        /// </summary>
+        public DbSet<FormTemplate> FormTemplates { get; set; } = null!;
+
+        /// <summary>
+        /// Form template sections
+        /// </summary>
+        public DbSet<FormTemplateSection> FormTemplateSections { get; set; } = null!;
+
+        /// <summary>
+        /// Form template items (fields/questions)
+        /// </summary>
+        public DbSet<FormTemplateItem> FormTemplateItems { get; set; } = null!;
+
+        /// <summary>
+        /// Form item options (dropdown/radio/checkbox)
+        /// </summary>
+        public DbSet<FormItemOption> FormItemOptions { get; set; } = null!;
+
+        /// <summary>
+        /// Form item configurations
+        /// </summary>
+        public DbSet<FormItemConfiguration> FormItemConfigurations { get; set; } = null!;
+
+        /// <summary>
+        /// Form item validations
+        /// </summary>
+        public DbSet<FormItemValidation> FormItemValidations { get; set; } = null!;
+
+        /// <summary>
+        /// Form item calculations
+        /// </summary>
+        public DbSet<FormItemCalculation> FormItemCalculations { get; set; } = null!;
+
+        /// <summary>
+        /// Form item to metric mappings
+        /// </summary>
+        public DbSet<FormItemMetricMapping> FormItemMetricMappings { get; set; } = null!;
+
+        /// <summary>
+        /// Metric population logs
+        /// </summary>
+        public DbSet<MetricPopulationLog> MetricPopulationLogs { get; set; } = null!;
+
+        /// <summary>
+        /// Form template submissions
+        /// </summary>
+        public DbSet<FormTemplateSubmission> FormTemplateSubmissions { get; set; } = null!;
+
+        /// <summary>
+        /// Form template responses
+        /// </summary>
+        public DbSet<FormTemplateResponse> FormTemplateResponses { get; set; } = null!;
+
+        /// <summary>
+        /// Submission workflow progress
+        /// </summary>
+        public DbSet<SubmissionWorkflowProgress> SubmissionWorkflowProgresses { get; set; } = null!;
+
+        /// <summary>
+        /// Workflow definitions
+        /// </summary>
+        public DbSet<WorkflowDefinition> WorkflowDefinitions { get; set; } = null!;
+
+        /// <summary>
+        /// Workflow steps
+        /// </summary>
+        public DbSet<WorkflowStep> WorkflowSteps { get; set; } = null!;
+
+        /// <summary>
+        /// Section routing (skip logic)
+        /// </summary>
+        public DbSet<SectionRouting> SectionRoutings { get; set; } = null!;
+
+        /// <summary>
+        /// Form analytics
+        /// </summary>
+        public DbSet<FormAnalytics> FormAnalytics { get; set; } = null!;
+
+        /// <summary>
+        /// Form template assignments
+        /// </summary>
+        public DbSet<FormTemplateAssignment> FormTemplateAssignments { get; set; } = null!;
+
+        // ============================================================================
+        // SECTION 5: SOFTWARE MANAGEMENT
+        // ============================================================================
+
+        /// <summary>
+        /// Software products catalog
+        /// </summary>
+        public DbSet<SoftwareProduct> SoftwareProducts { get; set; } = null!;
+
+        /// <summary>
+        /// Software version registry
+        /// </summary>
+        public DbSet<SoftwareVersion> SoftwareVersions { get; set; } = null!;
+
+        /// <summary>
+        /// Software licenses
+        /// </summary>
+        public DbSet<SoftwareLicense> SoftwareLicenses { get; set; } = null!;
+
+        /// <summary>
+        /// Tenant software installations
+        /// </summary>
+        public DbSet<TenantSoftwareInstallation> TenantSoftwareInstallations { get; set; } = null!;
+
+        /// <summary>
+        /// Software installation history
+        /// </summary>
+        public DbSet<SoftwareInstallationHistory> SoftwareInstallationHistories { get; set; } = null!;
+
+        // ============================================================================
+        // SECTION 6: HARDWARE INVENTORY
+        // ============================================================================
+
+        /// <summary>
+        /// Hardware categories
+        /// </summary>
+        public DbSet<HardwareCategory> HardwareCategories { get; set; } = null!;
+
+        /// <summary>
+        /// Hardware items master list
+        /// </summary>
+        public DbSet<HardwareItem> HardwareItems { get; set; } = null!;
+
+        /// <summary>
+        /// Tenant hardware inventory
+        /// </summary>
+        public DbSet<TenantHardware> TenantHardwares { get; set; } = null!;
+
+        /// <summary>
+        /// Hardware maintenance logs
+        /// </summary>
+        public DbSet<HardwareMaintenanceLog> HardwareMaintenanceLogs { get; set; } = null!;
+
+        // ============================================================================
+        // SECTION 7: SUPPORT TICKETS
+        // ============================================================================
+
+        /// <summary>
+        /// Ticket categories
+        /// </summary>
+        public DbSet<TicketCategory> TicketCategories { get; set; } = null!;
+
+        /// <summary>
+        /// Support tickets
+        /// </summary>
+        public DbSet<Ticket> Tickets { get; set; } = null!;
+
+        /// <summary>
+        /// Ticket comments
+        /// </summary>
+        public DbSet<TicketComment> TicketComments { get; set; } = null!;
+
+        // ============================================================================
+        // SECTION 8: FINANCIAL TRACKING
+        // ============================================================================
+
+        /// <summary>
+        /// Budget categories
+        /// </summary>
+        public DbSet<BudgetCategory> BudgetCategories { get; set; } = null!;
+
+        /// <summary>
+        /// Tenant budgets
+        /// </summary>
+        public DbSet<TenantBudget> TenantBudgets { get; set; } = null!;
+
+        /// <summary>
+        /// Tenant expenses
+        /// </summary>
+        public DbSet<TenantExpense> TenantExpenses { get; set; } = null!;
+
+        // ============================================================================
         // TODO: Additional sections will be added as we scaffold them
-        // - Section 3: Metrics & KPI Tracking
-        // - Section 4: Form Templates & Submissions
-        // - Section 5: Software Management
-        // - Section 6: Hardware Inventory
-        // - Section 7: Support Tickets
-        // - Section 8: Financial Tracking
         // - Section 9: Reporting & Analytics
         // - Section 10: Notifications
         // - Section 11: Media Management
@@ -141,6 +356,55 @@ namespace FormReporting.Data
             modelBuilder.ApplyConfiguration(new UserTenantAccessConfiguration());
             modelBuilder.ApplyConfiguration(new UserGroupConfiguration());
             modelBuilder.ApplyConfiguration(new UserGroupMemberConfiguration());
+
+            // Apply Section 3: Metrics & KPI Tracking configurations
+            modelBuilder.ApplyConfiguration(new MetricDefinitionConfiguration());
+            modelBuilder.ApplyConfiguration(new TenantMetricConfiguration());
+            modelBuilder.ApplyConfiguration(new SystemMetricLogConfiguration());
+
+            // Apply Section 4: Form Templates & Submissions configurations
+            modelBuilder.ApplyConfiguration(new FormCategoryConfiguration());
+            modelBuilder.ApplyConfiguration(new FieldLibraryConfiguration());
+            modelBuilder.ApplyConfiguration(new FormTemplateConfiguration());
+            modelBuilder.ApplyConfiguration(new FormTemplateSectionConfiguration());
+            modelBuilder.ApplyConfiguration(new FormTemplateItemConfiguration());
+            modelBuilder.ApplyConfiguration(new FormItemOptionConfiguration());
+            modelBuilder.ApplyConfiguration(new FormItemConfigurationConfiguration());
+            modelBuilder.ApplyConfiguration(new FormItemValidationConfiguration());
+            modelBuilder.ApplyConfiguration(new FormItemCalculationConfiguration());
+            modelBuilder.ApplyConfiguration(new FormItemMetricMappingConfiguration());
+            modelBuilder.ApplyConfiguration(new MetricPopulationLogConfiguration());
+            modelBuilder.ApplyConfiguration(new FormTemplateSubmissionConfiguration());
+            modelBuilder.ApplyConfiguration(new FormTemplateResponseConfiguration());
+            modelBuilder.ApplyConfiguration(new SubmissionWorkflowProgressConfiguration());
+            modelBuilder.ApplyConfiguration(new WorkflowDefinitionConfiguration());
+            modelBuilder.ApplyConfiguration(new WorkflowStepConfiguration());
+            modelBuilder.ApplyConfiguration(new SectionRoutingConfiguration());
+            modelBuilder.ApplyConfiguration(new FormAnalyticsConfiguration());
+            modelBuilder.ApplyConfiguration(new FormTemplateAssignmentConfiguration());
+
+            // Apply Section 5: Software Management configurations
+            modelBuilder.ApplyConfiguration(new SoftwareProductConfiguration());
+            modelBuilder.ApplyConfiguration(new SoftwareVersionConfiguration());
+            modelBuilder.ApplyConfiguration(new SoftwareLicenseConfiguration());
+            modelBuilder.ApplyConfiguration(new TenantSoftwareInstallationConfiguration());
+            modelBuilder.ApplyConfiguration(new SoftwareInstallationHistoryConfiguration());
+
+            // Apply Section 6: Hardware Inventory configurations
+            modelBuilder.ApplyConfiguration(new HardwareCategoryConfiguration());
+            modelBuilder.ApplyConfiguration(new HardwareItemConfiguration());
+            modelBuilder.ApplyConfiguration(new TenantHardwareConfiguration());
+            modelBuilder.ApplyConfiguration(new HardwareMaintenanceLogConfiguration());
+
+            // Apply Section 7: Support Tickets configurations
+            modelBuilder.ApplyConfiguration(new TicketCategoryConfiguration());
+            modelBuilder.ApplyConfiguration(new TicketConfiguration());
+            modelBuilder.ApplyConfiguration(new TicketCommentConfiguration());
+
+            // Apply Section 8: Financial Tracking configurations
+            modelBuilder.ApplyConfiguration(new BudgetCategoryConfiguration());
+            modelBuilder.ApplyConfiguration(new TenantBudgetConfiguration());
+            modelBuilder.ApplyConfiguration(new TenantExpenseConfiguration());
 
             // TODO: Apply additional configurations as we scaffold more sections
         }

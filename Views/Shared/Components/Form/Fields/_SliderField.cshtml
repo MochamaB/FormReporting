@@ -1,0 +1,75 @@
+@model FormReporting.Models.ViewModels.Components.FormFieldViewModel
+
+@*
+    Slider Field - Range slider input with value display
+*@
+
+@{
+    var minValue = 0;
+    var maxValue = 100;
+    var stepValue = 1;
+    var currentValueStr = Model.CurrentValue?.ToString() ?? "0";
+    var currentValue = !string.IsNullOrEmpty(currentValueStr) ? currentValueStr : "0";
+}
+
+<div class="mb-3 col-md-@Model.ColumnWidth">
+    <label for="@Model.InputId" class="form-label">
+        @Model.FieldName
+        @if (Model.IsRequired)
+        {
+            <span class="text-danger">*</span>
+        }
+    </label>
+
+    <div class="slider-field">
+        <div class="d-flex align-items-center gap-3">
+            <input type="range"
+                   class="form-range flex-grow-1"
+                   id="@Model.InputId"
+                   name="@Model.InputName"
+                   min="@minValue"
+                   max="@maxValue"
+                   step="@stepValue"
+                   value="@currentValue"
+                   @(Model.IsRequired ? "required" : "")
+                   @(Model.IsDisabled ? "disabled" : "")
+                   data-field-id="@Model.FieldId"
+                   oninput="updateSliderValue('@Model.InputId')"
+                   @if (!string.IsNullOrEmpty(Model.ValidationDataAttribute))
+                   {
+                       <text>data-validation='@Model.ValidationDataAttribute'</text>
+                   }
+                   @if (!string.IsNullOrEmpty(Model.ConditionalLogicDataAttribute))
+                   {
+                       <text>data-conditional='@Model.ConditionalLogicDataAttribute'</text>
+                   } />
+
+            <div class="slider-value-display">
+                <span class="badge bg-primary" id="@(Model.InputId)_value">@currentValue</span>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-between">
+            <small class="text-muted">@minValue</small>
+            <small class="text-muted">@maxValue</small>
+        </div>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.HelpText))
+    {
+        <div class="form-text">@Model.HelpText</div>
+    }
+
+    <div class="invalid-feedback"></div>
+</div>
+
+<script>
+    function updateSliderValue(fieldId) {
+        const slider = document.getElementById(fieldId);
+        const display = document.getElementById(fieldId + '_value');
+
+        if (slider && display) {
+            display.textContent = slider.value;
+        }
+    }
+</script>

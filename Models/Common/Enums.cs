@@ -34,24 +34,51 @@ namespace FormReporting.Models.Common
 
     /// <summary>
     /// Types of form fields
+    /// Categories:
+    /// - Input: Text, TextArea, Number, Decimal
+    /// - Date/Time: Date, Time, DateTime
+    /// - Selection: Dropdown, Radio, Checkbox, MultiSelect
+    /// - Media: FileUpload, Image, Signature
+    /// - Rating: Rating, Slider
+    /// - Contact: Email, Phone, Url
+    /// - Specialized: Currency, Percentage
     /// </summary>
     public enum FormFieldType
     {
+        // Input fields
         Text = 1,
         TextArea = 2,
         Number = 3,
-        Date = 4,
-        DateTime = 5,
-        Email = 6,
-        Phone = 7,
+        Decimal = 4,
+
+        // Date/Time fields
+        Date = 5,
+        Time = 6,
+        DateTime = 7,
+
+        // Selection fields
         Dropdown = 8,
         Radio = 9,
         Checkbox = 10,
         MultiSelect = 11,
+
+        // Media fields
         FileUpload = 12,
-        Url = 13,
-        Currency = 14,
-        Percentage = 15
+        Image = 13,
+        Signature = 14,
+
+        // Rating fields
+        Rating = 15,
+        Slider = 16,
+
+        // Contact fields
+        Email = 17,
+        Phone = 18,
+        Url = 19,
+
+        // Specialized fields
+        Currency = 20,
+        Percentage = 21
     }
 
     /// <summary>
@@ -98,6 +125,50 @@ namespace FormReporting.Models.Common
         SemiAnnually = 6,
         Annually = 7,
         Custom = 8
+    }
+
+    /// <summary>
+    /// Render mode for form display
+    /// </summary>
+    public enum FormRenderMode
+    {
+        /// <summary>
+        /// All sections displayed on single page (collapsible)
+        /// </summary>
+        SinglePage = 1,
+
+        /// <summary>
+        /// Sections displayed as wizard steps (one at a time with navigation)
+        /// </summary>
+        Wizard = 2
+    }
+
+    /// <summary>
+    /// Layout type for form fields
+    /// Defines how fields are displayed within a section
+    /// </summary>
+    public enum FieldLayoutType
+    {
+        /// <summary>
+        /// Regular single field layout (default)
+        /// </summary>
+        Single = 1,
+
+        /// <summary>
+        /// Fields arranged in matrix/table layout (rows and columns)
+        /// Used for rating scales, comparison grids, etc.
+        /// </summary>
+        Matrix = 2,
+
+        /// <summary>
+        /// Fields arranged in responsive grid layout
+        /// </summary>
+        Grid = 3,
+
+        /// <summary>
+        /// Fields displayed inline (horizontal)
+        /// </summary>
+        Inline = 4
     }
 
     // ============================================================================

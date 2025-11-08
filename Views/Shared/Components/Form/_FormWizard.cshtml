@@ -1,0 +1,358 @@
+@model FormReporting.Models.ViewModels.Components.FormViewModel
+
+@*
+    Form Wizard Wrapper - Displays form sections as wizard steps
+    One section visible at a time with Previous/Next navigation
+*@
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box">
+            @* Wizard Header with Stepper *@
+    <div class="card">
+        <div class="card-body">
+            @* Form Title and Description *@
+            <div class="mb-4">
+                <h4 class="card-title mb-1">@Model.Title</h4>
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <p class="text-muted mb-0">@Model.Description</p>
+                }
+            </div>
+
+            @* Horizontal Stepper *@
+            <div class="form-wizard-steps mb-3">
+                <div class="progress-nav progress-nav-wizard">
+                    <div class="progress" style="height: 2px;">
+                        <div class="progress-bar"
+                             id="wizard-progress-@Model.FormId"
+                             role="progressbar"
+                             style="width: 0%"
+                             aria-valuenow="0"
+                             aria-valuemin="0"
+                             aria-valuemax="100">
+                        </div>
+                    </div>
+                    <ul class="nav nav-wizard">
+                        @for (int i = 0; i < Model.Sections.Count; i++)
+                        {
+                            var section = Model.Sections[i];
+                            var stepNumber = i + 1;
+                            var isFirst = i == 0;
+                            var isActive = isFirst ? "active" : "";
+                            var isClickable = Model.AllowStepSkipping ? "clickable" : "";
+
+                            <li class="nav-item wizard-step @isActive @isClickable"
+                                data-step="@stepNumber"
+                                data-section-id="@(section.SectionId)">
+                                <a class="nav-link" href="#step-@stepNumber-@Model.FormId">
+                                    @if (Model.ShowStepNumbers)
+                                    {
+                                        <span class="step-number">@stepNumber</span>
+                                    }
+                                    @if (!string.IsNullOrEmpty(section.IconClass))
+                                    {
+                                        <i class="@(section.IconClass) step-icon"></i>
+                                    }
+                                    <span class="step-title">@(section.SectionName)</span>
+                                    <i class="ri-check-line step-check-icon"></i>
+                                </a>
+                            </li>
+                        }
+                    </ul>
+                </div>
+            </div>
+
+            @* Step Counter *@
+            <div class="text-center mb-3">
+                <span class="badge bg-primary-subtle text-primary fs-12">
+                    Step <span id="current-step-@Model.FormId">1</span> of @Model.TotalSteps
+                </span>
+            </div>
+        </div>
+    </div>
+            
+        </div>
+    </div>
+</div>
+
+<div class="form-wizard-wrapper" id="wizard-@Model.FormId" data-wizard-id="@Model.FormId">
+
+   
+
+    @* Main Form Element *@
+    <form id="form-@Model.FormId"
+          method="post"
+          action="@Model.SubmitUrl"
+          novalidate
+          data-wizard-form="true"
+          data-validate-on-step-change="@Model.ValidateOnStepChange.ToString().ToLower()"
+          data-auto-save="@Model.EnableAutoSave.ToString().ToLower()"
+          data-auto-save-interval="@Model.AutoSaveIntervalSeconds"
+          data-save-draft-url="@Model.SaveDraftUrl">
+
+        @* Anti-Forgery Token *@
+        @Html.AntiForgeryToken()
+
+        @* Hidden Fields *@
+        <input type="hidden" name="FormId" value="@Model.FormId" />
+        <input type="hidden" name="FormTemplateId" value="@Model.FormTemplateId" />
+        <input type="hidden" name="ResponseId" id="response-id-@Model.FormId" value="@Model.ResponseId" />
+        <input type="hidden" id="current-step-index-@Model.FormId" value="0" />
+
+        @* Wizard Step Content - Each section is a step *@
+        <div class="wizard-steps-content">
+            @for (int i = 0; i < Model.Sections.Count; i++)
+            {
+                var section = Model.Sections[i];
+                var stepNumber = i + 1;
+                var isFirst = i == 0;
+                var displayStyle = isFirst ? "display: block;" : "display: none;";
+
+                <div class="wizard-step-content"
+                     id="step-@stepNumber-@Model.FormId"
+                     data-step="@stepNumber"
+                     style="@displayStyle">
+                    @* Render the section using existing partial *@
+                    @await Html.PartialAsync("Components/Form/_FormSection", section)
+                </div>
+            }
+        </div>
+
+        @* Wizard Navigation Buttons *@
+        <div class="card mt-3">
+            <div class="card-body">
+                <div class="d-flex gap-2 justify-content-between align-items-center">
+                    @* Left side: Previous button *@
+                    <div>
+                        <button type="button"
+                                class="btn btn-soft-secondary wizard-btn-prev"
+                                id="wizard-prev-@Model.FormId"
+                                style="display: none;">
+                            <i class="ri-arrow-left-line align-bottom me-1"></i>
+                            @Model.PreviousButtonText
+                        </button>
+                    </div>
+
+                    @* Right side: Save Draft, Cancel, Next/Submit buttons *@
+                    <div class="d-flex gap-2">
+                        @if (Model.EnableAutoSave && !string.IsNullOrEmpty(Model.SaveDraftUrl))
+                        {
+                            <button type="button"
+                                    class="btn btn-soft-secondary"
+                                    id="save-draft-btn-@Model.FormId"
+                                    onclick="saveDraft('@Model.FormId')">
+                                <i class="ri-save-line align-bottom me-1"></i>
+                                @Model.SaveDraftButtonText
+                            </button>
+                        }
+
+                        @if (Model.ShowCancelButton)
+                        {
+                            <button type="button"
+                                    class="btn btn-soft-danger"
+                                    onclick="cancelForm('@Model.FormId')">
+                                <i class="ri-close-line align-bottom me-1"></i>
+                                Cancel
+                            </button>
+                        }
+
+                        @* Next Button (shown on all steps except last) *@
+                        <button type="button"
+                                class="btn btn-primary wizard-btn-next"
+                                id="wizard-next-@Model.FormId">
+                            @Model.NextButtonText
+                            <i class="ri-arrow-right-line align-bottom ms-1"></i>
+                        </button>
+
+                        @* Submit Button (shown only on last step) *@
+                        <button type="submit"
+                                class="btn btn-success wizard-btn-submit"
+                                id="wizard-submit-@Model.FormId"
+                                style="display: none;">
+                            <i class="ri-send-plane-line align-bottom me-1"></i>
+                            @Model.SubmitButtonText
+                        </button>
+                    </div>
+                </div>
+
+                @* Required Fields Notice *@
+                @if (Model.RequiredFields > 0)
+                {
+                    <div class="text-muted text-end mt-2">
+                        <small>
+                            <span class="text-danger">*</span> Indicates required field (@Model.RequiredFields total required)
+                        </small>
+                    </div>
+                }
+            </div>
+        </div>
+    </form>
+
+    @* Auto-Save Status Indicator *@
+    @if (Model.EnableAutoSave)
+    {
+        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050">
+            <div id="auto-save-toast-@Model.FormId"
+                 class="toast align-items-center text-white bg-success border-0"
+                 role="alert"
+                 aria-live="assertive"
+                 aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="ri-check-line me-2"></i>
+                        Draft saved automatically
+                    </div>
+                    <button type="button"
+                            class="btn-close btn-close-white me-2 m-auto"
+                            data-bs-dismiss="toast"
+                            aria-label="Close">
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@* Wizard-Specific Styles *@
+<style>
+    .form-wizard-wrapper {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    /* Wizard Stepper Styles */
+    .progress-nav-wizard {
+        position: relative;
+        margin-bottom: 2rem;
+    }
+
+    .nav-wizard {
+        display: flex;
+        justify-content: space-between;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        margin-top: -1px;
+        position: relative;
+    }
+
+    .nav-wizard .nav-item {
+        flex: 1;
+        text-align: center;
+        position: relative;
+    }
+
+    .nav-wizard .nav-link {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 1rem 0.5rem;
+        color: #878a99;
+        text-decoration: none;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+
+    .wizard-step.clickable .nav-link {
+        cursor: pointer;
+    }
+
+    .wizard-step:not(.clickable) .nav-link {
+        cursor: default;
+    }
+
+    .step-number {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: #e9ebec;
+        color: #878a99;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        margin-bottom: 0.5rem;
+        transition: all 0.3s ease;
+    }
+
+    .step-icon {
+        font-size: 1.25rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .step-title {
+        font-size: 0.875rem;
+        font-weight: 500;
+    }
+
+    .step-check-icon {
+        display: none;
+        position: absolute;
+        top: 0.5rem;
+        font-size: 1.25rem;
+        color: #0ab39c;
+    }
+
+    /* Active Step */
+    .wizard-step.active .step-number {
+        background: #405189;
+        color: #fff;
+    }
+
+    .wizard-step.active .nav-link {
+        color: #405189;
+    }
+
+    /* Completed Step */
+    .wizard-step.completed .step-number {
+        background: #0ab39c;
+        color: #fff;
+        display: none;
+    }
+
+    .wizard-step.completed .step-check-icon {
+        display: block;
+    }
+
+    .wizard-step.completed .nav-link {
+        color: #0ab39c;
+    }
+
+    /* Hover Effect for clickable steps */
+    .wizard-step.clickable:not(.active) .nav-link:hover {
+        color: #405189;
+    }
+
+    .wizard-step.clickable:not(.active) .nav-link:hover .step-number {
+        background: #dfe1e5;
+    }
+
+    /* Step Content Transitions */
+    .wizard-step-content {
+        animation: fadeIn 0.3s ease-in-out;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateX(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    /* Responsive Stepper */
+    @@media (max-width: 768px) {
+        .step-title {
+            font-size: 0.75rem;
+        }
+
+        .step-number {
+            width: 28px;
+            height: 28px;
+            font-size: 0.875rem;
+        }
+    }
+</style>

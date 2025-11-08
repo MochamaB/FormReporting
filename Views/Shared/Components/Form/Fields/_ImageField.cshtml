@@ -1,0 +1,67 @@
+@model FormReporting.Models.ViewModels.Components.FormFieldViewModel
+
+@*
+    Image Field - Image upload with preview
+*@
+
+<div class="mb-3 col-md-@Model.ColumnWidth">
+    <label for="@Model.InputId" class="form-label">
+        @Model.FieldName
+        @if (Model.IsRequired)
+        {
+            <span class="text-danger">*</span>
+        }
+    </label>
+
+    <input type="file"
+           class="form-control"
+           id="@Model.InputId"
+           name="@Model.InputName"
+           accept="image/*"
+           @(Model.IsRequired ? "required" : "")
+           @(Model.IsDisabled ? "disabled" : "")
+           data-field-id="@Model.FieldId"
+           data-preview-target="#@(Model.InputId)_preview"
+           @if (!string.IsNullOrEmpty(Model.ValidationDataAttribute))
+           {
+               <text>data-validation='@Model.ValidationDataAttribute'</text>
+           }
+           @if (!string.IsNullOrEmpty(Model.ConditionalLogicDataAttribute))
+           {
+               <text>data-conditional='@Model.ConditionalLogicDataAttribute'</text>
+           } />
+
+    @* Image preview *@
+    <div id="@(Model.InputId)_preview" class="mt-2">
+        @{
+            var currentImage = Model.CurrentValue?.ToString();
+        }
+        @if (!string.IsNullOrEmpty(currentImage))
+        {
+            <img src="@currentImage" alt="Preview" class="img-thumbnail" style="max-width: 200px; max-height: 200px;" />
+        }
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.HelpText))
+    {
+        <div class="form-text">@Model.HelpText</div>
+    }
+
+    <div class="invalid-feedback"></div>
+</div>
+
+<script>
+    // Image preview on file select
+    document.getElementById('@Model.InputId')?.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        const preview = document.getElementById('@(Model.InputId)_preview');
+
+        if (file && preview) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                preview.innerHTML = `<img src="${e.target.result}" alt="Preview" class="img-thumbnail" style="max-width: 200px; max-height: 200px;" />`;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+</script>

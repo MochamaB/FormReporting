@@ -1,0 +1,125 @@
+@model FormReporting.Models.ViewModels.Components.FormFieldViewModel
+@using FormReporting.Models.Common
+
+@*
+    Form Field Router - Directs to appropriate field type partial
+    Based on FormFieldType enum
+*@
+
+@switch (Model.FieldType)
+{
+    // ============================================================================
+    // INPUT FIELDS
+    // ============================================================================
+    case FormFieldType.Text:
+        @await Html.PartialAsync("Components/Form/Fields/_TextField", Model)
+        break;
+
+    case FormFieldType.TextArea:
+        @await Html.PartialAsync("Components/Form/Fields/_TextAreaField", Model)
+        break;
+
+    case FormFieldType.Number:
+        @await Html.PartialAsync("Components/Form/Fields/_NumberField", Model)
+        break;
+
+    case FormFieldType.Decimal:
+        @await Html.PartialAsync("Components/Form/Fields/_DecimalField", Model)
+        break;
+
+    // ============================================================================
+    // DATE/TIME FIELDS
+    // ============================================================================
+    case FormFieldType.Date:
+        @await Html.PartialAsync("Components/Form/Fields/_DateField", Model)
+        break;
+
+    case FormFieldType.Time:
+        @await Html.PartialAsync("Components/Form/Fields/_TimeField", Model)
+        break;
+
+    case FormFieldType.DateTime:
+        @await Html.PartialAsync("Components/Form/Fields/_DateTimeField", Model)
+        break;
+
+    // ============================================================================
+    // SELECTION FIELDS
+    // ============================================================================
+    case FormFieldType.Dropdown:
+        @await Html.PartialAsync("Components/Form/Fields/_DropdownField", Model)
+        break;
+
+    case FormFieldType.Radio:
+        @await Html.PartialAsync("Components/Form/Fields/_RadioField", Model)
+        break;
+
+    case FormFieldType.Checkbox:
+        @await Html.PartialAsync("Components/Form/Fields/_CheckboxField", Model)
+        break;
+
+    case FormFieldType.MultiSelect:
+        @await Html.PartialAsync("Components/Form/Fields/_MultiSelectField", Model)
+        break;
+
+    // ============================================================================
+    // MEDIA FIELDS
+    // ============================================================================
+    case FormFieldType.FileUpload:
+        @await Html.PartialAsync("Components/Form/Fields/_FileUploadField", Model)
+        break;
+
+    case FormFieldType.Image:
+        @await Html.PartialAsync("Components/Form/Fields/_ImageField", Model)
+        break;
+
+    case FormFieldType.Signature:
+        @await Html.PartialAsync("Components/Form/Fields/_SignatureField", Model)
+        break;
+
+    // ============================================================================
+    // RATING FIELDS
+    // ============================================================================
+    case FormFieldType.Rating:
+        @await Html.PartialAsync("Components/Form/Fields/_RatingField", Model)
+        break;
+
+    case FormFieldType.Slider:
+        @await Html.PartialAsync("Components/Form/Fields/_SliderField", Model)
+        break;
+
+    // ============================================================================
+    // CONTACT FIELDS
+    // ============================================================================
+    case FormFieldType.Email:
+        @await Html.PartialAsync("Components/Form/Fields/_EmailField", Model)
+        break;
+
+    case FormFieldType.Phone:
+        @await Html.PartialAsync("Components/Form/Fields/_PhoneField", Model)
+        break;
+
+    case FormFieldType.Url:
+        @await Html.PartialAsync("Components/Form/Fields/_UrlField", Model)
+        break;
+
+    // ============================================================================
+    // SPECIALIZED FIELDS
+    // ============================================================================
+    case FormFieldType.Currency:
+        @await Html.PartialAsync("Components/Form/Fields/_CurrencyField", Model)
+        break;
+
+    case FormFieldType.Percentage:
+        @await Html.PartialAsync("Components/Form/Fields/_PercentageField", Model)
+        break;
+
+    // ============================================================================
+    // DEFAULT (UNSUPPORTED)
+    // ============================================================================
+    default:
+        <div class="alert alert-warning" role="alert">
+            <i class="ri-alert-line me-2"></i>
+            Unsupported field type: @Model.FieldType
+        </div>
+        break;
+}

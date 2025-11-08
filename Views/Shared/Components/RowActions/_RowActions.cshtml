@@ -1,0 +1,32 @@
+@model FormReporting.Models.ViewModels.Components.RowActionsViewModel
+@using FormReporting.Models.ViewModels.Components
+
+@*
+    Row Actions Component - Main Entry Point
+
+    This partial automatically renders either:
+    - _RowActionsInline.cshtml (for 2-4 actions)
+    - _RowActionsDropdown.cshtml (for 4+ actions)
+
+    Usage in table rows:
+    <td>
+        @{
+            var rowActionsConfig = new RowActionsConfig()
+                .WithViewAction("/users/{id}")
+                .WithEditAction("/users/{id}/edit")
+                .WithDeleteAction("/users/{id}/delete");
+
+            var rowActionsViewModel = rowActionsConfig.BuildRowActions(user.Id);
+        }
+        <partial name="~/Views/Shared/Components/RowActions/_RowActions.cshtml" model="rowActionsViewModel" />
+    </td>
+*@
+
+@if (Model.DisplayStyle == RowActionDisplayStyle.Inline)
+{
+    <partial name="~/Views/Shared/Components/RowActions/_RowActionsInline.cshtml" model="Model" />
+}
+else
+{
+    <partial name="~/Views/Shared/Components/RowActions/_RowActionsDropdown.cshtml" model="Model" />
+}

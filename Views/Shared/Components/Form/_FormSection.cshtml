@@ -1,0 +1,154 @@
+@model FormReporting.Models.ViewModels.Components.FormSectionViewModel
+
+@*
+    Form Section - Collapsible section container for grouping form fields
+    Similar to SurveyJS panel/section structure with expandable header
+*@
+
+@{
+    var collapseClass = Model.IsCollapsedByDefault ? "collapse" : "collapse show";
+    var ariaExpanded = Model.IsCollapsedByDefault ? "false" : "true";
+}
+
+<div class="card form-section"
+     id="section-card-@Model.SectionId"
+     data-section-id="@Model.SectionId">
+
+    @if (Model.IsCollapsible)
+    {
+        @* Collapsible Section Header *@
+        <div class="card-header" id="heading-@Model.CollapseId">
+            <button class="btn btn-link w-100 text-start d-flex align-items-center justify-content-between p-0"
+                    type="button"
+                    data-bs-toggle="collapse"
+                    data-bs-target="#@Model.CollapseId"
+                    aria-expanded="@ariaExpanded"
+                    aria-controls="@Model.CollapseId">
+                <div class="d-flex align-items-center">
+                    @if (!string.IsNullOrEmpty(Model.IconClass))
+                    {
+                        <i class="@Model.IconClass me-2 fs-16 text-primary"></i>
+                    }
+                    <div>
+                        <h5 class="mb-0 text-body">
+                            @Model.SectionName
+                            @if (Model.IsRequired)
+                            {
+                                <span class="text-danger">*</span>
+                            }
+                        </h5>
+                        @if (!string.IsNullOrEmpty(Model.SectionDescription))
+                        {
+                            <small class="text-muted d-block mt-1">@Model.SectionDescription</small>
+                        }
+                    </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                    @if (Model.TotalFields > 0)
+                    {
+                        <span class="badge bg-secondary-subtle text-secondary">
+                            @Model.TotalFields @(Model.TotalFields == 1 ? "field" : "fields")
+                        </span>
+                    }
+                    <i class="ri-arrow-down-s-line fs-18 text-muted section-toggle-icon"></i>
+                </div>
+            </button>
+        </div>
+
+        @* Collapsible Body *@
+        <div id="@Model.CollapseId"
+             class="@collapseClass"
+             aria-labelledby="heading-@Model.CollapseId">
+            <div class="card-body">
+                @* Fields will be rendered here once field partials are created *@
+                <div class="form-fields-container">
+                    @* TODO: Render fields using _FormField.cshtml partial *@
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        @* Non-Collapsible Section Header *@
+        <div class="card-header">
+            <div class="d-flex align-items-center">
+                @if (!string.IsNullOrEmpty(Model.IconClass))
+                {
+                    <i class="@Model.IconClass me-2 fs-16 text-primary"></i>
+                }
+                <div class="flex-grow-1">
+                    <h5 class="mb-0">
+                        @Model.SectionName
+                        @if (Model.IsRequired)
+                        {
+                            <span class="text-danger">*</span>
+                        }
+                    </h5>
+                    @if (!string.IsNullOrEmpty(Model.SectionDescription))
+                    {
+                        <small class="text-muted d-block mt-1">@Model.SectionDescription</small>
+                    }
+                </div>
+                @if (Model.TotalFields > 0)
+                {
+                    <span class="badge bg-secondary-subtle text-secondary">
+                        @Model.TotalFields @(Model.TotalFields == 1 ? "field" : "fields")
+                    </span>
+                }
+            </div>
+        </div>
+
+        @* Always-Visible Body *@
+        <div class="card-body">
+            @* Fields will be rendered here once field partials are created *@
+            <div class="form-fields-container">
+                @* TODO: Render fields using _FormField.cshtml partial *@
+            </div>
+        </div>
+    }
+</div>
+
+@* Inline Styles for Section Appearance *@
+<style>
+    .form-section {
+        border: 1px solid #e9ebec;
+        box-shadow: 0 1px 2px rgba(56, 65, 74, 0.05);
+    }
+
+    .form-section .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ebec;
+        padding: 1rem 1.25rem;
+    }
+
+    .form-section .card-header .btn-link {
+        text-decoration: none;
+        color: inherit;
+    }
+
+    .form-section .card-header .btn-link:hover {
+        background-color: rgba(0, 0, 0, 0.02);
+        border-radius: 0.25rem;
+        padding: 0.5rem;
+        margin: -0.5rem;
+    }
+
+    .form-section .card-header .btn-link[aria-expanded="true"] .section-toggle-icon {
+        transform: rotate(180deg);
+        transition: transform 0.3s ease;
+    }
+
+    .form-section .card-header .btn-link[aria-expanded="false"] .section-toggle-icon {
+        transform: rotate(0deg);
+        transition: transform 0.3s ease;
+    }
+
+    .field-placeholder {
+        transition: all 0.2s ease;
+    }
+
+    .field-placeholder:hover {
+        background-color: #e9ecef !important;
+        border-color: #adb5bd !important;
+    }
+</style>

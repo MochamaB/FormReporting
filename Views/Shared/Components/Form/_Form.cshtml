@@ -1,0 +1,200 @@
+@model FormReporting.Models.ViewModels.Components.FormViewModel
+@using FormReporting.Models.Common
+
+@*
+    Main Form Container - Outermost wrapper for dynamic form rendering
+    Routes to either SinglePage or Wizard rendering based on RenderMode
+*@
+
+@if (Model.RenderMode == FormRenderMode.Wizard)
+{
+    @* Wizard Mode: Use wizard wrapper with step navigation *@
+    @await Html.PartialAsync("Components/Form/_FormWizard", Model)
+}
+else
+{
+    @* Single Page Mode: All sections displayed on one page *@
+    <div class="form-wrapper" id="@Model.FormId">
+    @* Form Header *@
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex align-items-center mb-3">
+                <div class="flex-grow-1">
+                    <h4 class="card-title mb-1">@Model.Title</h4>
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <p class="text-muted mb-0">@Model.Description</p>
+                    }
+                </div>
+                @if (Model.ShowProgressBar)
+                {
+                    <div class="flex-shrink-0">
+                        <span class="badge bg-primary-subtle text-primary fs-12">
+                            <span id="completed-fields-@Model.FormId">0</span> / @Model.TotalFields fields completed
+                        </span>
+                    </div>
+                }
+            </div>
+
+            @* Progress Bar *@
+            @if (Model.ShowProgressBar)
+            {
+                <div class="progress progress-sm" style="height: 4px;">
+                    <div class="progress-bar bg-primary"
+                         id="progress-bar-@Model.FormId"
+                         role="progressbar"
+                         style="width: 0%"
+                         aria-valuenow="0"
+                         aria-valuemin="0"
+                         aria-valuemax="100">
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+    @* Main Form Element *@
+    <form id="form-@Model.FormId"
+          method="post"
+          action="@Model.SubmitUrl"
+          novalidate
+          data-auto-save="@Model.EnableAutoSave.ToString().ToLower()"
+          data-auto-save-interval="@Model.AutoSaveIntervalSeconds"
+          data-save-draft-url="@Model.SaveDraftUrl">
+
+        @* Anti-Forgery Token *@
+        @Html.AntiForgeryToken()
+
+        @* Hidden Fields *@
+        <input type="hidden" name="FormId" value="@Model.FormId" />
+        <input type="hidden" name="FormTemplateId" value="@Model.FormTemplateId" />
+        <input type="hidden" name="ResponseId" id="response-id-@Model.FormId" value="@Model.ResponseId" />
+
+        @* Form Sections *@
+        <div class="form-sections-container mt-3">
+            @if (Model.Sections != null && Model.Sections.Any())
+            {
+                @foreach (var section in Model.Sections)
+                {
+                    @await Html.PartialAsync("Components/Form/_FormSection", section)
+                }
+            }
+            else
+            {
+                <div class="card">
+                    <div class="card-body text-center text-muted py-5">
+                        <i class="ri-file-list-3-line fs-1 mb-3 d-block"></i>
+                        <p class="mb-0">No sections defined for this form.</p>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @* Form Actions *@
+        <div class="card mt-3">
+            <div class="card-body">
+                <div class="d-flex gap-2 justify-content-end">
+                    @if (Model.AllowSaveDraft && !string.IsNullOrEmpty(Model.SaveDraftUrl))
+                    {
+                        <button type="button"
+                                class="btn btn-soft-secondary"
+                                id="save-draft-btn-@Model.FormId"
+                                onclick="saveDraft('@Model.FormId')">
+                            <i class="ri-save-line align-bottom me-1"></i>
+                            Save as Draft
+                        </button>
+                    }
+
+                    @if (Model.ShowResetButton)
+                    {
+                        <button type="button"
+                                class="btn btn-soft-warning"
+                                onclick="resetForm('@Model.FormId')">
+                            <i class="ri-refresh-line align-bottom me-1"></i>
+                            Reset Form
+                        </button>
+                    }
+
+                    @if (Model.ShowCancelButton)
+                    {
+                        <button type="button"
+                                class="btn btn-soft-danger"
+                                onclick="cancelForm('@Model.FormId')">
+                            <i class="ri-close-line align-bottom me-1"></i>
+                            Cancel
+                        </button>
+                    }
+
+                    <button type="submit"
+                            class="btn btn-primary"
+                            id="submit-btn-@Model.FormId">
+                        <i class="ri-send-plane-line align-bottom me-1"></i>
+                        @Model.SubmitButtonText
+                    </button>
+                </div>
+
+                @* Required Fields Notice *@
+                @if (Model.RequiredFields > 0)
+                {
+                    <div class="text-muted text-end mt-2">
+                        <small>
+                            <span class="text-danger">*</span> Indicates required field (@Model.RequiredFields required)
+                        </small>
+                    </div>
+                }
+            </div>
+        </div>
+    </form>
+
+    @* Auto-Save Status Indicator *@
+    @if (Model.EnableAutoSave)
+    {
+        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050">
+            <div id="auto-save-toast-@Model.FormId"
+                 class="toast align-items-center text-white bg-success border-0"
+                 role="alert"
+                 aria-live="assertive"
+                 aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        <i class="ri-check-line me-2"></i>
+                        Draft saved automatically
+                    </div>
+                    <button type="button"
+                            class="btn-close btn-close-white me-2 m-auto"
+                            data-bs-dismiss="toast"
+                            aria-label="Close">
+                    </button>
+                </div>
+            </div>
+        </div>
+    }
+
+    @* Inline Styles for SurveyJS-like appearance *@
+    <style>
+        .form-wrapper {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .form-sections-container > .card {
+            margin-bottom: 1rem;
+        }
+
+        .form-sections-container > .card:last-child {
+            margin-bottom: 0;
+        }
+
+        /* Smooth transitions for collapsible sections */
+        .collapse {
+            transition: height 0.3s ease;
+        }
+
+        /* Progress bar styling */
+        .progress-sm {
+            border-radius: 0.25rem;
+        }
+    </style>
+</div>
+@* End Single Page Mode *@
+}

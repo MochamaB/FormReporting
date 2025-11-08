@@ -1,0 +1,65 @@
+@model FormReporting.Models.ViewModels.Components.RowActionsViewModel
+
+@*
+    Row Actions Component - Inline Style
+
+    Features:
+    - Displays action buttons side-by-side (inline)
+    - Icon-only buttons for compact display
+    - Soft colored buttons (btn-soft-primary, btn-soft-success, etc.)
+    - Hover tooltips show action text
+    - Confirmation dialogs for destructive actions
+    - Recommended for 2-4 actions
+*@
+
+<div class="d-flex gap-2">
+    @foreach (var action in Model.Actions)
+    {
+        var buttonClass = Model.UseSoftButtons ? $"btn-soft-{action.ColorClass}" : $"btn-{action.ColorClass}";
+
+        @if (action.RequiresConfirmation)
+        {
+            <a href="#"
+               class="btn @buttonClass @Model.ButtonSizeClass action-with-confirm"
+               data-url="@action.Url"
+               data-message="@action.ConfirmationMessage"
+               title="@action.Text">
+                <i class="@action.IconClass"></i>
+                @if (!action.IconOnly)
+                {
+                    <span class="ms-1">@action.Text</span>
+                }
+            </a>
+        }
+        else
+        {
+            <a href="@action.Url"
+               class="btn @buttonClass @Model.ButtonSizeClass"
+               title="@action.Text">
+                <i class="@action.IconClass"></i>
+                @if (!action.IconOnly)
+                {
+                    <span class="ms-1">@action.Text</span>
+                }
+            </a>
+        }
+    }
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Handle confirmation actions
+            $('.action-with-confirm').on('click', function(e) {
+                e.preventDefault();
+                var btn = $(this);
+                var url = btn.data('url');
+                var message = btn.data('message') || 'Are you sure you want to proceed?';
+
+                if (confirm(message)) {
+                    window.location.href = url;
+                }
+            });
+        });
+    </script>
+}

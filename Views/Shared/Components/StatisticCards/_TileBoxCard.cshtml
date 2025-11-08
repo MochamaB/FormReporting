@@ -1,0 +1,72 @@
+@model FormReporting.Models.ViewModels.Components.StatCardViewModel
+@using FormReporting.Extensions
+
+@*
+    TileBoxCard Partial View
+
+    Features:
+    - Animated card effect (card-animate class)
+    - Trend indicator at top right
+    - Large value in center
+    - Bottom link
+    - Icon on right side
+    - Optional background color
+
+    Used for: Dashboard overview metrics (Earnings, Orders, Customers, Balance)
+
+    Example from Velzon: "Total Earnings $559.25k" with green trend arrow
+*@
+
+@{
+    // Get trend indicator if present
+    var (trendIcon, trendColor) = Model.TrendDirection.GetTrendIndicator();
+    var hasBackground = !string.IsNullOrEmpty(Model.ColorTheme) && Model.HasBackgroundColor;
+    var bgClass = hasBackground ? $"bg-{Model.ColorTheme}" : "";
+    var textColorClass = hasBackground ? "text-white" : "text-muted";
+    var textColor50Class = hasBackground ? "text-white-50" : "text-muted";
+    var iconBgClass = hasBackground ? "bg-white bg-opacity-25" : $"bg-{Model.ColorTheme}-subtle";
+    var iconTextClass = hasBackground ? "text-white" : $"text-{Model.ColorTheme}";
+}
+
+<div class="@Model.ColumnClass">
+    <div class="card card-animate @bgClass">
+        <div class="card-body">
+
+            @* Top Row: Title and Trend *@
+            <div class="d-flex align-items-center">
+                <div class="flex-grow-1">
+                    <p class="text-uppercase fw-medium @textColor50Class mb-0">@Model.Title</p>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.TrendPercentage))
+                {
+                    <div class="flex-shrink-0">
+                        <h5 class="@trendColor fs-14 mb-0">
+                            <i class="@trendIcon fs-13 align-middle"></i> @Model.TrendPercentage %
+                        </h5>
+                    </div>
+                }
+            </div>
+
+            @* Center Row: Value and Icon *@
+            <div class="d-flex align-items-end justify-content-between mt-4">
+                <div>
+                    <h4 class="fs-22 fw-semibold ff-secondary mb-4 @(hasBackground ? "text-white" : "")">
+                        <span class="counter-value" data-target="@Model.Value">@Model.Value</span>
+                    </h4>
+                    @if (!string.IsNullOrEmpty(Model.LinkText))
+                    {
+                        <a href="@(Model.LinkUrl ?? "#")" class="text-decoration-underline @(hasBackground ? "text-white-50" : "")">
+                            @Model.LinkText
+                        </a>
+                    }
+                </div>
+                <div class="avatar-sm flex-shrink-0">
+                    <span class="avatar-title @iconBgClass rounded fs-3 material-shadow">
+                        <i class="@Model.Icon @iconTextClass"></i>
+                    </span>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

@@ -1,0 +1,70 @@
+@model FormReporting.Models.ViewModels.Components.RowActionsViewModel
+
+@*
+    Row Actions Component - Dropdown Style
+
+    Features:
+    - Displays actions in a dropdown menu
+    - Compact display for many actions (4+)
+    - Icons with text labels in dropdown
+    - Confirmation dialogs for destructive actions
+    - Color-coded action items
+*@
+
+<div class="dropdown">
+    <button class="btn btn-soft-secondary @Model.ButtonSizeClass dropdown-toggle" type="button"
+            data-bs-toggle="dropdown" aria-expanded="false">
+        @if (!string.IsNullOrEmpty(Model.DropdownIconClass))
+        {
+            <i class="@Model.DropdownIconClass me-1"></i>
+        }
+        @Model.DropdownText
+    </button>
+    <ul class="dropdown-menu dropdown-menu-end">
+        @foreach (var action in Model.Actions)
+        {
+            <li>
+                @if (action.RequiresConfirmation)
+                {
+                    <a class="dropdown-item action-with-confirm" href="#"
+                       data-url="@action.Url"
+                       data-message="@action.ConfirmationMessage">
+                        @if (!string.IsNullOrEmpty(action.IconClass))
+                        {
+                            <i class="@action.IconClass me-2 text-@action.ColorClass"></i>
+                        }
+                        @action.Text
+                    </a>
+                }
+                else
+                {
+                    <a class="dropdown-item" href="@action.Url">
+                        @if (!string.IsNullOrEmpty(action.IconClass))
+                        {
+                            <i class="@action.IconClass me-2 text-@action.ColorClass"></i>
+                        }
+                        @action.Text
+                    </a>
+                }
+            </li>
+        }
+    </ul>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Handle confirmation actions in dropdown
+            $('.dropdown-menu .action-with-confirm').on('click', function(e) {
+                e.preventDefault();
+                var link = $(this);
+                var url = link.data('url');
+                var message = link.data('message') || 'Are you sure you want to proceed?';
+
+                if (confirm(message)) {
+                    window.location.href = url;
+                }
+            });
+        });
+    </script>
+}

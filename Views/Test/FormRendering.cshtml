@@ -1,0 +1,53 @@
+@model FormReporting.Models.ViewModels.Components.FormViewModel
+
+@{
+    ViewData["Title"] = "Monthly ICT Performance Report";
+    ViewData["Breadcrumbs"] = new List<(string Title, string? Url)>
+    {
+        ("Forms", null),
+        ("Monthly ICT Report", null)
+    };
+}
+
+
+
+@* Render the form *@
+<div class="row">
+    <div class="col-12">
+        @await Html.PartialAsync("Components/Form/_Form", Model)
+    </div>
+</div>
+
+@section Scripts
+{
+    <script src="~/js/form-wizard.js"></script>
+    <script>
+        // Form submission handler
+        document.getElementById('form-@Model.FormId')?.addEventListener('submit', function(e) {
+            e.preventDefault();
+            alert('Form submission prevented (test mode). In production, this would submit to: ' + this.action);
+        });
+
+        // Save draft handler
+        window.saveDraft = function(formId) {
+            alert('Draft saved successfully! (Test mode)');
+            // Show toast notification
+            var toast = new bootstrap.Toast(document.getElementById('auto-save-toast-' + formId));
+            toast.show();
+        };
+
+        // Reset form handler
+        window.resetForm = function(formId) {
+            if (confirm('Are you sure you want to reset this form? All unsaved changes will be lost.')) {
+                document.getElementById('form-' + formId)?.reset();
+            }
+        };
+
+        // Cancel form handler
+        window.cancelForm = function(formId) {
+            if (confirm('Are you sure you want to cancel? Any unsaved changes will be lost.')) {
+                window.location.href = '/';
+            }
+        };
+    </script>
+}

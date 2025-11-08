@@ -1,0 +1,40 @@
+@model FormReporting.Models.ViewModels.Components.FormFieldViewModel
+
+@*
+    TextArea Field - Multi-line text input
+*@
+
+<div class="mb-3 col-md-@Model.ColumnWidth">
+    <label for="@Model.InputId" class="form-label">
+        @Model.FieldName
+        @if (Model.IsRequired)
+        {
+            <span class="text-danger">*</span>
+        }
+    </label>
+
+    <textarea class="form-control"
+              id="@Model.InputId"
+              name="@Model.InputName"
+              rows="3"
+              placeholder="@Model.PlaceholderText"
+              @(Model.IsRequired ? "required" : "")
+              @(Model.IsReadOnly ? "readonly" : "")
+              @(Model.IsDisabled ? "disabled" : "")
+              data-field-id="@Model.FieldId"
+              @if (!string.IsNullOrEmpty(Model.ValidationDataAttribute))
+              {
+                  <text>data-validation='@Model.ValidationDataAttribute'</text>
+              }
+              @if (!string.IsNullOrEmpty(Model.ConditionalLogicDataAttribute))
+              {
+                  <text>data-conditional='@Model.ConditionalLogicDataAttribute'</text>
+              }>@Model.CurrentValue</textarea>
+
+    @if (!string.IsNullOrEmpty(Model.HelpText))
+    {
+        <div class="form-text">@Model.HelpText</div>
+    }
+
+    <div class="invalid-feedback"></div>
+</div>
