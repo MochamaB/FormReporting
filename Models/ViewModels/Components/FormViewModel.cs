@@ -72,6 +72,11 @@ namespace FormReporting.Models.ViewModels.Components
         public string SaveDraftButtonText { get; set; } = "Save as Draft";
 
         /// <summary>
+        /// Show reset button
+        /// </summary>
+        public bool ShowResetButton { get; set; } = true;
+
+        /// <summary>
         /// Show cancel button
         /// </summary>
         public bool ShowCancelButton { get; set; } = true;
@@ -452,6 +457,7 @@ namespace FormReporting.Models.ViewModels.Components
         public string SectionName { get; set; } = string.Empty;
         public string? SectionDescription { get; set; }
         public string? IconClass { get; set; }
+        public int DisplayOrder { get; set; }
         public bool IsCollapsible { get; set; }
         public bool IsCollapsedByDefault { get; set; }
         public bool IsRequired { get; set; }

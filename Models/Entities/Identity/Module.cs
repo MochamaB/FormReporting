@@ -17,6 +17,8 @@ namespace FormReporting.Models.Entities.Identity
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public int ModuleId { get; set; }
 
+        public int? MenuSectionId { get; set; }
+
         /// <summary>
         /// Unique module name
         /// </summary>
@@ -57,6 +59,9 @@ namespace FormReporting.Models.Entities.Identity
         /// Date when the module was created
         /// </summary>
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
+
+        [ForeignKey(nameof(MenuSectionId))]
+        public virtual MenuSection? MenuSection { get; set; }
 
         // Navigation properties
         /// <summary>

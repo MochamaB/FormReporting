@@ -33,6 +33,7 @@ namespace FormReporting.Extensions
                 CssClass = config.CssClass,
                 SubmitButtonText = config.SubmitButtonText,
                 SaveDraftButtonText = config.SaveDraftButtonText,
+                ShowResetButton = config.ShowResetButton,
                 ShowCancelButton = config.ShowCancelButton,
                 // Wizard mode properties
                 RenderMode = config.RenderMode,
@@ -190,6 +191,162 @@ namespace FormReporting.Extensions
                 FieldType = FormFieldType.Dropdown,
                 IsRequired = isRequired,
                 Options = options
+            });
+        }
+
+        /// <summary>
+        /// Fluent API: Add text area field
+        /// </summary>
+        public static FormSectionConfig WithTextAreaField(
+            this FormSectionConfig section,
+            string fieldId,
+            string fieldName,
+            bool isRequired = false,
+            string? placeholder = null)
+        {
+            return section.WithField(new FormFieldConfig
+            {
+                FieldId = fieldId,
+                FieldName = fieldName,
+                FieldType = FormFieldType.TextArea,
+                IsRequired = isRequired,
+                PlaceholderText = placeholder
+            });
+        }
+
+        /// <summary>
+        /// Fluent API: Add date field
+        /// </summary>
+        public static FormSectionConfig WithDateField(
+            this FormSectionConfig section,
+            string fieldId,
+            string fieldName,
+            bool isRequired = false)
+        {
+            return section.WithField(new FormFieldConfig
+            {
+                FieldId = fieldId,
+                FieldName = fieldName,
+                FieldType = FormFieldType.Date,
+                IsRequired = isRequired
+            });
+        }
+
+        /// <summary>
+        /// Fluent API: Add date-time field
+        /// </summary>
+        public static FormSectionConfig WithDateTimeField(
+            this FormSectionConfig section,
+            string fieldId,
+            string fieldName,
+            bool isRequired = false)
+        {
+            return section.WithField(new FormFieldConfig
+            {
+                FieldId = fieldId,
+                FieldName = fieldName,
+                FieldType = FormFieldType.DateTime,
+                IsRequired = isRequired
+            });
+        }
+
+        /// <summary>
+        /// Fluent API: Add radio button field
+        /// </summary>
+        public static FormSectionConfig WithRadioField(
+            this FormSectionConfig section,
+            string fieldId,
+            string fieldName,
+            List<FormFieldOption> options,
+            bool isRequired = false)
+        {
+            return section.WithField(new FormFieldConfig
+            {
+                FieldId = fieldId,
+                FieldName = fieldName,
+                FieldType = FormFieldType.Radio,
+                IsRequired = isRequired,
+                Options = options
+            });
+        }
+
+        /// <summary>
+        /// Fluent API: Add checkbox field
+        /// </summary>
+        public static FormSectionConfig WithCheckboxField(
+            this FormSectionConfig section,
+            string fieldId,
+            string fieldName,
+            List<FormFieldOption> options,
+            bool isRequired = false)
+        {
+            return section.WithField(new FormFieldConfig
+            {
+                FieldId = fieldId,
+                FieldName = fieldName,
+                FieldType = FormFieldType.Checkbox,
+                IsRequired = isRequired,
+                Options = options
+            });
+        }
+
+        /// <summary>
+        /// Fluent API: Add multi-select field
+        /// </summary>
+        public static FormSectionConfig WithMultiSelectField(
+            this FormSectionConfig section,
+            string fieldId,
+            string fieldName,
+            List<FormFieldOption> options,
+            bool isRequired = false)
+        {
+            return section.WithField(new FormFieldConfig
+            {
+                FieldId = fieldId,
+                FieldName = fieldName,
+                FieldType = FormFieldType.MultiSelect,
+                IsRequired = isRequired,
+                Options = options
+            });
+        }
+
+        /// <summary>
+        /// Fluent API: Add email field
+        /// </summary>
+        public static FormSectionConfig WithEmailField(
+            this FormSectionConfig section,
+            string fieldId,
+            string fieldName,
+            bool isRequired = false,
+            string? placeholder = null)
+        {
+            return section.WithField(new FormFieldConfig
+            {
+                FieldId = fieldId,
+                FieldName = fieldName,
+                FieldType = FormFieldType.Email,
+                IsRequired = isRequired,
+                PlaceholderText = placeholder
+            });
+        }
+
+        /// <summary>
+        /// Fluent API: Add phone field
+        /// </summary>
+        public static FormSectionConfig WithPhoneField(
+            this FormSectionConfig section,
+            string fieldId,
+            string fieldName,
+            bool isRequired = false,
+            string? placeholder = null)
+        {
+            return section.WithField(new FormFieldConfig
+            {
+                FieldId = fieldId,
+                FieldName = fieldName,
+                FieldType = FormFieldType.Phone,
+                IsRequired = isRequired,
+                PlaceholderText = placeholder
             });
         }
 
@@ -469,6 +626,7 @@ namespace FormReporting.Extensions
                 SectionName = section.SectionName,
                 SectionDescription = section.SectionDescription,
                 IconClass = section.IconClass,
+                DisplayOrder = section.DisplayOrder,
                 IsCollapsible = section.IsCollapsible,
                 IsCollapsedByDefault = section.IsCollapsedByDefault,
                 CollapseId = $"{formId}_section_{section.SectionId}"

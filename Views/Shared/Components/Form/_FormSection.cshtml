@@ -60,9 +60,17 @@
              class="@collapseClass"
              aria-labelledby="heading-@Model.CollapseId">
             <div class="card-body">
-                @* Fields will be rendered here once field partials are created *@
+                @* Render fields in rows (responsive multi-column layout) *@
                 <div class="form-fields-container">
-                    @* TODO: Render fields using _FormField.cshtml partial *@
+                    @foreach (var fieldRow in Model.FieldRows)
+                    {
+                        <div class="row">
+                            @foreach (var field in fieldRow)
+                            {
+                                @await Html.PartialAsync("Components/Form/_FormField", field)
+                            }
+                        </div>
+                    }
                 </div>
             </div>
         </div>
@@ -100,9 +108,17 @@
 
         @* Always-Visible Body *@
         <div class="card-body">
-            @* Fields will be rendered here once field partials are created *@
+            @* Render fields in rows (responsive multi-column layout) *@
             <div class="form-fields-container">
-                @* TODO: Render fields using _FormField.cshtml partial *@
+                @foreach (var fieldRow in Model.FieldRows)
+                {
+                    <div class="row">
+                        @foreach (var field in fieldRow)
+                        {
+                            @await Html.PartialAsync("Components/Form/_FormField", field)
+                        }
+                    </div>
+                }
             </div>
         </div>
     }

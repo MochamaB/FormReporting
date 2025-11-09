@@ -76,6 +76,8 @@ namespace FormReporting.Data
         /// </summary>
         public DbSet<UserRole> UserRoles { get; set; } = null!;
 
+        public DbSet<MenuSection> MenuSections { get; set; } = null!;
+
         /// <summary>
         /// Application modules
         /// </summary>
@@ -348,6 +350,7 @@ namespace FormReporting.Data
             modelBuilder.ApplyConfiguration(new RoleConfiguration());
             modelBuilder.ApplyConfiguration(new UserConfiguration());
             modelBuilder.ApplyConfiguration(new UserRoleConfiguration());
+            modelBuilder.ApplyConfiguration(new MenuSectionConfiguration());
             modelBuilder.ApplyConfiguration(new ModuleConfiguration());
             modelBuilder.ApplyConfiguration(new PermissionConfiguration());
             modelBuilder.ApplyConfiguration(new RolePermissionConfiguration());

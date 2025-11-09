@@ -1,0 +1,53 @@
+@model FormReporting.Models.ViewModels.Components.SidebarViewModel
+
+@*
+    Dynamic Sidebar Menu Component
+    Renders menu sections, modules, and menu items from database
+*@
+
+<ul class="navbar-nav" id="navbar-nav">
+    @foreach (var menusection in Model.Sections.OrderBy(s => s.DisplayOrder))
+    {
+        @* Menu Section Title (e.g., "Menu", "Management", "System") *@
+        <li class="menu-title">
+            <span>@menusection.SectionName</span>
+        </li>
+
+        @* Modules within this section *@
+        @foreach (var module in menusection.Modules.OrderBy(m => m.DisplayOrder))
+        {
+            <li class="nav-item">
+                @* Module Header (collapsible) *@
+                <a class="nav-link menu-link"
+                   href="#@module.CollapseId"
+                   data-bs-toggle="collapse"
+                   role="button"
+                   aria-expanded="false"
+                   aria-controls="@module.CollapseId">
+                    @if (!string.IsNullOrEmpty(module.Icon))
+                    {
+                        <i class="@module.Icon"></i>
+                    }
+                    <span>@module.ModuleName</span>
+                </a>
+
+                @* Menu Items (dropdown content) *@
+                @if (module.MenuItems.Any())
+                {
+                    <div class="collapse menu-dropdown" id="@module.CollapseId" data-bs-parent="#navbar-nav">
+                        <ul class="nav nav-sm flex-column">
+                            @foreach (var menuItem in module.MenuItems.OrderBy(mi => mi.DisplayOrder))
+                            {
+                                <li class="nav-item">
+                                    <a href="@menuItem.Url" class="nav-link" data-key="@menuItem.MenuCode">
+                                        @menuItem.MenuTitle
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                }
+            </li>
+        }
+    }
+</ul>

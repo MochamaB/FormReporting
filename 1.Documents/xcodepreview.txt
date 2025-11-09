@@ -1,21 +1,221 @@
-Severity	Code	Description	Project	File	Line	Suppression State
-Error (active)	CS0029	Cannot implicitly convert type 'string' to 'FormReporting.Models.Common.FieldLayoutType'	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Extensions\FormExtensions.cs	331	
-Error (active)	CS1503	Argument 1: cannot convert from 'object' to 'string?'	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Shared\Components\Form\Fields\_CheckboxField.cshtml	22	
-Error (active)	CS1929	'object' does not contain a definition for 'Split' and the best extension method overload 'MemoryExtensions.Split<char>(ReadOnlySpan<char>, char)' requires a receiver of type 'System.ReadOnlySpan<char>'	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Shared\Components\Form\Fields\_CheckboxField.cshtml	23	
-Error (active)	CS1061	'FormFieldOption' does not contain a definition for 'IsDisabled' and no accessible extension method 'IsDisabled' accepting a first argument of type 'FormFieldOption' could be found (are you missing a using directive or an assembly reference?)	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Shared\Components\Form\Fields\_CheckboxField.cshtml	32	
-Error (active)	RZ1031	The tag helper 'option' must not have C# in the element's attribute declaration area.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Shared\Components\Form\Fields\_DropdownField.cshtml	40	
-Error (active)	CS1503	Argument 1: cannot convert from 'object' to 'string?'	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Shared\Components\Form\Fields\_FileUploadField.cshtml	32	
-Error (active)	CS1503	Argument 1: cannot convert from 'object' to 'string?'	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Shared\Components\Form\Fields\_ImageField.cshtml	36	
-Error (active)	CS1503	Argument 1: cannot convert from 'object' to 'string?'	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Shared\Components\Form\Fields\_MultiSelectField.cshtml	33	
-Error (active)	CS1929	'object' does not contain a definition for 'Split' and the best extension method overload 'MemoryExtensions.Split<char>(ReadOnlySpan<char>, char)' requires a receiver of type 'System.ReadOnlySpan<char>'	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Shared\Components\Form\Fields\_MultiSelectField.cshtml	34	
-Error (active)	RZ1031	The tag helper 'option' must not have C# in the element's attribute declaration area.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Shared\Components\Form\Fields\_MultiSelectField.cshtml	40	
-Error (active)	CS1061	'FormFieldOption' does not contain a definition for 'IsDisabled' and no accessible extension method 'IsDisabled' accepting a first argument of type 'FormFieldOption' could be found (are you missing a using directive or an assembly reference?)	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Shared\Components\Form\Fields\_RadioField.cshtml	29	
-Error (active)	CS1503	Argument 1: cannot convert from 'object' to 'string?'	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Shared\Components\Form\Fields\_RatingField.cshtml	10	
-Error (active)	CS1503	Argument 1: cannot convert from 'object' to 'System.ReadOnlySpan<byte>'	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Shared\Components\Form\Fields\_RatingField.cshtml	10	
-Error (active)	CS1503	Argument 1: cannot convert from 'object' to 'string?'	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Shared\Components\Form\Fields\_SliderField.cshtml	11	
-Error (active)	CS0019	Operator '??' cannot be applied to operands of type 'List<FormFieldOption>' and 'List<FieldOptionViewModel>'	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Shared\Components\Form\Layouts\_FormFieldMatrix.cshtml	32	
-Error (active)	CS0234	The type or namespace name 'FieldOptionViewModel' does not exist in the namespace 'FormReporting.Models.ViewModels.Components' (are you missing an assembly reference?)	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Shared\Components\Form\Layouts\_FormFieldMatrix.cshtml	32	
-Error (active)	CS1503	Argument 1: cannot convert from 'object' to 'string?'	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Shared\Components\Form\Layouts\_FormFieldMatrix.cshtml	111	
-Error (active)	CS1929	'object' does not contain a definition for 'Split' and the best extension method overload 'MemoryExtensions.Split<char>(ReadOnlySpan<char>, char)' requires a receiver of type 'System.ReadOnlySpan<char>'	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Shared\Components\Form\Layouts\_FormFieldMatrix.cshtml	112	
-Error (active)	CS1503	Argument 1: cannot convert from 'object' to 'string?'	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Shared\Components\Form\Layouts\_FormFieldMatrix.cshtml	146	
-Error (active)	CS1503	Argument 1: cannot convert from 'object' to 'System.ReadOnlySpan<byte>'	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Shared\Components\Form\Layouts\_FormFieldMatrix.cshtml	147	
+
+{
+    public static class StandardFormExtensions
+    {
+        /// <summary>
+        /// Builds a FormViewModel from simple FormConfig
+        /// This keeps ALL logic out of the view
+        /// </summary>
+        public static FormViewModel BuildForm(this FormConfig config)
+        {
+            var standardform = new StandardFormExtensions
+            {
+                FormId = config.FormId,
+                ActionUrl = config.ActionUrl,
+                Method = config.Method,
+                FormType = config.FormType,
+                LabelColumnWidth = config.LabelColumnWidth,
+                InputColumnWidth = config.InputColumnWidth,
+                FieldsPerRow = config.FieldsPerRow,
+                FieldColumnClass = config.FieldColumnClass,
+                FieldColumnClasses = config.FieldColumnClasses,
+                SubmitButtonText = config.SubmitButtonText,
+                SubmitButtonClass = config.SubmitButtonClass,
+                CancelButtonText = config.CancelButtonText,
+                CancelUrl = config.CancelUrl,
+                WrapInCard = config.WrapInCard,
+                CardTitle = config.CardTitle
+            };
+
+            // Build fields with unique IDs
+            foreach (var fieldConfig in config.Fields)
+            {
+                var field = new StandardFormExtensions
+                {
+                    Name = fieldConfig.Name,
+                    PropertyName = !string.IsNullOrEmpty(fieldConfig.PropertyName) ? fieldConfig.PropertyName : fieldConfig.Name,
+                    Label = fieldConfig.Label,
+                    Type = fieldConfig.Type,
+                    Placeholder = fieldConfig.Placeholder,
+                    Value = fieldConfig.Value,
+                    DefaultValue = fieldConfig.DefaultValue,
+                    Required = fieldConfig.Required,
+                    Disabled = fieldConfig.Disabled,
+                    ReadOnly = fieldConfig.ReadOnly,
+                    Rows = fieldConfig.Rows,
+                    Options = fieldConfig.Options,
+                    ValidationMessage = fieldConfig.ValidationMessage,
+                    MaxLength = fieldConfig.MaxLength,
+                    MinLength = fieldConfig.MinLength,
+                    CustomAttributes = fieldConfig.CustomAttributes,
+                    CustomCssClass = fieldConfig.CustomCssClass,
+                    HelpText = fieldConfig.HelpText,
+                    UniqueId = GenerateUniqueId(config.FormId, fieldConfig.Name)
+                };
+
+                form.Fields.Add(field);
+            }
+
+            return form;
+        }
+
+        private static string GenerateUniqueId(string formId, string fieldName)
+        {
+            // Generate unique ID like: createCategoryForm_categoryName
+            return $"{formId}_{fieldName}";
+        }
+    }
+}
+
+
+ public class FormConfig
+    {
+        public string FormId { get; set; } = "mainForm";
+        public string ActionUrl { get; set; } = "";
+        public string Method { get; set; } = "POST";
+        public FormType FormType { get; set; } = FormType.VerticalForm;
+
+        // Fields configuration
+        public List<FormFieldConfig> Fields { get; set; } = new List<FormFieldConfig>();
+
+        // Horizontal form options
+        public int LabelColumnWidth { get; set; } = 2;  // col-sm-2 for labels
+        public int InputColumnWidth { get; set; } = 10; // col-sm-10 for inputs
+
+        // Layout options for multi-column forms
+        public int FieldsPerRow { get; set; } = 1; // 1 = single column, 2 = two columns, etc.
+        public string FieldColumnClass { get; set; } = "col-md-12"; // For single column width (e.g., col-md-8 to center)
+        public List<string>? FieldColumnClasses { get; set; } // For multi-column: ["col-md-8", "col-md-4"]
+
+        // Buttons
+        public string SubmitButtonText { get; set; } = "Submit";
+        public string SubmitButtonClass { get; set; } = "btn btn-primary";
+        public string? CancelButtonText { get; set; } = "Cancel";
+        public string? CancelUrl { get; set; }
+
+        // Card wrapper
+        public bool WrapInCard { get; set; } = true;
+        public string? CardTitle { get; set; }
+    }
+
+    /// <summary>
+    /// Individual field configuration
+    /// </summary>
+    public class FormFieldConfig
+    {
+        public string Name { get; set; } = "";
+        public string PropertyName { get; set; } = ""; // For binding to ViewModel properties
+        public string Label { get; set; } = "";
+        public FieldType Type { get; set; } = FieldType.Text;
+        public string? Placeholder { get; set; }
+        public string? Value { get; set; }
+        public string? DefaultValue { get; set; }
+        public bool Required { get; set; } = false;
+        public bool Disabled { get; set; } = false;
+        public bool ReadOnly { get; set; } = false;
+
+        // For Textarea
+        public int Rows { get; set; } = 3;
+
+        // For Select/Dropdown
+        public List<FormSelectOption>? Options { get; set; }
+
+        // Validation
+        public string? ValidationMessage { get; set; }
+        public int? MaxLength { get; set; }
+        public int? MinLength { get; set; }
+
+        // Custom attributes
+        public Dictionary<string, string>? CustomAttributes { get; set; }
+
+        // CSS
+        public string? CustomCssClass { get; set; }
+
+        // Help text
+        public string? HelpText { get; set; }
+    }
+
+    /// <summary>
+    /// Internal ViewModel for rendering (created by extension method)
+    /// </summary>
+    public class FormViewModel
+    {
+        public string FormId { get; set; } = "";
+        public string ActionUrl { get; set; } = "";
+        public string Method { get; set; } = "POST";
+        public FormType FormType { get; set; } = FormType.VerticalForm;
+        public List<FormFieldViewModel> Fields { get; set; } = new List<FormFieldViewModel>();
+        public int LabelColumnWidth { get; set; } = 2;
+        public int InputColumnWidth { get; set; } = 10;
+        public int FieldsPerRow { get; set; } = 1;
+        public string FieldColumnClass { get; set; } = "col-md-12";
+        public List<string>? FieldColumnClasses { get; set; }
+        public string SubmitButtonText { get; set; } = "Submit";
+        public string SubmitButtonClass { get; set; } = "btn btn-primary";
+        public string? CancelButtonText { get; set; }
+        public string? CancelUrl { get; set; }
+        public bool WrapInCard { get; set; } = true;
+        public string? CardTitle { get; set; }
+    }
+
+    public class FormFieldViewModel
+    {
+        public string Name { get; set; } = "";
+        public string PropertyName { get; set; } = "";
+        public string Label { get; set; } = "";
+        public FieldType Type { get; set; } = FieldType.Text;
+        public string? Placeholder { get; set; }
+        public string? Value { get; set; }
+        public string? DefaultValue { get; set; }
+        public bool Required { get; set; } = false;
+        public bool Disabled { get; set; } = false;
+        public bool ReadOnly { get; set; } = false;
+        public int Rows { get; set; } = 3;
+        public List<FormSelectOption>? Options { get; set; }
+        public string? ValidationMessage { get; set; }
+        public int? MaxLength { get; set; }
+        public int? MinLength { get; set; }
+        public Dictionary<string, string>? CustomAttributes { get; set; }
+        public string? CustomCssClass { get; set; }
+        public string? HelpText { get; set; }
+        public string UniqueId { get; set; } = ""; // Generated unique ID for field
+    }
+
+    public enum FormType
+    {
+        VerticalForm,        // Standard vertical layout
+        HorizontalForm,      // Labels on left, inputs on right
+        FloatingLabelForm,   // Floating labels (mobile-friendly)
+        InlineForm          // Compact inline layout
+    }
+
+    public enum FieldType
+    {
+        Text,
+        Email,
+        Password,
+        Number,
+        Tel,
+        Url,
+        Textarea,
+        Select,
+        Checkbox,
+        Radio,
+        Date,
+        DateTime,
+        Time,
+        File,
+        Hidden,
+        Color
+    }
+
+    /// <summary>
+    /// Select option for form dropdowns (separate from table filter SelectOption)
+    /// </summary>
+    public class FormSelectOption
+    {
+        public string Text { get; set; } = "";
+        public string Value { get; set; } = "";
+        public bool Selected { get; set; } = false;
+        public bool Disabled { get; set; } = false;
+    }
