@@ -6,6 +6,10 @@ using FormReporting.Data.Configurations.Software;
 using FormReporting.Data.Configurations.Hardware;
 using FormReporting.Data.Configurations.Tickets;
 using FormReporting.Data.Configurations.Financial;
+using FormReporting.Data.Configurations.Notifications;
+using FormReporting.Data.Configurations.Reporting;
+using FormReporting.Data.Configurations.Media;
+using FormReporting.Data.Configurations.Audit;
 using FormReporting.Models.Entities.Identity;
 using FormReporting.Models.Entities.Organizational;
 using FormReporting.Models.Entities.Metrics;
@@ -14,6 +18,10 @@ using FormReporting.Models.Entities.Software;
 using FormReporting.Models.Entities.Hardware;
 using FormReporting.Models.Entities.Tickets;
 using FormReporting.Models.Entities.Financial;
+using FormReporting.Models.Entities.Notifications;
+using FormReporting.Models.Entities.Reporting;
+using FormReporting.Models.Entities.Media;
+using FormReporting.Models.Entities.Audit;
 using Microsoft.EntityFrameworkCore;
 
 namespace FormReporting.Data
@@ -328,12 +336,140 @@ namespace FormReporting.Data
         public DbSet<TenantExpense> TenantExpenses { get; set; } = null!;
 
         // ============================================================================
-        // TODO: Additional sections will be added as we scaffold them
-        // - Section 9: Reporting & Analytics
-        // - Section 10: Notifications
-        // - Section 11: Media Management
-        // - Section 12: Audit & Logging
+        // SECTION 9: UNIFIED NOTIFICATION SYSTEM
         // ============================================================================
+
+        /// <summary>
+        /// Notification channels (Email, SMS, Push, InApp)
+        /// </summary>
+        public DbSet<NotificationChannel> NotificationChannels { get; set; } = null!;
+
+        /// <summary>
+        /// Central notification inbox
+        /// </summary>
+        public DbSet<Notification> Notifications { get; set; } = null!;
+
+        /// <summary>
+        /// Notification recipients
+        /// </summary>
+        public DbSet<NotificationRecipient> NotificationRecipients { get; set; } = null!;
+
+        /// <summary>
+        /// Multi-channel delivery tracking
+        /// </summary>
+        public DbSet<NotificationDelivery> NotificationDeliveries { get; set; } = null!;
+
+        /// <summary>
+        /// Reusable notification templates
+        /// </summary>
+        public DbSet<NotificationTemplate> NotificationTemplates { get; set; } = null!;
+
+        /// <summary>
+        /// User notification preferences
+        /// </summary>
+        public DbSet<UserNotificationPreference> UserNotificationPreferences { get; set; } = null!;
+
+        /// <summary>
+        /// Automated alert definitions
+        /// </summary>
+        public DbSet<AlertDefinition> AlertDefinitions { get; set; } = null!;
+
+        /// <summary>
+        /// Alert trigger history
+        /// </summary>
+        public DbSet<AlertHistory> AlertHistories { get; set; } = null!;
+
+        // ============================================================================
+        // SECTION 10: REPORTING & ANALYTICS
+        // ============================================================================
+
+        /// <summary>
+        /// Tenant performance snapshots (pre-aggregated metrics)
+        /// </summary>
+        public DbSet<TenantPerformanceSnapshot> TenantPerformanceSnapshots { get; set; } = null!;
+
+        /// <summary>
+        /// Regional monthly snapshots
+        /// </summary>
+        public DbSet<RegionalMonthlySnapshot> RegionalMonthlySnapshots { get; set; } = null!;
+
+        /// <summary>
+        /// Custom report definitions
+        /// </summary>
+        public DbSet<ReportDefinition> ReportDefinitions { get; set; } = null!;
+
+        /// <summary>
+        /// Report fields/columns
+        /// </summary>
+        public DbSet<ReportField> ReportFields { get; set; } = null!;
+
+        /// <summary>
+        /// Report filters
+        /// </summary>
+        public DbSet<ReportFilter> ReportFilters { get; set; } = null!;
+
+        /// <summary>
+        /// Report groupings
+        /// </summary>
+        public DbSet<ReportGrouping> ReportGroupings { get; set; } = null!;
+
+        /// <summary>
+        /// Report sorting
+        /// </summary>
+        public DbSet<ReportSorting> ReportSortings { get; set; } = null!;
+
+        /// <summary>
+        /// Report schedules
+        /// </summary>
+        public DbSet<ReportSchedule> ReportSchedules { get; set; } = null!;
+
+        /// <summary>
+        /// Report cache
+        /// </summary>
+        public DbSet<ReportCache> ReportCaches { get; set; } = null!;
+
+        /// <summary>
+        /// Report access control
+        /// </summary>
+        public DbSet<ReportAccessControl> ReportAccessControls { get; set; } = null!;
+
+        /// <summary>
+        /// Report execution logs
+        /// </summary>
+        public DbSet<ReportExecutionLog> ReportExecutionLogs { get; set; } = null!;
+
+        // ============================================================================
+        // SECTION 11: MEDIA MANAGEMENT
+        // ============================================================================
+
+        /// <summary>
+        /// Master file storage for all uploads
+        /// </summary>
+        public DbSet<MediaFile> MediaFiles { get; set; } = null!;
+
+        /// <summary>
+        /// Polymorphic file associations to any entity
+        /// </summary>
+        public DbSet<EntityMediaFile> EntityMediaFiles { get; set; } = null!;
+
+        /// <summary>
+        /// File access audit trail
+        /// </summary>
+        public DbSet<FileAccessLog> FileAccessLogs { get; set; } = null!;
+
+        // ============================================================================
+        // SECTION 12: AUDIT & LOGGING
+        // ============================================================================
+
+        /// <summary>
+        /// Audit logs for data changes
+        /// </summary>
+        public DbSet<AuditLog> AuditLogs { get; set; } = null!;
+
+        /// <summary>
+        /// User activity logs
+        /// </summary>
+        public DbSet<UserActivityLog> UserActivityLogs { get; set; } = null!;
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -409,7 +545,37 @@ namespace FormReporting.Data
             modelBuilder.ApplyConfiguration(new TenantBudgetConfiguration());
             modelBuilder.ApplyConfiguration(new TenantExpenseConfiguration());
 
-            // TODO: Apply additional configurations as we scaffold more sections
+            // Apply Section 9: Unified Notification System configurations
+            modelBuilder.ApplyConfiguration(new NotificationChannelConfiguration());
+            modelBuilder.ApplyConfiguration(new NotificationConfiguration());
+            modelBuilder.ApplyConfiguration(new NotificationRecipientConfiguration());
+            modelBuilder.ApplyConfiguration(new NotificationDeliveryConfiguration());
+            modelBuilder.ApplyConfiguration(new NotificationTemplateConfiguration());
+            modelBuilder.ApplyConfiguration(new UserNotificationPreferenceConfiguration());
+            modelBuilder.ApplyConfiguration(new AlertDefinitionConfiguration());
+            modelBuilder.ApplyConfiguration(new AlertHistoryConfiguration());
+
+            // Apply Section 10: Reporting & Analytics configurations
+            modelBuilder.ApplyConfiguration(new TenantPerformanceSnapshotConfiguration());
+            modelBuilder.ApplyConfiguration(new RegionalMonthlySnapshotConfiguration());
+            modelBuilder.ApplyConfiguration(new ReportDefinitionConfiguration());
+            modelBuilder.ApplyConfiguration(new ReportFieldConfiguration());
+            modelBuilder.ApplyConfiguration(new ReportFilterConfiguration());
+            modelBuilder.ApplyConfiguration(new ReportGroupingConfiguration());
+            modelBuilder.ApplyConfiguration(new ReportSortingConfiguration());
+            modelBuilder.ApplyConfiguration(new ReportScheduleConfiguration());
+            modelBuilder.ApplyConfiguration(new ReportCacheConfiguration());
+            modelBuilder.ApplyConfiguration(new ReportAccessControlConfiguration());
+            modelBuilder.ApplyConfiguration(new ReportExecutionLogConfiguration());
+
+            // Apply Section 11: Media Management configurations
+            modelBuilder.ApplyConfiguration(new MediaFileConfiguration());
+            modelBuilder.ApplyConfiguration(new EntityMediaFileConfiguration());
+            modelBuilder.ApplyConfiguration(new FileAccessLogConfiguration());
+
+            // Apply Section 12: Audit & Logging configurations
+            modelBuilder.ApplyConfiguration(new AuditLogConfiguration());
+            modelBuilder.ApplyConfiguration(new UserActivityLogConfiguration());
         }
 
         /// <summary>

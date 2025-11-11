@@ -15,11 +15,13 @@ FROM MenuItems
 ORDER BY ModuleId, DisplayOrder;
 
 -- Step 2: Update MenuItems - Move Action to Controller, set Action to 'Index'
+-- Note: We need to use a temporary variable to swap values
 UPDATE MenuItems
 SET
     Controller = Action,      -- Move current Action value to Controller
     Action = 'Index'          -- Set Action to Index
-WHERE Action IS NOT NULL;
+WHERE Action IS NOT NULL
+  AND Controller IS NOT NULL;
 
 -- Step 3: Verify the changes
 SELECT

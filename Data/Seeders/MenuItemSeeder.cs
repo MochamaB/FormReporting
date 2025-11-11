@@ -19,7 +19,7 @@ namespace FormReporting.Data.Seeders
             int menuItemId = 1;
 
             // Helper method to add menu items
-            int AddMenuItems(int? parentId, int moduleId, string moduleCode, string icon, string controller, List<(string Title, string Code, string Action, int Order, int Level)> items)
+            int AddMenuItems(int? parentId, int moduleId, string moduleCode, string icon, List<(string Title, string Code, string Controller, int Order, int Level)> items)
             {
                 int? firstItemId = null;
 
@@ -27,13 +27,13 @@ namespace FormReporting.Data.Seeders
                         {
                             var menuItem = new MenuItem
                             {
-                               
+
                                 ParentMenuItemId = parentId,
                                 ModuleId = moduleId,
                                 MenuTitle = item.Title,
                                 MenuCode = $"{moduleCode}_{item.Code}",
-                                Controller = controller,
-                                Action = item.Action,
+                                Controller = item.Controller,
+                                Action = "Index",  // All actions default to Index
                                 Icon = parentId == null ? icon : null,
                                 DisplayOrder = item.Order,
                                 Level = item.Level,
@@ -60,7 +60,7 @@ namespace FormReporting.Data.Seeders
             // Dashboards Module (1)
             if (modules.TryGetValue("DASHBOARDS", out var dashboardsModuleId))
             {
-                var parentId = AddMenuItems(null, dashboardsModuleId, "DASH", "ri-dashboard-2-line", "Dashboard", new()
+                var parentId = AddMenuItems(null, dashboardsModuleId, "DASH", "ri-dashboard-2-line", new()
                 {
                     ("Analytics Dashboard", "ANALYTICS", "Analytics", 1, 1),
                     ("Regional Overview", "REGIONAL", "Regional", 2, 1),
@@ -72,7 +72,7 @@ namespace FormReporting.Data.Seeders
             // Forms & Submissions Module (3)
             if (modules.TryGetValue("FORMS", out var formsModuleId))
             {
-                var parentId = AddMenuItems(null, formsModuleId, "FORMS", "ri-file-list-3-line", "Forms", new()
+                var parentId = AddMenuItems(null, formsModuleId, "FORMS", "ri-file-list-3-line", new()
                 {
                     ("Assigned Forms", "ASSIGNED", "Assigned", 1, 1),
                     ("My Submissions", "MY", "MySubmissions", 2, 1),
@@ -85,7 +85,7 @@ namespace FormReporting.Data.Seeders
             // Reports & Analytics Module (9)
             if (modules.TryGetValue("REPORTS", out var reportsModuleId))
             {
-                var parentId = AddMenuItems(null, reportsModuleId, "REPORTS", "ri-file-chart-line", "Reports", new()
+                var parentId = AddMenuItems(null, reportsModuleId, "REPORTS", "ri-file-chart-line", new()
                 {
                     ("All Reports", "ALL", "All", 1, 1),
                     ("Regional Summary", "REGIONAL", "Regional", 2, 1),
@@ -99,12 +99,12 @@ namespace FormReporting.Data.Seeders
             // Support Tickets Module (7)
             if (modules.TryGetValue("SUPPORT", out var supportModuleId))
             {
-                var parentId = AddMenuItems(null, supportModuleId, "TICKETS", "ri-ticket-2-line", "Tickets", new()
+                var parentId = AddMenuItems(null, supportModuleId, "TICKETS", "ri-ticket-2-line", new()
                 {
-                    ("All Tickets", "ALL", "All", 1, 1),
-                    ("My Tickets", "MY", "My", 2, 1),
-                    ("Create Ticket", "CREATE", "Create", 3, 1),
-                    ("Ticket Categories", "CATEGORIES", "Categories", 4, 1),
+                    ("All Tickets", "ALL", "Ticket", 1, 1),
+                    ("My Tickets", "MY", "MyTicket", 2, 1),
+                    ("Create Ticket", "CREATE", "Ticket", 3, 1),
+                    ("Ticket Categories", "CATEGORIES", "TicketCategory", 4, 1),
                     ("SLA Monitoring", "SLA", "SLA", 5, 1)
                 });
             }
@@ -114,26 +114,26 @@ namespace FormReporting.Data.Seeders
             // Hardware Inventory Module (6)
             if (modules.TryGetValue("HARDWARE", out var hardwareModuleId))
             {
-                var parentId = AddMenuItems(null, hardwareModuleId, "HARDWARE", "ri-computer-line", "Hardware", new()
+                var parentId = AddMenuItems(null, hardwareModuleId, "HARDWARE", "ri-computer-line", new()
                 {
-                    ("All Hardware Assets", "ALL", "All", 1, 1),
-                    ("Asset Assignments", "ASSIGNMENTS", "Assignments", 2, 1),
+                    ("All Hardware Assets", "ALL", "Hardware", 1, 1),
+                    ("Asset Assignments", "ASSIGNMENTS", "HardwareAssignment", 2, 1),
                     ("Maintenance Records", "MAINTENANCE", "Maintenance", 3, 1),
                     ("Disposal Tracking", "DISPOSAL", "Disposal", 4, 1),
-                    ("Hardware Categories", "CATEGORIES", "Categories", 5, 1)
+                    ("Hardware Categories", "CATEGORIES", "HardwareCategory", 5, 1)
                 });
             }
 
             // Software Management Module (5)
             if (modules.TryGetValue("SOFTWARE", out var softwareModuleId))
             {
-                var parentId = AddMenuItems(null, softwareModuleId, "SOFTWARE", "ri-apps-line", "Software", new()
+                var parentId = AddMenuItems(null, softwareModuleId, "SOFTWARE", "ri-apps-line", new()
                 {
-                    ("Software Catalog", "CATALOG", "Catalog", 1, 1),
-                    ("License Management", "LICENSES", "Licenses", 2, 1),
-                    ("Installations", "INSTALLATIONS", "Installations", 3, 1),
-                    ("Version Control", "VERSIONS", "Versions", 4, 1),
-                    ("License Allocations", "ALLOCATIONS", "Allocations", 5, 1)
+                    ("Software Catalog", "CATALOG", "Software", 1, 1),
+                    ("License Management", "LICENSES", "License", 2, 1),
+                    ("Installations", "INSTALLATIONS", "Installation", 3, 1),
+                    ("Version Control", "VERSIONS", "SoftwareVersion", 4, 1),
+                    ("License Allocations", "ALLOCATIONS", "LicenseAllocation", 5, 1)
                 });
             }
 
@@ -142,28 +142,28 @@ namespace FormReporting.Data.Seeders
             // Organizational Structure Module (1)
             if (modules.TryGetValue("ORG_STRUCTURE", out var orgStructureModuleId))
             {
-                var parentId = AddMenuItems(null, orgStructureModuleId, "ORG", "ri-building-line", "Organization", new()
+                var parentId = AddMenuItems(null, orgStructureModuleId, "ORG", "ri-building-line", new()
                 {
-                    ("All Tenants", "TENANTS", "Tenants", 1, 1),
-                    ("Factories", "FACTORIES", "Factories", 2, 1),
-                    ("Subsidiaries", "SUBSIDIARIES", "Subsidiaries", 3, 1),
-                    ("Regions", "REGIONS", "Regions", 4, 1),
-                    ("Tenant Groups", "GROUPS", "Groups", 5, 1),
-                    ("Departments", "DEPARTMENTS", "Departments", 6, 1)
+                    ("All Tenants", "TENANTS", "Tenant", 1, 1),
+                    ("Factories", "FACTORIES", "Factory", 2, 1),
+                    ("Subsidiaries", "SUBSIDIARIES", "Subsidiary", 3, 1),
+                    ("Regions", "REGIONS", "Region", 4, 1),
+                    ("Tenant Groups", "GROUPS", "TenantGroup", 5, 1),
+                    ("Departments", "DEPARTMENTS", "Department", 6, 1)
                 });
             }
 
             // Users & Access Management Module (2)
             if (modules.TryGetValue("IAM", out var iamModuleId))
             {
-                var parentId = AddMenuItems(null, iamModuleId, "IAM", "ri-user-line", "IAM", new()
+                var parentId = AddMenuItems(null, iamModuleId, "IAM", "ri-user-line", new()
                 {
-                    ("Users", "USERS", "Users", 1, 1),
-                    ("Roles", "ROLES", "Roles", 2, 1),
-                    ("Permissions", "PERMISSIONS", "Permissions", 3, 1),
-                    ("User Groups", "GROUPS", "Groups", 4, 1),
-                    ("Access Control", "ACCESS", "Access", 5, 1),
-                    ("Audit Logs", "AUDIT", "Audit", 6, 1)
+                    ("Users", "USERS", "User", 1, 1),
+                    ("Roles", "ROLES", "Role", 2, 1),
+                    ("Permissions", "PERMISSIONS", "Permission", 3, 1),
+                    ("User Groups", "GROUPS", "UserGroup", 4, 1),
+                    ("Access Control", "ACCESS", "AccessControl", 5, 1),
+                    ("Audit Logs", "AUDIT", "AuditLog", 6, 1)
                 });
             }
 
@@ -172,12 +172,12 @@ namespace FormReporting.Data.Seeders
             // Metrics & KPI Tracking Module (4)
             if (modules.TryGetValue("METRICS", out var metricsModuleId))
             {
-                var parentId = AddMenuItems(null, metricsModuleId, "METRICS", "ri-line-chart-line", "Metrics", new()
+                var parentId = AddMenuItems(null, metricsModuleId, "METRICS", "ri-line-chart-line", new()
                 {
-                    ("Metric Definitions", "DEFINITIONS", "Definitions", 1, 1),
-                    ("Performance Targets", "TARGETS", "Targets", 2, 1),
-                    ("Metric Values", "VALUES", "Values", 3, 1),
-                    ("Dashboard Widgets", "WIDGETS", "Widgets", 4, 1),
+                    ("Metric Definitions", "DEFINITIONS", "MetricDefinition", 1, 1),
+                    ("Performance Targets", "TARGETS", "PerformanceTarget", 2, 1),
+                    ("Metric Values", "VALUES", "MetricValue", 3, 1),
+                    ("Dashboard Widgets", "WIDGETS", "DashboardWidget", 4, 1),
                     ("KPI Monitoring", "KPI", "KPI", 5, 1)
                 });
             }
@@ -187,13 +187,13 @@ namespace FormReporting.Data.Seeders
             // Financial Tracking Module (8)
             if (modules.TryGetValue("FINANCE", out var financeModuleId))
             {
-                var parentId = AddMenuItems(null, financeModuleId, "FINANCE", "ri-money-dollar-circle-line", "Finance", new()
+                var parentId = AddMenuItems(null, financeModuleId, "FINANCE", "ri-money-dollar-circle-line", new()
                 {
-                    ("Budgets", "BUDGETS", "Budgets", 1, 1),
-                    ("Expenditures", "EXPENDITURES", "Expenditures", 2, 1),
-                    ("Cost Centers", "COSTCENTERS", "CostCenters", 3, 1),
-                    ("Vendors", "VENDORS", "Vendors", 4, 1),
-                    ("Financial Reports", "REPORTS", "Reports", 5, 1)
+                    ("Budgets", "BUDGETS", "Budget", 1, 1),
+                    ("Expenditures", "EXPENDITURES", "Expenditure", 2, 1),
+                    ("Cost Centers", "COSTCENTERS", "CostCenter", 3, 1),
+                    ("Vendors", "VENDORS", "Vendor", 4, 1),
+                    ("Financial Reports", "REPORTS", "FinancialReport", 5, 1)
                 });
             }
 
@@ -202,36 +202,36 @@ namespace FormReporting.Data.Seeders
             // Notifications Module (10)
             if (modules.TryGetValue("NOTIFICATIONS", out var notificationsModuleId))
             {
-                var parentId = AddMenuItems(null, notificationsModuleId, "NOTIF", "ri-notification-3-line", "Notifications", new()
+                var parentId = AddMenuItems(null, notificationsModuleId, "NOTIF", "ri-notification-3-line", new()
                 {
-                    ("All Notifications", "ALL", "All", 1, 1),
-                    ("Notification Templates", "TEMPLATES", "Templates", 2, 1),
-                    ("Notification Queue", "QUEUE", "Queue", 3, 1),
-                    ("User Preferences", "PREFERENCES", "Preferences", 4, 1),
-                    ("Alert Management", "ALERTS", "Alerts", 5, 1)
+                    ("All Notifications", "ALL", "Notification", 1, 1),
+                    ("Notification Templates", "TEMPLATES", "NotificationTemplate", 2, 1),
+                    ("Notification Queue", "QUEUE", "NotificationQueue", 3, 1),
+                    ("User Preferences", "PREFERENCES", "NotificationPreference", 4, 1),
+                    ("Alert Management", "ALERTS", "Alert", 5, 1)
                 });
             }
 
             // Media Management Module (11)
             if (modules.TryGetValue("MEDIA", out var mediaModuleId))
             {
-                var parentId = AddMenuItems(null, mediaModuleId, "MEDIA", "ri-folder-line", "Media", new()
+                var parentId = AddMenuItems(null, mediaModuleId, "MEDIA", "ri-folder-line", new()
                 {
-                    ("Media Files", "FILES", "Files", 1, 1),
-                    ("Folder Management", "FOLDERS", "Folders", 2, 1),
-                    ("Access Control", "ACCESS", "Access", 3, 1)
+                    ("Media Files", "FILES", "MediaFile", 1, 1),
+                    ("Folder Management", "FOLDERS", "MediaFolder", 2, 1),
+                    ("Access Control", "ACCESS", "MediaAccess", 3, 1)
                 });
             }
 
             // System Settings Module (12)
             if (modules.TryGetValue("SETTINGS", out var settingsModuleId))
             {
-                var parentId = AddMenuItems(null, settingsModuleId, "SETTINGS", "ri-settings-3-line", "Settings", new()
+                var parentId = AddMenuItems(null, settingsModuleId, "SETTINGS", "ri-settings-3-line", new()
                 {
-                    ("General Settings", "GENERAL", "General", 1, 1),
-                    ("System Configuration", "SYSTEM", "System", 2, 1),
-                    ("Audit Logs", "AUDIT", "Audit", 3, 1),
-                    ("Data Change Logs", "DATALOGS", "DataLogs", 4, 1),
+                    ("General Settings", "GENERAL", "GeneralSetting", 1, 1),
+                    ("System Configuration", "SYSTEM", "SystemConfiguration", 2, 1),
+                    ("Audit Logs", "AUDIT", "AuditLog", 3, 1),
+                    ("Data Change Logs", "DATALOGS", "DataChangeLog", 4, 1),
                     ("Login History", "LOGINHISTORY", "LoginHistory", 5, 1)
                 });
             }
