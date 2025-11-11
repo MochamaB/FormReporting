@@ -1,0 +1,136 @@
+@using FormReporting.Models.ViewModels.Components
+@using FormReporting.Extensions
+@{
+    ViewData["Title"] = "Vertical Wizard Test";
+    var wizard = ViewBag.VerticalWizard as WizardViewModel;
+}
+
+<!-- Page Title -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Vertical Wizard Component Test</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="javascript: void(0);">Components</a></li>
+                    <li class="breadcrumb-item"><a href="/ComponentTest/Wizards">Wizards</a></li>
+                    <li class="breadcrumb-item active">Vertical Wizard</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Vertical Wizard Test -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="ri-layout-left-line text-primary me-2"></i>
+                    Vertical Wizard - User Setup Example
+                </h4>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">
+                    2-column layout with modern vertical stepper and content area. 
+                    Features icon-based steps with connecting lines and smooth transitions.
+                    Ideal for simple workflows like user creation, role assignment, and configuration.
+                </p>
+                
+                <div class="alert alert-info">
+                    <i class="ri-information-line me-2"></i>
+                    <strong>Interactive Demo:</strong> Click Next/Previous buttons or click directly on steps to navigate. 
+                    Step states update automatically based on your position in the wizard.
+                </div>
+                
+                <div class="form-steps">
+                    <form id="@wizard.FormId" method="@wizard.FormMethod" action="@wizard.FormAction">
+                        <partial name="~/Views/Shared/Components/Wizards/_VerticalWizard.cshtml" model="wizard" />
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features & Usage -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-star-line me-2"></i>
+                    Features
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="py-2">
+                        <i class="ri-checkbox-circle-line text-success me-2"></i>
+                        <strong>Icon-based steps</strong> with custom icons
+                    </li>
+                    <li class="py-2">
+                        <i class="ri-checkbox-circle-line text-success me-2"></i>
+                        <strong>Connecting lines</strong> showing progress
+                    </li>
+                    <li class="py-2">
+                        <i class="ri-checkbox-circle-line text-success me-2"></i>
+                        <strong>State-based styling</strong> (Done/Active/Pending)
+                    </li>
+                    <li class="py-2">
+                        <i class="ri-checkbox-circle-line text-success me-2"></i>
+                        <strong>KTDA theme colors</strong> integration
+                    </li>
+                    <li class="py-2">
+                        <i class="ri-checkbox-circle-line text-success me-2"></i>
+                        <strong>Automatic state management</strong> via JavaScript
+                    </li>
+                    <li class="py-2">
+                        <i class="ri-checkbox-circle-line text-success me-2"></i>
+                        <strong>Minimum height content area</strong> with divider
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-lightbulb-line me-2"></i>
+                    KTDA Use Cases
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="py-2">
+                        <i class="ri-arrow-right-s-line text-primary me-2"></i>
+                        User Setup (WF-2.35)
+                    </li>
+                    <li class="py-2">
+                        <i class="ri-arrow-right-s-line text-primary me-2"></i>
+                        Metric Setup (WF-3.19)
+                    </li>
+                    <li class="py-2">
+                        <i class="ri-arrow-right-s-line text-primary me-2"></i>
+                        Role Creation & Assignment
+                    </li>
+                    <li class="py-2">
+                        <i class="ri-arrow-right-s-line text-primary me-2"></i>
+                        Department Configuration
+                    </li>
+                    <li class="py-2">
+                        <i class="ri-arrow-right-s-line text-primary me-2"></i>
+                        Tenant Onboarding
+                    </li>
+                    <li class="py-2">
+                        <i class="ri-arrow-right-s-line text-primary me-2"></i>
+                        Simple Multi-step Forms
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

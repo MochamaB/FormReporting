@@ -547,6 +547,128 @@ namespace FormReporting.Controllers
             return View("~/Views/Test/FieldTypesShowcase.cshtml", formViewModel);
         }
 
+        // ========== WIZARD COMPONENTS ==========
+
+        /// <summary>
+        /// Test page for Wizard components (Vertical and Horizontal)
+        /// </summary>
+        public IActionResult Wizards()
+        {
+            // Overview page with links to both wizard tests
+            return View("~/Views/Test/Wizards.cshtml");
+        }
+        
+        public IActionResult VerticalWizard()
+        {
+            // Vertical wizard test
+            ViewBag.VerticalWizard = CreateVerticalWizardConfig();
+            return View("~/Views/Test/VerticalWizard.cshtml");
+        }
+        
+        public IActionResult HorizontalWizard()
+        {
+            // Horizontal wizard test
+            ViewBag.HorizontalWizard = CreateHorizontalWizardConfig();
+            return View("~/Views/Test/HorizontalWizard.cshtml");
+        }
+
+        private WizardViewModel CreateVerticalWizardConfig()
+        {
+            var config = new WizardConfig
+            {
+                Layout = WizardLayout.Vertical,
+                FormId = "vertical-wizard-form",
+                FormAction = "/ComponentTest/SubmitVerticalWizard",
+                FormMethod = "POST",
+                Steps = new List<WizardStep>
+                {
+                    new()
+                    {
+                        Title = "Step 1",
+                        Label = "User Information",
+                        Icon = "ri-user-line",
+                        State = WizardStepState.Done
+                    },
+                    new()
+                    {
+                        Title = "Step 2",
+                        Label = "Role Assignment",
+                        Icon = "ri-shield-user-line",
+                        State = WizardStepState.Active
+                    },
+                    new()
+                    {
+                        Title = "Step 3",
+                        Label = "Permissions",
+                        Icon = "ri-lock-line",
+                        State = WizardStepState.Pending
+                    },
+                    new()
+                    {
+                        Title = "Step 4",
+                        Label = "Review & Confirm",
+                        Icon = "ri-checkbox-circle-line",
+                        State = WizardStepState.Pending,
+                        ShowNext = false,
+                        CustomButtonHtml = "<button type='submit' class='btn btn-primary ms-auto'><i class='ri-save-line me-1'></i> Create User</button>"
+                    }
+                }
+            };
+
+            return config.BuildWizard();
+        }
+
+        private WizardViewModel CreateHorizontalWizardConfig()
+        {
+            var config = new WizardConfig
+            {
+                Layout = WizardLayout.Horizontal,
+                FormId = "horizontal-wizard-form",
+                FormAction = "/ComponentTest/SubmitHorizontalWizard",
+                FormMethod = "POST",
+                ShowSummary = false,
+                Steps = new List<WizardStep>
+                {
+                    new()
+                    {
+                        Title = "Step 1",
+                        Label = "Select Template",
+                        Description = "Choose a form template",
+                        Icon = "ri-file-list-line",
+                        State = WizardStepState.Done
+                    },
+                    new()
+                    {
+                        Title = "Step 2",
+                        Label = "Fill Form Data",
+                        Description = "Enter required information",
+                        Icon = "ri-edit-line",
+                        State = WizardStepState.Active
+                    },
+                    new()
+                    {
+                        Title = "Step 3",
+                        Label = "Attachments",
+                        Description = "Upload supporting documents",
+                        Icon = "ri-attachment-line",
+                        State = WizardStepState.Pending
+                    },
+                    new()
+                    {
+                        Title = "Step 4",
+                        Label = "Review",
+                        Description = "Review and submit",
+                        Icon = "ri-check-double-line",
+                        State = WizardStepState.Pending,
+                        ShowNext = false,
+                        CustomButtonHtml = "<button type='submit' class='btn btn-success ms-auto'><i class='ri-send-plane-fill me-1'></i> Submit Form</button>"
+                    }
+                }
+            };
+
+            return config.BuildWizard();
+        }
+
         // ========== HELPER METHOD ==========
         private List<SampleUser> GetSampleUsers()
         {

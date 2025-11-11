@@ -1,0 +1,197 @@
+@{
+    ViewData["Title"] = "Wizard Components";
+}
+
+<!-- Page Title -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Wizard Components</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="javascript: void(0);">Components</a></li>
+                    <li class="breadcrumb-item active">Wizards</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Overview -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title mb-3">
+                    <i class="ri-magic-line me-2"></i>
+                    Wizard Component Overview
+                </h5>
+                <p class="text-muted">
+                    Reusable wizard components following the three-layer architecture pattern.
+                    Two layouts available: Vertical (simple workflows) and Horizontal (complex workflows).
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Wizard Types -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="avatar-sm">
+                            <div class="avatar-title bg-primary-subtle text-primary rounded fs-3">
+                                <i class="ri-layout-left-line"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h5 class="card-title mb-2">Vertical Wizard</h5>
+                        <p class="text-muted mb-3">
+                            2-column layout with icon-based stepper. Perfect for simple, linear workflows.
+                        </p>
+                        <a href="/ComponentTest/VerticalWizard" class="btn btn-primary btn-sm">
+                            <i class="ri-eye-line me-1"></i> View Demo
+                        </a>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <h6 class="fs-13 text-muted mb-2">Features:</h6>
+                    <ul class="list-unstyled text-muted mb-0 fs-12">
+                        <li><i class="ri-checkbox-circle-line text-success me-1"></i> Icon-based steps with connecting lines</li>
+                        <li><i class="ri-checkbox-circle-line text-success me-1"></i> KTDA theme color integration</li>
+                        <li><i class="ri-checkbox-circle-line text-success me-1"></i> Automatic state management</li>
+                        <li><i class="ri-checkbox-circle-line text-success me-1"></i> Click navigation on steps</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="avatar-sm">
+                            <div class="avatar-title bg-success-subtle text-success rounded fs-3">
+                                <i class="ri-layout-top-line"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h5 class="card-title mb-2">Horizontal Wizard</h5>
+                        <p class="text-muted mb-3">
+                            2-row layout with progress bar. Ideal for complex, multi-step processes.
+                        </p>
+                        <a href="/ComponentTest/HorizontalWizard" class="btn btn-success btn-sm">
+                            <i class="ri-eye-line me-1"></i> View Demo
+                        </a>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <h6 class="fs-13 text-muted mb-2">Features:</h6>
+                    <ul class="list-unstyled text-muted mb-0 fs-12">
+                        <li><i class="ri-checkbox-circle-line text-success me-1"></i> Horizontal progress indicator</li>
+                        <li><i class="ri-checkbox-circle-line text-success me-1"></i> Full-width content area</li>
+                        <li><i class="ri-checkbox-circle-line text-success me-1"></i> Step descriptions</li>
+                        <li><i class="ri-checkbox-circle-line text-success me-1"></i> Responsive design</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Architecture -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-stack-line me-2"></i>
+                    Three-Layer Architecture
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <div class="avatar-sm mx-auto mb-3">
+                                <div class="avatar-title bg-primary-subtle text-primary rounded-circle fs-4">
+                                    <i class="ri-database-2-line"></i>
+                                </div>
+                            </div>
+                            <h6>ViewModels</h6>
+                            <p class="text-muted fs-13">WizardConfig & WizardViewModel define the structure</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <div class="avatar-sm mx-auto mb-3">
+                                <div class="avatar-title bg-success-subtle text-success rounded-circle fs-4">
+                                    <i class="ri-tools-line"></i>
+                                </div>
+                            </div>
+                            <h6>Extensions</h6>
+                            <p class="text-muted fs-13">WizardExtensions transform config to viewmodel</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="text-center">
+                            <div class="avatar-sm mx-auto mb-3">
+                                <div class="avatar-title bg-warning-subtle text-warning rounded-circle fs-4">
+                                    <i class="ri-layout-line"></i>
+                                </div>
+                            </div>
+                            <h6>Partial Views</h6>
+                            <p class="text-muted fs-13">Render HTML with embedded JavaScript</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- KTDA Use Cases -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-lightbulb-line me-2"></i>
+                    KTDA Use Cases
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6 class="text-primary">Vertical Wizard (Simple Workflows)</h6>
+                        <ul class="list-unstyled mb-0">
+                            <li class="py-1"><i class="ri-arrow-right-s-line text-muted me-2"></i>User Setup (WF-2.35)</li>
+                            <li class="py-1"><i class="ri-arrow-right-s-line text-muted me-2"></i>Metric Setup (WF-3.19)</li>
+                            <li class="py-1"><i class="ri-arrow-right-s-line text-muted me-2"></i>Role Creation</li>
+                            <li class="py-1"><i class="ri-arrow-right-s-line text-muted me-2"></i>Department Setup</li>
+                            <li class="py-1"><i class="ri-arrow-right-s-line text-muted me-2"></i>Tenant Onboarding</li>
+                        </ul>
+                    </div>
+                    <div class="col-md-6">
+                        <h6 class="text-success">Horizontal Wizard (Complex Workflows)</h6>
+                        <ul class="list-unstyled mb-0">
+                            <li class="py-1"><i class="ri-arrow-right-s-line text-muted me-2"></i>Form Submission</li>
+                            <li class="py-1"><i class="ri-arrow-right-s-line text-muted me-2"></i>Form Template Builder</li>
+                            <li class="py-1"><i class="ri-arrow-right-s-line text-muted me-2"></i>Multi-step Report Generation</li>
+                            <li class="py-1"><i class="ri-arrow-right-s-line text-muted me-2"></i>Bulk User Import</li>
+                            <li class="py-1"><i class="ri-arrow-right-s-line text-muted me-2"></i>Workflow Configuration</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

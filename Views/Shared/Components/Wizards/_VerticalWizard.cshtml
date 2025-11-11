@@ -1,0 +1,238 @@
+@model FormReporting.Models.ViewModels.Components.WizardViewModel
+@using FormReporting.Extensions
+
+@*
+    Vertical Wizard Partial View
+    
+    Layout: 2-column (Steps left | Content right)
+    Best for: Simple workflows (User Setup, Role Creation, Metric Setup)
+    
+    Features:
+    - Vertical stepper with icons and connecting lines on left
+    - Content area on right
+    - Previous/Next navigation buttons
+*@
+
+<style>
+    .wizard-stepper {
+        position: relative;
+        padding-left: 0;
+        list-style: none;
+    }
+    
+    .wizard-step {
+        position: relative;
+        padding-bottom: 2.5rem;
+        display: flex;
+        align-items: flex-start;
+        cursor: pointer;
+    }
+    
+    .wizard-step:last-child {
+        padding-bottom: 0;
+    }
+    
+    .wizard-step:not(:last-child)::before {
+        content: '';
+        position: absolute;
+        left: 20px;
+        top: 45px;
+        width: 2px;
+        height: calc(100% - 20px);
+        background-color: #e9ecef;
+    }
+    
+    .wizard-step.done:not(:last-child)::before {
+        background-color: var(--vz-primary);
+    }
+    
+    .wizard-step.active:not(:last-child)::before {
+        background: linear-gradient(to bottom, var(--vz-primary) 0%, var(--vz-primary) 50%, #e9ecef 50%, #e9ecef 100%);
+    }
+    
+    .wizard-step-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #f3f6f9;
+        border: 2px solid #e9ecef;
+        flex-shrink: 0;
+        z-index: 1;
+        transition: all 0.3s ease;
+    }
+    
+    .wizard-step.done .wizard-step-icon {
+        background-color: var(--vz-primary);
+        border-color: var(--vz-primary);
+        color: white;
+    }
+    
+    .wizard-step.active .wizard-step-icon {
+        background-color: var(--vz-primary);
+        border-color: var(--vz-primary);
+        color: white;
+        box-shadow: 0 0 0 4px var(--vz-primary-subtle);
+    }
+    
+    .wizard-step-icon i {
+        font-size: 18px;
+        color: #878a99;
+    }
+    
+    .wizard-step.done .wizard-step-icon i,
+    .wizard-step.active .wizard-step-icon i {
+        color: white;
+    }
+    
+    .wizard-step-content {
+        margin-left: 1rem;
+        flex-grow: 1;
+        padding: 0.5rem 0.75rem;
+        border-radius: 0px;
+        transition: all 0.3s ease;
+    }
+    
+    .wizard-step.done .wizard-step-content {
+        background-color: var(--vz-primary-bg-subtle);
+    }
+    
+    .wizard-step.active .wizard-step-content {
+        background-color: var(--vz-secondary-bg-subtle);
+    }
+    
+    .wizard-step-title {
+        font-size: 15px;
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.25rem;
+    }
+    
+    .wizard-step.active .wizard-step-title {
+        color: var(--vz-primary);
+    }
+    
+    .wizard-step.done .wizard-step-title {
+        color: var(--vz-primary);
+    }
+    
+    .wizard-step-label {
+        font-size: 13px;
+        color: #878a99;
+        margin: 0;
+    }
+    
+    .wizard-step:hover .wizard-step-icon {
+        transform: scale(1.05);
+    }
+    
+    /* Content area styling */
+    .wizard-content-wrapper {
+        min-height: 400px;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .step-content-area {
+        flex-grow: 1;
+        margin-bottom: 2rem;
+    }
+    
+    .wizard-navigation {
+        border-top: 1px solid #e9ecef;
+        padding-top: 1.5rem;
+        margin-top: auto;
+    }
+</style>
+
+
+<div class="row gy-4 @Model.ContainerCssClass">
+    <!-- LEFT COLUMN: Vertical Stepper -->
+    <div class="col-lg-4">
+        <ul class="wizard-stepper ps-2">
+            @foreach (var step in Model.Steps)
+            {
+                var stepClass = step.State.GetStepClass();
+                var isActive = step.State == FormReporting.Models.Common.WizardStepState.Active;
+                
+                <li class="wizard-step @stepClass" 
+                    data-bs-toggle="pill" 
+                    data-bs-target="#@step.StepId"
+                    role="tab"
+                    aria-controls="@step.StepId"
+                    aria-selected="@isActive.ToString().ToLower()">
+                    <div class="wizard-step-icon">
+                        <i class="@step.Icon"></i>
+                    </div>
+                    <div class="wizard-step-content">
+                        <div class="wizard-step-title">@step.Title</div>
+                        <p class="wizard-step-label">@step.Label</p>
+                    </div>
+                </li>
+            }
+        </ul>
+    </div>
+    
+    <!-- RIGHT COLUMN: Tab Content -->
+    <div class="col-lg-8">
+        <div class="px-lg-4">
+            <div class="tab-content">
+                @foreach (var step in Model.Steps)
+                {
+                    var activeClass = step.State == FormReporting.Models.Common.WizardStepState.Active ? "show active" : "";
+                    var stepIndex = Model.Steps.IndexOf(step);
+                    var prevStep = stepIndex > 0 ? Model.Steps[stepIndex - 1] : null;
+                    var nextStep = stepIndex < Model.Steps.Count - 1 ? Model.Steps[stepIndex + 1] : null;
+                    
+                    <div class="tab-pane fade @activeClass" 
+                         id="@step.StepId" 
+                         role="tabpanel" 
+                         aria-labelledby="@(step.StepId)-tab">
+                         
+                        <div class="wizard-content-wrapper">
+                            @* Step content area - to be filled by implementing view *@
+                            <div class="step-content-area">
+                                @* Content goes here *@
+                            </div>
+                            
+                            @* Navigation Buttons with divider *@
+                            <div class="wizard-navigation">
+                                <div class="d-flex align-items-start gap-3">
+                            @* Previous Button *@
+                            @if (step.ShowPrevious && prevStep != null)
+                            {
+                                <button type="button" 
+                                        class="btn btn-secondary btn-label previestab" 
+                                        data-previous="@(prevStep.StepId)-tab">
+                                    <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i>
+                                    @step.PreviousButtonText
+                                </button>
+                            }
+                            
+                            @* Next Button *@
+                            @if (step.ShowNext && nextStep != null)
+                            {
+                                <button type="button" 
+                                        class="btn btn-success btn-label right ms-auto nexttab" 
+                                        data-nexttab="@(nextStep.StepId)-tab">
+                                    <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
+                                    @step.NextButtonText
+                                </button>
+                            }
+                            
+                            @* Custom Button HTML (e.g., Submit on last step) *@
+                            @if (!string.IsNullOrEmpty(step.CustomButtonHtml))
+                            {
+                                @Html.Raw(step.CustomButtonHtml)
+                            }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

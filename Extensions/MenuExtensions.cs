@@ -20,11 +20,13 @@ namespace FormReporting.Extensions
             var sidebar = new SidebarViewModel();
 
             // Load menu sections with their modules and menu items
+            // Using AsSplitQuery() to avoid multiple collection include warning
             var sections = await context.MenuSections
                 .Where(s => s.IsActive)
                 .Include(s => s.Modules.Where(m => m.IsActive))
                     .ThenInclude(m => m.MenuItems.Where(mi => mi.IsActive && mi.IsVisible))
                 .OrderBy(s => s.DisplayOrder)
+                .AsSplitQuery()
                 .ToListAsync();
 
             // Transform to ViewModels

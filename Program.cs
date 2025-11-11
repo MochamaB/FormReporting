@@ -26,6 +26,9 @@ using (var scope = app.Services.CreateScope())
         // Seed regions
         RegionSeeder.SeedRegions(context);
         
+        // Seed tenants (Head Office, Factories, Subsidiaries)
+        TenantSeeder.SeedTenants(context);
+        
         // Seed menu sections
         MenuSectionSeeder.SeedMenuSections(context);
 

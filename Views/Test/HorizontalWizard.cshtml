@@ -1,0 +1,131 @@
+@using FormReporting.Models.ViewModels.Components
+@using FormReporting.Extensions
+@{
+    ViewData["Title"] = "Horizontal Wizard Test";
+    var wizard = ViewBag.HorizontalWizard as WizardViewModel;
+}
+
+<!-- Page Title -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Horizontal Wizard Component Test</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="javascript: void(0);">Components</a></li>
+                    <li class="breadcrumb-item"><a href="/ComponentTest/Wizards">Wizards</a></li>
+                    <li class="breadcrumb-item active">Horizontal Wizard</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Horizontal Wizard Test -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="ri-layout-top-line text-success me-2"></i>
+                    Horizontal Wizard - Form Submission Example
+                </h4>
+            </div>
+            <div class="card-body">
+                <p class="text-muted mb-4">
+                    2-row layout with horizontal progress navigation and full-width content. 
+                    Ideal for complex workflows like form submissions, template building, and multi-step processes.
+                </p>
+                
+                <div class="alert alert-info">
+                    <i class="ri-information-line me-2"></i>
+                    <strong>Structure Demo:</strong> This shows the wizard structure (progress bar, steps, navigation). 
+                    In actual implementation, you would add your form fields in the content area.
+                </div>
+                
+                <div class="form-steps">
+                    <form id="@wizard.FormId" method="@wizard.FormMethod" action="@wizard.FormAction">
+                        <partial name="~/Views/Shared/Components/Wizards/_HorizontalWizard.cshtml" model="wizard" />
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Features & Usage -->
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-star-line me-2"></i>
+                    Features
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="py-2">
+                        <i class="ri-checkbox-circle-line text-success me-2"></i>
+                        <strong>Horizontal progress bar</strong> with percentage
+                    </li>
+                    <li class="py-2">
+                        <i class="ri-checkbox-circle-line text-success me-2"></i>
+                        <strong>Full-width content area</strong> for complex forms
+                    </li>
+                    <li class="py-2">
+                        <i class="ri-checkbox-circle-line text-success me-2"></i>
+                        <strong>Step indicators</strong> with icons
+                    </li>
+                    <li class="py-2">
+                        <i class="ri-checkbox-circle-line text-success me-2"></i>
+                        <strong>Responsive design</strong> for all screen sizes
+                    </li>
+                    <li class="py-2">
+                        <i class="ri-checkbox-circle-line text-success me-2"></i>
+                        <strong>Navigation buttons</strong> with validation support
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-lightbulb-line me-2"></i>
+                    KTDA Use Cases
+                </h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li class="py-2">
+                        <i class="ri-arrow-right-s-line text-success me-2"></i>
+                        Form Submission Workflows
+                    </li>
+                    <li class="py-2">
+                        <i class="ri-arrow-right-s-line text-success me-2"></i>
+                        Form Template Builder
+                    </li>
+                    <li class="py-2">
+                        <i class="ri-arrow-right-s-line text-success me-2"></i>
+                        Multi-step Report Generation
+                    </li>
+                    <li class="py-2">
+                        <i class="ri-arrow-right-s-line text-success me-2"></i>
+                        Bulk Data Import
+                    </li>
+                    <li class="py-2">
+                        <i class="ri-arrow-right-s-line text-success me-2"></i>
+                        Complex Workflow Configuration
+                    </li>
+                    <li class="py-2">
+                        <i class="ri-arrow-right-s-line text-success me-2"></i>
+                        Multi-page Data Entry
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
