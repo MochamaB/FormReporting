@@ -1,15 +1,10 @@
-@model FormReporting.Models.ViewModels.Organizational.TenantCreateViewModel
+@model dynamic
 
 @*
-    Step 1: Basic Details
+    Basic Details Partial (Reusable for Create Wizard & Edit Tabs)
     Tenant information, type, region, and contact details
+    Compatible with: TenantCreateViewModel, TenantEditViewModel
 *@
-
-<div class="row">
-    <div class="col-12">
-        <h5 class="mb-3">Tenant Information</h5>
-    </div>
-</div>
 
 <div class="row">
     <div class="col-md-6 mb-3">
@@ -56,7 +51,7 @@
             {
                 <option value="Factory">Factory</option>
             }
-            @if (!ViewBag.HeadOfficeExists)
+            @if (ViewBag.HeadOfficeExists != true)
             {
                 @if (Model.TenantType == "HeadOffice")
                 {

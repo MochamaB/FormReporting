@@ -1,16 +1,10 @@
-@model FormReporting.Models.ViewModels.Organizational.TenantCreateViewModel
+@model dynamic
 
 @*
-    Step 3: Tenant Groups (Optional)
+    Groups Partial (Reusable for Create Wizard & Edit Tabs)
     Assign tenant to existing groups
+    Compatible with: TenantCreateViewModel, TenantEditViewModel
 *@
-
-<div class="row">
-    <div class="col-12">
-        <h5 class="mb-3">Tenant Group Assignment</h5>
-        <p class="text-muted">Optionally assign this tenant to one or more groups for reporting and management purposes</p>
-    </div>
-</div>
 
 @if (ViewBag.TenantGroups != null && ((IEnumerable<dynamic>)ViewBag.TenantGroups).Any())
 {

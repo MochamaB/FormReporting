@@ -1,4 +1,15 @@
-@model FormReporting.Models.ViewModels.Components.TabsViewModel
+@using FormReporting.Models.ViewModels.Components
+
+@{
+    // Support both direct model and ViewData passing
+    // This allows parent views to maintain their own model type while passing tabs via ViewData
+    var tabsModel = Model as TabsViewModel ?? ViewData["TabsViewModel"] as TabsViewModel;
+
+    if (tabsModel == null)
+    {
+        throw new InvalidOperationException("TabsViewModel must be provided either as Model or via ViewData['TabsViewModel']");
+    }
+}
 
 @*
     Vertical Tabs Partial View
@@ -15,18 +26,23 @@
     - Disabled state support
 
     NOTE: This partial contains ZERO logic - all values pre-computed in TabsExtensions
+
+    Usage:
+    1. Direct model: <partial name="_VerticalTabs.cshtml" model="tabs" />
+    2. ViewData: ViewData["TabsViewModel"] = tabs; <partial name="_VerticalTabs.cshtml" />
+       (Use option 2 when parent view needs to maintain its own model type)
 *@
 
-@if (Model.WrapInCard)
+@if (tabsModel.WrapInCard)
 {
-    <div class="card @Model.ContainerCssClass">
-        @if (!string.IsNullOrEmpty(Model.CardTitle))
+    <div class="card @tabsModel.ContainerCssClass">
+        @if (!string.IsNullOrEmpty(tabsModel.CardTitle))
         {
             <div class="card-header">
-                <h5 class="card-title mb-0">@Model.CardTitle</h5>
-                @if (!string.IsNullOrEmpty(Model.CardSubtitle))
+                <h5 class="card-title mb-0">@tabsModel.CardTitle</h5>
+                @if (!string.IsNullOrEmpty(tabsModel.CardSubtitle))
                 {
-                    <p class="text-muted mb-0">@Model.CardSubtitle</p>
+                    <p class="text-muted mb-0">@tabsModel.CardSubtitle</p>
                 }
             </div>
         }
@@ -34,8 +50,8 @@
             <div class="row">
                 @* Left Column: Vertical Tabs *@
                 <div class="col-md-3">
-                    <div class="@Model.NavClasses" id="@Model.TabsId" role="tablist" aria-orientation="vertical">
-                        @foreach (var tab in Model.Tabs)
+                    <div class="@tabsModel.NavClasses" id="@tabsModel.TabsId" role="tablist" aria-orientation="vertical">
+                        @foreach (var tab in tabsModel.Tabs)
                         {
                             <a class="@tab.NavLinkClasses mb-2"
                                id="@(tab.TabId)-tab"
@@ -65,8 +81,8 @@
 
                 @* Right Column: Tab Content *@
                 <div class="col-md-9">
-                    <div class="@Model.TabContentClasses mt-4 mt-md-0" id="@(Model.TabsId)Content">
-                        @foreach (var tab in Model.Tabs)
+                    <div class="@tabsModel.TabContentClasses mt-4 mt-md-0" id="@(tabsModel.TabsId)Content">
+                        @foreach (var tab in tabsModel.Tabs)
                         {
                             <div class="@tab.TabPaneClasses"
                                  id="@tab.TabId"
@@ -74,7 +90,9 @@
                                  aria-labelledby="@(tab.TabId)-tab">
                                 @if (!string.IsNullOrEmpty(tab.ContentPartialPath))
                                 {
-                                    <partial name="@tab.ContentPartialPath" />
+                                    @* Pass the parent view's model to the partial *@
+                                    var parentModel = ViewData["ParentModel"];
+                                    <partial name="@tab.ContentPartialPath" model="parentModel" />
                                 }
                                 else if (!string.IsNullOrEmpty(tab.ContentHtml))
                                 {
@@ -94,12 +112,12 @@
 }
 else
 {
-    <div class="@Model.ContainerCssClass">
+    <div class="@tabsModel.ContainerCssClass">
         <div class="row">
             @* Left Column: Vertical Tabs *@
             <div class="col-md-3">
-                <div class="@Model.NavClasses" id="@Model.TabsId" role="tablist" aria-orientation="vertical">
-                    @foreach (var tab in Model.Tabs)
+                <div class="@tabsModel.NavClasses" id="@tabsModel.TabsId" role="tablist" aria-orientation="vertical">
+                    @foreach (var tab in tabsModel.Tabs)
                     {
                         <a class="@tab.NavLinkClasses mb-2"
                            id="@(tab.TabId)-tab"
@@ -129,8 +147,8 @@ else
 
             @* Right Column: Tab Content *@
             <div class="col-md-9">
-                <div class="@Model.TabContentClasses mt-4 mt-md-0" id="@(Model.TabsId)Content">
-                    @foreach (var tab in Model.Tabs)
+                <div class="@tabsModel.TabContentClasses mt-4 mt-md-0" id="@(tabsModel.TabsId)Content">
+                    @foreach (var tab in tabsModel.Tabs)
                     {
                         <div class="@tab.TabPaneClasses"
                              id="@tab.TabId"
@@ -138,7 +156,9 @@ else
                              aria-labelledby="@(tab.TabId)-tab">
                             @if (!string.IsNullOrEmpty(tab.ContentPartialPath))
                             {
-                                <partial name="@tab.ContentPartialPath" />
+                                @* Pass the parent view's model to the partial *@
+                                var parentModel = ViewData["ParentModel"];
+                                <partial name="@tab.ContentPartialPath" model="parentModel" />
                             }
                             else if (!string.IsNullOrEmpty(tab.ContentHtml))
                             {

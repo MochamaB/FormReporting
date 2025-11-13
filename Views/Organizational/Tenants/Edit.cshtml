@@ -1,0 +1,136 @@
+@model FormReporting.Models.ViewModels.Organizational.TenantEditViewModel
+@using FormReporting.Models.ViewModels.Components
+@using FormReporting.Extensions
+
+@{
+    ViewData["Title"] = "Edit Tenant";
+}
+
+@* Automatic Breadcrumb *@
+<partial name="_Breadcrumb" />
+
+@* Display validation errors *@
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <h5 class="alert-heading"><i class="ri-error-warning-line me-2"></i>Validation Errors</h5>
+        <ul class="mb-0">
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <li>@error.ErrorMessage</li>
+            }
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@* Main Card Container *@
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex align-items-center">
+                    <h5 class="card-title mb-0 flex-grow-1">
+                        <i class="ri-edit-line me-2"></i>Edit Tenant: @Model.TenantName
+                    </h5>
+                    <div>
+                        <a href="@Url.Action("Index", "Tenants")" class="btn btn-secondary btn-sm">
+                            <i class="ri-arrow-left-line me-1"></i>Back to List
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body">
+                <form method="post" action="@Url.Action("Edit", "Tenants")" id="tenantEditForm">
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(m => m.TenantId)
+                    @Html.HiddenFor(m => m.CreatedDate)
+                    @Html.HiddenFor(m => m.CreatedBy)
+
+                    @* Vertical Tabs Configuration *@
+                    @{
+                        var tabsConfig = new TabsConfig
+                        {
+                            TabsId = "tenantEditTabs",
+                            Layout = TabsLayout.Vertical,
+                            Tabs = new List<TabConfig>
+                            {
+                                new TabConfig
+                                {
+                                    TabId = "basic-details",
+                                    Title = "Basic Details",
+                                    Icon = "ri-information-line",
+                                    IsActive = true,
+                                    ContentPartialPath = "~/Views/Organizational/Tenants/Partials/_BasicDetails.cshtml"
+                                },
+                                new TabConfig
+                                {
+                                    TabId = "departments",
+                                    Title = "Departments",
+                                    Icon = "ri-building-4-line",
+                                    ContentPartialPath = "~/Views/Organizational/Tenants/Partials/_Departments.cshtml"
+                                },
+                                new TabConfig
+                                {
+                                    TabId = "groups",
+                                    Title = "Tenant Groups",
+                                    Icon = "ri-group-line",
+                                    ContentPartialPath = "~/Views/Organizational/Tenants/Partials/_Groups.cshtml"
+                                }
+                            }
+                        };
+
+                        var tabs = tabsConfig.BuildTabs();
+                        ViewData["TabsViewModel"] = tabs;
+
+                        // Store parent model so tab partials can access it
+                        ViewData["ParentModel"] = Model;
+                    }
+
+                    @* Render Vertical Tabs *@
+                    <partial name="~/Views/Shared/Components/Tabs/_VerticalTabs.cshtml" />
+
+                    @* Form Actions *@
+                    <div class="row mt-4 pt-3 border-top">
+                        <div class="col-12">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a href="@Url.Action("Index", "Tenants")" class="btn btn-light">
+                                    <i class="ri-close-line me-1"></i>Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="ri-save-line me-1"></i>Save Changes
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            // Handle tenant type change (show/hide region field)
+            $('#TenantType').on('change', function () {
+                const tenantType = $(this).val();
+                const regionGroup = $('#RegionId').closest('.mb-3');
+
+                if (tenantType === 'Factory') {
+                    regionGroup.show();
+                    $('#RegionId').prop('required', true);
+                } else if (tenantType === 'HeadOffice') {
+                    regionGroup.hide();
+                    $('#RegionId').val('').prop('required', false);
+                } else {
+                    regionGroup.show();
+                    $('#RegionId').prop('required', false);
+                }
+            });
+
+            // Trigger on page load
+            $('#TenantType').trigger('change');
+        });
+    </script>
+}

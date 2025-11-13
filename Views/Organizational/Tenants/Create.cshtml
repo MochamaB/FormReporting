@@ -26,8 +26,10 @@
                 StepNumber = 1,
                 Title = "Basic Details",
                 Description = "Tenant information and contact details",
+                Instructions = "Enter the essential information for the new tenant including code, name, and type",
+                Icon = "ri-information-line",
                 State = WizardStepState.Active,
-                ContentPartialPath = "~/Views/Organizational/Tenants/WizardSteps/_Step1_BasicDetails.cshtml",
+                ContentPartialPath = "~/Views/Organizational/Tenants/Partials/_BasicDetails.cshtml",
                 ShowPrevious = false,
                 ShowNext = true,
                 NextButtonText = "Next: Departments"
@@ -36,10 +38,12 @@
             {
                 StepId = "step2-departments",
                 StepNumber = 2,
-                Title = "Departments",
+                Title = "Department Setup",
                 Description = "Setup organizational departments",
+                Instructions = "Define the organizational structure for this tenant",
+                Icon = "ri-building-4-line",
                 State = WizardStepState.Pending,
-                ContentPartialPath = "~/Views/Organizational/Tenants/WizardSteps/_Step2_Departments.cshtml",
+                ContentPartialPath = "~/Views/Organizational/Tenants/Partials/_Departments.cshtml",
                 ShowPrevious = true,
                 ShowNext = true,
                 PreviousButtonText = "Back",
@@ -51,8 +55,10 @@
                 StepNumber = 3,
                 Title = "Tenant Groups",
                 Description = "Assign to groups (optional)",
+                Instructions = "Select which tenant groups this tenant should belong to (optional)",
+                Icon = "ri-group-line",
                 State = WizardStepState.Pending,
-                ContentPartialPath = "~/Views/Organizational/Tenants/WizardSteps/_Step3_Groups.cshtml",
+                ContentPartialPath = "~/Views/Organizational/Tenants/Partials/_Groups.cshtml",
                 ShowPrevious = true,
                 ShowNext = true,
                 PreviousButtonText = "Back",
@@ -64,8 +70,10 @@
                 StepNumber = 4,
                 Title = "Review & Confirm",
                 Description = "Verify all information",
+                Instructions = "Please review all information before creating the tenant",
+                Icon = "ri-check-double-line",
                 State = WizardStepState.Pending,
-                ContentPartialPath = "~/Views/Organizational/Tenants/WizardSteps/_Step4_Summary.cshtml",
+                ContentPartialPath = "~/Views/Organizational/Tenants/Partials/_Step4_Summary.cshtml",
                 ShowPrevious = true,
                 ShowNext = false,
                 PreviousButtonText = "Back",
@@ -78,6 +86,9 @@
 
     // Pass wizard through ViewData so step partials can inherit TenantCreateViewModel
     ViewData["WizardViewModel"] = wizard;
+
+    // Store parent model so step partials can access it
+    ViewData["ParentModel"] = Model;
 }
 
 @* Display validation errors *@
@@ -118,62 +129,18 @@
     <script>
         $(document).ready(function () {
             const wizardId = '@wizardConfig.FormId';
-            let currentStep = 1;
-            const totalSteps = @wizardConfig.Steps.Count;
 
-            // Next button click - using data-nexttab attribute
-            $(document).on('click', '.nexttab', function (e) {
-                e.preventDefault();
-                const nextTabId = $(this).data('nexttab');
-
-                if (validateCurrentStep()) {
-                    // Find current active step and mark as done
-                    const currentWizardStep = $('.wizard-step.active');
-                    currentWizardStep.removeClass('active').addClass('done');
-                    currentWizardStep.find('.wizard-step-icon i').addClass('ri-check-line');
-
-                    // Activate next tab using Bootstrap Tab API
-                    const nextTab = new bootstrap.Tab(document.getElementById(nextTabId));
-                    nextTab.show();
-
-                    // Update wizard step visual
-                    const nextStepLi = $('.wizard-step[data-bs-target="#' + nextTabId.replace('-tab', '') + '"]');
-                    nextStepLi.removeClass('done').addClass('active');
-
-                    currentStep++;
-                }
-            });
-
-            // Previous button click - using data-previous attribute
-            $(document).on('click', '.previestab', function (e) {
-                e.preventDefault();
-                const previousTabId = $(this).data('previous');
-
-                // Find current active step and revert to pending
-                const currentWizardStep = $('.wizard-step.active');
-                currentWizardStep.removeClass('active done');
-
-                // Activate previous tab using Bootstrap Tab API
-                const previousTab = new bootstrap.Tab(document.getElementById(previousTabId));
-                previousTab.show();
-
-                // Update wizard step visual - mark previous as active and remove done state from icon
-                const prevStepLi = $('.wizard-step[data-bs-target="#' + previousTabId.replace('-tab', '') + '"]');
-                prevStepLi.removeClass('done').addClass('active');
-                prevStepLi.find('.wizard-step-icon i').removeClass('ri-check-line');
-
-                currentStep--;
-            });
-
-            // Validate current step
-            function validateCurrentStep() {
+            // Register validation callback for this wizard instance
+            // The global form-wizard.js will call this before navigating to next step
+            window.wizardValidationCallbacks[wizardId] = function (currentStepId) {
                 let isValid = true;
 
                 // Clear previous errors
                 $('.is-invalid').removeClass('is-invalid');
                 $('.invalid-feedback').remove();
 
-                if (currentStep === 1) {
+                // Validate based on current step
+                if (currentStepId === 'step1-basic') {
                     // Validate Step 1: Basic Details
                     if ($('#TenantCode').val().trim() === '') {
                         showError('#TenantCode', 'Tenant code is required');
@@ -202,22 +169,21 @@
                         isValid = false;
                     }
                 }
-                else if (currentStep === 2) {
-                    // Validate Step 2: Departments (optional validation)
-                    // Departments are optional if CreateDefaultDepartments is true
+                else if (currentStepId === 'step2-departments') {
+                    // Validate Step 2: Departments (optional - can skip if using defaults)
                 }
                 // Step 3 and 4 don't require validation
 
                 return isValid;
-            }
+            };
 
-            // Show error message
+            // Show error message helper
             function showError(fieldId, message) {
                 $(fieldId).addClass('is-invalid');
                 $(fieldId).after('<div class="invalid-feedback d-block">' + message + '</div>');
             }
 
-            // Handle tenant type change
+            // Handle tenant type change (business logic specific to tenant creation)
             $('#TenantType').on('change', function () {
                 const tenantType = $(this).val();
                 const regionGroup = $('#RegionId').closest('.mb-3');
@@ -236,6 +202,75 @@
 
             // Trigger on page load
             $('#TenantType').trigger('change');
+
+            // ========================================================
+            // STEP 4: UPDATE SUMMARY WITH FORM VALUES
+            // ========================================================
+
+            // Update summary with current form values
+            function updateSummary() {
+                // Basic Details
+                $('#summary-tenantcode').text($('#TenantCode').val() || '(Not specified)');
+                $('#summary-tenantname').text($('#TenantName').val() || '(Not specified)');
+
+                var tenantType = $('#TenantType').val() || '(Not specified)';
+                $('#summary-tenanttype').text(tenantType);
+
+                // Update badge color based on type
+                var $typeBadge = $('#summary-tenanttype');
+                $typeBadge.removeClass('bg-primary bg-success bg-info');
+                if (tenantType === 'HeadOffice') {
+                    $typeBadge.addClass('bg-primary');
+                } else if (tenantType === 'Factory') {
+                    $typeBadge.addClass('bg-success');
+                } else if (tenantType === 'Subsidiary') {
+                    $typeBadge.addClass('bg-info');
+                }
+
+                // Region (if visible and has value)
+                var regionId = $('#RegionId').val();
+                if (regionId) {
+                    var regionText = $('#RegionId option:selected').text();
+                    $('#summary-region').text(regionText);
+                }
+
+                // Location
+                var location = $('#Location').val();
+                if (location) {
+                    $('#summary-location').text(location);
+                }
+
+                // Contact Phone
+                var phone = $('#ContactPhone').val();
+                if (phone) {
+                    $('#summary-phone').text(phone);
+                }
+
+                // Contact Email
+                var email = $('#ContactEmail').val();
+                if (email) {
+                    $('#summary-email').text(email);
+                }
+            }
+
+            // Update summary when step 4 becomes active
+            // Listen for when the Review tab is shown
+            $('[data-bs-target="#step4-summary"]').on('click', function () {
+                setTimeout(updateSummary, 100);
+            });
+
+            // Also update when Next button brings us to step 4
+            $('.nexttab').on('click', function () {
+                var nextTabId = $(this).attr('data-nexttab');
+                if (nextTabId === 'step4-summary-tab') {
+                    setTimeout(updateSummary, 100);
+                }
+            });
+
+            // Update on page load if we're already on step 4
+            if ($('#step4-summary').hasClass('active')) {
+                updateSummary();
+            }
         });
     </script>
 }

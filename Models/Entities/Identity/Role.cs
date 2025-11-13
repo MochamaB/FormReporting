@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace FormReporting.Models.Entities.Identity
 {
     /// <summary>
-    /// Represents a role in the RBAC system with hierarchical levels
+    /// Represents a role in the RBAC system with hierarchical scope-based access
     /// </summary>
     [Table("Roles")]
     public class Role : IActivatable
@@ -38,10 +38,11 @@ namespace FormReporting.Models.Entities.Identity
         public string? Description { get; set; }
 
         /// <summary>
-        /// Role level: 1=HeadOffice, 2=Regional, 3=Factory
+        /// Foreign key to ScopeLevel - defines the access scope for this role
+        /// Determines the breadth of data visibility (Global, Regional, Tenant, Department, etc.)
         /// </summary>
         [Required]
-        public int Level { get; set; }
+        public int ScopeLevelId { get; set; }
 
         /// <summary>
         /// Indicates if the role is active
@@ -54,6 +55,12 @@ namespace FormReporting.Models.Entities.Identity
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
 
         // Navigation properties
+        /// <summary>
+        /// The scope level that defines this role's data access breadth
+        /// </summary>
+        [ForeignKey(nameof(ScopeLevelId))]
+        public virtual ScopeLevel ScopeLevel { get; set; } = null!;
+
         /// <summary>
         /// Users assigned to this role
         /// </summary>

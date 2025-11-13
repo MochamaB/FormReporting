@@ -294,6 +294,261 @@ namespace FormReporting.Controllers.Organizational
             }
         }
 
+        // ============================================================================
+        // EDIT TENANT
+        // ============================================================================
+
+        /// <summary>
+        /// GET: Edit tenant
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> Edit(int id)
+        {
+            var tenant = await _context.Tenants
+                .Include(t => t.Region)
+                .FirstOrDefaultAsync(t => t.TenantId == id);
+
+            if (tenant == null)
+            {
+                TempData["ErrorMessage"] = "Tenant not found";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Map to ViewModel
+            var model = new TenantEditViewModel
+            {
+                TenantId = tenant.TenantId,
+                TenantCode = tenant.TenantCode,
+                TenantName = tenant.TenantName,
+                TenantType = tenant.TenantType,
+                RegionId = tenant.RegionId,
+                Location = tenant.Location,
+                GPSCoordinates = tenant.Latitude.HasValue && tenant.Longitude.HasValue
+                    ? $"{tenant.Latitude.Value}, {tenant.Longitude.Value}"
+                    : null,
+                ContactPhone = tenant.ContactPhone,
+                ContactEmail = tenant.ContactEmail,
+                IsActive = tenant.IsActive,
+                CreatedDate = tenant.CreatedDate,
+                CreatedBy = tenant.CreatedBy ?? 0,
+                ModifiedDate = tenant.ModifiedDate,
+                ModifiedBy = tenant.ModifiedBy
+            };
+
+            // Get currently assigned groups
+            model.SelectedGroupIds = await _context.TenantGroupMembers
+                .Where(tgm => tgm.TenantId == id)
+                .Select(tgm => tgm.TenantGroupId)
+                .ToListAsync();
+
+            // Load dropdown data
+            ViewBag.Regions = await _context.Regions
+                .Where(r => r.IsActive)
+                .OrderBy(r => r.RegionName)
+                .Select(r => new { r.RegionId, r.RegionName })
+                .ToListAsync();
+
+            ViewBag.TenantGroups = await _context.TenantGroups
+                .Where(g => g.IsActive)
+                .OrderBy(g => g.GroupName)
+                .Select(g => new { g.TenantGroupId, g.GroupName, g.Description })
+                .ToListAsync();
+
+            // Load existing departments for display
+            ViewBag.ExistingDepartments = await _context.Departments
+                .Where(d => d.TenantId == id)
+                .OrderBy(d => d.DepartmentName)
+                .Select(d => new
+                {
+                    d.DepartmentId,
+                    d.DepartmentCode,
+                    d.DepartmentName,
+                    d.Description,
+                    d.IsActive,
+                    d.CreatedDate
+                })
+                .ToListAsync();
+
+            // Check if HeadOffice exists (excluding current tenant if it's already HeadOffice)
+            ViewBag.HeadOfficeExists = await _context.Tenants
+                .AnyAsync(t => t.TenantType.ToLower() == "headoffice" && t.TenantId != id);
+
+            return View("~/Views/Organizational/Tenants/Edit.cshtml", model);
+        }
+
+        /// <summary>
+        /// POST: Update tenant
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(TenantEditViewModel model)
+        {
+            // Custom validation
+            var validationErrors = model.ValidateBasicDetails();
+            foreach (var error in validationErrors)
+            {
+                ModelState.AddModelError(string.Empty, error);
+            }
+
+            // Check for duplicate tenant code (excluding current tenant)
+            if (await _context.Tenants.AnyAsync(t => t.TenantCode.ToLower() == model.TenantCode.ToLower() && t.TenantId != model.TenantId))
+            {
+                ModelState.AddModelError("TenantCode", "A tenant with this code already exists");
+            }
+
+            // Business rule: Cannot change type if there's only one HeadOffice
+            var existingTenant = await _context.Tenants.FindAsync(model.TenantId);
+            if (existingTenant != null && existingTenant.TenantType.ToLower() == "headoffice" && model.TenantType.ToLower() != "headoffice")
+            {
+                if (!await _context.Tenants.AnyAsync(t => t.TenantType.ToLower() == "headoffice" && t.TenantId != model.TenantId))
+                {
+                    ModelState.AddModelError("TenantType", "Cannot change type - at least one HeadOffice must exist");
+                }
+            }
+
+            if (!ModelState.IsValid)
+            {
+                // Reload dropdown data
+                ViewBag.Regions = await _context.Regions
+                    .Where(r => r.IsActive)
+                    .OrderBy(r => r.RegionName)
+                    .Select(r => new { r.RegionId, r.RegionName })
+                    .ToListAsync();
+
+                ViewBag.TenantGroups = await _context.TenantGroups
+                    .Where(g => g.IsActive)
+                    .OrderBy(g => g.GroupName)
+                    .Select(g => new { g.TenantGroupId, g.GroupName, g.Description })
+                    .ToListAsync();
+
+                ViewBag.ExistingDepartments = await _context.Departments
+                    .Where(d => d.TenantId == model.TenantId)
+                    .OrderBy(d => d.DepartmentName)
+                    .Select(d => new
+                    {
+                        d.DepartmentId,
+                        d.DepartmentCode,
+                        d.DepartmentName,
+                        d.Description,
+                        d.IsActive,
+                        d.CreatedDate
+                    })
+                    .ToListAsync();
+
+                return View("~/Views/Organizational/Tenants/Edit.cshtml", model);
+            }
+
+            // Start transaction
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                var tenant = await _context.Tenants.FindAsync(model.TenantId);
+                if (tenant == null)
+                {
+                    TempData["ErrorMessage"] = "Tenant not found";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // Update tenant properties
+                tenant.TenantCode = model.TenantCode;
+                tenant.TenantName = model.TenantName;
+                tenant.TenantType = model.TenantType;
+                tenant.RegionId = model.RegionId;
+                tenant.Location = model.Location;
+
+                // Parse GPS coordinates if provided
+                if (!string.IsNullOrEmpty(model.GPSCoordinates))
+                {
+                    var coords = model.GPSCoordinates.Split(',');
+                    if (coords.Length == 2 &&
+                        decimal.TryParse(coords[0].Trim(), out decimal lat) &&
+                        decimal.TryParse(coords[1].Trim(), out decimal lng))
+                    {
+                        tenant.Latitude = lat;
+                        tenant.Longitude = lng;
+                    }
+                }
+                else
+                {
+                    tenant.Latitude = null;
+                    tenant.Longitude = null;
+                }
+
+                tenant.ContactPhone = model.ContactPhone;
+                tenant.ContactEmail = model.ContactEmail;
+                tenant.IsActive = model.IsActive;
+                tenant.ModifiedDate = DateTime.UtcNow;
+                tenant.ModifiedBy = 1; // TODO: Replace with current user ID
+
+                _context.Tenants.Update(tenant);
+                await _context.SaveChangesAsync();
+
+                // Update TenantGroupMembers
+                // Remove existing memberships
+                var existingMemberships = await _context.TenantGroupMembers
+                    .Where(tgm => tgm.TenantId == model.TenantId)
+                    .ToListAsync();
+                _context.TenantGroupMembers.RemoveRange(existingMemberships);
+
+                // Add new memberships
+                if (model.SelectedGroupIds != null && model.SelectedGroupIds.Any())
+                {
+                    foreach (var groupId in model.SelectedGroupIds)
+                    {
+                        var membership = new TenantGroupMember
+                        {
+                            TenantGroupId = groupId,
+                            TenantId = tenant.TenantId,
+                            AddedBy = 1, // TODO: Replace with current user ID
+                            AddedDate = DateTime.UtcNow
+                        };
+                        _context.TenantGroupMembers.Add(membership);
+                    }
+                }
+                await _context.SaveChangesAsync();
+
+                // Commit transaction
+                await transaction.CommitAsync();
+
+                TempData["SuccessMessage"] = $"Tenant '{tenant.TenantName}' updated successfully!";
+                return RedirectToAction(nameof(Index));
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                ModelState.AddModelError(string.Empty, $"Error updating tenant: {ex.Message}");
+
+                // Reload dropdown data
+                ViewBag.Regions = await _context.Regions
+                    .Where(r => r.IsActive)
+                    .OrderBy(r => r.RegionName)
+                    .Select(r => new { r.RegionId, r.RegionName })
+                    .ToListAsync();
+
+                ViewBag.TenantGroups = await _context.TenantGroups
+                    .Where(g => g.IsActive)
+                    .OrderBy(g => g.GroupName)
+                    .Select(g => new { g.TenantGroupId, g.GroupName, g.Description })
+                    .ToListAsync();
+
+                ViewBag.ExistingDepartments = await _context.Departments
+                    .Where(d => d.TenantId == model.TenantId)
+                    .OrderBy(d => d.DepartmentName)
+                    .Select(d => new
+                    {
+                        d.DepartmentId,
+                        d.DepartmentCode,
+                        d.DepartmentName,
+                        d.Description,
+                        d.IsActive,
+                        d.CreatedDate
+                    })
+                    .ToListAsync();
+
+                return View("~/Views/Organizational/Tenants/Edit.cshtml", model);
+            }
+        }
+
         /// <summary>
         /// Get default departments for tenant creation
         /// </summary>

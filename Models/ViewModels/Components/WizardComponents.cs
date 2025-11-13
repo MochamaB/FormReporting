@@ -126,9 +126,15 @@ namespace FormReporting.Models.ViewModels.Components
         public string Label { get; set; } = string.Empty;
 
         /// <summary>
-        /// Optional description (shown in horizontal layout)
+        /// Optional description (shown in sidebar/stepper)
         /// </summary>
         public string? Description { get; set; }
+
+        /// <summary>
+        /// Instructions/helper text shown in the content area header
+        /// (e.g., "Define the organizational structure for this tenant")
+        /// </summary>
+        public string? Instructions { get; set; }
 
         /// <summary>
         /// Remix icon class (optional - will be auto-assigned based on state if not provided)
@@ -314,9 +320,14 @@ namespace FormReporting.Models.ViewModels.Components
         public string Label { get; set; } = string.Empty;
 
         /// <summary>
-        /// Optional description
+        /// Optional description (shown in sidebar/stepper)
         /// </summary>
         public string? Description { get; set; }
+
+        /// <summary>
+        /// Instructions/helper text shown in the content area header
+        /// </summary>
+        public string? Instructions { get; set; }
 
         /// <summary>
         /// Icon class (pre-computed based on state)

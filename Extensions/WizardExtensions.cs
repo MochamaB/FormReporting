@@ -79,6 +79,7 @@ namespace FormReporting.Extensions
                     Title = configStep.Title,
                     Label = configStep.Label,
                     Description = configStep.Description,
+                    Instructions = configStep.Instructions,
                     Icon = icon,
                     StateClass = configStep.State.GetStepClass(),
                     ColorClass = configStep.State.GetStepColorClass(),

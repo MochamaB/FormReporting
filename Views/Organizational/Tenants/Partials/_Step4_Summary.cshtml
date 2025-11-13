@@ -5,13 +5,6 @@
     Review all information before creating tenant
 *@
 
-<div class="row">
-    <div class="col-12">
-        <h5 class="mb-3">Review & Confirm</h5>
-        <p class="text-muted">Please review all information before creating the tenant</p>
-    </div>
-</div>
-
 @* Basic Details Summary *@
 <div class="row mb-4">
     <div class="col-12">
@@ -206,14 +199,3 @@
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        // Update summary when returning from previous steps
-        $(document).ready(function () {
-            // Update summary dynamically if user goes back and changes values
-            $('[data-previous]').on('click', function () {
-                // Values will be preserved in form fields
-            });
-        });
-    </script>
-}

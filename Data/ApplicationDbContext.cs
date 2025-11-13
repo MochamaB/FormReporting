@@ -70,7 +70,12 @@ namespace FormReporting.Data
         // ============================================================================
 
         /// <summary>
-        /// Roles with hierarchical levels
+        /// Scope levels for hierarchical access control
+        /// </summary>
+        public DbSet<ScopeLevel> ScopeLevels { get; set; } = null!;
+
+        /// <summary>
+        /// Roles with scope-based access
         /// </summary>
         public DbSet<Role> Roles { get; set; } = null!;
 
@@ -483,6 +488,7 @@ namespace FormReporting.Data
             modelBuilder.ApplyConfiguration(new DepartmentConfiguration());
 
             // Apply Section 2: Identity & Access Management configurations
+            modelBuilder.ApplyConfiguration(new ScopeLevelConfiguration());
             modelBuilder.ApplyConfiguration(new RoleConfiguration());
             modelBuilder.ApplyConfiguration(new UserConfiguration());
             modelBuilder.ApplyConfiguration(new UserRoleConfiguration());

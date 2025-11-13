@@ -98,9 +98,19 @@
         font-size: 18px;
         color: #878a99;
     }
-    
+
     .wizard-step.done .wizard-step-icon i,
     .wizard-step.active .wizard-step-icon i {
+        color: white;
+    }
+
+    .wizard-step-icon .step-number {
+        font-size: 16px;
+        font-weight: 600;
+        color: #878a99;
+    }
+
+    .wizard-step.active .wizard-step-icon .step-number {
         color: white;
     }
     
@@ -165,24 +175,35 @@
 </style>
 
 
-<div class="row gy-4 @wizardModel.ContainerCssClass">
+<div class="row gy-4 @wizardModel.ContainerCssClass p-3">
     <!-- LEFT COLUMN: Vertical Stepper -->
-    <div class="col-lg-4">
+    <div class="col-lg-4" style="border-right: 2px solid #e9ecef;">
         <ul class="wizard-stepper ps-2">
             @foreach (var step in wizardModel.Steps)
             {
-                <li class="wizard-step @step.StateClass"
+                <li id="@(step.StepId)-tab"
+                    class="wizard-step @step.StateClass"
                     data-bs-toggle="pill"
                     data-bs-target="#@step.StepId"
+                    data-step-number="@step.StepNumber"
                     role="tab"
                     aria-controls="@step.StepId"
                     aria-selected="@step.AriaSelected">
                     <div class="wizard-step-icon">
-                        <i class="@step.Icon"></i>
+                        @if (step.IsDone)
+                        {
+                            <i class="ri-check-line"></i>
+                        }
+                        else
+                        {
+                            <span class="step-number">@step.StepNumber</span>
+                        }
                     </div>
                     <div class="wizard-step-content">
-                        <div class="wizard-step-title">@step.Title</div>
-                        <p class="wizard-step-label">@step.Label</p>
+                        <div class="wizard-step-title">
+                            <i class="@step.Icon me-2"></i>@step.Title
+                        </div>
+                        <p class="wizard-step-label">@step.Description</p>
                     </div>
                 </li>
             }
@@ -203,9 +224,26 @@
                         <div class="wizard-content-wrapper">
                             @* Step content area - to be filled by implementing view *@
                             <div class="step-content-area">
+                                @* Step Header with icon, title, and instructions *@
+                                <div class="step-content-header d-flex align-items-start mb-4 pb-3 border-bottom">
+                                    <div class="step-header-icon me-3 mt-1">
+                                        <i class="@step.Icon fs-24 text-primary"></i>
+                                    </div>
+                                    <div class="step-header-text flex-grow-1">
+                                        <h5 class="mb-2">@step.Title</h5>
+                                        @if (!string.IsNullOrEmpty(step.Instructions))
+                                        {
+                                            <p class="text-muted mb-0">@step.Instructions</p>
+                                        }
+                                    </div>
+                                </div>
+
+                                @* Step Content *@
                                 @if (!string.IsNullOrEmpty(step.ContentPartialPath))
                                 {
-                                    <partial name="@step.ContentPartialPath" />
+                                    @* Pass the parent view's model to the partial *@
+                                    var parentModel = ViewData["ParentModel"] ?? ViewContext.ViewData.Model; 
+                                    <partial name="@step.ContentPartialPath" model="parentModel" />
                                 }
                                 else
                                 {

@@ -21,19 +21,22 @@ using (var scope = app.Services.CreateScope())
     {
         var context = services.GetRequiredService<ApplicationDbContext>();
         
-       
+        // IMPORTANT: Seed in order of dependencies
         
-        // Seed regions
-       // RegionSeeder.SeedRegions(context);
+        // 1. Seed scope levels (required before roles)
+        ScopeLevelSeeder.SeedScopeLevels(context);
         
-        // Seed tenants (Head Office, Factories, Subsidiaries)
-      //  TenantSeeder.SeedTenants(context);
+        // 2. Seed roles (depends on scope levels)
+        RoleSeeder.SeedRoles(context);
         
-        // Seed menu sections
-     //   MenuSectionSeeder.SeedMenuSections(context);
-
-      //  ModuleSeeder.SeedModules(context);
-      //  MenuItemSeeder.SeedMenuItems(context);
+        // 3. Seed organizational structure
+        // RegionSeeder.SeedRegions(context);
+        // TenantSeeder.SeedTenants(context);
+        
+        // 4. Seed menu system
+        // MenuSectionSeeder.SeedMenuSections(context);
+        // ModuleSeeder.SeedModules(context);
+        // MenuItemSeeder.SeedMenuItems(context);
     }
     catch (Exception ex)
     {

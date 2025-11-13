@@ -1,18 +1,21 @@
-@model FormReporting.Models.ViewModels.Organizational.TenantCreateViewModel
+@model dynamic
 
 @*
-    Step 2: Departments
+    Departments Partial (Reusable for Create Wizard & Edit Tabs)
     Setup organizational departments (default + custom)
+    Compatible with: TenantCreateViewModel, TenantEditViewModel
 *@
 
-<div class="row">
-    <div class="col-12">
-        <h5 class="mb-3">Department Setup</h5>
-        <p class="text-muted">Define the organizational structure for this tenant</p>
-    </div>
-</div>
+@{
+    // Detect which ViewModel we have
+    bool isCreateMode = Model.GetType().Name == "TenantCreateViewModel";
+    bool isEditMode = Model.GetType().Name == "TenantEditViewModel";
+}
 
-<div class="row mb-4">
+@if (isCreateMode)
+{
+    @* CREATE MODE: Department Setup *@
+    <div class="row mb-4">
     <div class="col-12">
         <div class="form-check form-switch">
             <input class="form-check-input"
@@ -69,9 +72,9 @@
                     </tr>
                 </thead>
                 <tbody id="departmentsTableBody">
-                    @if (Model.Departments != null && Model.Departments.Any())
+                    @if (Model.Departments != null && ((System.Collections.IList)Model.Departments).Count > 0)
                     {
-                        for (int i = 0; i < Model.Departments.Count; i++)
+                        for (int i = 0; i < ((System.Collections.IList)Model.Departments).Count; i++)
                         {
                             <tr>
                                 <td>
@@ -117,10 +120,9 @@
     </div>
 </div>
 
-@section Scripts {
     <script>
         $(document).ready(function () {
-            let deptIndex = @(Model.Departments?.Count ?? 0);
+            let deptIndex = @(((System.Collections.IList)Model.Departments)?.Count ?? 0);
 
             // Toggle department sections
             $('#CreateDefaultDepartments').on('change', function () {
@@ -142,21 +144,21 @@
                         <td>
                             <input type="text"
                                    class="form-control form-control-sm"
-                                   name="Departments[${deptIndex}].DepartmentCode"
+                                   name="Departments[\${deptIndex}].DepartmentCode"
                                    placeholder="e.g., HR"
                                    required />
                         </td>
                         <td>
                             <input type="text"
                                    class="form-control form-control-sm"
-                                   name="Departments[${deptIndex}].DepartmentName"
+                                   name="Departments[\${deptIndex}].DepartmentName"
                                    placeholder="e.g., Human Resources"
                                    required />
                         </td>
                         <td>
                             <input type="text"
                                    class="form-control form-control-sm"
-                                   name="Departments[${deptIndex}].Description"
+                                   name="Departments[\${deptIndex}].Description"
                                    placeholder="Department description" />
                         </td>
                         <td class="text-center">
@@ -189,4 +191,62 @@
             });
         });
     </script>
+}
+else if (isEditMode)
+{
+    @* EDIT MODE: View Existing Departments *@
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="ri-information-line me-2"></i>
+                <strong>Note:</strong> Department management for existing tenants is done separately.
+                This tab shows the current departments assigned to this tenant.
+            </div>
+
+            @if (ViewBag.ExistingDepartments != null && ((IEnumerable<dynamic>)ViewBag.ExistingDepartments).Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Department Code</th>
+                                <th>Department Name</th>
+                                <th>Description</th>
+                                <th>Status</th>
+                                <th>Created Date</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var dept in (IEnumerable<dynamic>)ViewBag.ExistingDepartments)
+                            {
+                                <tr>
+                                    <td><span class="badge bg-secondary-subtle text-secondary">@dept.DepartmentCode</span></td>
+                                    <td><strong>@dept.DepartmentName</strong></td>
+                                    <td>@(dept.Description ?? "-")</td>
+                                    <td>
+                                        @if (dept.IsActive)
+                                        {
+                                            <span class="badge bg-success-subtle text-success">Active</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger-subtle text-danger">Inactive</span>
+                                        }
+                                    </td>
+                                    <td>@dept.CreatedDate.ToString("dd MMM, yyyy")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning">
+                    <i class="ri-alert-line me-2"></i>
+                    No departments found for this tenant.
+                </div>
+            }
+        </div>
+    </div>
 }

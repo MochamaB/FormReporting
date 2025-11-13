@@ -32,7 +32,7 @@ namespace FormReporting.Data.Configurations.Identity
             builder.Property(e => e.Description)
                 .HasMaxLength(500);
 
-            builder.Property(e => e.Level)
+            builder.Property(e => e.ScopeLevelId)
                 .IsRequired();
 
             builder.Property(e => e.IsActive)
@@ -53,6 +53,12 @@ namespace FormReporting.Data.Configurations.Identity
                 .HasDatabaseName("UQ_Role_Code");
 
             // Relationships
+            // Foreign key to ScopeLevel
+            builder.HasOne(e => e.ScopeLevel)
+                .WithMany(sl => sl.Roles)
+                .HasForeignKey(e => e.ScopeLevelId)
+                .OnDelete(DeleteBehavior.Restrict);
+
             builder.HasMany(e => e.UserRoles)
                 .WithOne(ur => ur.Role)
                 .HasForeignKey(ur => ur.RoleId)
