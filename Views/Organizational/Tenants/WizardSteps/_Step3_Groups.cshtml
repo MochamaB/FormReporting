@@ -1,0 +1,116 @@
+@model FormReporting.Models.ViewModels.Organizational.TenantCreateViewModel
+
+@*
+    Step 3: Tenant Groups (Optional)
+    Assign tenant to existing groups
+*@
+
+<div class="row">
+    <div class="col-12">
+        <h5 class="mb-3">Tenant Group Assignment</h5>
+        <p class="text-muted">Optionally assign this tenant to one or more groups for reporting and management purposes</p>
+    </div>
+</div>
+
+@if (ViewBag.TenantGroups != null && ((IEnumerable<dynamic>)ViewBag.TenantGroups).Any())
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <i class="ri-information-line me-2"></i>
+                <strong>What are Tenant Groups?</strong>
+                <p class="mb-0 mt-2">
+                    Groups allow you to organize tenants for specific purposes such as:
+                    performance tracking, project teams, regional groupings, or custom categorization.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-12">
+            <h6 class="mb-3">Available Groups</h6>
+            <div class="list-group">
+                @foreach (var group in ViewBag.TenantGroups)
+                {
+                    <div class="list-group-item">
+                        <div class="form-check">
+                            @if (Model.SelectedGroupIds != null && Model.SelectedGroupIds.Contains(group.TenantGroupId))
+                            {
+                                <input class="form-check-input"
+                                       type="checkbox"
+                                       name="SelectedGroupIds"
+                                       value="@group.TenantGroupId"
+                                       id="group_@group.TenantGroupId"
+                                       checked />
+                            }
+                            else
+                            {
+                                <input class="form-check-input"
+                                       type="checkbox"
+                                       name="SelectedGroupIds"
+                                       value="@group.TenantGroupId"
+                                       id="group_@group.TenantGroupId" />
+                            }
+                            <label class="form-check-label w-100" for="group_@group.TenantGroupId">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <h6 class="mb-1">@group.GroupName</h6>
+                                        @if (!string.IsNullOrEmpty(group.Description))
+                                        {
+                                            <p class="mb-0 text-muted small">@group.Description</p>
+                                        }
+                                    </div>
+                                    <span class="badge bg-primary-subtle text-primary">
+                                        Group #@group.TenantGroupId
+                                    </span>
+                                </div>
+                            </label>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="row mt-3">
+        <div class="col-12">
+            <div class="alert alert-warning">
+                <i class="ri-lightbulb-line me-2"></i>
+                <strong>Note:</strong> You can add or remove the tenant from groups later from the tenant details page.
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-secondary">
+                <div class="d-flex align-items-center">
+                    <i class="ri-information-line fs-22 me-3"></i>
+                    <div>
+                        <h6 class="alert-heading mb-1">No Tenant Groups Available</h6>
+                        <p class="mb-0">
+                            There are currently no tenant groups configured in the system.
+                            You can create groups later and assign this tenant to them.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="card bg-light">
+            <div class="card-body">
+                <h6 class="card-title"><i class="ri-question-line me-2"></i>Skip This Step?</h6>
+                <p class="card-text mb-0">
+                    Group assignment is optional. Click "Next" to proceed to the review step without selecting any groups.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>

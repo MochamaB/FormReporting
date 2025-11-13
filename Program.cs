@@ -24,16 +24,16 @@ using (var scope = app.Services.CreateScope())
        
         
         // Seed regions
-        RegionSeeder.SeedRegions(context);
+       // RegionSeeder.SeedRegions(context);
         
         // Seed tenants (Head Office, Factories, Subsidiaries)
-        TenantSeeder.SeedTenants(context);
+      //  TenantSeeder.SeedTenants(context);
         
         // Seed menu sections
-        MenuSectionSeeder.SeedMenuSections(context);
+     //   MenuSectionSeeder.SeedMenuSections(context);
 
-        ModuleSeeder.SeedModules(context);
-        MenuItemSeeder.SeedMenuItems(context);
+      //  ModuleSeeder.SeedModules(context);
+      //  MenuItemSeeder.SeedMenuItems(context);
     }
     catch (Exception ex)
     {

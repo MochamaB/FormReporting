@@ -1,0 +1,219 @@
+@model FormReporting.Models.ViewModels.Organizational.TenantCreateViewModel
+
+@*
+    Step 4: Summary & Confirm
+    Review all information before creating tenant
+*@
+
+<div class="row">
+    <div class="col-12">
+        <h5 class="mb-3">Review & Confirm</h5>
+        <p class="text-muted">Please review all information before creating the tenant</p>
+    </div>
+</div>
+
+@* Basic Details Summary *@
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-primary-subtle">
+                <h6 class="mb-0"><i class="ri-information-line me-2"></i>Basic Details</h6>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-borderless mb-0">
+                        <tbody>
+                            <tr>
+                                <th style="width: 30%;">Tenant Code:</th>
+                                <td><span class="badge bg-primary-subtle text-primary" id="summary-tenantcode">@Model.TenantCode</span></td>
+                            </tr>
+                            <tr>
+                                <th>Tenant Name:</th>
+                                <td><strong id="summary-tenantname">@Model.TenantName</strong></td>
+                            </tr>
+                            <tr>
+                                <th>Tenant Type:</th>
+                                <td>
+                                    <span class="badge" id="summary-tenanttype">@Model.TenantType</span>
+                                </td>
+                            </tr>
+                            @if (Model.RegionId.HasValue)
+                            {
+                                <tr>
+                                    <th>Region:</th>
+                                    <td id="summary-region">
+                                        @{
+                                            string regionName = "N/A";
+                                            if (ViewBag.Regions != null)
+                                            {
+                                                foreach (var region in ViewBag.Regions)
+                                                {
+                                                    if (region.RegionId == Model.RegionId)
+                                                    {
+                                                        regionName = region.RegionName;
+                                                        break;
+                                                    }
+                                                }
+                                            }
+                                        }
+                                        @regionName
+                                    </td>
+                                </tr>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.Location))
+                            {
+                                <tr>
+                                    <th>Location:</th>
+                                    <td id="summary-location">@Model.Location</td>
+                                </tr>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.ContactPhone))
+                            {
+                                <tr>
+                                    <th>Contact Phone:</th>
+                                    <td id="summary-phone">@Model.ContactPhone</td>
+                                </tr>
+                            }
+                            @if (!string.IsNullOrEmpty(Model.ContactEmail))
+                            {
+                                <tr>
+                                    <th>Contact Email:</th>
+                                    <td id="summary-email">@Model.ContactEmail</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Departments Summary *@
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-success-subtle">
+                <h6 class="mb-0"><i class="ri-community-line me-2"></i>Departments</h6>
+            </div>
+            <div class="card-body">
+                @if (Model.CreateDefaultDepartments)
+                {
+                    <p class="text-muted mb-2"><strong>Default departments will be created:</strong></p>
+                    <ul class="list-unstyled mb-0">
+                        <li><i class="ri-check-line text-success me-2"></i><strong>GEN</strong> - General</li>
+                        <li><i class="ri-check-line text-success me-2"></i><strong>ICT</strong> - ICT Department</li>
+                        <li><i class="ri-check-line text-success me-2"></i><strong>FIN</strong> - Finance Department</li>
+                        <li><i class="ri-check-line text-success me-2"></i><strong>OPS</strong> - Operations Department</li>
+                    </ul>
+                }
+                else if (Model.Departments != null && Model.Departments.Any())
+                {
+                    <p class="text-muted mb-2"><strong>Custom departments (@Model.Departments.Count):</strong></p>
+                    <div class="table-responsive">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Code</th>
+                                    <th>Name</th>
+                                    <th>Description</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var dept in Model.Departments)
+                                {
+                                    <tr>
+                                        <td><span class="badge bg-secondary-subtle text-secondary">@dept.DepartmentCode</span></td>
+                                        <td>@dept.DepartmentName</td>
+                                        <td>@dept.Description</td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted mb-0"><i class="ri-information-line me-2"></i>No departments specified</p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Groups Summary *@
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-info-subtle">
+                <h6 class="mb-0"><i class="ri-group-line me-2"></i>Tenant Groups</h6>
+            </div>
+            <div class="card-body">
+                @if (Model.SelectedGroupIds != null && Model.SelectedGroupIds.Any())
+                {
+                    <p class="text-muted mb-2"><strong>Tenant will be added to (@Model.SelectedGroupIds.Count) groups:</strong></p>
+                    <div class="d-flex flex-wrap gap-2">
+                        @foreach (var groupId in Model.SelectedGroupIds)
+                        {
+                            @if (ViewBag.TenantGroups != null)
+                            {
+                                foreach (var group in ViewBag.TenantGroups)
+                                {
+                                    if (group.TenantGroupId == groupId)
+                                    {
+                                        <span class="badge bg-info fs-12">
+                                            <i class="ri-group-line me-1"></i>@group.GroupName
+                                        </span>
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    </div>
+                }
+                else
+                {
+                    <p class="text-muted mb-0">
+                        <i class="ri-information-line me-2"></i>Not assigned to any groups
+                    </p>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Confirmation Alert *@
+<div class="row">
+    <div class="col-12">
+        <div class="alert alert-warning">
+            <h6 class="alert-heading"><i class="ri-alert-line me-2"></i>Confirm Creation</h6>
+            <p class="mb-0">
+                By clicking "Create Tenant", the following actions will be performed:
+            </p>
+            <ul class="mb-0 mt-2">
+                <li>Create tenant record in the database</li>
+                <li>Create @(Model.CreateDefaultDepartments ? "4 default" : (Model.Departments?.Count.ToString() ?? "0")) department(s)</li>
+                @if (Model.SelectedGroupIds != null && Model.SelectedGroupIds.Any())
+                {
+                    <li>Add tenant to @Model.SelectedGroupIds.Count selected group(s)</li>
+                }
+                @if (Model.TenantType == "Factory" && Model.RegionId.HasValue)
+                {
+                    <li>Send notification to Regional Manager</li>
+                }
+            </ul>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Update summary when returning from previous steps
+        $(document).ready(function () {
+            // Update summary dynamically if user goes back and changes values
+            $('[data-previous]').on('click', function () {
+                // Values will be preserved in form fields
+            });
+        });
+    </script>
+}

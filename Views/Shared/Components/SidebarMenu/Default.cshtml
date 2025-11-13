@@ -18,11 +18,11 @@
         {
             <li class="nav-item">
                 @* Module Header (collapsible) *@
-                <a class="nav-link menu-link"
+                <a class="nav-link menu-link @(module.IsExpanded ? "" : "collapsed")"
                    href="#@module.CollapseId"
                    data-bs-toggle="collapse"
                    role="button"
-                   aria-expanded="false"
+                   aria-expanded="@module.IsExpanded.ToString().ToLower()"
                    aria-controls="@module.CollapseId">
                     @if (!string.IsNullOrEmpty(module.Icon))
                     {
@@ -34,12 +34,12 @@
                 @* Menu Items (dropdown content) *@
                 @if (module.MenuItems.Any())
                 {
-                    <div class="collapse menu-dropdown" id="@module.CollapseId" data-bs-parent="#navbar-nav">
+                    <div class="collapse menu-dropdown @(module.IsExpanded ? "show" : "")" id="@module.CollapseId" data-bs-parent="#navbar-nav">
                         <ul class="nav nav-sm flex-column">
                             @foreach (var menuItem in module.MenuItems.OrderBy(mi => mi.DisplayOrder))
                             {
                                 <li class="nav-item">
-                                    <a href="@menuItem.Url" class="nav-link" data-key="@menuItem.MenuCode">
+                                    <a href="@menuItem.Url" class="nav-link @(menuItem.IsActive ? "active" : "")" data-key="@menuItem.MenuCode">
                                         @menuItem.MenuTitle
                                     </a>
                                 </li>

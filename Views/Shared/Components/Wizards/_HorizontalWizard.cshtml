@@ -1,17 +1,18 @@
 @model FormReporting.Models.ViewModels.Components.WizardViewModel
-@using FormReporting.Extensions
 
 @*
     Horizontal Wizard Partial View
-    
+
     Layout: 2-row (Steps on top | Content below)
     Best for: Complex workflows (Form Submissions, Template Builder, Multi-step Reports)
-    
+
     Features:
     - Horizontal stepper with connecting lines and checkmarks
     - KTDA theme colors (green for done, yellow for active)
     - Full-width content area below
     - Optional navigation buttons
+
+    NOTE: This partial contains ZERO logic - all values pre-computed in WizardExtensions
 *@
 
 <style>
@@ -143,18 +144,14 @@
             <ul class="horizontal-wizard-stepper">
                 @foreach (var step in Model.Steps)
                 {
-                    var stepClass = step.State.GetStepClass();
-                    var isActive = step.State == FormReporting.Models.Common.WizardStepState.Active;
-                    var stepIndex = Model.Steps.IndexOf(step) + 1;
-                    
-                    <li class="horizontal-wizard-step @stepClass"
-                        data-bs-toggle="pill" 
+                    <li class="horizontal-wizard-step @step.StateClass"
+                        data-bs-toggle="pill"
                         data-bs-target="#@step.StepId"
                         role="tab"
                         aria-controls="@step.StepId"
-                        aria-selected="@isActive.ToString().ToLower()">
+                        aria-selected="@step.AriaSelected">
                         <div class="horizontal-step-circle">
-                            @if (step.State == FormReporting.Models.Common.WizardStepState.Done)
+                            @if (step.IsDone)
                             {
                                 <i class="ri-check-line"></i>
                             }
@@ -164,7 +161,7 @@
                             }
                             else
                             {
-                                <span class="horizontal-step-number">@stepIndex</span>
+                                <span class="horizontal-step-number">@step.StepNumber</span>
                             }
                         </div>
                         <div class="horizontal-step-label">@step.Label</div>
@@ -180,16 +177,11 @@
             <div class="tab-content">
                 @foreach (var step in Model.Steps)
                 {
-                    var activeClass = step.State == FormReporting.Models.Common.WizardStepState.Active ? "show active" : "";
-                    var stepIndex = Model.Steps.IndexOf(step);
-                    var prevStep = stepIndex > 0 ? Model.Steps[stepIndex - 1] : null;
-                    var nextStep = stepIndex < Model.Steps.Count - 1 ? Model.Steps[stepIndex + 1] : null;
-                    
-                    <div class="tab-pane fade @activeClass" 
-                         id="@step.StepId" 
-                         role="tabpanel" 
+                    <div class="tab-pane fade @step.TabActiveClass"
+                         id="@step.StepId"
+                         role="tabpanel"
                          aria-labelledby="@(step.StepId)-tab">
-                         
+
                         <div class="horizontal-wizard-content">
                             @* Step Header *@
                             @if (!string.IsNullOrEmpty(step.Title) || !string.IsNullOrEmpty(step.Description))
@@ -205,39 +197,46 @@
                                     }
                                 </div>
                             }
-                            
+
                             @* Step content area - to be filled by implementing view *@
                             <div class="horizontal-step-content-area">
-                                @* Content goes here *@
+                                @if (!string.IsNullOrEmpty(step.ContentPartialPath))
+                                {
+                                    <partial name="@step.ContentPartialPath" />
+                                }
+                                else
+                                {
+                                    @* Content goes here when implementing *@
+                                }
                             </div>
-                            
+
                             @* Navigation Buttons (Optional) *@
                             @if (step.ShowNext || step.ShowPrevious)
                             {
                                 <div class="horizontal-wizard-navigation">
                                     <div class="d-flex align-items-start gap-3">
                                         @* Previous Button *@
-                                        @if (step.ShowPrevious && prevStep != null)
+                                        @if (step.ShowPrevious && !string.IsNullOrEmpty(step.PreviousStepId))
                                         {
-                                            <button type="button" 
-                                                    class="btn btn-secondary btn-label previestab" 
-                                                    data-previous="@(prevStep.StepId)-tab">
+                                            <button type="button"
+                                                    class="btn btn-secondary btn-label previestab"
+                                                    data-previous="@(step.PreviousStepId)-tab">
                                                 <i class="ri-arrow-left-line label-icon align-middle fs-16 me-2"></i>
                                                 @step.PreviousButtonText
                                             </button>
                                         }
-                                        
+
                                         @* Next Button *@
-                                        @if (step.ShowNext && nextStep != null)
+                                        @if (step.ShowNext && !string.IsNullOrEmpty(step.NextStepId))
                                         {
-                                            <button type="button" 
-                                                    class="btn btn-success btn-label right ms-auto nexttab" 
-                                                    data-nexttab="@(nextStep.StepId)-tab">
+                                            <button type="button"
+                                                    class="btn btn-success btn-label right ms-auto nexttab"
+                                                    data-nexttab="@(step.NextStepId)-tab">
                                                 <i class="ri-arrow-right-line label-icon align-middle fs-16 ms-2"></i>
                                                 @step.NextButtonText
                                             </button>
                                         }
-                                        
+
                                         @* Custom Button HTML *@
                                         @if (!string.IsNullOrEmpty(step.CustomButtonHtml))
                                         {

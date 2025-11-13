@@ -1,0 +1,92 @@
+@model FormReporting.Models.Entities.Organizational.Region
+@using FormReporting.Extensions
+@using FormReporting.Models.ViewModels.Components
+
+@{
+    ViewData["Title"] = "Create New Region";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+
+<div class="row">
+    <div class="col-lg-8">
+        @{
+            // Configure the form using SimpleForms
+            var formConfig = new SimpleFormConfig
+            {
+                FormId = "createRegionForm",
+                FormAction = Url.Action("Create", "Regions"),
+                FormMethod = "POST",
+                CardTitle = "Region Information",
+                CardSubtitle = "Enter the details for the new region",
+                StyleType = FormStyleType.Standard,
+                CancelButtonUrl = Url.Action("Index", "Regions"),
+                SubmitButtonText = "Create Region",
+                WrapInCard = true,
+                ShowResetButton = false
+            };
+
+            // Add form fields
+            formConfig
+                .WithNumberField("RegionNumber", "Region Number",
+                    value: Model?.RegionNumber,
+                    min: 1,
+                    isRequired: true,
+                    placeholder: "e.g., 1",
+                    helpText: "Unique numeric identifier for the region",
+                    columnClass: "col-md-6")
+                .WithTextField("RegionName", "Region Name",
+                    value: Model?.RegionName,
+                    isRequired: true,
+                    placeholder: "e.g., Central Region",
+                    helpText: "Full name of the region",
+                    columnClass: "col-md-6")
+                .WithTextField("RegionCode", "Region Code",
+                    value: Model?.RegionCode,
+                    isRequired: true,
+                    placeholder: "e.g., CR-001",
+                    helpText: "Unique code for the region (max 20 characters)",
+                    columnClass: "col-md-6")
+                .WithCheckboxField("IsActive", "Is Active",
+                    isChecked: Model?.IsActive ?? true,
+                    helpText: "Check to activate this region immediately");
+
+            // Build the form
+            var form = formConfig.BuildForm();
+        }
+
+        @* Render the form using SimpleForms partial *@
+        <partial name="~/Views/Shared/Components/SimpleForms/_SimpleForm.cshtml" model="form" />
+    </div>
+
+    <div class="col-lg-4">
+        @* Help Card *@
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="ri-information-line me-1"></i> Help</h5>
+            </div>
+            <div class="card-body">
+                <h6>Creating a Region</h6>
+                <p class="text-muted">Regions are used to group factories geographically for management and reporting purposes.</p>
+
+                <h6 class="mt-3">Field Requirements</h6>
+                <ul class="text-muted small">
+                    <li><strong>Region Number:</strong> Must be unique and positive</li>
+                    <li><strong>Region Name:</strong> Maximum 100 characters</li>
+                    <li><strong>Region Code:</strong> Maximum 20 characters, must be unique</li>
+                    <li><strong>Is Active:</strong> Only active regions appear in dropdowns</li>
+                </ul>
+
+                <div class="alert alert-info mt-3">
+                    <i class="ri-lightbulb-line me-1"></i>
+                    <strong>Tip:</strong> Use a consistent naming convention for region codes (e.g., CR-001, ER-002)
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

@@ -1,0 +1,157 @@
+@model FormReporting.Models.ViewModels.Components.TabsViewModel
+
+@*
+    Vertical Tabs Partial View
+
+    Layout: Tabs on left/right, content on right/left
+    Style: Vertical Nav Pills
+    Best for: Settings pages, User profiles, Configuration panels
+
+    Features:
+    - Vertical tab navigation with icons
+    - Optional badges/counts
+    - Optional descriptions
+    - Pills or tabs style
+    - Disabled state support
+
+    NOTE: This partial contains ZERO logic - all values pre-computed in TabsExtensions
+*@
+
+@if (Model.WrapInCard)
+{
+    <div class="card @Model.ContainerCssClass">
+        @if (!string.IsNullOrEmpty(Model.CardTitle))
+        {
+            <div class="card-header">
+                <h5 class="card-title mb-0">@Model.CardTitle</h5>
+                @if (!string.IsNullOrEmpty(Model.CardSubtitle))
+                {
+                    <p class="text-muted mb-0">@Model.CardSubtitle</p>
+                }
+            </div>
+        }
+        <div class="card-body">
+            <div class="row">
+                @* Left Column: Vertical Tabs *@
+                <div class="col-md-3">
+                    <div class="@Model.NavClasses" id="@Model.TabsId" role="tablist" aria-orientation="vertical">
+                        @foreach (var tab in Model.Tabs)
+                        {
+                            <a class="@tab.NavLinkClasses mb-2"
+                               id="@(tab.TabId)-tab"
+                               data-bs-toggle="pill"
+                               href="@tab.Href"
+                               role="tab"
+                               aria-controls="@tab.TabId"
+                               aria-selected="@tab.AriaSelected"
+                               @(tab.IsDisabled ? "tabindex=\"-1\"" : "")>
+                                @if (!string.IsNullOrEmpty(tab.Icon))
+                                {
+                                    <i class="@tab.Icon d-block fs-20 mb-1"></i>
+                                }
+                                <span class="d-block">@tab.Title</span>
+                                @if (!string.IsNullOrEmpty(tab.Badge))
+                                {
+                                    <span class="@tab.BadgeClasses">@tab.Badge</span>
+                                }
+                                @if (!string.IsNullOrEmpty(tab.Description))
+                                {
+                                    <small class="text-muted d-block mt-1">@tab.Description</small>
+                                }
+                            </a>
+                        }
+                    </div>
+                </div>
+
+                @* Right Column: Tab Content *@
+                <div class="col-md-9">
+                    <div class="@Model.TabContentClasses mt-4 mt-md-0" id="@(Model.TabsId)Content">
+                        @foreach (var tab in Model.Tabs)
+                        {
+                            <div class="@tab.TabPaneClasses"
+                                 id="@tab.TabId"
+                                 role="tabpanel"
+                                 aria-labelledby="@(tab.TabId)-tab">
+                                @if (!string.IsNullOrEmpty(tab.ContentPartialPath))
+                                {
+                                    <partial name="@tab.ContentPartialPath" />
+                                }
+                                else if (!string.IsNullOrEmpty(tab.ContentHtml))
+                                {
+                                    @Html.Raw(tab.ContentHtml)
+                                }
+                                else
+                                {
+                                    <p class="text-muted">No content provided for this tab.</p>
+                                }
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="@Model.ContainerCssClass">
+        <div class="row">
+            @* Left Column: Vertical Tabs *@
+            <div class="col-md-3">
+                <div class="@Model.NavClasses" id="@Model.TabsId" role="tablist" aria-orientation="vertical">
+                    @foreach (var tab in Model.Tabs)
+                    {
+                        <a class="@tab.NavLinkClasses mb-2"
+                           id="@(tab.TabId)-tab"
+                           data-bs-toggle="pill"
+                           href="@tab.Href"
+                           role="tab"
+                           aria-controls="@tab.TabId"
+                           aria-selected="@tab.AriaSelected"
+                           @(tab.IsDisabled ? "tabindex=\"-1\"" : "")>
+                            @if (!string.IsNullOrEmpty(tab.Icon))
+                            {
+                                <i class="@tab.Icon d-block fs-20 mb-1"></i>
+                            }
+                            <span class="d-block">@tab.Title</span>
+                            @if (!string.IsNullOrEmpty(tab.Badge))
+                            {
+                                <span class="@tab.BadgeClasses">@tab.Badge</span>
+                            }
+                            @if (!string.IsNullOrEmpty(tab.Description))
+                            {
+                                <small class="text-muted d-block mt-1">@tab.Description</small>
+                            }
+                        </a>
+                    }
+                </div>
+            </div>
+
+            @* Right Column: Tab Content *@
+            <div class="col-md-9">
+                <div class="@Model.TabContentClasses mt-4 mt-md-0" id="@(Model.TabsId)Content">
+                    @foreach (var tab in Model.Tabs)
+                    {
+                        <div class="@tab.TabPaneClasses"
+                             id="@tab.TabId"
+                             role="tabpanel"
+                             aria-labelledby="@(tab.TabId)-tab">
+                            @if (!string.IsNullOrEmpty(tab.ContentPartialPath))
+                            {
+                                <partial name="@tab.ContentPartialPath" />
+                            }
+                            else if (!string.IsNullOrEmpty(tab.ContentHtml))
+                            {
+                                @Html.Raw(tab.ContentHtml)
+                            }
+                            else
+                            {
+                                <p class="text-muted">No content provided for this tab.</p>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+}

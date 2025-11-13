@@ -36,6 +36,11 @@ namespace FormReporting.Models.ViewModels.Components
         /// Bootstrap collapse target ID (e.g., "sidebarDashboards")
         /// </summary>
         public string CollapseId => $"sidebar{ModuleCode}";
+
+        /// <summary>
+        /// Indicates if this module should be expanded (contains active menu item)
+        /// </summary>
+        public bool IsExpanded { get; set; } = false;
     }
 
     /// <summary>

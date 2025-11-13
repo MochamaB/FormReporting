@@ -1,0 +1,176 @@
+@model FormReporting.Models.ViewModels.Organizational.TenantCreateViewModel
+
+@*
+    Step 1: Basic Details
+    Tenant information, type, region, and contact details
+*@
+
+<div class="row">
+    <div class="col-12">
+        <h5 class="mb-3">Tenant Information</h5>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label for="TenantCode" class="form-label">
+            Tenant Code <span class="text-danger">*</span>
+        </label>
+        <input type="text"
+               class="form-control"
+               id="TenantCode"
+               name="TenantCode"
+               value="@Model.TenantCode"
+               placeholder="e.g., FAC001"
+               required />
+        <div class="form-text">Unique code for this tenant</div>
+    </div>
+
+    <div class="col-md-6 mb-3">
+        <label for="TenantName" class="form-label">
+            Tenant Name <span class="text-danger">*</span>
+        </label>
+        <input type="text"
+               class="form-control"
+               id="TenantName"
+               name="TenantName"
+               value="@Model.TenantName"
+               placeholder="e.g., Nairobi Factory"
+               required />
+        <div class="form-text">Full name of the tenant</div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label for="TenantType" class="form-label">
+            Tenant Type <span class="text-danger">*</span>
+        </label>
+        <select class="form-select" id="TenantType" name="TenantType" required>
+            <option value="">-- Select Type --</option>
+            @if (Model.TenantType == "Factory")
+            {
+                <option value="Factory" selected>Factory</option>
+            }
+            else
+            {
+                <option value="Factory">Factory</option>
+            }
+            @if (!ViewBag.HeadOfficeExists)
+            {
+                @if (Model.TenantType == "HeadOffice")
+                {
+                    <option value="HeadOffice" selected>Head Office</option>
+                }
+                else
+                {
+                    <option value="HeadOffice">Head Office</option>
+                }
+            }
+            @if (Model.TenantType == "Subsidiary")
+            {
+                <option value="Subsidiary" selected>Subsidiary</option>
+            }
+            else
+            {
+                <option value="Subsidiary">Subsidiary</option>
+            }
+        </select>
+        <div class="form-text">
+            @if (ViewBag.HeadOfficeExists)
+            {
+                <span class="text-warning"><i class="ri-information-line"></i> Head Office already exists</span>
+            }
+            else
+            {
+                <span>Factory, Head Office, or Subsidiary</span>
+            }
+        </div>
+    </div>
+
+    <div class="col-md-6 mb-3" id="regionGroup">
+        <label for="RegionId" class="form-label">
+            Region <span class="text-danger region-required" style="display:none;">*</span>
+        </label>
+        <select class="form-select" id="RegionId" name="RegionId">
+            <option value="">-- Select Region --</option>
+            @foreach (var region in ViewBag.Regions)
+            {
+                @if (Model.RegionId == region.RegionId)
+                {
+                    <option value="@region.RegionId" selected>@region.RegionName</option>
+                }
+                else
+                {
+                    <option value="@region.RegionId">@region.RegionName</option>
+                }
+            }
+        </select>
+        <div class="form-text">Required for Factory type only</div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <h5 class="mb-3 mt-3">Location & Contact Information</h5>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-12 mb-3">
+        <label for="Location" class="form-label">Location/Address</label>
+        <textarea class="form-control"
+                  id="Location"
+                  name="Location"
+                  rows="2"
+                  placeholder="e.g., Thika Road, Industrial Area">@Model.Location</textarea>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label for="Latitude" class="form-label">Latitude</label>
+        <input type="number"
+               step="0.0000001"
+               class="form-control"
+               id="Latitude"
+               name="Latitude"
+               value="@Model.Latitude"
+               placeholder="e.g., -1.286389" />
+        <div class="form-text">GPS coordinates (optional)</div>
+    </div>
+
+    <div class="col-md-6 mb-3">
+        <label for="Longitude" class="form-label">Longitude</label>
+        <input type="number"
+               step="0.0000001"
+               class="form-control"
+               id="Longitude"
+               name="Longitude"
+               value="@Model.Longitude"
+               placeholder="e.g., 36.817223" />
+        <div class="form-text">GPS coordinates (optional)</div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label for="ContactPhone" class="form-label">Contact Phone</label>
+        <input type="tel"
+               class="form-control"
+               id="ContactPhone"
+               name="ContactPhone"
+               value="@Model.ContactPhone"
+               placeholder="e.g., +254712345678" />
+    </div>
+
+    <div class="col-md-6 mb-3">
+        <label for="ContactEmail" class="form-label">Contact Email</label>
+        <input type="email"
+               class="form-control"
+               id="ContactEmail"
+               name="ContactEmail"
+               value="@Model.ContactEmail"
+               placeholder="e.g., tenant@company.com" />
+    </div>
+</div>

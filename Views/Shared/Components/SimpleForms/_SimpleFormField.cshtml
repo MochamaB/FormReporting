@@ -1,0 +1,266 @@
+@model FormReporting.Models.ViewModels.Components.SimpleFormFieldViewModel
+@using FormReporting.Models.ViewModels.Components
+
+@*
+    Individual field renderer for all field types
+    Handles Standard, Floating Labels, Horizontal, and Inline layouts
+*@
+
+@{
+    var isFloating = Model.FormGroupClass.Contains("form-floating");
+    var isHorizontal = Model.FormGroupClass.Contains("row");
+    var inputType = Model.FieldType switch
+    {
+        SimpleFieldType.Email => "email",
+        SimpleFieldType.Password => "password",
+        SimpleFieldType.Number => "number",
+        SimpleFieldType.Date => "date",
+        SimpleFieldType.DateTime => "datetime-local",
+        SimpleFieldType.File => "file",
+        _ => "text"
+    };
+}
+
+@* HIDDEN FIELD *@
+@if (Model.FieldType == SimpleFieldType.Hidden)
+{
+    <input type="hidden" id="@Model.InputId" name="@Model.InputName" value="@Model.Value" />
+}
+
+@* CHECKBOX FIELD *@
+else if (Model.FieldType == SimpleFieldType.Checkbox)
+{
+    <div class="@Model.FormGroupClass">
+        <div class="form-check">
+            <input type="checkbox"
+                   class="@Model.InputClass"
+                   id="@Model.InputId"
+                   name="@Model.InputName"
+                   value="true"
+                   @(Model.Value == "True" ? "checked" : "") />
+            <label class="form-check-label" for="@Model.InputId">
+                @Model.Label
+            </label>
+            @if (!string.IsNullOrEmpty(Model.HelpText))
+            {
+                <div class="form-text">@Model.HelpText</div>
+            }
+        </div>
+    </div>
+}
+
+@* TEXTAREA FIELD *@
+else if (Model.FieldType == SimpleFieldType.TextArea)
+{
+    <div class="@Model.FormGroupClass">
+        @if (isHorizontal)
+        {
+            <label for="@Model.InputId" class="@Model.LabelClass">@Model.Label</label>
+            <div class="col-md-9">
+                <textarea class="@Model.InputClass"
+                          id="@Model.InputId"
+                          name="@Model.InputName"
+                          rows="@Model.Rows"
+                          placeholder="@Model.PlaceholderText"
+                          @(Model.IsRequired ? "required" : "")>@Model.Value</textarea>
+                @if (!string.IsNullOrEmpty(Model.HelpText))
+                {
+                    <div class="form-text">@Model.HelpText</div>
+                }
+            </div>
+        }
+        else if (isFloating)
+        {
+            @* Floating labels for textarea *@
+            <textarea class="@Model.InputClass"
+                      id="@Model.InputId"
+                      name="@Model.InputName"
+                      rows="@Model.Rows"
+                      placeholder="@(Model.PlaceholderText ?? Model.Label)"
+                      @(Model.IsRequired ? "required" : "")>@Model.Value</textarea>
+            <label for="@Model.InputId">@Model.Label</label>
+            @if (!string.IsNullOrEmpty(Model.HelpText))
+            {
+                <div class="form-text">@Model.HelpText</div>
+            }
+        }
+        else
+        {
+            @* Standard layout *@
+            <label for="@Model.InputId" class="@Model.LabelClass">@Model.Label</label>
+            <textarea class="@Model.InputClass"
+                      id="@Model.InputId"
+                      name="@Model.InputName"
+                      rows="@Model.Rows"
+                      placeholder="@Model.PlaceholderText"
+                      @(Model.IsRequired ? "required" : "")>@Model.Value</textarea>
+            @if (!string.IsNullOrEmpty(Model.HelpText))
+            {
+                <div class="form-text">@Model.HelpText</div>
+            }
+        }
+    </div>
+}
+
+@* SELECT/DROPDOWN FIELD *@
+else if (Model.FieldType == SimpleFieldType.Select)
+{
+    <div class="@Model.FormGroupClass">
+        @if (isHorizontal)
+        {
+            <label for="@Model.InputId" class="@Model.LabelClass">@Model.Label</label>
+            <div class="col-md-9">
+                <select class="@Model.InputClass"
+                        id="@Model.InputId"
+                        name="@Model.InputName"
+                        @(Model.IsRequired ? "required" : "")>
+                    @foreach (var option in Model.Options)
+                    {
+                        <option value="@option.Value" selected="@(option.IsSelected)">@option.Text</option>
+                    }
+                </select>
+                @if (!string.IsNullOrEmpty(Model.HelpText))
+                {
+                    <div class="form-text">@Model.HelpText</div>
+                }
+            </div>
+        }
+        else if (isFloating)
+        {
+            @* Floating labels for select *@
+            <select class="@Model.InputClass"
+                    id="@Model.InputId"
+                    name="@Model.InputName"
+                    @(Model.IsRequired ? "required" : "")>
+                @foreach (var option in Model.Options)
+                {
+                    <option value="@option.Value" selected="@(option.IsSelected)">@option.Text</option>
+                }
+            </select>
+            <label for="@Model.InputId">@Model.Label</label>
+            @if (!string.IsNullOrEmpty(Model.HelpText))
+            {
+                <div class="form-text">@Model.HelpText</div>
+            }
+        }
+        else
+        {
+            @* Standard layout *@
+            <label for="@Model.InputId" class="@Model.LabelClass">@Model.Label</label>
+            <select class="@Model.InputClass"
+                    id="@Model.InputId"
+                    name="@Model.InputName"
+                    @(Model.IsRequired ? "required" : "")>
+                @foreach (var option in Model.Options)
+                {
+                    <option value="@option.Value" selected="@(option.IsSelected)">@option.Text</option>
+                }
+            </select>
+            @if (!string.IsNullOrEmpty(Model.HelpText))
+            {
+                <div class="form-text">@Model.HelpText</div>
+            }
+        }
+    </div>
+}
+
+@* FILE UPLOAD FIELD *@
+else if (Model.FieldType == SimpleFieldType.File)
+{
+    <div class="@Model.FormGroupClass">
+        @if (isHorizontal)
+        {
+            <label for="@Model.InputId" class="@Model.LabelClass">@Model.Label</label>
+            <div class="col-md-9">
+                <input type="file"
+                       class="@Model.InputClass"
+                       id="@Model.InputId"
+                       name="@Model.InputName"
+                       @(Model.IsRequired ? "required" : "") />
+                @if (!string.IsNullOrEmpty(Model.HelpText))
+                {
+                    <div class="form-text">@Model.HelpText</div>
+                }
+            </div>
+        }
+        else
+        {
+            @* Standard layout (floating labels don't work well with file inputs) *@
+            <label for="@Model.InputId" class="@Model.LabelClass">@Model.Label</label>
+            <input type="file"
+                   class="@Model.InputClass"
+                   id="@Model.InputId"
+                   name="@Model.InputName"
+                   @(Model.IsRequired ? "required" : "") />
+            @if (!string.IsNullOrEmpty(Model.HelpText))
+            {
+                <div class="form-text">@Model.HelpText</div>
+            }
+        }
+    </div>
+}
+
+@* TEXT, EMAIL, PASSWORD, NUMBER, DATE, DATETIME FIELDS *@
+else
+{
+    <div class="@Model.FormGroupClass">
+        @if (isHorizontal)
+        {
+            <label for="@Model.InputId" class="@Model.LabelClass">@Model.Label</label>
+            <div class="col-md-9">
+                <input type="@inputType"
+                       class="@Model.InputClass"
+                       id="@Model.InputId"
+                       name="@Model.InputName"
+                       value="@Model.Value"
+                       placeholder="@Model.PlaceholderText"
+                       @(Model.IsRequired ? "required" : "")
+                       @(Model.Min.HasValue ? $"min=\"{Model.Min.Value}\"" : "")
+                       @(Model.Max.HasValue ? $"max=\"{Model.Max.Value}\"" : "")
+                       @(Model.Step.HasValue ? $"step=\"{Model.Step.Value}\"" : "") />
+                @if (!string.IsNullOrEmpty(Model.HelpText))
+                {
+                    <div class="form-text">@Model.HelpText</div>
+                }
+            </div>
+        }
+        else if (isFloating)
+        {
+            @* Floating labels: Input first, then label *@
+            <input type="@inputType"
+                   class="@Model.InputClass"
+                   id="@Model.InputId"
+                   name="@Model.InputName"
+                   value="@Model.Value"
+                   placeholder="@(Model.PlaceholderText ?? Model.Label)"
+                   @(Model.IsRequired ? "required" : "")
+                   @(Model.Min.HasValue ? $"min=\"{Model.Min.Value}\"" : "")
+                   @(Model.Max.HasValue ? $"max=\"{Model.Max.Value}\"" : "")
+                   @(Model.Step.HasValue ? $"step=\"{Model.Step.Value}\"" : "") />
+            <label for="@Model.InputId">@Model.Label</label>
+            @if (!string.IsNullOrEmpty(Model.HelpText))
+            {
+                <div class="form-text">@Model.HelpText</div>
+            }
+        }
+        else
+        {
+            @* Standard layout: Label first, then input *@
+            <label for="@Model.InputId" class="@Model.LabelClass">@Model.Label</label>
+            <input type="@inputType"
+                   class="@Model.InputClass"
+                   id="@Model.InputId"
+                   name="@Model.InputName"
+                   value="@Model.Value"
+                   placeholder="@Model.PlaceholderText"
+                   @(Model.IsRequired ? "required" : "")
+                   @(Model.Min.HasValue ? $"min=\"{Model.Min.Value}\"" : "")
+                   @(Model.Max.HasValue ? $"max=\"{Model.Max.Value}\"" : "")
+                   @(Model.Step.HasValue ? $"step=\"{Model.Step.Value}\"" : "") />
+            @if (!string.IsNullOrEmpty(Model.HelpText))
+            {
+                <div class="form-text">@Model.HelpText</div>
+            }
+        }
+    </div>
+}

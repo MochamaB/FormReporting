@@ -1,0 +1,241 @@
+@model FormReporting.Models.ViewModels.Organizational.TenantCreateViewModel
+@using FormReporting.Models.ViewModels.Components
+@using FormReporting.Extensions
+
+@{
+    ViewData["Title"] = "Create New Tenant";
+}
+
+
+
+@{
+    // ============================================================================
+    // WIZARD CONFIGURATION - 4 Steps
+    // Implements WF-1.10: Tenant Creation Wizard
+    // ============================================================================
+
+    var wizardConfig = new WizardConfig
+    {
+        FormId = "tenantCreationWizard",
+        Layout = WizardLayout.Vertical,
+        Steps = new List<WizardStep>
+        {
+            new WizardStep
+            {
+                StepId = "step1-basic",
+                StepNumber = 1,
+                Title = "Basic Details",
+                Description = "Tenant information and contact details",
+                State = WizardStepState.Active,
+                ContentPartialPath = "~/Views/Organizational/Tenants/WizardSteps/_Step1_BasicDetails.cshtml",
+                ShowPrevious = false,
+                ShowNext = true,
+                NextButtonText = "Next: Departments"
+            },
+            new WizardStep
+            {
+                StepId = "step2-departments",
+                StepNumber = 2,
+                Title = "Departments",
+                Description = "Setup organizational departments",
+                State = WizardStepState.Pending,
+                ContentPartialPath = "~/Views/Organizational/Tenants/WizardSteps/_Step2_Departments.cshtml",
+                ShowPrevious = true,
+                ShowNext = true,
+                PreviousButtonText = "Back",
+                NextButtonText = "Next: Groups"
+            },
+            new WizardStep
+            {
+                StepId = "step3-groups",
+                StepNumber = 3,
+                Title = "Tenant Groups",
+                Description = "Assign to groups (optional)",
+                State = WizardStepState.Pending,
+                ContentPartialPath = "~/Views/Organizational/Tenants/WizardSteps/_Step3_Groups.cshtml",
+                ShowPrevious = true,
+                ShowNext = true,
+                PreviousButtonText = "Back",
+                NextButtonText = "Next: Review"
+            },
+            new WizardStep
+            {
+                StepId = "step4-summary",
+                StepNumber = 4,
+                Title = "Review & Confirm",
+                Description = "Verify all information",
+                State = WizardStepState.Pending,
+                ContentPartialPath = "~/Views/Organizational/Tenants/WizardSteps/_Step4_Summary.cshtml",
+                ShowPrevious = true,
+                ShowNext = false,
+                PreviousButtonText = "Back",
+                CustomButtonHtml = "<button type='submit' class='btn btn-success'><i class='ri-check-line me-1'></i>Create Tenant</button>"
+            }
+        }
+    };
+
+    var wizard = wizardConfig.BuildWizard();
+
+    // Pass wizard through ViewData so step partials can inherit TenantCreateViewModel
+    ViewData["WizardViewModel"] = wizard;
+}
+
+@* Display validation errors *@
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <h5 class="alert-heading"><i class="ri-error-warning-line me-2"></i>Validation Errors</h5>
+        <ul class="mb-0">
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <li>@error.ErrorMessage</li>
+            }
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+@* Main Form with Wizard *@
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="post" action="@Url.Action("Create", "Tenants")" id="@wizardConfig.FormId">
+                    @Html.AntiForgeryToken()
+
+                    @* Hidden fields to preserve data across wizard steps *@
+                    @Html.HiddenFor(m => m.CreateDefaultDepartments)
+
+                    @* Render Wizard Component (wizard passed via ViewData) *@
+                    <partial name="~/Views/Shared/Components/Wizards/_VerticalWizard.cshtml" />
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            const wizardId = '@wizardConfig.FormId';
+            let currentStep = 1;
+            const totalSteps = @wizardConfig.Steps.Count;
+
+            // Next button click - using data-nexttab attribute
+            $(document).on('click', '.nexttab', function (e) {
+                e.preventDefault();
+                const nextTabId = $(this).data('nexttab');
+
+                if (validateCurrentStep()) {
+                    // Find current active step and mark as done
+                    const currentWizardStep = $('.wizard-step.active');
+                    currentWizardStep.removeClass('active').addClass('done');
+                    currentWizardStep.find('.wizard-step-icon i').addClass('ri-check-line');
+
+                    // Activate next tab using Bootstrap Tab API
+                    const nextTab = new bootstrap.Tab(document.getElementById(nextTabId));
+                    nextTab.show();
+
+                    // Update wizard step visual
+                    const nextStepLi = $('.wizard-step[data-bs-target="#' + nextTabId.replace('-tab', '') + '"]');
+                    nextStepLi.removeClass('done').addClass('active');
+
+                    currentStep++;
+                }
+            });
+
+            // Previous button click - using data-previous attribute
+            $(document).on('click', '.previestab', function (e) {
+                e.preventDefault();
+                const previousTabId = $(this).data('previous');
+
+                // Find current active step and revert to pending
+                const currentWizardStep = $('.wizard-step.active');
+                currentWizardStep.removeClass('active done');
+
+                // Activate previous tab using Bootstrap Tab API
+                const previousTab = new bootstrap.Tab(document.getElementById(previousTabId));
+                previousTab.show();
+
+                // Update wizard step visual - mark previous as active and remove done state from icon
+                const prevStepLi = $('.wizard-step[data-bs-target="#' + previousTabId.replace('-tab', '') + '"]');
+                prevStepLi.removeClass('done').addClass('active');
+                prevStepLi.find('.wizard-step-icon i').removeClass('ri-check-line');
+
+                currentStep--;
+            });
+
+            // Validate current step
+            function validateCurrentStep() {
+                let isValid = true;
+
+                // Clear previous errors
+                $('.is-invalid').removeClass('is-invalid');
+                $('.invalid-feedback').remove();
+
+                if (currentStep === 1) {
+                    // Validate Step 1: Basic Details
+                    if ($('#TenantCode').val().trim() === '') {
+                        showError('#TenantCode', 'Tenant code is required');
+                        isValid = false;
+                    }
+                    if ($('#TenantName').val().trim() === '') {
+                        showError('#TenantName', 'Tenant name is required');
+                        isValid = false;
+                    }
+                    if ($('#TenantType').val() === '') {
+                        showError('#TenantType', 'Tenant type is required');
+                        isValid = false;
+                    }
+
+                    // Check region requirement for factories
+                    const tenantType = $('#TenantType').val();
+                    const regionId = $('#RegionId').val();
+
+                    if (tenantType === 'Factory' && !regionId) {
+                        showError('#RegionId', 'Region is required for Factory type tenants');
+                        isValid = false;
+                    }
+
+                    if (tenantType === 'HeadOffice' && regionId) {
+                        showError('#RegionId', 'Head Office cannot be assigned to a region');
+                        isValid = false;
+                    }
+                }
+                else if (currentStep === 2) {
+                    // Validate Step 2: Departments (optional validation)
+                    // Departments are optional if CreateDefaultDepartments is true
+                }
+                // Step 3 and 4 don't require validation
+
+                return isValid;
+            }
+
+            // Show error message
+            function showError(fieldId, message) {
+                $(fieldId).addClass('is-invalid');
+                $(fieldId).after('<div class="invalid-feedback d-block">' + message + '</div>');
+            }
+
+            // Handle tenant type change
+            $('#TenantType').on('change', function () {
+                const tenantType = $(this).val();
+                const regionGroup = $('#RegionId').closest('.mb-3');
+
+                if (tenantType === 'Factory') {
+                    regionGroup.show();
+                    $('#RegionId').prop('required', true);
+                } else if (tenantType === 'HeadOffice') {
+                    regionGroup.hide();
+                    $('#RegionId').val('').prop('required', false);
+                } else {
+                    regionGroup.show();
+                    $('#RegionId').prop('required', false);
+                }
+            });
+
+            // Trigger on page load
+            $('#TenantType').trigger('change');
+        });
+    </script>
+}

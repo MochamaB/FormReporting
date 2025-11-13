@@ -1,28 +1,50 @@
-@* Breadcrumb Component *@
+@using FormReporting.Models.ViewModels.Components
+@using FormReporting.Extensions
+
+@*
+    Breadcrumb Component - Automatic Navigation
+
+    This component automatically generates breadcrumbs from route data.
+
+    Usage in views:
+    1. Automatic (no code needed): Just include partial name="_Breadcrumb"
+    2. Custom: Pass BreadcrumbViewModel in ViewData["BreadcrumbViewModel"]
+
+    NOTE: This partial contains ZERO logic - all values pre-computed in BreadcrumbExtensions
+*@
+
 @{
-    var pageTitle = ViewData["Title"]?.ToString() ?? "Dashboard";
-    var breadcrumbs = ViewData["Breadcrumbs"] as List<(string Title, string? Url)>;
+    // Try to get custom breadcrumb from ViewData
+    var breadcrumb = ViewData["BreadcrumbViewModel"] as BreadcrumbViewModel;
+
+    // If not provided, auto-generate from route data
+    if (breadcrumb == null)
+    {
+        breadcrumb = BreadcrumbExtensions.BuildBreadcrumbFromRoute(ViewContext);
+    }
 }
 
 <!-- start page title -->
 <div class="row">
     <div class="col-12">
         <div class="page-title-box d-sm-flex align-items-center justify-content-between bg-galaxy-transparent">
-            <h4 class="mb-sm-0">@pageTitle</h4>
+            <h4 class="mb-sm-0">@breadcrumb.PageTitle</h4>
 
-            @if (breadcrumbs != null && breadcrumbs.Any())
+            @if (breadcrumb.HasItems)
             {
                 <div class="page-title-right">
                     <ol class="breadcrumb m-0">
-                        @foreach (var item in breadcrumbs)
+                        @foreach (var item in breadcrumb.Items)
                         {
-                            if (!string.IsNullOrEmpty(item.Url))
+                            @if (item.IsActive)
                             {
-                                <li class="breadcrumb-item"><a href="@item.Url">@item.Title</a></li>
+                                <li class="@item.CssClasses">@item.Title</li>
                             }
                             else
                             {
-                                <li class="breadcrumb-item active">@item.Title</li>
+                                <li class="@item.CssClasses">
+                                    <a href="@item.Url">@item.Title</a>
+                                </li>
                             }
                         }
                     </ol>

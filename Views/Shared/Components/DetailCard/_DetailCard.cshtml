@@ -1,0 +1,22 @@
+@model FormReporting.Models.ViewModels.Components.DetailCardViewModel
+
+@*
+    Detail Card Component - Main Router
+
+    Routes to the appropriate variant partial based on configuration
+
+    Variants:
+    - Standard: Project/Entity overview with colored background
+    - Profile: Profile banner with background image
+
+    NOTE: This partial contains ZERO logic beyond variant routing
+*@
+
+@if (Model.Variant == FormReporting.Models.ViewModels.Components.DetailCardVariant.Standard)
+{
+    <partial name="~/Views/Shared/Components/DetailCard/_StandardDetailCard.cshtml" model="Model" />
+}
+else if (Model.Variant == FormReporting.Models.ViewModels.Components.DetailCardVariant.Profile)
+{
+    <partial name="~/Views/Shared/Components/DetailCard/_ProfileDetailCard.cshtml" model="Model" />
+}

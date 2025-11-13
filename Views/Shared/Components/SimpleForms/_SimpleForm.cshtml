@@ -1,0 +1,29 @@
+@model FormReporting.Models.ViewModels.Components.SimpleFormViewModel
+
+@*
+    Main wrapper for Standard Forms
+    Handles card wrapping and delegates to content partial
+*@
+
+@if (Model.WrapInCard)
+{
+    <div class="card">
+        @if (!string.IsNullOrEmpty(Model.CardTitle))
+        {
+            <div class="card-header">
+                <h5 class="card-title mb-0">@Model.CardTitle</h5>
+                @if (!string.IsNullOrEmpty(Model.CardSubtitle))
+                {
+                    <p class="text-muted mb-0">@Model.CardSubtitle</p>
+                }
+            </div>
+        }
+        <div class="card-body">
+            <partial name="~/Views/Shared/Components/SimpleForms/_SimpleFormContent.cshtml" model="Model" />
+        </div>
+    </div>
+}
+else
+{
+    <partial name="~/Views/Shared/Components/SimpleForms/_SimpleFormContent.cshtml" model="Model" />
+}

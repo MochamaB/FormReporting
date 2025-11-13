@@ -1,0 +1,62 @@
+@model FormReporting.Models.ViewModels.Components.SimpleFormViewModel
+@using FormReporting.Models.ViewModels.Components
+
+@*
+    Form content with fields and action buttons
+    Handles different form style types (Standard, Floating, Horizontal, Inline)
+*@
+
+<form id="@Model.FormId"
+      action="@Model.FormAction"
+      method="@Model.FormMethod"
+      class="@(Model.StyleType == FormStyleType.Inline ? "row row-cols-auto g-3 align-items-center" : "")"
+      enctype="multipart/form-data">
+
+    @* Render all fields *@
+    <div class="row">
+        @foreach (var field in Model.Fields)
+        {
+            @if (field.FieldType != SimpleFieldType.Hidden)
+            {
+                <div class="@field.ColumnClass">
+                    <partial name="~/Views/Shared/Components/SimpleForms/_SimpleFormField.cshtml" model="field" />
+                </div>
+            }
+            else
+            {
+                @* Hidden fields don't need column wrapper *@
+                <partial name="~/Views/Shared/Components/SimpleForms/_SimpleFormField.cshtml" model="field" />
+            }
+        }
+    </div>
+
+    @* Action Buttons *@
+    <div class="row mt-3">
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary">
+                <i class="ri-save-line align-middle me-1"></i>
+                @Model.SubmitButtonText
+            </button>
+
+            @if (Model.ShowCancelButton && !string.IsNullOrEmpty(Model.CancelButtonUrl))
+            {
+                <a href="@Model.CancelButtonUrl" class="btn btn-secondary ms-2">
+                    <i class="ri-close-line align-middle me-1"></i>
+                    Cancel
+                </a>
+            }
+
+            @if (Model.ShowResetButton)
+            {
+                <button type="reset" class="btn btn-outline-secondary ms-2">
+                    <i class="ri-refresh-line align-middle me-1"></i>
+                    Reset
+                </button>
+            }
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

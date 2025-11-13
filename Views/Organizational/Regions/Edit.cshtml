@@ -1,0 +1,137 @@
+@model FormReporting.Models.Entities.Organizational.Region
+@using FormReporting.Extensions
+@using FormReporting.Models.ViewModels.Components
+
+@{
+    ViewData["Title"] = $"Edit {Model.RegionName}";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+
+<div class="row">
+    <div class="col-lg-8">
+        @{
+            // Configure the form using SimpleForms with Floating Labels style
+            var formConfig = new SimpleFormConfig
+            {
+                FormId = "editRegionForm",
+                FormAction = Url.Action("Edit", "Regions", new { id = Model.RegionId }),
+                FormMethod = "POST",
+                CardTitle = "Region Information",
+                CardSubtitle = $"Update details for {Model.RegionName}",
+                StyleType = FormStyleType.FloatingLabels,  // Using Floating Labels style
+                CancelButtonUrl = Url.Action("Index", "Regions"),
+                SubmitButtonText = "Update Region",
+                WrapInCard = true,
+                ShowResetButton = false
+            };
+
+            // Add hidden field for RegionId
+            formConfig.WithHiddenField("RegionId", Model.RegionId);
+
+            // Add form fields with current values
+            formConfig
+                .WithNumberField("RegionNumber", "Region Number",
+                    value: Model.RegionNumber,
+                    min: 1,
+                    isRequired: true,
+                    placeholder: "Region Number",
+                    helpText: "Unique numeric identifier for the region",
+                    columnClass: "col-md-6")
+                .WithTextField("RegionName", "Region Name",
+                    value: Model.RegionName,
+                    isRequired: true,
+                    placeholder: "Region Name",
+                    helpText: "Full name of the region",
+                    columnClass: "col-md-6")
+                .WithTextField("RegionCode", "Region Code",
+                    value: Model.RegionCode,
+                    isRequired: true,
+                    placeholder: "Region Code",
+                    helpText: "Unique code for the region (max 20 characters)",
+                    columnClass: "col-md-6")
+                .WithCheckboxField("IsActive", "Is Active",
+                    isChecked: Model.IsActive,
+                    helpText: "Check to keep this region active");
+
+            // Build the form
+            var form = formConfig.BuildForm();
+        }
+
+        @* Render the form using SimpleForms partial *@
+        <partial name="~/Views/Shared/Components/SimpleForms/_SimpleForm.cshtml" model="form" />
+    </div>
+
+    <div class="col-lg-4">
+        @* Region Summary Card *@
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="ri-information-line me-1"></i> Region Summary</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-borderless mb-0">
+                        <tbody>
+                            <tr>
+                                <td class="text-muted">Region ID:</td>
+                                <td class="fw-medium">@Model.RegionId</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Created:</td>
+                                <td class="fw-medium">@Model.CreatedDate.ToString("MMM dd, yyyy")</td>
+                            </tr>
+                            @if (Model.ModifiedDate != DateTime.MinValue)
+                            {
+                                <tr>
+                                    <td class="text-muted">Last Modified:</td>
+                                    <td class="fw-medium">@Model.ModifiedDate.ToString("MMM dd, yyyy")</td>
+                                </tr>
+                            }
+                            <tr>
+                                <td class="text-muted">Status:</td>
+                                <td>
+                                    @if (Model.IsActive)
+                                    {
+                                        <span class="badge bg-success">Active</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge bg-danger">Inactive</span>
+                                    }
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="alert alert-warning mt-3">
+                    <i class="ri-alert-line me-1"></i>
+                    <strong>Warning:</strong> Changing the region code or number may affect existing data relationships.
+                </div>
+            </div>
+        </div>
+
+        @* Help Card *@
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="ri-question-line me-1"></i> Help</h5>
+            </div>
+            <div class="card-body">
+                <h6>Editing a Region</h6>
+                <p class="text-muted small">Update region details as needed. Changes will be reflected immediately across the system.</p>
+
+                <h6 class="mt-3">Best Practices</h6>
+                <ul class="text-muted small">
+                    <li>Avoid changing region codes unless necessary</li>
+                    <li>Ensure region number remains unique</li>
+                    <li>Deactivate instead of deleting when possible</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

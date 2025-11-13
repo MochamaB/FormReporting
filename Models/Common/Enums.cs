@@ -486,46 +486,4 @@ namespace FormReporting.Models.Common
         Latest = 6
     }
 
-    // ============================================================================
-    // REUSABLE COMPONENTS ENUMS
-    // ============================================================================
-
-    /// <summary>
-    /// Wizard layout types
-    /// </summary>
-    public enum WizardLayout
-    {
-        /// <summary>
-        /// Vertical layout: Steps on left, content center, summary right (3-column)
-        /// Best for: Simple workflows (User Setup, Role Creation)
-        /// </summary>
-        Vertical = 1,
-        
-        /// <summary>
-        /// Horizontal layout: Steps on top, content below (2-row)
-        /// Best for: Complex workflows (Form Submissions, Template Builder)
-        /// </summary>
-        Horizontal = 2
-    }
-
-    /// <summary>
-    /// Step state for visual indicators
-    /// </summary>
-    public enum WizardStepState
-    {
-        /// <summary>
-        /// Step not yet started (default icon)
-        /// </summary>
-        Pending = 1,
-        
-        /// <summary>
-        /// Currently active step (highlighted)
-        /// </summary>
-        Active = 2,
-        
-        /// <summary>
-        /// Completed step (checkmark icon)
-        /// </summary>
-        Done = 3
-    }
 }

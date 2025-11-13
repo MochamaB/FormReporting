@@ -1,0 +1,192 @@
+@model FormReporting.Models.ViewModels.Organizational.TenantCreateViewModel
+
+@*
+    Step 2: Departments
+    Setup organizational departments (default + custom)
+*@
+
+<div class="row">
+    <div class="col-12">
+        <h5 class="mb-3">Department Setup</h5>
+        <p class="text-muted">Define the organizational structure for this tenant</p>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="form-check form-switch">
+            <input class="form-check-input"
+                   type="checkbox"
+                   id="CreateDefaultDepartments"
+                   name="CreateDefaultDepartments"
+                   @(Model.CreateDefaultDepartments ? "checked" : "")
+                   value="true" />
+            <label class="form-check-label" for="CreateDefaultDepartments">
+                <strong>Create Default Departments</strong>
+                <span class="text-muted d-block small">
+                    Automatically create: General, ICT, Finance, and Operations departments
+                </span>
+            </label>
+        </div>
+    </div>
+</div>
+
+@if (Model.CreateDefaultDepartments)
+{
+    <div class="row" id="defaultDepartmentsPreview">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h6 class="alert-heading"><i class="ri-information-line me-2"></i>Default Departments</h6>
+                <p class="mb-0">The following departments will be created automatically:</p>
+                <ul class="mb-0 mt-2">
+                    <li><strong>GEN</strong> - General</li>
+                    <li><strong>ICT</strong> - ICT Department</li>
+                    <li><strong>FIN</strong> - Finance Department</li>
+                    <li><strong>OPS</strong> - Operations Department</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="row" id="customDepartmentsSection" style="display: @(Model.CreateDefaultDepartments ? "none" : "block");">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h6 class="mb-0">Custom Departments</h6>
+            <button type="button" class="btn btn-sm btn-primary" id="addDepartmentBtn">
+                <i class="ri-add-line me-1"></i>Add Department
+            </button>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-bordered" id="departmentsTable">
+                <thead class="table-light">
+                    <tr>
+                        <th width="25%">Department Code <span class="text-danger">*</span></th>
+                        <th width="35%">Department Name <span class="text-danger">*</span></th>
+                        <th width="35%">Description</th>
+                        <th width="5%" class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="departmentsTableBody">
+                    @if (Model.Departments != null && Model.Departments.Any())
+                    {
+                        for (int i = 0; i < Model.Departments.Count; i++)
+                        {
+                            <tr>
+                                <td>
+                                    <input type="text"
+                                           class="form-control form-control-sm"
+                                           name="Departments[@i].DepartmentCode"
+                                           value="@Model.Departments[i].DepartmentCode"
+                                           required />
+                                </td>
+                                <td>
+                                    <input type="text"
+                                           class="form-control form-control-sm"
+                                           name="Departments[@i].DepartmentName"
+                                           value="@Model.Departments[i].DepartmentName"
+                                           required />
+                                </td>
+                                <td>
+                                    <input type="text"
+                                           class="form-control form-control-sm"
+                                           name="Departments[@i].Description"
+                                           value="@Model.Departments[i].Description" />
+                                </td>
+                                <td class="text-center">
+                                    <button type="button" class="btn btn-sm btn-danger removeDeptBtn">
+                                        <i class="ri-delete-bin-line"></i>
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr id="noDepartmentsRow">
+                            <td colspan="4" class="text-center text-muted">
+                                <i class="ri-information-line me-1"></i>
+                                Click "Add Department" to create custom departments
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            let deptIndex = @(Model.Departments?.Count ?? 0);
+
+            // Toggle department sections
+            $('#CreateDefaultDepartments').on('change', function () {
+                if ($(this).is(':checked')) {
+                    $('#defaultDepartmentsPreview').show();
+                    $('#customDepartmentsSection').hide();
+                } else {
+                    $('#defaultDepartmentsPreview').hide();
+                    $('#customDepartmentsSection').show();
+                }
+            });
+
+            // Add department row
+            $('#addDepartmentBtn').on('click', function () {
+                $('#noDepartmentsRow').remove();
+
+                const newRow = `
+                    <tr>
+                        <td>
+                            <input type="text"
+                                   class="form-control form-control-sm"
+                                   name="Departments[${deptIndex}].DepartmentCode"
+                                   placeholder="e.g., HR"
+                                   required />
+                        </td>
+                        <td>
+                            <input type="text"
+                                   class="form-control form-control-sm"
+                                   name="Departments[${deptIndex}].DepartmentName"
+                                   placeholder="e.g., Human Resources"
+                                   required />
+                        </td>
+                        <td>
+                            <input type="text"
+                                   class="form-control form-control-sm"
+                                   name="Departments[${deptIndex}].Description"
+                                   placeholder="Department description" />
+                        </td>
+                        <td class="text-center">
+                            <button type="button" class="btn btn-sm btn-danger removeDeptBtn">
+                                <i class="ri-delete-bin-line"></i>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+
+                $('#departmentsTableBody').append(newRow);
+                deptIndex++;
+            });
+
+            // Remove department row
+            $(document).on('click', '.removeDeptBtn', function () {
+                $(this).closest('tr').remove();
+
+                // Show "no departments" message if table is empty
+                if ($('#departmentsTableBody tr').length === 0) {
+                    $('#departmentsTableBody').html(`
+                        <tr id="noDepartmentsRow">
+                            <td colspan="4" class="text-center text-muted">
+                                <i class="ri-information-line me-1"></i>
+                                Click "Add Department" to create custom departments
+                            </td>
+                        </tr>
+                    `);
+                }
+            });
+        });
+    </script>
+}

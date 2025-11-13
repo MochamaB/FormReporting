@@ -1,0 +1,118 @@
+@model FormReporting.Models.ViewModels.Components.DetailCardViewModel
+
+@*
+    Standard Detail Card - Project/Entity Overview Style
+
+    Reference: apps-projects-overview.html (lines 1906-1978)
+
+    Features:
+    - Colored background (subtle variants)
+    - Optional icon/logo in circle
+    - Title with meta information in horizontal stack
+    - Badges (status, priority, etc.)
+    - Action buttons (favorite, share, etc.)
+    - Meta info with dividers
+
+    NOTE: This partial contains ZERO logic - all values pre-computed in DetailCardExtensions
+*@
+
+<div class="@Model.ContainerClasses">
+    <div class="@Model.BackgroundClasses">
+        <div class="card-body pb-0 px-4">
+            <div class="row mb-3">
+                @* Left Section: Icon + Title + Meta Info *@
+                <div class="col-md">
+                    <div class="row align-items-center g-3">
+                        @* Icon/Logo *@
+                        @if (Model.HasIcon)
+                        {
+                            <div class="col-md-auto">
+                                <div class="avatar-md">
+                                    <div class="avatar-title bg-white rounded-circle">
+                                        @if (!string.IsNullOrEmpty(Model.IconImageUrl))
+                                        {
+                                            <img src="@Model.IconImageUrl" alt="" class="avatar-xs">
+                                        }
+                                        else if (!string.IsNullOrEmpty(Model.IconClass))
+                                        {
+                                            <i class="@Model.IconClass fs-24"></i>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+
+                        @* Title + Meta Info *@
+                        <div class="col-md">
+                            <div>
+                                <h4 class="fw-bold">@Model.Title</h4>
+                                @if (!string.IsNullOrEmpty(Model.Subtitle))
+                                {
+                                    <p class="text-muted mb-2">@Model.Subtitle</p>
+                                }
+
+                                @* Meta Items with Dividers *@
+                                @if (Model.HasMetaItems || Model.HasBadges)
+                                {
+                                    <div class="hstack gap-3 flex-wrap">
+                                        @foreach (var meta in Model.MetaItems)
+                                        {
+                                            <div>
+                                                @if (meta.HasIcon)
+                                                {
+                                                    <i class="@meta.IconClass align-bottom me-1"></i>
+                                                }
+                                                @if (meta.HasLabel)
+                                                {
+                                                    @meta.Label
+                                                }
+                                                <span class="fw-medium">@meta.Value</span>
+                                            </div>
+                                            @if (meta != Model.MetaItems.Last() || Model.HasBadges)
+                                            {
+                                                <div class="vr"></div>
+                                            }
+                                        }
+
+                                        @* Badges *@
+                                        @foreach (var badge in Model.Badges)
+                                        {
+                                            <div class="@badge.BadgeClasses">@badge.Text</div>
+                                            @if (badge != Model.Badges.Last())
+                                            {
+                                                <div class="vr"></div>
+                                            }
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                @* Right Section: Action Buttons *@
+                @if (Model.HasActions)
+                {
+                    <div class="col-md-auto">
+                        <div class="hstack gap-1 flex-wrap">
+                            @foreach (var action in Model.Actions)
+                            {
+                                <button type="button"
+                                        class="@action.ButtonClasses"
+                                        title="@action.Title"
+                                        @if (!string.IsNullOrEmpty(action.ActionUrl))
+                                        {
+                                            @:onclick="location.href='@action.ActionUrl'"
+                                        }>
+                                    <i class="@action.IconClass"></i>
+                                </button>
+                            }
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+        <!-- end card body -->
+    </div>
+</div>
+<!-- end card -->

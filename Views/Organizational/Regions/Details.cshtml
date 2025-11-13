@@ -1,0 +1,123 @@
+@model FormReporting.Models.Entities.Organizational.Region
+@using FormReporting.Models.ViewModels.Components
+@using FormReporting.Extensions
+
+@{
+    ViewData["Title"] = $"{Model.RegionName} - Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    // Optional: Custom breadcrumb configuration
+    // If not provided, will auto-generate: Home > Regions > Details
+    var breadcrumbConfig = new BreadcrumbConfig()
+        .WithPageTitle($"{Model.RegionName}")
+        .WithItem("Regions", Url.Action("Index", "Regions"))
+        .WithItem("Details");
+
+    ViewData["BreadcrumbViewModel"] = breadcrumbConfig.BuildBreadcrumb(ViewContext);
+}
+
+@* Automatic Breadcrumb - No manual HTML needed! *@
+<partial name="_Breadcrumb" />
+
+@{
+    // ============================================================================
+    // DETAIL CARD CONFIGURATION
+    // ============================================================================
+
+    var detailCardConfig = new DetailCardConfig
+    {
+        Variant = DetailCardVariant.Standard,
+        BackgroundColor = "primary-subtle",
+        IconClass = "ri-map-pin-line",
+        Title = Model.RegionName,
+        Subtitle = $"Region Code: {Model.RegionCode}",
+        UseNegativeMargin = true
+    };
+
+    // Add meta items
+    detailCardConfig
+        .WithMetaItem($"Region #{Model.RegionNumber}", label: "Region Number:")
+        .WithMetaItem(Model.CreatedDate.ToString("dd MMM, yyyy"), label: "Created:")
+        .WithMetaItem(Model.ModifiedDate.ToString("dd MMM, yyyy"), label: "Last Modified:");
+
+    // Add status badge
+    detailCardConfig.WithBadge(
+        Model.IsActive ? "Active" : "Inactive",
+        Model.IsActive ? "success" : "danger"
+    );
+
+    // Add tenant count badge
+    if (Model.Tenants != null && Model.Tenants.Any())
+    {
+        detailCardConfig.WithBadge($"{Model.Tenants.Count} Tenants", "info");
+    }
+
+    // Add action buttons
+    detailCardConfig
+        .WithAction("ri-edit-line", "Edit Region", actionUrl: Url.Action("Edit", "Regions", new { id = Model.RegionId }))
+        .WithAction("ri-refresh-line", "Refresh", actionUrl: Url.Action("Details", "Regions", new { id = Model.RegionId }))
+        .WithAction("ri-arrow-left-line", "Back to List", actionUrl: Url.Action("Index", "Regions"));
+
+    var detailCard = detailCardConfig.BuildDetailCard();
+
+    // ============================================================================
+    // TABS CONFIGURATION
+    // ============================================================================
+
+    var tabsConfig = new TabsConfig
+    {
+        TabsId = "regionDetailsTabs",
+        Layout = TabsLayout.Horizontal,
+        Style = TabsStyle.CustomBordered,
+        ColorTheme = "success",
+        IsJustified = false,
+        WrapInCard = true
+    };
+
+    // Tab 1: Overview
+    tabsConfig.WithTab(
+        tabId: "overview",
+        title: "Overview",
+        icon: "ri-information-line",
+        isActive: true
+    );
+
+    // Tab 2: Tenants
+    tabsConfig.WithTab(
+        tabId: "tenants",
+        title: "Tenants",
+        icon: "ri-building-line",
+        badge: Model.Tenants?.Count.ToString() ?? "0",
+        badgeColor: "primary"
+    );
+
+    // Tab 3: Statistics
+    tabsConfig.WithTab(
+        tabId: "statistics",
+        title: "Statistics",
+        icon: "ri-bar-chart-line"
+    );
+
+    // Tab 4: Activity Log
+    tabsConfig.WithTab(
+        tabId: "activity",
+        title: "Activity Log",
+        icon: "ri-history-line"
+    );
+
+    var tabs = tabsConfig.BuildTabs();
+}
+
+@* DetailCard Component - Shows region summary *@
+<div class="row">
+    <div class="col-lg-12">
+        <partial name="~/Views/Shared/Components/DetailCard/_DetailCard.cshtml" model="detailCard" />
+    </div>
+</div>
+
+@* Tabs Component - Shows detailed information in tabs *@
+<div class="row">
+    <div class="col-lg-12">
+        <partial name="~/Views/Shared/Components/Tabs/_HorizontalTabs.cshtml" model="tabs" />
+    </div>
+</div>

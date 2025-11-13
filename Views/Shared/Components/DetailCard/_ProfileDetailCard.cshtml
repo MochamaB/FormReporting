@@ -1,0 +1,104 @@
+@model FormReporting.Models.ViewModels.Components.DetailCardViewModel
+
+@*
+    Profile Detail Card - Profile Banner Style
+
+    Reference: pages-profile.html (lines 1906-1980)
+
+    Features:
+    - Background image banner
+    - Large avatar image
+    - Title + Subtitle
+    - Meta information (projects, followers, etc.)
+    - Action buttons
+
+    NOTE: This partial contains ZERO logic - all values pre-computed in DetailCardExtensions
+*@
+
+<div class="@Model.BackgroundClasses mx-n4 mt-n4">
+    @* Background Image Banner *@
+    @if (!string.IsNullOrEmpty(Model.BackgroundImageUrl))
+    {
+        <div class="profile-wid-bg">
+            <img src="@Model.BackgroundImageUrl" alt="" class="profile-wid-img" />
+        </div>
+    }
+</div>
+
+<div class="pt-4 mb-4 mb-lg-3 pb-lg-4 profile-wrapper">
+    <div class="row g-4">
+        @* Avatar *@
+        @if (Model.HasAvatar)
+        {
+            <div class="col-auto">
+                <div class="@Model.AvatarClasses">
+                    <img src="@Model.AvatarImageUrl" alt="user-img" class="img-thumbnail rounded-circle" />
+                </div>
+            </div>
+        }
+
+        @* Profile Info *@
+        <div class="col">
+            <div class="p-2">
+                <h3 class="text-white mb-1">@Model.Title</h3>
+                @if (!string.IsNullOrEmpty(Model.Subtitle))
+                {
+                    <p class="text-white text-opacity-75">@Model.Subtitle</p>
+                }
+
+                @* Meta Items *@
+                @if (Model.HasMetaItems)
+                {
+                    <div class="hstack text-white-50 gap-1">
+                        @foreach (var meta in Model.MetaItems)
+                        {
+                            <div class="me-2">
+                                @if (meta.HasIcon)
+                                {
+                                    <i class="@meta.IconClass me-1"></i>
+                                }
+                                @if (meta.HasLabel)
+                                {
+                                    <span class="fw-medium">@meta.Value</span> @meta.Label
+                                }
+                                else
+                                {
+                                    @meta.Value
+                                }
+                            </div>
+                            @if (meta != Model.MetaItems.Last())
+                            {
+                                <div class="vr"></div>
+                            }
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+
+        @* Action Buttons *@
+        @if (Model.HasActions)
+        {
+            <div class="col-12 col-lg-auto order-last order-lg-0">
+                <div class="row text text-white-50 text-center">
+                    @foreach (var action in Model.Actions)
+                    {
+                        <div class="col-lg-6 col-4">
+                            <div class="p-2">
+                                <button type="button"
+                                        class="btn btn-soft-light btn-sm w-100"
+                                        @if (!string.IsNullOrEmpty(action.ActionUrl))
+                                        {
+                                            @:onclick="location.href='@action.ActionUrl'"
+                                        }>
+                                    <i class="@action.IconClass align-middle me-1"></i>
+                                    @action.Title
+                                </button>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</div>
