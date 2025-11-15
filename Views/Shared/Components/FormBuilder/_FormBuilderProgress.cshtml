@@ -1,0 +1,281 @@
+@model FormReporting.Models.ViewModels.Components.FormBuilderProgressViewModel
+
+@*
+    Form Builder Progress Tracker
+
+    Features:
+    - Horizontal step indicator
+    - Shows current progress
+    - Clickable steps (if navigable)
+    - Status indicators (pending, active, completed, error)
+    - Template info header
+    - Action buttons (Save Draft, Exit)
+*@
+
+<style>
+    .form-builder-progress {
+        background: #fff;
+        border-bottom: 2px solid #f3f3f9;
+        margin: 0;
+        padding: 0;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        width: 100%;
+    }
+
+    .progress-step {
+        flex: 1;
+        text-align: center;
+        position: relative;
+        padding: 1.5rem 1rem;
+        transition: all 0.3s ease;
+    }
+
+    .progress-step.navigable {
+        cursor: pointer;
+    }
+
+    .progress-step.navigable:hover {
+        background-color: #f8f9fa;
+    }
+
+    .progress-step.active {
+        background-color: rgba(var(--vz-primary-rgb), 0.05);
+    }
+
+    .progress-step.completed {
+        background-color: rgba(var(--vz-success-rgb), 0.03);
+    }
+
+    .progress-step.error {
+        background-color: rgba(var(--vz-danger-rgb), 0.03);
+    }
+
+    .progress-step::after {
+        content: '';
+        position: absolute;
+        top: 50%;
+        right: -1px;
+        width: 2px;
+        height: 60%;
+        background: #e9ecef;
+        transform: translateY(-50%);
+    }
+
+    .progress-step:last-child::after {
+        display: none;
+    }
+
+    .step-icon-wrapper {
+        width: 48px;
+        height: 48px;
+        margin: 0 auto 0.5rem;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        border: 2px solid #e9ecef;
+        background: #fff;
+    }
+
+    .progress-step.active .step-icon-wrapper {
+        border-color: var(--vz-primary);
+        background: rgba(var(--vz-primary-rgb), 0.1);
+    }
+
+    .progress-step.completed .step-icon-wrapper {
+        border-color: var(--vz-success);
+        background: rgba(var(--vz-success-rgb), 0.1);
+    }
+
+    .progress-step.error .step-icon-wrapper {
+        border-color: var(--vz-danger);
+        background: rgba(var(--vz-danger-rgb), 0.1);
+    }
+
+    .step-number {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        width: 24px;
+        height: 24px;
+        background: var(--vz-primary);
+        color: white;
+        border-radius: 50%;
+        font-size: 12px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #fff;
+    }
+
+    .progress-step.completed .step-number {
+        background: var(--vz-success);
+    }
+
+    .progress-step.error .step-number {
+        background: var(--vz-danger);
+    }
+
+    .step-title {
+        font-size: 14px;
+        margin-bottom: 0.25rem;
+        font-weight: 500;
+    }
+
+    .step-description {
+        font-size: 12px;
+        color: #6c757d;
+    }
+
+    .template-info {
+        border-bottom: 1px solid #e9ecef;
+    }
+
+    .overall-progress {
+        height: 4px;
+        background: #e9ecef;
+    }
+</style>
+<div class="row">
+    <div class="col-12">
+       
+    </div>
+</div>
+
+<div class="form-builder-progress">
+    @* Template Info Header *@
+    <div class="template-info px-4 py-3">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-1">
+                    @if (string.IsNullOrEmpty(Model.TemplateName))
+                    {
+                        <span class="text-muted">New Form Template</span>
+                    }
+                    else
+                    {
+                        @Model.TemplateName
+                        @if (!string.IsNullOrEmpty(Model.TemplateVersion))
+                        {
+                            <span class="badge bg-secondary-subtle text-secondary ms-2">v@Model.TemplateVersion</span>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.PublishStatus))
+                        {
+                            var statusBadge = Model.PublishStatus.ToLower() switch
+                            {
+                                "draft" => "bg-warning-subtle text-warning",
+                                "published" => "bg-success-subtle text-success",
+                                "archived" => "bg-secondary-subtle text-secondary",
+                                _ => "bg-light text-dark"
+                            };
+                            <span class="badge @statusBadge ms-1">@Model.PublishStatus</span>
+                        }
+                    }
+                </h5>
+                <p class="text-muted mb-0 small">
+                    <i class="ri-information-line me-1"></i>
+                    Step @Model.CurrentStepNumber of @Model.TotalSteps - @Model.Steps.First(s => s.IsActive).Description
+                </p>
+            </div>
+            <div class="d-flex gap-2">
+                @if (Model.ShowSaveDraft && Model.TemplateId.HasValue)
+                {
+                    <button type="button" class="btn btn-soft-secondary btn-sm" id="saveDraftBtn">
+                        <i class="ri-save-line me-1"></i>Save Draft
+                    </button>
+                }
+                @if (Model.ShowExit)
+                {
+                    <a href="@Model.ExitUrl" class="btn btn-light btn-sm" id="exitBtn">
+                        <i class="ri-close-line me-1"></i>Exit
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+
+    @* Overall Progress Bar *@
+    <div class="overall-progress">
+        <div class="progress-bar @Model.ProgressBarClass"
+             role="progressbar"
+             style="width: @Model.ProgressPercentage%"
+             aria-valuenow="@Model.ProgressPercentage"
+             aria-valuemin="0"
+             aria-valuemax="100">
+        </div>
+    </div>
+
+    @* Step Indicators *@
+    <div class="d-flex">
+        @foreach (var step in Model.Steps)
+        {
+            <div class="@step.StepClasses"
+                 data-step="@((int)step.Step)"
+                 @if (step.IsNavigable && step.NavigateUrl != null)
+                 {
+                     <text>onclick="navigateToStep('@step.NavigateUrl')"</text>
+                 }>
+
+                @* Step Icon *@
+                <div class="step-icon-wrapper">
+                    <i class="@step.IconClasses"></i>
+                    <div class="step-number">@step.StepNumber</div>
+                </div>
+
+                @* Step Title *@
+                <div class="@step.TitleClasses">@step.Title</div>
+
+                @* Step Description *@
+                <div class="step-description">@step.Description</div>
+
+                @* Status Icon *@
+                @if (!step.IsPending)
+                {
+                    <div class="mt-1">
+                        <i class="@step.StatusIconClass @step.StatusIconColor fs-16"></i>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        function navigateToStep(url) {
+            // Check if there are unsaved changes
+            if (typeof hasUnsavedChanges === 'function' && hasUnsavedChanges()) {
+                if (!confirm('You have unsaved changes. Are you sure you want to leave?')) {
+                    return;
+                }
+            }
+
+            window.location.href = url;
+        }
+
+        // Save draft handler
+        $(document).ready(function() {
+            $('#saveDraftBtn').on('click', function() {
+                if (typeof saveDraft === 'function') {
+                    saveDraft();
+                } else {
+                    alert('Save draft functionality not implemented for this step');
+                }
+            });
+
+            // Exit confirmation
+            $('#exitBtn').on('click', function(e) {
+                if (typeof hasUnsavedChanges === 'function' && hasUnsavedChanges()) {
+                    if (!confirm('You have unsaved changes. Are you sure you want to exit?')) {
+                        e.preventDefault();
+                    }
+                }
+            });
+        });
+    </script>
+}

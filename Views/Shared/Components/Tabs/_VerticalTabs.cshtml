@@ -11,6 +11,24 @@
     }
 }
 
+<style>
+    /* Subtle primary background for active vertical tabs */
+    .nav-pills .nav-link.active {
+        background-color: rgba(var(--vz-primary-rgb), 0.15) !important;
+        color: var(--vz-primary) !important;
+        border-left: 3px solid var(--vz-primary);
+    }
+
+    .nav-pills .nav-link {
+        transition: all 0.3s ease;
+        border-left: 3px solid transparent;
+    }
+
+    .nav-pills .nav-link:hover:not(.active) {
+        background-color: rgba(var(--vz-primary-rgb), 0.05);
+    }
+</style>
+
 @*
     Vertical Tabs Partial View
 
@@ -53,7 +71,7 @@
                     <div class="@tabsModel.NavClasses" id="@tabsModel.TabsId" role="tablist" aria-orientation="vertical">
                         @foreach (var tab in tabsModel.Tabs)
                         {
-                            <a class="@tab.NavLinkClasses mb-2"
+                            <a class="@tab.NavLinkClasses mb-2 d-flex align-items-center"
                                id="@(tab.TabId)-tab"
                                data-bs-toggle="pill"
                                href="@tab.Href"
@@ -63,16 +81,18 @@
                                @(tab.IsDisabled ? "tabindex=\"-1\"" : "")>
                                 @if (!string.IsNullOrEmpty(tab.Icon))
                                 {
-                                    <i class="@tab.Icon d-block fs-20 mb-1"></i>
+                                    <i class="@tab.Icon fs-18 me-2"></i>
                                 }
-                                <span class="d-block">@tab.Title</span>
+                                <span class="flex-grow-1">
+                                    @tab.Title
+                                    @if (!string.IsNullOrEmpty(tab.Description))
+                                    {
+                                        <small class="text-muted d-block">@tab.Description</small>
+                                    }
+                                </span>
                                 @if (!string.IsNullOrEmpty(tab.Badge))
                                 {
-                                    <span class="@tab.BadgeClasses">@tab.Badge</span>
-                                }
-                                @if (!string.IsNullOrEmpty(tab.Description))
-                                {
-                                    <small class="text-muted d-block mt-1">@tab.Description</small>
+                                    <span class="@tab.BadgeClasses ms-auto">@tab.Badge</span>
                                 }
                             </a>
                         }
@@ -119,7 +139,7 @@ else
                 <div class="@tabsModel.NavClasses" id="@tabsModel.TabsId" role="tablist" aria-orientation="vertical">
                     @foreach (var tab in tabsModel.Tabs)
                     {
-                        <a class="@tab.NavLinkClasses mb-2"
+                        <a class="@tab.NavLinkClasses mb-2 d-flex align-items-center"
                            id="@(tab.TabId)-tab"
                            data-bs-toggle="pill"
                            href="@tab.Href"
@@ -129,16 +149,18 @@ else
                            @(tab.IsDisabled ? "tabindex=\"-1\"" : "")>
                             @if (!string.IsNullOrEmpty(tab.Icon))
                             {
-                                <i class="@tab.Icon d-block fs-20 mb-1"></i>
+                                <i class="@tab.Icon fs-18 me-2"></i>
                             }
-                            <span class="d-block">@tab.Title</span>
+                            <span class="flex-grow-1">
+                                @tab.Title
+                                @if (!string.IsNullOrEmpty(tab.Description))
+                                {
+                                    <small class="text-muted d-block">@tab.Description</small>
+                                }
+                            </span>
                             @if (!string.IsNullOrEmpty(tab.Badge))
                             {
-                                <span class="@tab.BadgeClasses">@tab.Badge</span>
-                            }
-                            @if (!string.IsNullOrEmpty(tab.Description))
-                            {
-                                <small class="text-muted d-block mt-1">@tab.Description</small>
+                                <span class="@tab.BadgeClasses ms-auto">@tab.Badge</span>
                             }
                         </a>
                     }

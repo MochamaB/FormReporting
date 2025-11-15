@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FormReporting.Data;
 using FormReporting.Models.ViewModels.Forms;
+using FormReporting.Models.ViewModels.Components;
+using FormReporting.Extensions;
 
 namespace FormReporting.Controllers.Forms
 {
@@ -164,6 +166,21 @@ namespace FormReporting.Controllers.Forms
         /// </summary>
         public IActionResult Create()
         {
+            // Build progress tracker - Step 1 active, no template ID yet
+            var progress = new FormBuilderProgressConfig
+            {
+                BuilderId = Guid.NewGuid().ToString("N"),
+                CurrentStep = FormBuilderStep.TemplateConfiguration,
+                TemplateId = null,
+                TemplateName = null,
+                ShowSaveDraft = false, // Can't save draft until template created
+                ExitUrl = Url.Action("Index", "FormTemplates") ?? "/Forms/FormTemplates"
+            }
+            .AtStep(FormBuilderStep.TemplateConfiguration)
+            .BuildProgress();
+
+            ViewData["Progress"] = progress;
+
             return View("~/Views/Forms/FormTemplates/Create.cshtml");
         }
 

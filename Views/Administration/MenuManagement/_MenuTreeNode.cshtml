@@ -1,0 +1,91 @@
+@model FormReporting.Models.ViewModels.Administration.MenuItemViewModel
+
+@{
+    // Determine CSS class based on level
+    var levelClass = Model.Level switch
+    {
+        1 => "nested-1",
+        2 => "nested-2",
+        3 => "nested-3",
+        _ => "nested-4"
+    };
+}
+
+<!-- Menu Item Node -->
+<div class="list-group-item @levelClass menu-item" 
+     data-id="@Model.MenuItemId"
+     data-parent-id="@Model.ParentMenuItemId"
+     data-module-id="@Model.ModuleId"
+     data-level="@Model.Level"
+     data-type="item"
+     onclick="loadMenuItemProperties(@Model.MenuItemId)"
+     style="cursor: pointer;">
+    
+    <div class="d-flex justify-content-between align-items-center">
+        <!-- Left Side: Icon + Title + Badges -->
+        <div class="flex-grow-1">
+            @if (!string.IsNullOrEmpty(Model.Icon))
+            {
+                <i class="@Model.Icon fs-16 align-middle text-primary me-2"></i>
+            }
+            <span class="@(Model.IsActive ? "" : "text-muted text-decoration-line-through")">
+                @Model.MenuTitle
+            </span>
+            
+            <!-- Status Badges -->
+            @if (Model.IsActive)
+            {
+                <span class="badge bg-success-subtle text-success ms-2">
+                    <i class="ri-checkbox-circle-line"></i>
+                </span>
+            }
+            else
+            {
+                <span class="badge bg-danger-subtle text-danger ms-2">
+                    <i class="ri-close-circle-line"></i> Inactive
+                </span>
+            }
+
+            @if (!Model.IsVisible)
+            {
+                <span class="badge bg-secondary-subtle text-secondary ms-1">
+                    <i class="ri-eye-off-line"></i> Hidden
+                </span>
+            }
+
+            @if (Model.HasChildren)
+            {
+                <span class="badge bg-info-subtle text-info ms-1">
+                    @Model.Children.Count sub-items
+                </span>
+            }
+        </div>
+
+        <!-- Right Side: Action Buttons -->
+        <div class="btn-group btn-group-sm" onclick="event.stopPropagation();">
+            <button type="button" 
+                    class="btn btn-soft-info btn-sm" 
+                    onclick="loadMenuItemProperties(@Model.MenuItemId)"
+                    title="Edit">
+                <i class="ri-pencil-line"></i>
+            </button>
+            <button type="button" 
+                    class="btn btn-soft-danger btn-sm" 
+                    onclick="deleteMenuItem(@Model.MenuItemId, '@Model.MenuTitle')"
+                    title="Delete">
+                <i class="ri-delete-bin-line"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Recursively Render Children -->
+    @if (Model.HasChildren)
+    {
+        <div class="list-group nested-list nested-sortable mt-2">
+            @foreach (var child in Model.Children)
+            {
+                @await Html.PartialAsync("~/Views/Administration/MenuManagement/_MenuTreeNode.cshtml", child)
+            }
+        </div>
+    }
+</div>

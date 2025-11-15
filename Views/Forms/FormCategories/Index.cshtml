@@ -1,0 +1,359 @@
+@using FormReporting.Extensions
+@using FormReporting.Models.ViewModels.Components
+@model FormReporting.Models.ViewModels.Forms.FormCategoriesIndexViewModel
+@{
+    ViewData["Title"] = "Form Categories";
+    ViewData["PageTitle"] = "Form Categories";
+    ViewData["Breadcrumbs"] = new List<(string Text, string? Url)>
+    {
+        ("Forms", null),
+        ("Form Categories", null)
+    };
+
+    // Build DataTable configuration
+    var tableConfig = new DataTableConfig
+    {
+        TableId = "formCategoriesTable",
+        Columns = new List<string> {
+            "#",
+            "Icon",
+            "Category Name",
+            "Description",
+            "Color",
+            "Forms",
+            "Order",
+            "Status",
+            "Created",
+            "Actions"
+        },
+        EnableSearch = true,
+        SearchBox = new SearchBoxConfig
+        {
+            ParameterName = "search",
+            PlaceholderText = "Search categories...",
+            CurrentValue = ViewBag.CurrentSearch,
+            ActionUrl = Url.Action("Index", "FormCategories") ?? "/Forms/FormCategories"
+        },
+        FilterDropdowns = new List<FilterDropdownConfig>
+        {
+            new FilterDropdownConfig
+            {
+                Label = "Status",
+                Options = new List<FilterOption>
+                {
+                    new FilterOption
+                    {
+                        Text = "All Status",
+                        Value = "",
+                        Url = Url.Action("Index", "FormCategories", new { search = ViewBag.CurrentSearch }) ?? "/Forms/FormCategories",
+                        IsActive = string.IsNullOrEmpty(ViewBag.CurrentStatus)
+                    },
+                    new FilterOption
+                    {
+                        Text = "Active",
+                        Value = "active",
+                        Url = Url.Action("Index", "FormCategories", new { search = ViewBag.CurrentSearch, status = "active" }) ?? "/Forms/FormCategories",
+                        IsActive = ViewBag.CurrentStatus == "active"
+                    },
+                    new FilterOption
+                    {
+                        Text = "Inactive",
+                        Value = "inactive",
+                        Url = Url.Action("Index", "FormCategories", new { search = ViewBag.CurrentSearch, status = "inactive" }) ?? "/Forms/FormCategories",
+                        IsActive = ViewBag.CurrentStatus == "inactive"
+                    }
+                }
+            }
+        },
+        CreateButtonText = "Add New Category",
+        CreateButtonUrl = Url.Action("Create", "FormCategories") ?? "/Forms/FormCategories/Create",
+        ShowPagination = false, // No pagination for now
+        CurrentPage = 1,
+        TotalPages = 1,
+        TotalRecords = Model.Categories.Count,
+        PageSize = Model.Categories.Count
+    };
+
+    // Build table
+    var table = tableConfig.BuildDataTable();
+
+    // Helper function to build row actions for each category
+    RowActionsViewModel BuildRowActions(int categoryId, string categoryName)
+    {
+        var config = new RowActionsConfig
+        {
+            DisplayStyle = RowActionDisplayStyle.Dropdown,
+            DropdownText = "",
+            DropdownIconClass = "ri-more-fill",
+            ButtonSize = "sm",
+            UseSoftButtons = true,
+            Actions = new List<RowActionConfig>
+            {
+                new RowActionConfig
+                {
+                    Text = "Edit",
+                    IconClass = "ri-pencil-line",
+                    ColorClass = "success",
+                    UrlTemplate = Url.Action("Edit", "FormCategories", new { id = categoryId }) ?? $"/Forms/FormCategories/Edit/{categoryId}"
+                },
+                new RowActionConfig
+                {
+                    Text = "View Details",
+                    IconClass = "ri-eye-line",
+                    ColorClass = "primary",
+                    UrlTemplate = $"javascript:viewCategoryDetails({categoryId})"
+                },
+                new RowActionConfig
+                {
+                    Text = "Delete",
+                    IconClass = "ri-delete-bin-line",
+                    ColorClass = "danger",
+                    UrlTemplate = $"javascript:deleteCategory({categoryId}, '{categoryName}')",
+                    RequiresConfirmation = false // We handle confirmation in JavaScript
+                }
+            }
+        };
+
+        return new RowActionsViewModel
+        {
+            DisplayStyle = config.DisplayStyle,
+            DropdownText = config.DropdownText,
+            DropdownIconClass = config.DropdownIconClass,
+            ButtonSizeClass = $"btn-{config.ButtonSize}",
+            UseSoftButtons = config.UseSoftButtons,
+            RowId = categoryId.ToString(),
+            Actions = config.Actions.Select(a => new RowActionViewModel
+            {
+                Text = a.Text,
+                IconClass = a.IconClass,
+                ColorClass = a.ColorClass,
+                Url = a.UrlTemplate,
+                RequiresConfirmation = a.RequiresConfirmation,
+                ConfirmationMessage = a.ConfirmationMessage,
+                IconOnly = a.IconOnly,
+                IsVisible = true
+            }).ToList()
+        };
+    }
+}
+
+<!-- Main Content -->
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center flex-wrap w-100 gap-2">
+                    @* Left Side: Search and Filters *@
+                    <div class="d-flex gap-2 flex-wrap align-items-center">
+                        @* Search Box using partial component *@
+                        @if (table.SearchBox != null)
+                        {
+                            <partial name="~/Views/Shared/Components/DataTable/_SearchBox.cshtml" model="table.SearchBox" />
+                            @if (!string.IsNullOrEmpty(table.SearchBox.CurrentValue))
+                            {
+                                <a href="@table.SearchBox.ActionUrl" class="btn btn-soft-secondary" title="Clear search">
+                                    <i class="ri-refresh-line"></i>
+                                </a>
+                            }
+                        }
+
+                        @* Filter Dropdowns using partial component *@
+                        @if (table.FilterDropdowns != null && table.FilterDropdowns.Any())
+                        {
+                            foreach (var filterDropdown in table.FilterDropdowns)
+                            {
+                                <partial name="~/Views/Shared/Components/DataTable/_FilterDropdown.cshtml" model="filterDropdown" />
+                            }
+                        }
+                    </div>
+
+                    @* Right Side: Create Button *@
+                    <div class="d-flex gap-2">
+                        @if (!string.IsNullOrEmpty(table.CreateButtonText) && !string.IsNullOrEmpty(table.CreateButtonUrl))
+                        {
+                            <a href="@table.CreateButtonUrl" class="btn btn-primary">
+                                <i class="ri-add-line me-1"></i>@table.CreateButtonText
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="@table.TableClasses" id="@table.TableId" style="width: 100%;">
+                        <thead class="bg-light">
+                            <tr>
+                                @foreach (var column in table.Columns)
+                                {
+                                    <th scope="col" style="min-width: 50px; padding: 12px; white-space: nowrap;">@column</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < Model.Categories.Count; i++)
+                            {
+                                var category = Model.Categories[i];
+                                var rowNumber = i + 1;
+                                <tr>
+                                    <td class="text-center">
+                                        <span class="text-muted fw-medium">@rowNumber</span>
+                                    </td>
+                                    <td class="text-center">
+                                        @Html.Raw(category.IconPreview)
+                                    </td>
+                                    <td>
+                                        <div class="fw-medium">@category.CategoryName</div>
+                                        <small class="text-muted">@category.CategoryCode</small>
+                                    </td>
+                                    <td>
+                                        @if (string.IsNullOrEmpty(category.Description))
+                                        {
+                                            <em class="text-muted">No description</em>
+                                        }
+                                        else
+                                        {
+                                            <span>@category.Description</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @Html.Raw(category.ColorBadge)
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-info-subtle text-info">@category.FormCount</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="text-muted">@category.DisplayOrder</span>
+                                    </td>
+                                    <td>
+                                        @Html.Raw(category.StatusBadge)
+                                    </td>
+                                    <td>
+                                        <span class="text-muted">@category.CreatedDate.ToString("MMM dd, yyyy")</span>
+                                    </td>
+                                    <td>
+                                        @{
+                                            var rowActions = BuildRowActions(category.CategoryId, category.CategoryName);
+                                        }
+                                        <partial name="~/Views/Shared/Components/RowActions/_RowActionsDropdown.cshtml" model="rowActions" />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <i class="ri-alert-line text-warning" style="font-size: 3rem;"></i>
+                </div>
+                <p id="deleteModalMessage" class="text-center mb-0"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">Delete</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Info Modal -->
+<div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="infoModalLabel">Information</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center mb-3">
+                    <i id="infoModalIcon" class="ri-information-line text-info" style="font-size: 3rem;"></i>
+                </div>
+                <p id="infoModalMessage" class="text-center mb-0"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Delete category
+        let categoryToDelete = null;
+
+        function deleteCategory(categoryId, categoryName) {
+            categoryToDelete = categoryId;
+            
+            const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+            document.getElementById('deleteModalMessage').textContent = 
+                `Are you sure you want to delete "${categoryName}"?\n\nThis action cannot be undone.`;
+            
+            modal.show();
+        }
+
+        document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+            if (!categoryToDelete) return;
+
+            const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
+            
+            fetch(`/Forms/FormCategories/Delete/${categoryToDelete}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': token
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide delete modal
+                const deleteModal = bootstrap.Modal.getInstance(document.getElementById('deleteModal'));
+                deleteModal.hide();
+
+                // Show result modal
+                const infoModal = new bootstrap.Modal(document.getElementById('infoModal'));
+                const infoIcon = document.getElementById('infoModalIcon');
+                const infoMessage = document.getElementById('infoModalMessage');
+                
+                if (data.success) {
+                    infoIcon.className = 'ri-checkbox-circle-line text-success';
+                    infoMessage.textContent = data.message;
+                    infoModal.show();
+                    
+                    // Reload page after modal closes
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    infoIcon.className = 'ri-error-warning-line text-danger';
+                    infoMessage.textContent = data.message;
+                    infoModal.show();
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while deleting the category.');
+            });
+        });
+
+        // View category details (placeholder)
+        function viewCategoryDetails(categoryId) {
+            alert('View details functionality will be implemented later. Category ID: ' + categoryId);
+        }
+    </script>
+}
+
+@Html.AntiForgeryToken()

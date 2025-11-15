@@ -230,6 +230,7 @@ namespace FormReporting.Data.Seeders
                 {
                     ("General Settings", "GENERAL", "GeneralSetting", 1, 1),
                     ("System Configuration", "SYSTEM", "SystemConfiguration", 2, 1),
+                    ("Menu Management", "MENU", "MenuManagement", 3, 1), 
                     ("Audit Logs", "AUDIT", "AuditLog", 3, 1),
                     ("Data Change Logs", "DATALOGS", "DataChangeLog", 4, 1),
                     ("Login History", "LOGINHISTORY", "LoginHistory", 5, 1)

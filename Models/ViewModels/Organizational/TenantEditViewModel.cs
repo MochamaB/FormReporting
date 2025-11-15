@@ -31,7 +31,9 @@ namespace FormReporting.Models.ViewModels.Organizational
         [StringLength(200)]
         public string? Location { get; set; }
 
-        public string? GPSCoordinates { get; set; }
+        public decimal? Latitude { get; set; }
+
+        public decimal? Longitude { get; set; }
 
         [Phone]
         public string? ContactPhone { get; set; }

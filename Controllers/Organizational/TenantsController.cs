@@ -323,9 +323,8 @@ namespace FormReporting.Controllers.Organizational
                 TenantType = tenant.TenantType,
                 RegionId = tenant.RegionId,
                 Location = tenant.Location,
-                GPSCoordinates = tenant.Latitude.HasValue && tenant.Longitude.HasValue
-                    ? $"{tenant.Latitude.Value}, {tenant.Longitude.Value}"
-                    : null,
+                Latitude = tenant.Latitude,
+                Longitude = tenant.Longitude,
                 ContactPhone = tenant.ContactPhone,
                 ContactEmail = tenant.ContactEmail,
                 IsActive = tenant.IsActive,
@@ -435,6 +434,10 @@ namespace FormReporting.Controllers.Organizational
                     })
                     .ToListAsync();
 
+                // Check if HeadOffice exists (excluding current tenant if it's already HeadOffice)
+                ViewBag.HeadOfficeExists = await _context.Tenants
+                    .AnyAsync(t => t.TenantType.ToLower() == "headoffice" && t.TenantId != model.TenantId);
+
                 return View("~/Views/Organizational/Tenants/Edit.cshtml", model);
             }
 
@@ -455,25 +458,8 @@ namespace FormReporting.Controllers.Organizational
                 tenant.TenantType = model.TenantType;
                 tenant.RegionId = model.RegionId;
                 tenant.Location = model.Location;
-
-                // Parse GPS coordinates if provided
-                if (!string.IsNullOrEmpty(model.GPSCoordinates))
-                {
-                    var coords = model.GPSCoordinates.Split(',');
-                    if (coords.Length == 2 &&
-                        decimal.TryParse(coords[0].Trim(), out decimal lat) &&
-                        decimal.TryParse(coords[1].Trim(), out decimal lng))
-                    {
-                        tenant.Latitude = lat;
-                        tenant.Longitude = lng;
-                    }
-                }
-                else
-                {
-                    tenant.Latitude = null;
-                    tenant.Longitude = null;
-                }
-
+                tenant.Latitude = model.Latitude;
+                tenant.Longitude = model.Longitude;
                 tenant.ContactPhone = model.ContactPhone;
                 tenant.ContactEmail = model.ContactEmail;
                 tenant.IsActive = model.IsActive;
@@ -544,6 +530,10 @@ namespace FormReporting.Controllers.Organizational
                         d.CreatedDate
                     })
                     .ToListAsync();
+
+                // Check if HeadOffice exists (excluding current tenant if it's already HeadOffice)
+                ViewBag.HeadOfficeExists = await _context.Tenants
+                    .AnyAsync(t => t.TenantType.ToLower() == "headoffice" && t.TenantId != model.TenantId);
 
                 return View("~/Views/Organizational/Tenants/Edit.cshtml", model);
             }
