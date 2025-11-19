@@ -1,0 +1,95 @@
+@*
+    Wizard Step 1: Basic Information
+    Contains: Template Name, Code, Category, Version, Description
+*@
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label for="TemplateName" class="form-label">
+                Template Name <span class="text-danger">*</span>
+            </label>
+            <input type="text"
+                   class="form-control"
+                   id="TemplateName"
+                   name="TemplateName"
+                   placeholder="e.g., Monthly ICT Report"
+                   required>
+            <div class="invalid-feedback">Please enter a template name</div>
+            <div class="form-text">Give your form template a descriptive name</div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label for="TemplateCode" class="form-label">
+                Template Code <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+                <input type="text"
+                       class="form-control"
+                       id="TemplateCode"
+                       name="TemplateCode"
+                       placeholder="Auto-generated"
+                       readonly>
+                <button class="btn btn-outline-secondary" type="button" id="editCodeBtn" title="Edit template code manually">
+                    <i class="ri-edit-line"></i>
+                </button>
+            </div>
+            <div class="form-text" id="codeHelpText">Will be auto-generated from template name</div>
+            <div class="invalid-feedback" id="codeFeedback" style="display: none;"></div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label for="CategoryId" class="form-label">
+                Category <span class="text-danger">*</span>
+            </label>
+            <select class="form-select" id="CategoryId" name="CategoryId" required>
+                <option value="">Select category...</option>
+                @if (ViewBag.Categories != null)
+                {
+                    foreach (var category in ViewBag.Categories)
+                    {
+                        <option value="@category.CategoryId">@category.CategoryName</option>
+                    }
+                }
+            </select>
+            <div class="invalid-feedback">Please select a category</div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label for="Version" class="form-label">
+                Version
+            </label>
+            <input type="text"
+                   class="form-control"
+                   id="Version"
+                   name="Version"
+                   value="1.0"
+                   readonly>
+            <div class="form-text">Version will be managed automatically</div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="mb-3">
+            <label for="Description" class="form-label">
+                Description
+            </label>
+            <textarea class="form-control"
+                      id="Description"
+                      name="Description"
+                      rows="4"
+                      placeholder="Describe the purpose of this form template..."></textarea>
+            <div class="form-text">Provide a brief description of what this form is used for</div>
+        </div>
+    </div>
+</div>

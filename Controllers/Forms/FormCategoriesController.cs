@@ -9,6 +9,7 @@ namespace FormReporting.Controllers.Forms
     /// <summary>
     /// Controller for managing form categories
     /// </summary>
+    [Route("Forms/[controller]")]
     public class FormCategoriesController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -21,7 +22,8 @@ namespace FormReporting.Controllers.Forms
         /// <summary>
         /// Display the form categories index page with datatable
         /// </summary>
-        [HttpGet]
+        [HttpGet("")]
+        [HttpGet("Index")]
         public async Task<IActionResult> Index()
         {
             var categories = await _context.FormCategories
@@ -58,7 +60,7 @@ namespace FormReporting.Controllers.Forms
         /// <summary>
         /// API endpoint to get categories data for DataTables
         /// </summary>
-        [HttpGet]
+        [HttpGet("GetCategoriesData")]
         public async Task<IActionResult> GetCategoriesData()
         {
             var categories = await _context.FormCategories
@@ -86,7 +88,7 @@ namespace FormReporting.Controllers.Forms
         /// <summary>
         /// Show create form category page
         /// </summary>
-        [HttpGet]
+        [HttpGet("Create")]
         public IActionResult Create()
         {
             var viewModel = new FormCategoryEditViewModel
@@ -101,7 +103,7 @@ namespace FormReporting.Controllers.Forms
         /// <summary>
         /// Handle create form category submission
         /// </summary>
-        [HttpPost]
+        [HttpPost("Create")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(FormCategoryEditViewModel model)
         {
@@ -133,7 +135,7 @@ namespace FormReporting.Controllers.Forms
         /// <summary>
         /// Show edit form category page
         /// </summary>
-        [HttpGet]
+        [HttpGet("Edit/{id}")]
         public async Task<IActionResult> Edit(int id)
         {
             var category = await _context.FormCategories.FindAsync(id);
@@ -155,13 +157,13 @@ namespace FormReporting.Controllers.Forms
                 IsActive = category.IsActive
             };
 
-            return View(viewModel);
+            return View("~/Views/Forms/FormCategories/Create.cshtml",viewModel);
         }
 
         /// <summary>
         /// Handle edit form category submission
         /// </summary>
-        [HttpPost]
+        [HttpPost("Edit")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(FormCategoryEditViewModel model)
         {
@@ -195,7 +197,7 @@ namespace FormReporting.Controllers.Forms
         /// <summary>
         /// Delete a form category
         /// </summary>
-        [HttpPost]
+        [HttpPost("Delete/{id}")]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(int id)
         {

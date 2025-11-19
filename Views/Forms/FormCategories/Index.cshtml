@@ -82,7 +82,7 @@
     {
         var config = new RowActionsConfig
         {
-            DisplayStyle = RowActionDisplayStyle.Dropdown,
+            DisplayStyle = RowActionDisplayStyle.Inline,
             DropdownText = "",
             DropdownIconClass = "ri-more-fill",
             ButtonSize = "sm",
@@ -93,15 +93,17 @@
                 {
                     Text = "Edit",
                     IconClass = "ri-pencil-line",
-                    ColorClass = "success",
-                    UrlTemplate = Url.Action("Edit", "FormCategories", new { id = categoryId }) ?? $"/Forms/FormCategories/Edit/{categoryId}"
+                    ColorClass = "secondary",
+                    UrlTemplate = Url.Action("Edit", "FormCategories", new { id = categoryId }) ?? $"/Forms/FormCategories/Edit/{categoryId}",
+                    IconOnly = true
                 },
                 new RowActionConfig
                 {
                     Text = "View Details",
                     IconClass = "ri-eye-line",
                     ColorClass = "primary",
-                    UrlTemplate = $"javascript:viewCategoryDetails({categoryId})"
+                    UrlTemplate = $"javascript:viewCategoryDetails({categoryId})",
+                    IconOnly = true
                 },
                 new RowActionConfig
                 {
@@ -109,7 +111,8 @@
                     IconClass = "ri-delete-bin-line",
                     ColorClass = "danger",
                     UrlTemplate = $"javascript:deleteCategory({categoryId}, '{categoryName}')",
-                    RequiresConfirmation = false // We handle confirmation in JavaScript
+                    RequiresConfirmation = false, // We handle confirmation in JavaScript
+                    IconOnly = true
                 }
             }
         };
@@ -235,7 +238,7 @@
                                         @{
                                             var rowActions = BuildRowActions(category.CategoryId, category.CategoryName);
                                         }
-                                        <partial name="~/Views/Shared/Components/RowActions/_RowActionsDropdown.cshtml" model="rowActions" />
+                                        <partial name="~/Views/Shared/Components/RowActions/_RowActionsInline.cshtml" model="rowActions" />
                                     </td>
                                 </tr>
                             }

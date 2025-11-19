@@ -4,16 +4,28 @@ using FormReporting.Data;
 using FormReporting.Models.ViewModels.Forms;
 using FormReporting.Models.ViewModels.Components;
 using FormReporting.Extensions;
+using FormReporting.Services.Forms;
+using FormReporting.Services.Identity;
 
 namespace FormReporting.Controllers.Forms
 {
     public class FormTemplatesController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IFormCategoryService _categoryService;
+        private readonly IFormTemplateService _templateService;
+        private readonly IUserService _userService;
 
-        public FormTemplatesController(ApplicationDbContext context)
+        public FormTemplatesController(
+            ApplicationDbContext context,
+            IFormCategoryService categoryService,
+            IFormTemplateService templateService,
+            IUserService userService)
         {
             _context = context;
+            _categoryService = categoryService;
+            _templateService = templateService;
+            _userService = userService;
         }
 
         /// <summary>
@@ -150,13 +162,13 @@ namespace FormReporting.Controllers.Forms
             ViewBag.CurrentType = type;
             ViewBag.CurrentCategory = category;
 
-            // Get categories for filter dropdown
-            ViewBag.Categories = await _context.FormCategories
-                .Where(c => c.IsActive)
+            // Get categories for filter dropdown (using service)
+            var categories = await _categoryService.GetActiveCategoriesAsync();
+            ViewBag.Categories = categories
                 .Select(c => c.CategoryName)
                 .Distinct()
                 .OrderBy(c => c)
-                .ToListAsync();
+                .ToList();
 
             return View("~/Views/Forms/FormTemplates/Index.cshtml", templates);
         }
@@ -164,7 +176,7 @@ namespace FormReporting.Controllers.Forms
         /// <summary>
         /// Create - Display form for creating a new template
         /// </summary>
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
             // Build progress tracker - Step 1 active, no template ID yet
             var progress = new FormBuilderProgressConfig
@@ -180,6 +192,26 @@ namespace FormReporting.Controllers.Forms
             .BuildProgress();
 
             ViewData["Progress"] = progress;
+
+            // Get active categories for dropdown (using service)
+            ViewBag.Categories = await _categoryService.GetCategorySelectListAsync();
+
+            // Initialize Assignment Manager for approval workflow
+            var approvalWorkflowManager = new AssignmentManagerConfig
+            {
+                ManagerId = "template-approval-workflow",
+                ContextLabel = "Approval Levels",
+                HelpText = "Define who needs to approve submissions for this form template",
+                ShowLevels = true,
+                AllowMultiplePerLevel = false,
+                IsCollapsible = false,
+                SearchEndpoint = Url.Action("SearchAssignableEntities", "FormTemplates")
+            }
+            .WithAssignmentType("User", "Specific User", "ri-user-line", isDefault: true)
+            .WithAssignmentType("Role", "By Role", "ri-shield-user-line")
+            .BuildAssignmentManager();
+
+            ViewData["ApprovalWorkflowManager"] = approvalWorkflowManager;
 
             return View("~/Views/Forms/FormTemplates/Create.cshtml");
         }
@@ -324,6 +356,134 @@ namespace FormReporting.Controllers.Forms
             }
 
             return View("~/Views/Forms/FormTemplates/Assignments.cshtml", template);
+        }
+
+        // ============================================================================
+        // AJAX ENDPOINTS FOR TEMPLATE CODE GENERATION
+        // ============================================================================
+
+        /// <summary>
+        /// AJAX: Check if template code exists
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> CheckTemplateCode(string code, int? excludeId = null)
+        {
+            if (string.IsNullOrWhiteSpace(code))
+            {
+                return Json(new { exists = false, valid = false, message = "Template code is required" });
+            }
+
+            var exists = await _templateService.TemplateCodeExistsAsync(code, excludeId);
+            var isValid = _templateService.IsValidTemplateCodeFormat(code);
+
+            return Json(new
+            {
+                exists = exists,
+                valid = isValid,
+                message = exists
+                    ? "This template code already exists"
+                    : isValid
+                        ? "Template code is available"
+                        : "Invalid format. Use TPL_UPPERCASE_LETTERS_NUMBERS"
+            });
+        }
+
+        /// <summary>
+        /// AJAX: Generate unique template code from name
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GenerateTemplateCode(string name, int? excludeId = null)
+        {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return Json(new { success = false, code = "", message = "Template name is required" });
+            }
+
+            try
+            {
+                var code = await _templateService.GenerateUniqueTemplateCodeAsync(name, excludeId);
+                return Json(new { success = true, code = code, message = "Code generated successfully" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, code = "", message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// AJAX: Search assignable entities (Users, Roles, Departments) for AssignmentManager
+        /// Returns scope-filtered results based on current user's access
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> SearchAssignableEntities(string query, string type)
+        {
+            if (string.IsNullOrWhiteSpace(query) || query.Length < 2)
+            {
+                return Json(new List<object>());
+            }
+
+            if (string.IsNullOrWhiteSpace(type))
+            {
+                return Json(new List<object>());
+            }
+
+            try
+            {
+                switch (type)
+                {
+                    case "User":
+                        // Get users within current user's scope
+                        var users = await _userService.SearchUsersAsync(User, query, limit: 20);
+                        var userResults = users.Select(u => new
+                        {
+                            id = u.UserId,
+                            name = u.FullName,
+                            details = $"{u.Email} | {u.PrimaryTenant?.TenantName ?? "No Tenant"}",
+                            icon = "ri-user-line"
+                        });
+                        return Json(userResults);
+
+                    case "Role":
+                        // Get roles
+                        var roles = await _context.Roles
+                            .Where(r => r.IsActive && r.RoleName.ToLower().Contains(query.ToLower()))
+                            .OrderBy(r => r.RoleName)
+                            .Take(20)
+                            .Select(r => new
+                            {
+                                id = r.RoleId,
+                                name = r.RoleName,
+                                details = r.Description,
+                                icon = "ri-shield-user-line"
+                            })
+                            .ToListAsync();
+                        return Json(roles);
+
+                    case "Department":
+                        // Get departments (scope-filtered)
+                        var departments = await _context.Departments
+                            .Include(d => d.Tenant)
+                            .Where(d => d.IsActive && d.DepartmentName.ToLower().Contains(query.ToLower()))
+                            .OrderBy(d => d.DepartmentName)
+                            .Take(20)
+                            .Select(d => new
+                            {
+                                id = d.DepartmentId,
+                                name = d.DepartmentName,
+                                details = d.Tenant.TenantName,
+                                icon = "ri-building-line"
+                            })
+                            .ToListAsync();
+                        return Json(departments);
+
+                    default:
+                        return Json(new List<object>());
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message });
+            }
         }
     }
 }

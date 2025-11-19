@@ -104,6 +104,18 @@ namespace FormReporting.Data.Configurations.Identity
                 .HasDatabaseName("IX_User_Department");
 
             // Relationships
+
+            // Primary Tenant relationship (required)
+            builder.HasOne(e => e.PrimaryTenant)
+                .WithMany()
+                .HasForeignKey(e => e.TenantId)
+                .OnDelete(DeleteBehavior.Restrict)
+                .HasConstraintName("FK_User_PrimaryTenant");
+
+            builder.HasIndex(e => e.TenantId)
+                .HasDatabaseName("IX_User_PrimaryTenant");
+
+            // Department relationship (optional)
             builder.HasOne(e => e.Department)
                 .WithMany(d => d.Users)
                 .HasForeignKey(e => e.DepartmentId)

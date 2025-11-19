@@ -1,0 +1,161 @@
+@{
+    ViewData["Title"] = "My Dashboard";
+    ViewData["Breadcrumbs"] = new List<(string Title, string? Url)>
+    {
+        ("Dashboard", null)
+    };
+}
+
+@* 
+    Personalized Dashboard View
+    Implementation Plan: 1.Documents\10_Reporting_Analytics\1A_MyDashboard_Information_Requirements.md
+    
+    MUST HAVE Components (Always Visible):
+    1. User Context - Who am I? (Name, Role, Scope, Tenant)
+    2. Pending Forms - What do I need to submit?
+    3. Alerts - What requires attention?
+    4. Quick Stats - How am I doing?
+    
+    SHOULD HAVE Components (Conditional):
+    5. Pending Approvals - (If user is approver)
+    6. Multi-Tenant Access - (If user has access to > 1 tenant)
+    7. Quick Access Links - Shortcuts
+    
+    NICE TO HAVE Components (Optional):
+    8. Recent Activity - Historical context
+    9. Scheduled Reports - (If user has created schedules)
+    10. Tenant Groups - (If tenant belongs to groups)
+*@
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="ri-dashboard-line me-2"></i>Welcome to Your Dashboard
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="text-center py-5">
+                    <i class="ri-dashboard-3-line display-1 text-muted"></i>
+                    <h3 class="mt-4">Dashboard Under Construction</h3>
+                    <p class="text-muted">
+                        Your personalized dashboard will be implemented based on the requirements in:<br>
+                        <code>1.Documents\10_Reporting_Analytics\1A_MyDashboard_Information_Requirements.md</code>
+                    </p>
+                    
+                    <div class="mt-4">
+                        <h5>Planned Components:</h5>
+                        <div class="row mt-3">
+                            <div class="col-md-6">
+                                <div class="card border">
+                                    <div class="card-body">
+                                        <h6 class="text-primary">
+                                            <i class="ri-checkbox-circle-line me-2"></i>MUST HAVE
+                                        </h6>
+                                        <ul class="text-start mb-0">
+                                            <li>User Context</li>
+                                            <li>Pending Forms</li>
+                                            <li>Alerts & Notifications</li>
+                                            <li>Quick Stats</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card border">
+                                    <div class="card-body">
+                                        <h6 class="text-success">
+                                            <i class="ri-checkbox-circle-line me-2"></i>SHOULD HAVE
+                                        </h6>
+                                        <ul class="text-start mb-0">
+                                            <li>Pending Approvals</li>
+                                            <li>Multi-Tenant Access</li>
+                                            <li>Quick Access Links</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-primary">
+                            <i class="ri-home-line me-2"></i>Go to Home
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Temporary: Show user claims for testing authentication *@
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-shield-user-line me-2"></i>Your Access Information (Temporary - For Testing)
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm table-borderless mb-0">
+                        <tbody>
+                            <tr>
+                                <td class="fw-medium" style="width: 150px;">User:</td>
+                                <td>@User.Identity?.Name</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium">Email:</td>
+                                <td>@User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium">Scope:</td>
+                                <td><span class="badge bg-primary">@User.FindFirst("ScopeName")?.Value</span></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium">Scope Code:</td>
+                                <td><span class="badge bg-info">@User.FindFirst("ScopeCode")?.Value</span></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium">Roles:</td>
+                                <td>
+                                    @foreach (var role in User.FindAll(System.Security.Claims.ClaimTypes.Role))
+                                    {
+                                        <span class="badge bg-success me-1">@role.Value</span>
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium">Permissions:</td>
+                                <td>
+                                    @{
+                                        var permissions = User.FindAll("Permission").Take(5).ToList();
+                                        if (permissions.Any())
+                                        {
+                                            foreach (var perm in permissions)
+                                            {
+                                                <span class="badge bg-warning text-dark me-1 mb-1">@perm.Value</span>
+                                            }
+                                            var totalPerms = User.FindAll("Permission").Count();
+                                            if (totalPerms > 5)
+                                            {
+                                                <span class="badge bg-secondary">+@(totalPerms - 5) more</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No permissions</span>
+                                        }
+                                    }
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,661 @@
+@using FormReporting.Extensions
+@using FormReporting.Models.ViewModels.Components
+@model FormReporting.Models.ViewModels.Identity.RolesIndexViewModel
+
+@{
+    ViewData["Title"] = "Roles Management";
+
+    // Build stat cards config
+    var statConfig = new StatsRowConfig
+    {
+        Titles = new List<string> { "Total Roles", "Active Roles", "Inactive Roles" },
+        Values = new List<string> {
+            Model.TotalRoles.ToString(),
+            Model.ActiveRoles.ToString(),
+            Model.InactiveRoles.ToString()
+        },
+        Icons = new List<string> {
+            "ri-shield-user-line",
+            "ri-checkbox-circle-line",
+            "ri-close-circle-line"
+        },
+        ColorThemes = new List<string> { "primary", "success", "danger" },
+        CardType = CardType.IconLeftCard,
+        Subtitles = new List<string> {
+            "System roles",
+            "Currently active",
+            "Deactivated roles"
+        },
+        TrendPercentages = new List<string> { "", "", "" },
+        TrendDirections = new List<TrendDirection> {
+            TrendDirection.Neutral,
+            TrendDirection.Neutral,
+            TrendDirection.Neutral
+        }
+    };
+
+    // Call extension to build stat cards
+    var statCards = statConfig.BuildStatsRow();
+
+    // Calculate row number starting point
+    int startingNumber = ((ViewBag.CurrentPage - 1) * ViewBag.PageSize) + 1;
+
+    // Build DataTable configuration
+    var tableConfig = new DataTableConfig
+    {
+        TableId = "rolesTable",
+        Columns = new List<string> {
+            "#",
+            "Role Name",
+            "Role Code",
+            "Description",
+            "Scope Level",
+            "Level",
+            "Users",
+            "Status",
+            "Actions"
+        },
+        EnableSearch = true,
+        SearchBox = new SearchBoxConfig
+        {
+            ParameterName = "search",
+            PlaceholderText = "Search roles...",
+            CurrentValue = ViewBag.CurrentSearch,
+            ActionUrl = Url.Action("Index", "Roles") ?? "/Identity/Roles"
+        },
+        FilterDropdowns = new List<FilterDropdownConfig>
+        {
+            new FilterDropdownConfig
+            {
+                Label = "Status",
+                Options = new List<FilterOption>
+                {
+                    new FilterOption
+                    {
+                        Text = "All Status",
+                        Value = "",
+                        Url = Url.Action("Index", "Roles", new { search = ViewBag.CurrentSearch }) ?? "/Identity/Roles",
+                        IsActive = string.IsNullOrEmpty(ViewBag.CurrentStatus)
+                    },
+                    new FilterOption
+                    {
+                        Text = "Active",
+                        Value = "active",
+                        Url = Url.Action("Index", "Roles", new { search = ViewBag.CurrentSearch, status = "active" }) ?? "/Identity/Roles",
+                        IsActive = ViewBag.CurrentStatus == "active"
+                    },
+                    new FilterOption
+                    {
+                        Text = "Inactive",
+                        Value = "inactive",
+                        Url = Url.Action("Index", "Roles", new { search = ViewBag.CurrentSearch, status = "inactive" }) ?? "/Identity/Roles",
+                        IsActive = ViewBag.CurrentStatus == "inactive"
+                    }
+                }
+            }
+        },
+        CreateButtonText = "Create New Role",
+        CreateButtonUrl = Url.Action("Create", "Roles") ?? "/Identity/Roles/Create",
+        ShowPagination = true,
+        CurrentPage = ViewBag.CurrentPage,
+        TotalPages = ViewBag.TotalPages,
+        TotalRecords = ViewBag.TotalRecords,
+        PageSize = ViewBag.PageSize
+    };
+
+    // Build table
+    var table = tableConfig.BuildDataTable();
+
+    // Helper function to build row actions for each role
+    RowActionsViewModel BuildRowActions(int roleId, string roleName)
+    {
+        var config = new RowActionsConfig
+        {
+            DisplayStyle = RowActionDisplayStyle.Inline,
+            DropdownText = "",
+            DropdownIconClass = "ri-more-fill",
+            ButtonSize = "sm",
+            UseSoftButtons = true,
+            Actions = new List<RowActionConfig>
+            {
+                new RowActionConfig
+                {
+                    Text = "Edit",
+                    IconClass = "ri-pencil-line",
+                    ColorClass = "success",
+                    UrlTemplate = Url.Action("Edit", "Roles", new { id = roleId }) ?? $"/Identity/Roles/Edit/{roleId}",
+                    IconOnly = true
+                },
+                new RowActionConfig
+                {
+                    Text = "View Details",
+                    IconClass = "ri-eye-line",
+                    ColorClass = "primary",
+                    UrlTemplate = $"javascript:viewRoleDetails({roleId})",
+                    IconOnly = true
+                },
+                new RowActionConfig
+                {
+                    Text = "Assign Permissions",
+                    IconClass = "ri-shield-check-line",
+                    ColorClass = "info",
+                    UrlTemplate = $"/Identity/Roles/Permissions/{roleId}",
+                    IconOnly = true
+                },
+                new RowActionConfig
+                {
+                    Text = "Delete",
+                    IconClass = "ri-delete-bin-line",
+                    ColorClass = "danger",
+                    UrlTemplate = $"javascript:deleteRole({roleId}, '{roleName}')",
+                    RequiresConfirmation = false,
+                    IconOnly = true
+                }
+            }
+        };
+
+        return new RowActionsViewModel
+        {
+            DisplayStyle = config.DisplayStyle,
+            DropdownText = config.DropdownText,
+            DropdownIconClass = config.DropdownIconClass,
+            ButtonSizeClass = $"btn-{config.ButtonSize}",
+            UseSoftButtons = config.UseSoftButtons,
+            RowId = roleId.ToString(),
+            Actions = config.Actions.Select(a => new RowActionViewModel
+            {
+                Text = a.Text,
+                IconClass = a.IconClass,
+                ColorClass = a.ColorClass,
+                Url = a.UrlTemplate,
+                RequiresConfirmation = a.RequiresConfirmation,
+                ConfirmationMessage = a.ConfirmationMessage,
+                IconOnly = a.IconOnly,
+                IsVisible = true
+            }).ToList()
+        };
+    }
+}
+
+<!-- Stat Cards Row -->
+<div class="row">
+    @foreach (var card in statCards)
+    {
+        <partial name="~/Views/Shared/Components/StatisticCards/_IconLeftCard.cshtml" model="card" />
+    }
+</div>
+
+@* Main Content *@
+<div class="row mt-3">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center flex-wrap w-100 gap-2">
+                    @* Left Side: Search and Filters *@
+                    <div class="d-flex gap-2 flex-wrap align-items-center">
+                        @* Search Box using partial component *@
+                        @if (table.SearchBox != null)
+                        {
+                            <partial name="~/Views/Shared/Components/DataTable/_SearchBox.cshtml" model="table.SearchBox" />
+                            @if (!string.IsNullOrEmpty(table.SearchBox.CurrentValue))
+                            {
+                                <a href="@table.SearchBox.ActionUrl" class="btn btn-soft-secondary" title="Clear search">
+                                    <i class="ri-refresh-line"></i>
+                                </a>
+                            }
+                        }
+
+                        @* Filter Dropdowns using partial component *@
+                        @if (table.FilterDropdowns != null && table.FilterDropdowns.Any())
+                        {
+                            foreach (var filterDropdown in table.FilterDropdowns)
+                            {
+                                <partial name="~/Views/Shared/Components/DataTable/_FilterDropdown.cshtml" model="filterDropdown" />
+                            }
+                        }
+                    </div>
+
+                    @* Right Side: Create Button *@
+                    <div class="d-flex gap-2">
+                        @if (!string.IsNullOrEmpty(table.CreateButtonText) && !string.IsNullOrEmpty(table.CreateButtonUrl))
+                        {
+                            <a href="@table.CreateButtonUrl" class="btn btn-primary">
+                                <i class="ri-add-line me-1"></i>@table.CreateButtonText
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="@table.TableClasses" id="@table.TableId" style="width: 100%;">
+                        <thead class="bg-light">
+                            <tr>
+                                @foreach (var column in table.Columns)
+                                {
+                                    <th scope="col" style="min-width: 50px; padding: 12px; white-space: nowrap;">@column</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < Model.Roles.Count(); i++)
+                            {
+                                var role = Model.Roles.ElementAt(i);
+                                var rowNumber = startingNumber + i;
+                                <tr>
+                                    <td class="text-center">
+                                        <span class="text-muted fw-medium">@rowNumber</span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="flex-shrink-0 me-2">
+                                                <div class="avatar-xs">
+                                                    <div class="avatar-title bg-primary-subtle text-primary rounded-circle fs-13">
+                                                        <i class="ri-shield-user-line"></i>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="flex-grow-1">
+                                                <h6 class="mb-0">@role.RoleName</h6>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td><code class="text-primary">@role.RoleCode</code></td>
+                                    <td>
+                                        <span class="text-muted">
+                                            @if (!string.IsNullOrEmpty(role.Description))
+                                            {
+                                                @(role.Description.Length > 50 ? role.Description.Substring(0, 50) + "..." : role.Description)
+                                            }
+                                            else
+                                            {
+                                                <em>No description</em>
+                                            }
+                                        </span>
+                                    </td>
+                                    <td>@Html.Raw(role.ScopeBadge)</td>
+                                    <td class="text-center">
+                                        <span class="badge bg-light text-dark">Level @role.Level</span>
+                                    </td>
+                                    <td class="text-center">
+                                        <span class="badge bg-info-subtle text-info">@role.UserCount</span>
+                                    </td>
+                                    <td class="text-center">@Html.Raw(role.StatusBadge)</td>
+                                    <td>
+                                        @{
+                                            var rowActions = BuildRowActions(role.RoleId, role.RoleName);
+                                        }
+                                        <partial name="~/Views/Shared/Components/RowActions/_RowActionsInline.cshtml" model="rowActions" />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            @* Pagination Footer *@
+            @if (table.ShowPagination && table.TotalPages > 1)
+            {
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <span class="text-muted">
+                                Showing page @table.CurrentPage of @table.TotalPages
+                                (@table.TotalRecords total items)
+                            </span>
+                        </div>
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination mb-0">
+                                @{
+                                    string BuildPageUrl(int pageNumber)
+                                    {
+                                        return Url.Action("Index", "Roles", new
+                                        {
+                                            page = pageNumber,
+                                            search = ViewBag.CurrentSearch,
+                                            status = ViewBag.CurrentStatus
+                                        }) ?? $"/Identity/Roles?page={pageNumber}";
+                                    }
+                                }
+
+                                @* Previous Button *@
+                                <li class="page-item @(table.CurrentPage == 1 ? "disabled" : "")">
+                                    <a class="page-link" href="@(table.CurrentPage > 1 ? BuildPageUrl(table.CurrentPage - 1) : "#")" aria-label="Previous">
+                                        <i class="ri-arrow-left-s-line"></i>
+                                    </a>
+                                </li>
+
+                                @* Page Numbers *@
+                                @{
+                                    int startPage = Math.Max(1, table.CurrentPage - 2);
+                                    int endPage = Math.Min(table.TotalPages, table.CurrentPage + 2);
+
+                                    // Show first page
+                                    if (startPage > 1)
+                                    {
+                                        <li class="page-item">
+                                            <a class="page-link" href="@BuildPageUrl(1)">1</a>
+                                        </li>
+                                        if (startPage > 2)
+                                        {
+                                            <li class="page-item disabled">
+                                                <span class="page-link">...</span>
+                                            </li>
+                                        }
+                                    }
+
+                                    // Show page numbers
+                                    for (int i = startPage; i <= endPage; i++)
+                                    {
+                                        <li class="page-item @(i == table.CurrentPage ? "active" : "")">
+                                            <a class="page-link" href="@BuildPageUrl(i)">@i</a>
+                                        </li>
+                                    }
+
+                                    // Show last page
+                                    if (endPage < table.TotalPages)
+                                    {
+                                        if (endPage < table.TotalPages - 1)
+                                        {
+                                            <li class="page-item disabled">
+                                                <span class="page-link">...</span>
+                                            </li>
+                                        }
+                                        <li class="page-item">
+                                            <a class="page-link" href="@BuildPageUrl(table.TotalPages)">@table.TotalPages</a>
+                                        </li>
+                                    }
+                                }
+
+                                @* Next Button *@
+                                <li class="page-item @(table.CurrentPage >= table.TotalPages ? "disabled" : "")">
+                                    <a class="page-link" href="@(table.CurrentPage < table.TotalPages ? BuildPageUrl(table.CurrentPage + 1) : "#")" aria-label="Next">
+                                        <i class="ri-arrow-right-s-line"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@* Delete Confirmation Modal *@
+<div class="modal fade" id="deleteConfirmModal" tabindex="-1" aria-labelledby="deleteConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger">
+                <h5 class="modal-title text-white" id="deleteConfirmModalLabel">
+                    <i class="ri-alert-line me-2"></i>Confirm Delete
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">Are you sure you want to delete the role <strong id="roleNameToDelete"></strong>?</p>
+                <p class="text-muted mt-2 mb-0">This action cannot be undone.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="confirmDeleteBtn">
+                    <i class="ri-delete-bin-line me-1"></i>Delete Role
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Info Modal *@
+<div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" id="infoModalHeader">
+                <h5 class="modal-title" id="infoModalLabel">Information</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="infoModalBody">
+                <!-- Dynamic content -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">OK</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@* Role Details Modal *@
+<div class="modal fade" id="roleDetailsModal" tabindex="-1" aria-labelledby="roleDetailsModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary">
+                <h5 class="modal-title text-white" id="roleDetailsModalLabel">
+                    <i class="ri-shield-user-line me-2"></i>Role Details
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="roleDetailsBody">
+                <!-- Dynamic content will be loaded here -->
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        let roleIdToDelete = null;
+
+        // Delete role function
+        function deleteRole(roleId, roleName) {
+            roleIdToDelete = roleId;
+            document.getElementById('roleNameToDelete').textContent = roleName;
+            const modal = new bootstrap.Modal(document.getElementById('deleteConfirmModal'));
+            modal.show();
+        }
+
+        // Confirm delete
+        document.getElementById('confirmDeleteBtn').addEventListener('click', function() {
+            if (roleIdToDelete) {
+                // Create form and submit
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/Identity/Roles/Delete/${roleIdToDelete}`;
+
+                const token = document.querySelector('input[name="__RequestVerificationToken"]');
+                if (token) {
+                    const tokenInput = document.createElement('input');
+                    tokenInput.type = 'hidden';
+                    tokenInput.name = '__RequestVerificationToken';
+                    tokenInput.value = token.value;
+                    form.appendChild(tokenInput);
+                }
+
+                document.body.appendChild(form);
+
+                // Submit via AJAX
+                fetch(form.action, {
+                    method: 'POST',
+                    headers: {
+                        'RequestVerificationToken': token ? token.value : ''
+                    },
+                    body: new FormData(form)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    document.body.removeChild(form);
+                    bootstrap.Modal.getInstance(document.getElementById('deleteConfirmModal')).hide();
+
+                    if (data.success) {
+                        showInfoModal('Success', data.message, 'success');
+                        setTimeout(() => window.location.reload(), 1500);
+                    } else {
+                        showInfoModal('Error', data.message, 'danger');
+                    }
+                })
+                .catch(error => {
+                    document.body.removeChild(form);
+                    showInfoModal('Error', 'An error occurred while deleting the role.', 'danger');
+                });
+            }
+        });
+
+        // View role details
+        function viewRoleDetails(roleId) {
+            const modal = new bootstrap.Modal(document.getElementById('roleDetailsModal'));
+            modal.show();
+
+            fetch(`/Identity/Roles/Details/${roleId}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const role = data.data;
+                        const detailsHtml = `
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Role Name</label>
+                                        <p class="text-muted">${role.roleName}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Role Code</label>
+                                        <p><code class="text-primary">${role.roleCode}</code></p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Scope Level</label>
+                                        <p class="text-muted">${role.scopeLevelName}</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Level</label>
+                                        <p><span class="badge bg-light text-dark">Level ${role.level}</span></p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Assigned Users</label>
+                                        <p><span class="badge bg-info-subtle text-info">${role.userCount} users</span></p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Status</label>
+                                        <p>${role.isActive ? '<span class="badge bg-success-subtle text-success">Active</span>' : '<span class="badge bg-danger-subtle text-danger">Inactive</span>'}</p>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="mb-3">
+                                        <label class="form-label fw-semibold">Description</label>
+                                        <p class="text-muted">${role.description || '<em>No description</em>'}</p>
+                                    </div>
+                                </div>
+                                <div class="col-12">
+                                    <div class="mb-0">
+                                        <label class="form-label fw-semibold">Created Date</label>
+                                        <p class="text-muted">${new Date(role.createdDate).toLocaleString()}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                        document.getElementById('roleDetailsBody').innerHTML = detailsHtml;
+                    } else {
+                        document.getElementById('roleDetailsBody').innerHTML = '<p class="text-danger">Failed to load role details.</p>';
+                    }
+                })
+                .catch(error => {
+                    document.getElementById('roleDetailsBody').innerHTML = '<p class="text-danger">An error occurred while loading role details.</p>';
+                });
+        }
+
+        // Show info modal
+        function showInfoModal(title, message, type = 'info') {
+            const modal = new bootstrap.Modal(document.getElementById('infoModal'));
+            const header = document.getElementById('infoModalHeader');
+            const body = document.getElementById('infoModalBody');
+
+            header.className = 'modal-header';
+            if (type === 'success') {
+                header.classList.add('bg-success');
+            } else if (type === 'danger') {
+                header.classList.add('bg-danger');
+            } else {
+                header.classList.add('bg-primary');
+            }
+
+            document.getElementById('infoModalLabel').innerHTML = `<i class="ri-information-line me-2"></i>${title}`;
+            body.innerHTML = `<p class="mb-0">${message}</p>`;
+
+            modal.show();
+        }
+
+        // Initialize DataTable-like functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add search functionality
+            const searchInput = document.querySelector('input[type="search"]');
+            if (searchInput) {
+                searchInput.addEventListener('input', function() {
+                    filterTable();
+                });
+            }
+
+            // Add filter functionality
+            const filterSelects = document.querySelectorAll('select[data-filter-field]');
+            filterSelects.forEach(select => {
+                select.addEventListener('change', function() {
+                    filterTable();
+                });
+            });
+        });
+
+        function filterTable() {
+            const searchValue = document.querySelector('input[type="search"]')?.value.toLowerCase() || '';
+            const filters = {};
+            
+            document.querySelectorAll('select[data-filter-field]').forEach(select => {
+                if (select.value) {
+                    filters[select.getAttribute('data-filter-field')] = select.value.toLowerCase();
+                }
+            });
+
+            const rows = document.querySelectorAll('#rolesTableBody tr');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                let show = true;
+
+                // Search filter
+                if (searchValue) {
+                    const text = row.textContent.toLowerCase();
+                    show = text.includes(searchValue);
+                }
+
+                // Additional filters
+                if (show && Object.keys(filters).length > 0) {
+                    // Implement filter logic based on data attributes or cell content
+                }
+
+                row.style.display = show ? '' : 'none';
+                if (show) visibleCount++;
+            });
+
+            // Update info text
+            document.getElementById('showingEnd').textContent = visibleCount;
+            document.getElementById('totalRecords').textContent = visibleCount;
+        }
+    </script>
+    @Html.AntiForgeryToken()
+}

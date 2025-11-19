@@ -2379,6 +2379,9 @@ namespace FormReporting.Data.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("TenantId")
+                        .HasColumnType("int");
+
                     b.Property<bool>("TwoFactorEnabled")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -2404,6 +2407,9 @@ namespace FormReporting.Data.Migrations
 
                     b.HasIndex("NormalizedUserName")
                         .HasDatabaseName("IX_Users_Username");
+
+                    b.HasIndex("TenantId")
+                        .HasDatabaseName("IX_User_PrimaryTenant");
 
                     b.HasIndex("UserName")
                         .IsUnique()
@@ -6415,7 +6421,16 @@ namespace FormReporting.Data.Migrations
                         .OnDelete(DeleteBehavior.NoAction)
                         .HasConstraintName("FK_User_Department");
 
+                    b.HasOne("FormReporting.Models.Entities.Organizational.Tenant", "PrimaryTenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired()
+                        .HasConstraintName("FK_User_PrimaryTenant");
+
                     b.Navigation("Department");
+
+                    b.Navigation("PrimaryTenant");
                 });
 
             modelBuilder.Entity("FormReporting.Models.Entities.Identity.UserGroup", b =>

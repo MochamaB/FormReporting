@@ -114,27 +114,95 @@
 </div> <!-- end row-->
 
 <div class="row">
-    <div class="col-xl-12">
+    <div class="col-xl-8">
         <div class="card">
             <div class="card-header align-items-center d-flex">
-                <h4 class="card-title mb-0 flex-grow-1">Welcome to KTDA ICT Reporting System</h4>
+                <h4 class="card-title mb-0 flex-grow-1">Welcome to KTDA Form Reporting System</h4>
             </div><!-- end card header -->
 
             <div class="card-body">
-                <p class="text-muted">This is your central hub for managing ICT infrastructure reporting across all KTDA facilities.</p>
+                <p class="text-muted">This is your central hub for managing form reporting across all KTDA facilities.</p>
                 <div class="alert alert-success alert-dismissible alert-label-icon label-arrow fade show" role="alert">
-                    <i class="ri-check-double-line label-icon"></i><strong>Success</strong> - Velzon template has been successfully integrated!
+                    <i class="ri-check-double-line label-icon"></i><strong>Success</strong> - You are now logged in!
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
                 <h5>Quick Actions:</h5>
                 <div class="hstack gap-2">
-                    <button type="button" class="btn btn-primary">Submit Monthly Report</button>
+                    <button type="button" class="btn btn-primary">Create Form</button>
                     <button type="button" class="btn btn-success">View Reports</button>
-                    <button type="button" class="btn btn-info">Create Ticket</button>
+                    <button type="button" class="btn btn-info">Manage Categories</button>
                     <button type="button" class="btn btn-secondary">Manage Templates</button>
                 </div>
             </div><!-- end card-body -->
         </div><!-- end card -->
     </div>
     <!-- end col -->
+
+    <div class="col-xl-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="ri-shield-user-line me-2"></i>Your Access Information
+                </h4>
+            </div>
+            <div class="card-body">
+                <h6 class="text-muted mb-3">Authentication Claims:</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-borderless mb-0">
+                        <tbody>
+                            <tr>
+                                <td class="fw-medium">User:</td>
+                                <td>@User.Identity?.Name</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium">Email:</td>
+                                <td>@User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value</td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium">Scope:</td>
+                                <td><span class="badge bg-primary">@User.FindFirst("ScopeName")?.Value</span></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium">Scope Code:</td>
+                                <td><span class="badge bg-info">@User.FindFirst("ScopeCode")?.Value</span></td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium">Roles:</td>
+                                <td>
+                                    @foreach (var role in User.FindAll(System.Security.Claims.ClaimTypes.Role))
+                                    {
+                                        <span class="badge bg-success me-1">@role.Value</span>
+                                    }
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="fw-medium">Permissions:</td>
+                                <td>
+                                    @{
+                                        var permissions = User.FindAll("Permission").Take(5).ToList();
+                                        if (permissions.Any())
+                                        {
+                                            foreach (var perm in permissions)
+                                            {
+                                                <span class="badge bg-warning text-dark me-1 mb-1">@perm.Value</span>
+                                            }
+                                            var totalPerms = User.FindAll("Permission").Count();
+                                            if (totalPerms > 5)
+                                            {
+                                                <span class="badge bg-secondary">+@(totalPerms - 5) more</span>
+                                            }
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">No permissions</span>
+                                        }
+                                    }
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

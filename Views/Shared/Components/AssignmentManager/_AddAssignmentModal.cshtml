@@ -1,0 +1,352 @@
+@model FormReporting.Models.ViewModels.Components.AssignmentManagerViewModel
+
+@*
+    Add Assignment Modal - Allows searching and selecting users/roles/departments
+*@
+
+<div class="modal fade" id="@Model.AddModalId" tabindex="-1" aria-labelledby="@(Model.AddModalId)Label" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="@(Model.AddModalId)Label">
+                    <i class="ri-add-line align-middle me-1"></i>Add Assignment
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+
+                @* Assignment Type Selection *@
+                <div class="mb-4">
+                    <label class="form-label">Assignment Type</label>
+                    <div class="btn-group w-100" role="group" aria-label="Assignment type">
+                        @foreach (var type in Model.SupportedTypes)
+                        {
+                            <input type="radio"
+                                   class="btn-check"
+                                   name="assignmentType_@(Model.ManagerId)"
+                                   id="type_@(Model.ManagerId)_@(type.TypeCode)"
+                                   value="@type.TypeCode"
+                                   autocomplete="off"
+                                   @(type.IsDefault ? "checked" : "")>
+                            <label class="btn btn-outline-primary" for="type_@(Model.ManagerId)_@(type.TypeCode)">
+                                <i class="@type.Icon me-1"></i>@type.TypeLabel
+                            </label>
+                        }
+                    </div>
+                </div>
+
+                @* Level Selection (if applicable) *@
+                @if (Model.ShowLevels)
+                {
+                    <div class="mb-4">
+                        <label for="assignmentLevel_@(Model.ManagerId)" class="form-label">
+                            Approval Level <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="assignmentLevel_@(Model.ManagerId)">
+                            <option value="">Select level...</option>
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                <option value="@i">Level @i</option>
+                            }
+                        </select>
+                        <div class="form-text">Select the approval level/step for this assignment</div>
+                    </div>
+                }
+
+                @* Search and Select *@
+                <div class="mb-3">
+                    <label for="assignmentSearch_@(Model.ManagerId)" class="form-label">
+                        Search <span class="text-danger">*</span>
+                    </label>
+                    <div class="input-group">
+                        <span class="input-group-text">
+                            <i class="ri-search-line"></i>
+                        </span>
+                        <input type="text"
+                               class="form-control"
+                               id="assignmentSearch_@(Model.ManagerId)"
+                               placeholder="Type to search...">
+                    </div>
+                    <div class="form-text">Search by name, email, or code</div>
+                </div>
+
+                @* Search Results *@
+                <div id="searchResults_@(Model.ManagerId)" class="search-results" style="display: none;">
+                    <div class="list-group">
+                        @* Results will be populated via AJAX *@
+                    </div>
+                </div>
+
+                @* Selected Assignment Preview *@
+                <div id="selectedPreview_@(Model.ManagerId)" class="selected-preview mt-3" style="display: none;">
+                    <div class="alert alert-success mb-0">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <strong>Selected:</strong>
+                                <span id="selectedName_@(Model.ManagerId)"></span>
+                                <br>
+                                <small id="selectedDetails_@(Model.ManagerId)" class="text-muted"></small>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-secondary" id="clearSelection_@(Model.ManagerId)">
+                                <i class="ri-close-line"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                @* Mandatory Checkbox *@
+                <div class="form-check mt-3">
+                    <input class="form-check-input" type="checkbox" id="assignmentMandatory_@(Model.ManagerId)" checked>
+                    <label class="form-check-label" for="assignmentMandatory_@(Model.ManagerId)">
+                        Required / Mandatory
+                    </label>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="addAssignmentBtn_@(Model.ManagerId)" disabled>
+                    <i class="ri-add-line me-1"></i>Add Assignment
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .search-results {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #e9ecef;
+        border-radius: 0.25rem;
+        margin-top: 0.5rem;
+    }
+
+    .search-results .list-group-item {
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+
+    .search-results .list-group-item:hover {
+        background-color: #f8f9fa;
+    }
+
+    .search-results .list-group-item.active {
+        background-color: rgba(var(--vz-primary-rgb), 0.1);
+        border-color: var(--vz-primary);
+        color: inherit;
+    }
+</style>
+
+<script>
+    // Add Assignment Modal - JavaScript
+        $(document).ready(function() {
+            var managerId = '@Model.ManagerId';
+            var searchEndpoint = '@Model.SearchEndpoint';
+            var selectedItem = null;
+            var searchTimeout = null;
+
+            // Search input handler
+            $('#assignmentSearch_' + managerId).on('input', function() {
+                clearTimeout(searchTimeout);
+                var query = $(this).val().trim();
+                var assignmentType = $('input[name="assignmentType_' + managerId + '"]:checked').val();
+
+                if (query.length < 2) {
+                    $('#searchResults_' + managerId).hide().find('.list-group').empty();
+                    return;
+                }
+
+                // Debounce search
+                searchTimeout = setTimeout(function() {
+                    performSearch(query, assignmentType);
+                }, 300);
+            });
+
+            // Assignment type change handler
+            $('input[name="assignmentType_' + managerId + '"]').on('change', function() {
+                // Clear search and selection
+                $('#assignmentSearch_' + managerId).val('');
+                $('#searchResults_' + managerId).hide().find('.list-group').empty();
+                clearSelection();
+            });
+
+            // Clear selection handler
+            $('#clearSelection_' + managerId).on('click', function() {
+                clearSelection();
+            });
+
+            // Add assignment button handler
+            $('#addAssignmentBtn_' + managerId).on('click', function() {
+                if (!selectedItem) return;
+
+                var level = @(Model.ShowLevels ? "$('#assignmentLevel_' + managerId).val()" : "null");
+                var isMandatory = $('#assignmentMandatory_' + managerId).is(':checked');
+
+                // Add to table (in real implementation, would save to database)
+                addAssignmentToTable(selectedItem, level, isMandatory);
+
+                // Reset and close modal
+                resetModal();
+                $('#@Model.AddModalId').modal('hide');
+            });
+
+            // Perform AJAX search
+            function performSearch(query, assignmentType) {
+                // Check if searchEndpoint is empty or null
+                if (!searchEndpoint || searchEndpoint.trim() === '') {
+                    // Mock data for testing
+                    console.log('Using mock data for search:', query, assignmentType);
+                    showMockResults(query, assignmentType);
+                    return;
+                }
+
+                // Real AJAX implementation
+                console.log('Performing AJAX search to:', searchEndpoint);
+                $.ajax({
+                    url: searchEndpoint,
+                    type: 'GET',
+                    data: { query: query, type: assignmentType },
+                    success: function(results) {
+                        displayResults(results);
+                    },
+                    error: function() {
+                        console.error('AJAX search failed');
+                        alert('Failed to search. Please try again.');
+                    }
+                });
+            }
+
+            // Display search results
+            function displayResults(results) {
+                var $resultsContainer = $('#searchResults_' + managerId + ' .list-group');
+                $resultsContainer.empty();
+
+                if (results.length === 0) {
+                    $resultsContainer.append('<div class="list-group-item text-muted">No results found</div>');
+                } else {
+                    results.forEach(function(item) {
+                        var $item = $('<div class="list-group-item list-group-item-action">')
+                            .data('item', item)
+                            .html(`
+                                <div class="d-flex justify-content-between align-items-center">
+                                    <div>
+                                        <strong>${item.name}</strong>
+                                        ${item.details ? '<br><small class="text-muted">' + item.details + '</small>' : ''}
+                                    </div>
+                                    <i class="${item.icon || 'ri-arrow-right-line'}"></i>
+                                </div>
+                            `)
+                            .on('click', function() {
+                                selectItem($(this).data('item'));
+                            });
+                        $resultsContainer.append($item);
+                    });
+                }
+
+                $('#searchResults_' + managerId).show();
+            }
+
+            // Select an item
+            function selectItem(item) {
+                selectedItem = item;
+
+                // Update preview
+                $('#selectedName_' + managerId).text(item.name);
+                $('#selectedDetails_' + managerId).text(item.details || '');
+                $('#selectedPreview_' + managerId).show();
+
+                // Enable add button
+                $('#addAssignmentBtn_' + managerId).prop('disabled', false);
+
+                // Hide search results
+                $('#searchResults_' + managerId).hide();
+            }
+
+            // Clear selection
+            function clearSelection() {
+                selectedItem = null;
+                $('#selectedPreview_' + managerId).hide();
+                $('#addAssignmentBtn_' + managerId).prop('disabled', true);
+            }
+
+            // Add assignment to table
+            function addAssignmentToTable(item, level, isMandatory) {
+                var $table = $('.assignment-manager[data-manager-id="' + managerId + '"] table tbody');
+                var assignmentType = $('input[name="assignmentType_' + managerId + '"]:checked').val();
+
+                var $row = $('<tr>')
+                    .html(`
+                        @if (Model.ShowLevels) {
+                            <text>
+                            <td>
+                                <span class="badge bg-secondary">Level ${level}</span>
+                                ${isMandatory ? '<small class="text-danger ms-1" title="Required">*</small>' : ''}
+                            </td>
+                            </text>
+                        }
+                        <td>
+                            <span class="badge bg-primary-subtle text-primary">
+                                <i class="${item.icon || 'ri-user-line'} me-1"></i>${assignmentType}
+                            </span>
+                        </td>
+                        <td><strong>${item.name}</strong></td>
+                        <td><small class="text-muted">${item.details || ''}</small></td>
+                        @if (Model.ShowRemoveButton) {
+                            <text>
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm btn-ghost-danger remove-assignment-btn" title="Remove">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </td>
+                            </text>
+                        }
+                    `);
+
+                $table.append($row);
+
+                // Update count
+                var $badge = $('.assignment-manager[data-manager-id="' + managerId + '"] .badge.bg-primary-subtle');
+                if ($badge.length) {
+                    $badge.text(parseInt($badge.text()) + 1);
+                } else {
+                    $('.assignment-manager[data-manager-id="' + managerId + '"] h5').append(
+                        '<span class="badge bg-primary-subtle text-primary ms-2">1</span>'
+                    );
+                }
+            }
+
+            // Reset modal
+            function resetModal() {
+                $('#assignmentSearch_' + managerId).val('');
+                $('#searchResults_' + managerId).hide().find('.list-group').empty();
+                $('#assignmentLevel_' + managerId).val('');
+                $('#assignmentMandatory_' + managerId).prop('checked', true);
+                clearSelection();
+            }
+
+            // Mock results for testing (remove in production)
+            function showMockResults(query, assignmentType) {
+                var mockData = {
+                    'User': [
+                        { id: 1, name: 'John Doe', details: 'john.doe@ktda.com', icon: 'ri-user-line' },
+                        { id: 2, name: 'Jane Smith', details: 'jane.smith@ktda.com', icon: 'ri-user-line' }
+                    ],
+                    'Role': [
+                        { id: 1, name: 'ICT Manager', details: '5 users', icon: 'ri-shield-user-line' },
+                        { id: 2, name: 'Network Administrator', details: '3 users', icon: 'ri-shield-user-line' }
+                    ],
+                    'Department': [
+                        { id: 1, name: 'ICT Department', details: 'Nairobi HQ', icon: 'ri-building-line' },
+                        { id: 2, name: 'Operations', details: 'All Factories', icon: 'ri-building-line' }
+                    ]
+                };
+
+                var results = (mockData[assignmentType] || []).filter(function(item) {
+                    return item.name.toLowerCase().includes(query.toLowerCase());
+                });
+
+                displayResults(results);
+            }
+        });
+</script>

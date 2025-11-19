@@ -12,6 +12,9 @@
       class="@(Model.StyleType == FormStyleType.Inline ? "row row-cols-auto g-3 align-items-center" : "")"
       enctype="multipart/form-data">
 
+    @* Anti-forgery token for POST requests *@
+    @Html.AntiForgeryToken()
+
     @* Render all fields *@
     <div class="row">
         @foreach (var field in Model.Fields)

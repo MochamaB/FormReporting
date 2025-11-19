@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - KTDA Form Reporting</title>
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- KTDA Theme -->
+    <link rel="stylesheet" href="~/css/ktda-theme.css" asp-append-version="true" />
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .auth-container {
+            display: flex;
+            height: 100vh;
+            width: 100%;
+        }
+
+        /* Left Panel - Information */
+        .auth-left {
+            flex: 0 0 65%;
+            background: linear-gradient(135deg, #324721 0%, #1e2b14 100%);
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            color: white;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-left::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 175, 0, 0.1) 0%, transparent 70%);
+            animation: pulse 15s ease-in-out infinite;
+        }
+
+        @@keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.5; }
+            50% { transform: scale(1.1); opacity: 0.3; }
+        }
+
+        .auth-left-content {
+            position: relative;
+            z-index: 1;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header with logo and title */
+        .auth-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .auth-title {
+            flex: 1;
+        }
+
+        .auth-title h3 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            color: #ffffff;
+        }
+
+        .auth-title .subtitle {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 1.4;
+        }
+
+        .auth-logo {
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 175, 0, 0.2);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 175, 0, 0.3);
+            margin-left: 20px;
+        }
+
+        .auth-logo img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Slider Styles */
+        .slider-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            width: 100%;
+            position: relative;
+        }
+
+        .slider-wrapper {
+            overflow: hidden;
+            height: 100%;
+            display: flex;
+            align-items: center;
+        }
+
+        .slider-track {
+            display: flex;
+            transition: transform 0.5s ease-in-out;
+            height: 100%;
+            align-items: center;
+        }
+
+        .slide {
+            min-width: 100%;
+            text-align: center;
+            padding: 0 10px;
+        }
+
+        .slide-image {
+            width: 100%;
+            max-height: 450px;
+            margin: 0 auto 30px;
+            object-fit: contain;
+            filter: drop-shadow(0 10px 30px rgba(0, 0, 0, 0.2));
+        }
+
+        .slide-content h3 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 15px;
+            color: #ffffff;
+        }
+
+        .slide-content p {
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.85);
+            line-height: 1.6;
+        }
+
+        /* Slider Navigation */
+        .slider-nav {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .slider-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+
+        .slider-dot.active {
+            background: #ffaf00;
+            width: 40px;
+            border-radius: 6px;
+        }
+
+        .slider-dot:hover {
+            background: rgba(255, 175, 0, 0.6);
+        }
+
+        /* Right Panel - Form */
+        .auth-right {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 40px 60px;
+            background: #ffffff;
+            overflow-y: auto;
+        }
+
+        .auth-form-header {
+            text-align: center;
+            margin-bottom: 20px;
+            padding-bottom: 0px;
+            border-bottom: 1px solid #d2d3d4;;
+        }
+
+        .auth-form-header img {
+            margin-bottom: 15px;
+        }
+
+        .auth-form-header h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #324721;
+            margin-bottom: 8px;
+        }
+
+        .auth-form-header .subtitle {
+            font-size: 14px;
+            color: #6c757d;
+            line-height: 1.4;
+        }
+
+        .auth-form-container {
+            width: 100%;
+            max-width: 450px;
+            margin: 0 auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            
+        }
+
+        /* Page Heading Styles */
+        .page-heading {
+            padding-bottom: 15px;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .page-heading h3 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #324721;
+        }
+
+        .page-heading p {
+            font-size: 14px;
+            color: #6c757d;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #495057;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .input-group {
+            margin-bottom: 0;
+        }
+
+        .input-group-text {
+            background-color: #f8f9fa;
+            border: 1.5px solid #e0e0e0;
+            border-right: none;
+            border-radius: 10px 0 0 10px;
+            color: #6c757d;
+        }
+
+        .input-group .form-control {
+            border-left: none;
+            border-right: 1.5px solid #e0e0e0;
+            border-radius: 0;
+        }
+
+        .input-group .form-control:focus {
+            border-left: none;
+        }
+
+        .input-group .btn-outline-secondary {
+            border: 1.5px solid #e0e0e0;
+            border-left: none;
+            border-radius: 0 10px 10px 0;
+            color: #6c757d;
+            background-color: #f8f9fa;
+        }
+
+        .input-group .btn-outline-secondary:hover {
+            background-color: #e9ecef;
+            color: #324721;
+            border-color: #e0e0e0;
+        }
+
+        .input-group:focus-within .input-group-text,
+        .input-group:focus-within .form-control,
+        .input-group:focus-within .btn-outline-secondary {
+            border-color: #324721;
+        }
+
+        .form-control {
+            height: 50px;
+            border-radius: 10px;
+            border: 1.5px solid #e0e0e0;
+            padding: 12px 16px;
+            font-size: 15px;
+            transition: all 0.3s ease;
+        }
+
+        .form-control:focus {
+            border-color: #324721;
+            box-shadow: 0 0 0 0.2rem rgba(50, 71, 33, 0.15);
+        }
+
+        .btn-login {
+            height: 50px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 16px;
+            background: #324721;
+            border: none;
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        .btn-login:hover {
+            background: #1e2b14;
+            color:#ffaf00 !important;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(50, 71, 33, 0.3);
+        }
+
+        .form-check-input:checked {
+            background-color: #324721;
+            border-color: #324721;
+        }
+
+        .forgot-password {
+            color: #324721;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .forgot-password:hover {
+            color: #ffaf00;
+            text-decoration: underline;
+        }
+
+        .alert {
+            border-radius: 10px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+        }
+
+        /* Responsive */
+        @@media (max-width: 992px) {
+            .auth-left {
+                display: none;
+            }
+            
+            .auth-right {
+                flex: 1;
+            }
+        }
+
+        @@media (max-width: 576px) {
+            .auth-right {
+                padding: 30px 20px;
+            }
+
+            .auth-form-header h2 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <!-- Left Panel - Information (Hardcoded) -->
+        <div class="auth-left">
+            <div class="auth-left-content">
+                <!-- Header with logo and title -->
+                
+
+                <!-- Slider -->
+                <div class="slider-container">
+                    <div class="slider-wrapper">
+                        <div class="slider-track">
+                            <!-- Slide 1: Dynamic Forms -->
+                            <div class="slide">
+                                <img src="~/assets/images/svg/dynamicforms.svg" 
+                                     alt="Dynamic Forms" 
+                                     class="slide-image"
+                                     onerror="this.src='https://img.freepik.com/free-vector/forms-concept-illustration_114360-4957.jpg'">
+                                <div class="slide-content">
+                                    <h3>Dynamic Forms</h3>
+                                    <p>Create and manage custom forms with ease. Build flexible forms with various field types and validation rules.</p>
+                                </div>
+                            </div>
+
+                            <!-- Slide 2: Real-time Reports -->
+                            <div class="slide">
+                                <img src="~/assets/images/svg/realtimereports.svg" 
+                                     alt="Real-time Reports" 
+                                     class="slide-image"
+                                     onerror="this.src='https://img.freepik.com/free-vector/dashboard-concept-illustration_114360-1492.jpg'">
+                                <div class="slide-content">
+                                    <h3>Real-time Reports</h3>
+                                    <p>Generate insightful reports instantly. Visualize your data with interactive charts and export capabilities.</p>
+                                </div>
+                            </div>
+
+                            <!-- Slide 3: Multi-tenant Support -->
+                            <div class="slide">
+                                <img src="~/assets/images/svg/multitenant.svg" 
+                                     alt="Multi-tenant Support" 
+                                     class="slide-image"
+                                     onerror="this.src='https://img.freepik.com/free-vector/team-concept-illustration_114360-2581.jpg'">
+                                <div class="slide-content">
+                                    <h3>Multi-tenant Support</h3>
+                                    <p>Manage data across multiple factories. Secure tenant isolation with role-based access control.</p>
+                                </div>
+                            </div>
+
+                            <!-- Slide 4: Alerts & Notifications -->
+                            <div class="slide">
+                                <img src="~/assets/images/svg/notifications.svg" 
+                                     alt="Alerts & Notifications" 
+                                     class="slide-image"
+                                     onerror="this.src='https://img.freepik.com/free-vector/privacy-policy-concept-illustration_114360-7853.jpg'">
+                                <div class="slide-content">
+                                    <h3>Alerts & Notifications</h3>
+                                    <p>Receive instant alerts and notifications for critical events and updates.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Slider Navigation Dots -->
+                    <div class="slider-nav">
+                        <div class="slider-dot active"></div>
+                        <div class="slider-dot"></div>
+                        <div class="slider-dot"></div>
+                        <div class="slider-dot"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Form -->
+        <div class="auth-right">
+            <div class="auth-form-header">
+                <img src="~/assets/images/ktda-login-logo.gif" alt="" height="100">
+                <h2>Form Reporting System</h2>
+                <p class="subtitle">
+                    To streamline data collection and reporting processes in the organization
+                </p>
+            </div>
+            <div class="auth-form-container">
+                @RenderBody()
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Slider Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sliderTrack = document.querySelector('.slider-track');
+            const slides = document.querySelectorAll('.slide');
+            const dots = document.querySelectorAll('.slider-dot');
+            
+            if (!sliderTrack || slides.length === 0) return;
+            
+            let currentSlide = 0;
+            const totalSlides = slides.length;
+            
+            function goToSlide(index) {
+                currentSlide = index;
+                sliderTrack.style.transform = `translateX(-${currentSlide * 100}%)`;
+                
+                // Update dots
+                dots.forEach((dot, i) => {
+                    dot.classList.toggle('active', i === currentSlide);
+                });
+            }
+            
+            function nextSlide() {
+                currentSlide = (currentSlide + 1) % totalSlides;
+                goToSlide(currentSlide);
+            }
+            
+            // Dot navigation
+            dots.forEach((dot, index) => {
+                dot.addEventListener('click', () => goToSlide(index));
+            });
+            
+            // Auto-advance every 5 seconds
+            setInterval(nextSlide, 5000);
+            
+            // Initialize first slide
+            goToSlide(0);
+        });
+    </script>
+    
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

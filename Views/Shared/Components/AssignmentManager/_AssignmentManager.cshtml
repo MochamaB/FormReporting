@@ -1,0 +1,206 @@
+@model FormReporting.Models.ViewModels.Components.AssignmentManagerViewModel
+
+@*
+    AssignmentManager Component - Reusable User/Role/Department Assignment UI
+
+    Features:
+    - Display current assignments in organized table
+    - Add new assignments via modal
+    - Remove assignments
+    - Support for multiple assignment types (User, Role, Department, UserGroup, Tenant)
+    - Optional level/step support for workflows
+    - Collapsible section support
+
+    Usage in controllers:
+    var assignmentManager = new AssignmentManagerConfig
+    {
+        ManagerId = "approval-workflow",
+        ContextLabel = "Approval Levels"
+    }
+    .ForApprovalWorkflow()
+    .WithAssignment("User", 1, "John Doe", "john@example.com", level: 1)
+    .BuildAssignmentManager();
+
+    ViewData["AssignmentManager"] = assignmentManager;
+*@
+
+<div class="@Model.ContainerCssClasses" data-manager-id="@Model.ManagerId">
+
+    @* Header *@
+    <div class="d-flex justify-content-between align-items-center mb-3" style="border-bottom: 1px solid #e9ebec;">
+        <div>
+            <h5 class="mb-1">
+                @if (Model.IsCollapsible)
+                {
+                    <a data-bs-toggle="collapse" href="#@Model.CollapseId" role="button"
+                       aria-expanded="@(!Model.InitiallyCollapsed)" aria-controls="@Model.CollapseId">
+                        <i class="ri-arrow-down-s-line collapse-icon"></i>
+                        @Model.ContextLabel
+                    </a>
+                }
+                else
+                {
+                    @Model.ContextLabel
+                }
+
+                @if (Model.HasAssignments)
+                {
+                    <span class="badge bg-primary-subtle text-primary ms-2">@Model.AssignmentCount</span>
+                }
+            </h5>
+
+            @if (!string.IsNullOrWhiteSpace(Model.HelpText))
+            {
+                <small class="text-muted">@Model.HelpText</small>
+            }
+        </div>
+
+        @if (Model.ShowAddButton)
+        {
+            <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#@Model.AddModalId">
+                <i class="ri-add-line align-middle me-1"></i>Add
+            </button>
+        }
+    </div>
+
+    @* Collapsible Content *@
+    <div class="@(Model.IsCollapsible ? "collapse" : "") @(Model.IsCollapsible && !Model.InitiallyCollapsed ? "show" : "")"
+         id="@(Model.IsCollapsible ? Model.CollapseId : "")">
+
+        @if (Model.HasAssignments)
+        {
+            @* Assignments Table *@
+            <div class="table-responsive">
+                <table class="table table-sm table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            @if (Model.ShowLevels)
+                            {
+                                <th style="width: 100px;">Level</th>
+                            }
+                            <th style="width: 120px;">Type</th>
+                            <th>Name</th>
+                            <th>Details</th>
+                            @if (Model.ShowRemoveButton)
+                            {
+                                <th style="width: 80px;" class="text-center">Actions</th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var assignment in Model.CurrentAssignments)
+                        {
+                            <tr data-assignment-id="@assignment.AssignmentId">
+                                @if (Model.ShowLevels)
+                                {
+                                    <td>
+                                        <span class="badge bg-secondary">@assignment.LevelLabel</span>
+                                        @if (assignment.IsMandatory)
+                                        {
+                                            <small class="text-danger ms-1" title="Required">*</small>
+                                        }
+                                    </td>
+                                }
+                                <td>
+                                    <span class="badge bg-@assignment.TypeBadgeColor-subtle text-@assignment.TypeBadgeColor">
+                                        <i class="@assignment.TypeIcon me-1"></i>@assignment.AssignmentType
+                                    </span>
+                                </td>
+                                <td>
+                                    <strong>@assignment.TargetName</strong>
+                                </td>
+                                <td>
+                                    <small class="text-muted">@assignment.TargetDetails</small>
+                                </td>
+                                @if (Model.ShowRemoveButton)
+                                {
+                                    <td class="text-center">
+                                        <button type="button"
+                                                class="btn btn-sm btn-ghost-danger remove-assignment-btn"
+                                                data-assignment-id="@assignment.AssignmentId"
+                                                data-assignment-type="@assignment.AssignmentType"
+                                                data-target-id="@assignment.TargetId"
+                                                title="Remove">
+                                            <i class="ri-delete-bin-line"></i>
+                                        </button>
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+        else
+        {
+            @* Empty State *@
+            <div class="text-center py-4">
+                <i class="ri-user-add-line" style="font-size: 3rem; color: #ccc;"></i>
+                <p class="text-muted mt-2 mb-0">No assignments yet</p>
+                <small class="text-muted">Click "Add" to assign users, roles, or departments</small>
+            </div>
+        }
+
+    </div>
+
+    @* Add Assignment Modal *@
+    <partial name="~/Views/Shared/Components/AssignmentManager/_AddAssignmentModal.cshtml" model="Model" />
+
+</div>
+
+<style>
+    .assignment-manager .collapse-icon {
+        transition: transform 0.2s;
+    }
+
+    .assignment-manager [data-bs-toggle="collapse"][aria-expanded="true"] .collapse-icon {
+        transform: rotate(180deg);
+    }
+
+    .assignment-manager .table td {
+        vertical-align: middle;
+    }
+
+    .assignment-manager .btn-ghost-danger {
+        color: var(--vz-danger);
+        background-color: transparent;
+        border-color: transparent;
+    }
+
+    .assignment-manager .btn-ghost-danger:hover {
+        color: #fff;
+        background-color: var(--vz-danger);
+        border-color: var(--vz-danger);
+    }
+</style>
+
+<script>
+    // Assignment Manager - Remove assignment handler
+    $(document).ready(function() {
+        // Remove assignment handler
+        $(document).on('click', '.remove-assignment-btn', function() {
+            if (!confirm('Are you sure you want to remove this assignment?')) {
+                return;
+            }
+
+            var $btn = $(this);
+            var $row = $btn.closest('tr');
+            var assignmentId = $btn.data('assignment-id');
+
+            // If has database ID, would call AJAX to delete
+            // For now, just remove from DOM
+            $row.fadeOut(300, function() {
+                $(this).remove();
+
+                // Update count badge
+                var $manager = $btn.closest('.assignment-manager');
+                var remainingCount = $manager.find('tbody tr').length;
+                $manager.find('.badge.bg-primary-subtle').text(remainingCount);
+
+                if (remainingCount === 0) {
+                    $manager.find('.badge.bg-primary-subtle').remove();
+                }
+            });
+        });
+    });
+</script>

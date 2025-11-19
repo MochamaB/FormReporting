@@ -116,7 +116,14 @@ namespace FormReporting.Models.Entities.Identity
         public string? EmployeeNumber { get; set; }
 
         /// <summary>
-        /// Department ID
+        /// Primary/Home Tenant ID (required)
+        /// This is the user's base tenant for scope-based access
+        /// </summary>
+        [Required]
+        public int TenantId { get; set; }
+
+        /// <summary>
+        /// Department ID (optional - not all users are in specific departments)
         /// </summary>
         public int? DepartmentId { get; set; }
 
@@ -132,7 +139,13 @@ namespace FormReporting.Models.Entities.Identity
 
         // Navigation properties
         /// <summary>
-        /// Department this user belongs to
+        /// Primary/Home Tenant this user belongs to
+        /// </summary>
+        [ForeignKey(nameof(TenantId))]
+        public virtual Tenant PrimaryTenant { get; set; } = null!;
+
+        /// <summary>
+        /// Department this user belongs to (optional)
         /// </summary>
         [ForeignKey(nameof(DepartmentId))]
         public virtual Department? Department { get; set; }
@@ -143,7 +156,8 @@ namespace FormReporting.Models.Entities.Identity
         public virtual ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
 
         /// <summary>
-        /// Tenant access exceptions for this user
+        /// Tenant access exceptions/additions for this user
+        /// Grants access to tenants beyond their primary scope (projects, audits, etc.)
         /// </summary>
         public virtual ICollection<UserTenantAccess> TenantAccesses { get; set; } = new List<UserTenantAccess>();
 

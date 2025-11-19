@@ -1,0 +1,118 @@
+@model FormReporting.Models.ViewModels.Identity.LoginViewModel
+@{
+    ViewData["Title"] = "Login";
+    Layout = "~/Views/Shared/_AuthLayout.cshtml";
+}
+
+<div class="page-heading mb-4">
+    <h3 class="mb-1">Login</h3>
+    <p class="text-muted mb-0">Sign in to access your dashboard</p>
+</div>
+
+@if (!string.IsNullOrEmpty(ViewData["ErrorMessage"] as string))
+{
+    <div class="alert alert-danger d-flex align-items-center" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>
+        <span>@ViewData["ErrorMessage"]</span>
+    </div>
+}
+
+@if (ViewData.ModelState.ErrorCount > 0)
+{
+    <div class="alert alert-danger" role="alert">
+        <div class="d-flex align-items-start">
+            <i class="fas fa-exclamation-circle me-2 mt-1"></i>
+            <div class="flex-grow-1">
+                @foreach (var error in ViewContext.ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    <div>@error.ErrorMessage</div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+<form asp-action="Login" asp-controller="Account" method="post">
+    <input type="hidden" asp-for="@ViewData["ReturnUrl"]" />
+    
+    <div class="mb-3">
+        <label asp-for="UserName" class="form-label">Username or Email</label>
+        <div class="input-group">
+            <span class="input-group-text">
+                <i class="fas fa-user"></i>
+            </span>
+            <input asp-for="UserName" 
+                   class="form-control" 
+                   placeholder="Enter your username or email"
+                   autofocus />
+        </div>
+        <span asp-validation-for="UserName" class="text-danger small"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Password" class="form-label">Password</label>
+        <div class="input-group">
+            <span class="input-group-text">
+                <i class="fas fa-lock"></i>
+            </span>
+            <input asp-for="Password" 
+                   type="password" 
+                   class="form-control" 
+                   id="passwordInput"
+                   placeholder="Enter your password" />
+            <button class="btn btn-outline-secondary" type="button" id="togglePassword">
+                <i class="fas fa-eye" id="toggleIcon"></i>
+            </button>
+        </div>
+        <span asp-validation-for="Password" class="text-danger small"></span>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="form-check">
+            <input asp-for="RememberMe" 
+                   class="form-check-input" 
+                   type="checkbox" 
+                   id="rememberMe">
+            <label class="form-check-label" for="rememberMe">
+                Remember me
+            </label>
+        </div>
+        <a asp-action="ForgotPassword" asp-controller="Password" class="forgot-password">
+            Forgot Password?
+        </a>
+    </div>
+
+    <button type="submit" class="btn btn-login w-100">
+        <i class="fas fa-sign-in-alt me-2"></i>
+        Sign In
+    </button>
+</form>
+
+<div class="text-center mt-4">
+    <p class="text-muted small mb-0">
+        <i class="fas fa-info-circle me-1"></i>
+        Need access? Contact your system administrator
+    </p>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    
+    <script>
+        // Password visibility toggle
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('passwordInput');
+            const toggleIcon = document.getElementById('toggleIcon');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                toggleIcon.classList.remove('fa-eye');
+                toggleIcon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                toggleIcon.classList.remove('fa-eye-slash');
+                toggleIcon.classList.add('fa-eye');
+            }
+        });
+    </script>
+}

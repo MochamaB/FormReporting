@@ -1,0 +1,183 @@
+@model FormReporting.Models.ViewModels.Forms.FormCategoryEditViewModel
+@using FormReporting.Extensions
+@using FormReporting.Models.ViewModels.Components
+
+@{
+    ViewData["Title"] = "Edit Form Category";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="row">
+    <div class="col-lg-8">
+        @{
+            // Configure the form using SimpleForms
+            var formConfig = new SimpleFormConfig
+            {
+                FormId = "editFormCategoryForm",
+                FormAction = "/Forms/FormCategories/Edit",
+                FormMethod = "POST",
+                CardTitle = "Edit Form Category",
+                CardSubtitle = "Update the details for this form category",
+                StyleType = FormStyleType.Standard,
+                CancelButtonUrl = "/Forms/FormCategories",
+                SubmitButtonText = "Update Category",
+                WrapInCard = true,
+                ShowResetButton = false
+            };
+
+            // Add hidden field for CategoryId
+            formConfig.WithHiddenField("CategoryId", Model?.CategoryId);
+
+            // Add form fields
+            formConfig
+                .WithTextField("CategoryName", "Category Name",
+                    value: Model?.CategoryName,
+                    isRequired: true,
+                    placeholder: "e.g., Safety Forms",
+                    helpText: "Descriptive name for the category (max 100 characters)",
+                    columnClass: "col-md-6")
+                .WithTextField("CategoryCode", "Category Code",
+                    value: Model?.CategoryCode,
+                    isRequired: true,
+                    placeholder: "e.g., SAFETY",
+                    helpText: "Unique code identifier (max 50 characters)",
+                    columnClass: "col-md-6")
+                .WithTextAreaField("Description", "Description",
+                    value: Model?.Description,
+                    rows: 4,
+                    isRequired: false,
+                    placeholder: "Enter a brief description of this category",
+                    helpText: "Optional description (max 500 characters)")
+                .WithTextField("IconClass", "Icon Class",
+                    value: Model?.IconClass,
+                    isRequired: false,
+                    placeholder: "e.g., ri-file-list-line",
+                    helpText: "Remix Icon class name for visual representation",
+                    columnClass: "col-md-6")
+                .WithTextField("Color", "Color (Hex)",
+                    value: Model?.Color,
+                    isRequired: false,
+                    placeholder: "e.g., #3B82F6",
+                    helpText: "Hex color code for category badge (e.g., #FF5733)",
+                    columnClass: "col-md-6")
+                .WithNumberField("DisplayOrder", "Display Order",
+                    value: Model?.DisplayOrder ?? 0,
+                    min: 0,
+                    max: 9999,
+                    step: 1,
+                    isRequired: true,
+                    placeholder: "0",
+                    helpText: "Order in which this category appears in lists",
+                    columnClass: "col-md-6")
+                .WithCheckboxField("IsActive", "Is Active",
+                    isChecked: Model?.IsActive ?? true,
+                    helpText: "Check to make this category available for use");
+
+            // Build the form
+            var form = formConfig.BuildForm();
+        }
+
+        @* Render the form using SimpleForms partial *@
+        <partial name="~/Views/Shared/Components/SimpleForms/_SimpleForm.cshtml" model="form" />
+    </div>
+
+    <div class="col-lg-4">
+        @* Current Preview Card *@
+        @if (Model != null)
+        {
+            <div class="card mb-3">
+                <div class="card-header bg-light">
+                    <h5 class="card-title mb-0"><i class="ri-eye-line me-1"></i> Current Preview</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Icon Preview</label>
+                        <div>
+                            @if (!string.IsNullOrEmpty(Model.IconClass))
+                            {
+                                <i class="@Model.IconClass" style="font-size: 2rem;"></i>
+                            }
+                            else
+                            {
+                                <i class="ri-folder-line text-muted" style="font-size: 2rem;"></i>
+                                <small class="text-muted d-block">No icon set</small>
+                            }
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted small">Color Preview</label>
+                        <div>
+                            @if (!string.IsNullOrEmpty(Model.Color))
+                            {
+                                <span class="badge" style="background-color: @Model.Color; font-size: 1rem; padding: 0.5rem 1rem;">@Model.Color</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-secondary">No color set</span>
+                            }
+                        </div>
+                    </div>
+                    <div>
+                        <label class="form-label text-muted small">Status</label>
+                        <div>
+                            @if (Model.IsActive)
+                            {
+                                <span class="badge bg-success">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge bg-danger">Inactive</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+
+        @* Help Card *@
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0"><i class="ri-information-line me-1"></i> Help</h5>
+            </div>
+            <div class="card-body">
+                <h6>Editing a Form Category</h6>
+                <p class="text-muted">Update the category details. Changes will affect all associated form templates.</p>
+
+                <h6 class="mt-3">Field Requirements</h6>
+                <ul class="text-muted small">
+                    <li><strong>Category Name:</strong> Required, max 100 characters</li>
+                    <li><strong>Category Code:</strong> Required, unique, max 50 characters</li>
+                    <li><strong>Description:</strong> Optional, max 500 characters</li>
+                    <li><strong>Icon Class:</strong> Optional, use Remix Icon classes</li>
+                    <li><strong>Color:</strong> Optional, hex format (#RRGGBB)</li>
+                    <li><strong>Display Order:</strong> Required, 0-9999</li>
+                </ul>
+
+                <h6 class="mt-3">Icon Examples</h6>
+                <div class="text-muted small">
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="ri-file-list-line me-2"></i>
+                        <code>ri-file-list-line</code>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="ri-shield-check-line me-2"></i>
+                        <code>ri-shield-check-line</code>
+                    </div>
+                    <div class="d-flex align-items-center mb-2">
+                        <i class="ri-tools-line me-2"></i>
+                        <code>ri-tools-line</code>
+                    </div>
+                </div>
+
+                <div class="alert alert-warning mt-3">
+                    <i class="ri-alert-line me-1"></i>
+                    <strong>Note:</strong> Deactivating this category will hide it from form template creation.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

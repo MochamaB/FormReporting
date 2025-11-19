@@ -1,15 +1,56 @@
 using FormReporting.Data;
 using FormReporting.Data.Seeders;
+using FormReporting.Models.Entities.Identity;
+using FormReporting.Services.Forms;
+using FormReporting.Services.Identity;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddHttpContextAccessor();
 
 // Add DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// Configure Cookie Authentication (not using ASP.NET Core Identity to preserve existing User model)
+builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme)
+    .AddCookie(options =>
+    {
+        options.Cookie.HttpOnly = true;
+        options.Cookie.SecurePolicy = CookieSecurePolicy.Always;
+        options.Cookie.SameSite = SameSiteMode.Strict;
+        options.ExpireTimeSpan = TimeSpan.FromMinutes(30);
+        options.SlidingExpiration = true;
+        options.LoginPath = "/Account/Login";
+        options.LogoutPath = "/Account/Logout";
+        options.AccessDeniedPath = "/Account/AccessDenied";
+    });
+
+// Add password hasher for secure password storage
+builder.Services.AddScoped<IPasswordHasher<User>, PasswordHasher<User>>();
+
+// Add data protection for token generation (password reset tokens)
+builder.Services.AddDataProtection();
+
+// Register application services
+// Forms services
+builder.Services.AddScoped<IFormCategoryService, FormCategoryService>();
+builder.Services.AddScoped<IFormTemplateService, FormTemplateService>();
+
+// Identity services
+builder.Services.AddScoped<IScopeService, ScopeService>();
+builder.Services.AddScoped<IUserService, UserService>();
+
+// Register authentication services
+builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
+builder.Services.AddScoped<IClaimsService, ClaimsService>();
+builder.Services.AddScoped<IScopeService, ScopeService>();
+// TODO: Register remaining services (Step 6)
+// builder.Services.AddScoped<INotificationService, NotificationService>();
 
 var app = builder.Build();
 
@@ -24,16 +65,19 @@ using (var scope = app.Services.CreateScope())
         // IMPORTANT: Seed in order of dependencies
         
         // 1. Seed scope levels (required before roles)
-        ScopeLevelSeeder.SeedScopeLevels(context);
+        // ScopeLevelSeeder.SeedScopeLevels(context);
         
         // 2. Seed roles (depends on scope levels)
-        RoleSeeder.SeedRoles(context);
+        // RoleSeeder.SeedRoles(context);
         
         // 3. Seed organizational structure
         // RegionSeeder.SeedRegions(context);
         // TenantSeeder.SeedTenants(context);
         
-        // 4. Seed menu system
+        // 4. Seed users (depends on roles, regions, and tenants)
+       // UserSeeder.SeedUsers(context);
+        
+        // 5. Seed menu system
         // MenuSectionSeeder.SeedMenuSections(context);
         // ModuleSeeder.SeedModules(context);
         // MenuItemSeeder.SeedMenuItems(context);
@@ -56,14 +100,23 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
+// Authentication & Authorization middleware (must be in this order)
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapStaticAssets();
 
+// Map controllers (includes attribute-routed controllers like AccountController)
+app.MapControllers();
+
+// Conventional routing for other controllers
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}")
     .WithStaticAssets();
+
+// Root URL redirect to login
+app.MapGet("/", () => Results.Redirect("/Account/Login"));
 
 
 app.Run();
