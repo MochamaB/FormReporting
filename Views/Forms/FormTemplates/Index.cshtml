@@ -278,31 +278,130 @@
     // ============================================================================
     RowActionsViewModel BuildRowActions(FormTemplateViewModel template)
     {
-        var actions = new List<RowActionConfig>
+        var actions = new List<RowActionConfig>();
+
+        // ========================================================================
+        // DRAFT STATUS: Resume Editing (Continue where they left off)
+        // ========================================================================
+        if (template.PublishStatus == "Draft")
         {
-            // View Preview - always available
-            new RowActionConfig
+            // PRIMARY ACTION: Continue Editing (Resume Draft)
+            actions.Add(new RowActionConfig
+            {
+                Text = "Continue Editing",
+                IconClass = "ri-play-line",
+                ColorClass = "primary",
+                UrlTemplate = Url.Action("Create", "FormTemplates", new { id = template.TemplateId }) ?? $"/FormTemplates/Create?id={template.TemplateId}"
+            });
+
+            // View Preview
+            actions.Add(new RowActionConfig
             {
                 Text = "View Preview",
                 IconClass = "ri-eye-line",
-                ColorClass = "primary",
+                ColorClass = "secondary",
                 UrlTemplate = Url.Action("Preview", "FormTemplates", new { id = template.TemplateId }) ?? $"/FormTemplates/Preview/{template.TemplateId}"
-            }
-        };
+            });
 
-        // Edit - only for Draft status
-        if (template.PublishStatus == "Draft")
-        {
+            // Delete Draft
             actions.Add(new RowActionConfig
             {
-                Text = "Edit",
-                IconClass = "ri-pencil-line",
-                ColorClass = "success",
-                UrlTemplate = Url.Action("Edit", "FormTemplates", new { id = template.TemplateId }) ?? $"/FormTemplates/Edit/{template.TemplateId}"
+                Text = "Delete Draft",
+                IconClass = "ri-delete-bin-line",
+                ColorClass = "danger",
+                RequiresConfirmation = true,
+                ConfirmationMessage = $"Are you sure you want to delete draft '{template.TemplateName}'? This action cannot be undone."
             });
         }
+        // ========================================================================
+        // PUBLISHED STATUS: Edit (Create New Version)
+        // ========================================================================
+        else if (template.PublishStatus == "Published")
+        {
+            // PRIMARY ACTION: Edit (Create New Version)
+            actions.Add(new RowActionConfig
+            {
+                Text = $"Edit (Create v{template.Version + 1})",
+                IconClass = "ri-git-branch-line",
+                ColorClass = "warning",
+                UrlTemplate = Url.Action("Edit", "FormTemplates", new { id = template.TemplateId }) ?? $"/FormTemplates/Edit/{template.TemplateId}"
+            });
 
-        // Clone - always available
+            // View Preview
+            actions.Add(new RowActionConfig
+            {
+                Text = "View Template",
+                IconClass = "ri-eye-line",
+                ColorClass = "primary",
+                UrlTemplate = Url.Action("Preview", "FormTemplates", new { id = template.TemplateId }) ?? $"/FormTemplates/Preview/{template.TemplateId}"
+            });
+
+            // View Assignments
+            actions.Add(new RowActionConfig
+            {
+                Text = "View Assignments",
+                IconClass = "ri-user-follow-line",
+                ColorClass = "info",
+                UrlTemplate = Url.Action("Assignments", "FormTemplates", new { id = template.TemplateId }) ?? $"/FormTemplates/Assignments/{template.TemplateId}"
+            });
+
+            // View Submissions
+            actions.Add(new RowActionConfig
+            {
+                Text = "View Submissions",
+                IconClass = "ri-file-list-3-line",
+                ColorClass = "success",
+                UrlTemplate = Url.Action("Submissions", "FormSubmissions", new { templateId = template.TemplateId }) ?? $"/FormSubmissions?templateId={template.TemplateId}"
+            });
+
+            // Archive
+            actions.Add(new RowActionConfig
+            {
+                Text = "Archive",
+                IconClass = "ri-archive-line",
+                ColorClass = "danger",
+                RequiresConfirmation = true,
+                ConfirmationMessage = $"Are you sure you want to archive '{template.TemplateName}'? Archived templates cannot be assigned to new users."
+            });
+        }
+        // ========================================================================
+        // ARCHIVED/DEPRECATED STATUS
+        // ========================================================================
+        else if (template.PublishStatus == "Archived" || template.PublishStatus == "Deprecated")
+        {
+            // View Preview
+            actions.Add(new RowActionConfig
+            {
+                Text = "View Template",
+                IconClass = "ri-eye-line",
+                ColorClass = "secondary",
+                UrlTemplate = Url.Action("Preview", "FormTemplates", new { id = template.TemplateId }) ?? $"/FormTemplates/Preview/{template.TemplateId}"
+            });
+
+            // Create New Version (from archived)
+            actions.Add(new RowActionConfig
+            {
+                Text = "Create New Version",
+                IconClass = "ri-git-branch-line",
+                ColorClass = "primary",
+                UrlTemplate = Url.Action("Edit", "FormTemplates", new { id = template.TemplateId }) ?? $"/FormTemplates/Edit/{template.TemplateId}"
+            });
+
+            // Restore (if archived)
+            if (template.PublishStatus == "Archived")
+            {
+                actions.Add(new RowActionConfig
+                {
+                    Text = "Restore",
+                    IconClass = "ri-restart-line",
+                    ColorClass = "success",
+                    RequiresConfirmation = true,
+                    ConfirmationMessage = $"Restore '{template.TemplateName}' to published status?"
+                });
+            }
+        }
+
+        // Clone - available for all statuses
         actions.Add(new RowActionConfig
         {
             Text = "Clone",
@@ -310,39 +409,6 @@
             ColorClass = "info",
             UrlTemplate = Url.Action("Clone", "FormTemplates", new { id = template.TemplateId }) ?? $"/FormTemplates/Clone/{template.TemplateId}"
         });
-
-        // Archive - only for Published status
-        if (template.PublishStatus == "Published")
-        {
-            actions.Add(new RowActionConfig
-            {
-                Text = "Archive",
-                IconClass = "ri-archive-line",
-                ColorClass = "warning",
-                RequiresConfirmation = true,
-                ConfirmationMessage = $"Are you sure you want to archive '{template.TemplateName}'? Archived templates cannot be assigned to new users."
-            });
-
-            actions.Add(new RowActionConfig
-            {
-                Text = "View Assignments",
-                IconClass = "ri-user-follow-line",
-                ColorClass = "secondary",
-                UrlTemplate = Url.Action("Assignments", "FormTemplates", new { id = template.TemplateId }) ?? $"/FormTemplates/Assignments/{template.TemplateId}"
-            });
-        }
-
-        // Create New Version - for Published or Deprecated
-        if (template.PublishStatus == "Published" || template.PublishStatus == "Deprecated")
-        {
-            actions.Add(new RowActionConfig
-            {
-                Text = "Create New Version",
-                IconClass = "ri-git-branch-line",
-                ColorClass = "primary",
-                UrlTemplate = Url.Action("CreateVersion", "FormTemplates", new { id = template.TemplateId }) ?? $"/FormTemplates/CreateVersion/{template.TemplateId}"
-            });
-        }
 
         var config = new RowActionsConfig
         {
@@ -472,7 +538,28 @@
                                             <span class="text-muted fw-medium">@rowNumber</span>
                                         </td>
                                         <td>
-                                            <div class="fw-medium">@item.TemplateName</div>
+                                            <div class="fw-medium mb-1">@item.TemplateName</div>
+                                            @* Show progress for drafts *@
+                                            @if (item.PublishStatus == "Draft")
+                                            {
+                                                <div class="mt-2">
+                                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                                        <span class="badge bg-info-subtle text-info">
+                                                            <i class="ri-draft-line"></i> In Progress
+                                                        </span>
+                                                        @* TODO: Add completion percentage from controller *@
+                                                        @* <small class="text-muted">45% Complete</small> *@
+                                                    </div>
+                                                </div>
+                                            }
+                                            @* Show version badge for published *@
+                                            @if (item.PublishStatus == "Published")
+                                            {
+                                                <small class="text-muted">
+                                                    <i class="ri-checkbox-circle-line text-success"></i> 
+                                                    Live Template
+                                                </small>
+                                            }
                                         </td>
                                         <td>
                                             <code class="text-primary">@item.TemplateCode</code>

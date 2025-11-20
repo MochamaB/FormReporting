@@ -40,5 +40,13 @@ namespace FormReporting.Services.Identity
         /// <param name="targetUserId">Target user ID</param>
         /// <returns>True if accessible, false otherwise</returns>
         Task<bool> CanAccessUserAsync(ClaimsPrincipal currentUser, int targetUserId);
+
+        /// <summary>
+        /// Get accessible users grouped by tenant (for bulk selection UIs)
+        /// </summary>
+        /// <param name="currentUser">Current user's claims principal</param>
+        /// <param name="searchQuery">Optional search query</param>
+        /// <returns>Users grouped by tenant with metadata</returns>
+        Task<List<object>> GetUsersGroupedByTenantAsync(ClaimsPrincipal currentUser, string? searchQuery = null);
     }
 }

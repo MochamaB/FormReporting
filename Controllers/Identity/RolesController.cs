@@ -172,29 +172,9 @@ namespace FormReporting.Controllers.Identity
             ViewBag.ExistingRoles = existingRoles;
 
             // ═══════════════════════════════════════════════════════════
-            // STEP 3 DATA: Load Scoped Users (grouped by tenant)
+            // STEP 3 DATA: Users loaded via AJAX (see GetUsersGroupedByTenant endpoint)
             // ═══════════════════════════════════════════════════════════
-            var scopedUsers = await _userService.GetAccessibleUsersAsync(User);
-
-            // Group users by tenant for the bulk selection UI
-            var usersByTenant = scopedUsers
-                .GroupBy(u => new { u.TenantId, TenantName = u.PrimaryTenant?.TenantName ?? "No Tenant" })
-                .Select(g => new
-                {
-                    TenantId = g.Key.TenantId,
-                    TenantName = g.Key.TenantName,
-                    Users = g.Select(u => new
-                    {
-                        u.UserId,
-                        u.FullName,
-                        u.EmployeeNumber,
-                        DepartmentName = u.Department?.DepartmentName ?? "No Department",
-                        u.Email
-                    }).ToList()
-                })
-                .OrderBy(g => g.TenantName)
-                .ToList();
-            ViewBag.UsersByTenant = usersByTenant;
+            // No server-side user loading needed - handled by external JS module
 
             // ═══════════════════════════════════════════════════════════
             // WIZARD CONFIGURATION
@@ -414,26 +394,8 @@ namespace FormReporting.Controllers.Identity
                 .ToListAsync();
             ViewBag.ExistingRoles = existingRoles;
 
-            // Load scoped users grouped by tenant
-            var scopedUsers = await _userService.GetAccessibleUsersAsync(User);
-            var usersByTenant = scopedUsers
-                .GroupBy(u => new { u.TenantId, TenantName = u.PrimaryTenant?.TenantName ?? "No Tenant" })
-                .Select(g => new
-                {
-                    TenantId = g.Key.TenantId,
-                    TenantName = g.Key.TenantName,
-                    Users = g.Select(u => new
-                    {
-                        u.UserId,
-                        u.FullName,
-                        u.EmployeeNumber,
-                        DepartmentName = u.Department?.DepartmentName ?? "No Department",
-                        u.Email
-                    }).ToList()
-                })
-                .OrderBy(g => g.TenantName)
-                .ToList();
-            ViewBag.UsersByTenant = usersByTenant;
+            // Users loaded via AJAX (see GetUsersGroupedByTenant endpoint)
+            // No server-side user loading needed - handled by external JS module
 
             // Rebuild wizard config
             var wizardConfig = new WizardConfig
@@ -504,13 +466,19 @@ namespace FormReporting.Controllers.Identity
         [HttpGet("Edit/{id}")]
         public async Task<IActionResult> Edit(int id)
         {
-            var role = await _context.Roles.FindAsync(id);
+            // Load role with related data
+            var role = await _context.Roles
+                .Include(r => r.RolePermissions)
+                .Include(r => r.UserRoles)
+                .FirstOrDefaultAsync(r => r.RoleId == id);
+
             if (role == null)
             {
                 TempData["ErrorMessage"] = "Role not found.";
                 return RedirectToAction(nameof(Index));
             }
 
+            // Map to ViewModel
             var model = new RoleEditViewModel
             {
                 RoleId = role.RoleId,
@@ -518,14 +486,49 @@ namespace FormReporting.Controllers.Identity
                 RoleCode = role.RoleCode,
                 Description = role.Description,
                 ScopeLevelId = role.ScopeLevelId,
-                IsActive = role.IsActive
+                IsActive = role.IsActive,
+                // Load existing permissions
+                SelectedPermissionIds = role.RolePermissions
+                    .Where(rp => rp.IsGranted)
+                    .Select(rp => rp.PermissionId)
+                    .ToList(),
+                // Load existing users
+                SelectedUserIds = role.UserRoles
+                    .Where(ur => ur.IsActive)
+                    .Select(ur => ur.UserId)
+                    .ToList()
             };
 
+            // ═══════════════════════════════════════════════════════════
+            // TAB 1 DATA: Load Scope Levels
+            // ═══════════════════════════════════════════════════════════
             ViewBag.ScopeLevels = await _context.ScopeLevels
                 .Where(s => s.IsActive)
                 .OrderBy(s => s.Level)
-                .Select(s => new { s.ScopeLevelId, s.ScopeName, s.Level })
                 .ToListAsync();
+
+            // ═══════════════════════════════════════════════════════════
+            // TAB 2 DATA: Load Permissions grouped by Module
+            // ═══════════════════════════════════════════════════════════
+            var modules = await _context.Modules
+                .Include(m => m.Permissions.Where(p => p.IsActive))
+                .Where(m => m.IsActive)
+                .OrderBy(m => m.DisplayOrder)
+                .ToListAsync();
+            ViewBag.Modules = modules;
+
+            // Load existing roles for "Copy from existing role" feature
+            var existingRoles = await _context.Roles
+                .Where(r => r.IsActive && r.RoleId != id) // Exclude current role
+                .OrderBy(r => r.RoleName)
+                .Select(r => new { r.RoleId, r.RoleName, r.RoleCode })
+                .ToListAsync();
+            ViewBag.ExistingRoles = existingRoles;
+
+            // ═══════════════════════════════════════════════════════════
+            // TAB 3 DATA: Users loaded via AJAX (see GetUsersGroupedByTenant endpoint)
+            // ═══════════════════════════════════════════════════════════
+            // No server-side user loading needed - handled by external JS module
 
             return View("Views/Identity/Roles/Edit.cshtml", model);
         }
@@ -537,57 +540,141 @@ namespace FormReporting.Controllers.Identity
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(RoleEditViewModel model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid)
             {
-                var role = await _context.Roles.FindAsync(model.RoleId);
-                if (role == null)
-                {
-                    TempData["ErrorMessage"] = "Role not found.";
-                    return RedirectToAction(nameof(Index));
-                }
-
-                // Check for duplicate RoleCode (excluding current role)
-                if (await _context.Roles.AnyAsync(r => r.RoleCode == model.RoleCode && r.RoleId != model.RoleId))
-                {
-                    ModelState.AddModelError("RoleCode", "A role with this code already exists.");
-                    ViewBag.ScopeLevels = await _context.ScopeLevels
-                        .Where(s => s.IsActive)
-                        .OrderBy(s => s.Level)
-                        .Select(s => new { s.ScopeLevelId, s.ScopeName, s.Level })
-                        .ToListAsync();
-                    return View(model);
-                }
-
-                // Check for duplicate RoleName (excluding current role)
-                if (await _context.Roles.AnyAsync(r => r.RoleName == model.RoleName && r.RoleId != model.RoleId))
-                {
-                    ModelState.AddModelError("RoleName", "A role with this name already exists.");
-                    ViewBag.ScopeLevels = await _context.ScopeLevels
-                        .Where(s => s.IsActive)
-                        .OrderBy(s => s.Level)
-                        .Select(s => new { s.ScopeLevelId, s.ScopeName, s.Level })
-                        .ToListAsync();
-                    return View(model);
-                }
-
-                role.RoleName = model.RoleName;
-                role.RoleCode = model.RoleCode.ToUpper();
-                role.Description = model.Description;
-                role.ScopeLevelId = model.ScopeLevelId;
-                role.IsActive = model.IsActive;
-
-                await _context.SaveChangesAsync();
-
-                TempData["SuccessMessage"] = $"Role '{role.RoleName}' updated successfully.";
-                return RedirectToAction(nameof(Index));
+                await LoadEditViewData(model.RoleId);
+                return View(model);
             }
 
+            // Check for duplicate RoleCode (excluding current role)
+            if (await _context.Roles.AnyAsync(r => r.RoleCode == model.RoleCode && r.RoleId != model.RoleId))
+            {
+                ModelState.AddModelError("RoleCode", "A role with this code already exists.");
+                await LoadEditViewData(model.RoleId);
+                return View(model);
+            }
+
+            // Check for duplicate RoleName (excluding current role)
+            if (await _context.Roles.AnyAsync(r => r.RoleName == model.RoleName && r.RoleId != model.RoleId))
+            {
+                ModelState.AddModelError("RoleName", "A role with this name already exists.");
+                await LoadEditViewData(model.RoleId);
+                return View(model);
+            }
+
+            // Use transaction for atomic update
+            using (var transaction = await _context.Database.BeginTransactionAsync())
+            {
+                try
+                {
+                    // 1. UPDATE ROLE BASIC DETAILS
+                    var role = await _context.Roles.FindAsync(model.RoleId);
+                    if (role == null)
+                    {
+                        TempData["ErrorMessage"] = "Role not found.";
+                        return RedirectToAction(nameof(Index));
+                    }
+
+                    role.RoleName = model.RoleName;
+                    role.RoleCode = model.RoleCode.ToUpper();
+                    role.Description = model.Description;
+                    role.ScopeLevelId = model.ScopeLevelId;
+                    role.IsActive = model.IsActive;
+                    await _context.SaveChangesAsync();
+
+                    // 2. UPDATE ROLE PERMISSIONS
+                    // Remove existing permissions
+                    var existingPermissions = await _context.RolePermissions
+                        .Where(rp => rp.RoleId == model.RoleId)
+                        .ToListAsync();
+                    _context.RolePermissions.RemoveRange(existingPermissions);
+                    await _context.SaveChangesAsync();
+
+                    // Add new permissions (if any selected)
+                    if (model.SelectedPermissionIds != null && model.SelectedPermissionIds.Any())
+                    {
+                        foreach (var permissionId in model.SelectedPermissionIds)
+                        {
+                            var rolePermission = new RolePermission
+                            {
+                                RoleId = model.RoleId,
+                                PermissionId = permissionId,
+                                IsGranted = true,
+                                CreatedDate = DateTime.UtcNow,
+                                CreatedBy = "System" // TODO: Replace with actual user
+                            };
+                            _context.RolePermissions.Add(rolePermission);
+                        }
+                        await _context.SaveChangesAsync();
+                    }
+
+                    // 3. UPDATE USER ROLES
+                    // Remove existing user roles
+                    var existingUserRoles = await _context.UserRoles
+                        .Where(ur => ur.RoleId == model.RoleId)
+                        .ToListAsync();
+                    _context.UserRoles.RemoveRange(existingUserRoles);
+                    await _context.SaveChangesAsync();
+
+                    // Add new user roles (if any users selected)
+                    if (model.SelectedUserIds != null && model.SelectedUserIds.Any())
+                    {
+                        foreach (var userId in model.SelectedUserIds)
+                        {
+                            var userRole = new UserRole
+                            {
+                                UserId = userId,
+                                RoleId = model.RoleId,
+                                IsActive = true,
+                                CreatedDate = DateTime.UtcNow,
+                                CreatedBy = "System" // TODO: Replace with actual user
+                            };
+                            _context.UserRoles.Add(userRole);
+                        }
+                        await _context.SaveChangesAsync();
+                    }
+
+                    await transaction.CommitAsync();
+
+                    TempData["SuccessMessage"] = $"Role '{role.RoleName}' updated successfully with {model.SelectedPermissionIds?.Count ?? 0} permission(s) and {model.SelectedUserIds?.Count ?? 0} user(s).";
+                    return RedirectToAction(nameof(Index));
+                }
+                catch (Exception ex)
+                {
+                    await transaction.RollbackAsync();
+                    ModelState.AddModelError("", $"An error occurred while updating the role: {ex.Message}");
+                    await LoadEditViewData(model.RoleId);
+                    return View(model);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Helper method to load ViewData for Edit view (on errors)
+        /// </summary>
+        private async Task LoadEditViewData(int roleId)
+        {
+            // Load scope levels
             ViewBag.ScopeLevels = await _context.ScopeLevels
                 .Where(s => s.IsActive)
                 .OrderBy(s => s.Level)
-                .Select(s => new { s.ScopeLevelId, s.ScopeName, s.Level })
                 .ToListAsync();
-            return View(model);
+
+            // Load modules with permissions
+            var modules = await _context.Modules
+                .Include(m => m.Permissions.Where(p => p.IsActive))
+                .Where(m => m.IsActive)
+                .OrderBy(m => m.DisplayOrder)
+                .ToListAsync();
+            ViewBag.Modules = modules;
+
+            // Load existing roles for copy feature (exclude current role)
+            var existingRoles = await _context.Roles
+                .Where(r => r.IsActive && r.RoleId != roleId)
+                .OrderBy(r => r.RoleName)
+                .Select(r => new { r.RoleId, r.RoleName, r.RoleCode })
+                .ToListAsync();
+            ViewBag.ExistingRoles = existingRoles;
         }
 
         /// <summary>
@@ -713,6 +800,24 @@ namespace FormReporting.Controllers.Identity
                 permissionIds,
                 message = $"Found {permissionIds.Count} permission(s)"
             });
+        }
+
+        /// <summary>
+        /// AJAX Endpoint: Get accessible users grouped by tenant (for bulk selection in wizard)
+        /// Uses UserService which applies scope-based filtering
+        /// </summary>
+        [HttpGet("GetUsersGroupedByTenant")]
+        public async Task<IActionResult> GetUsersGroupedByTenant(string? search = null)
+        {
+            try
+            {
+                var groupedUsers = await _userService.GetUsersGroupedByTenantAsync(User, search);
+                return Json(groupedUsers);
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message });
+            }
         }
     }
 }

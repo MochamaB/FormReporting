@@ -1,12 +1,15 @@
 using Microsoft.EntityFrameworkCore;
 using FormReporting.Data;
+using FormReporting.Models.Entities.Forms;
+using FormReporting.Models.ViewModels.Forms;
+using FormReporting.Models.ViewModels.Components;
 using System.Text.RegularExpressions;
 
 namespace FormReporting.Services.Forms
 {
     /// <summary>
     /// Service implementation for FormTemplate operations
-    /// Handles template code generation, uniqueness checking, and validation
+    /// Handles template code generation, uniqueness checking, validation, and progress tracking
     /// </summary>
     public class FormTemplateService : IFormTemplateService
     {
@@ -132,6 +135,297 @@ namespace FormReporting.Services.Forms
             // Must start with TPL_ and contain only uppercase letters, numbers, and underscores
             var pattern = @"^TPL_[A-Z0-9_]+$";
             return Regex.IsMatch(templateCode, pattern) && templateCode.Length <= MAX_CODE_LENGTH;
+        }
+
+        /// <summary>
+        /// Load template with all related entities for editing/resume
+        /// Includes: Sections, Items, Assignments, Workflow, Category, MetricMappings
+        /// </summary>
+        public async Task<FormTemplate?> LoadTemplateForEditingAsync(int templateId)
+        {
+            return await _context.FormTemplates
+                .Include(t => t.Category)
+                .Include(t => t.Sections)
+                    .ThenInclude(s => s.Items)
+                        .ThenInclude(i => i.MetricMappings)
+                .Include(t => t.Items)
+                    .ThenInclude(i => i.MetricMappings)
+                .Include(t => t.Assignments)
+                .Include(t => t.Workflow)
+                .FirstOrDefaultAsync(t => t.TemplateId == templateId);
+        }
+
+        /// <summary>
+        /// Analyze template progress and determine current step for resume functionality
+        /// Uses existing data to intelligently detect which step user should resume from
+        /// </summary>
+        public FormBuilderResumeInfo AnalyzeTemplateProgress(FormTemplate template)
+        {
+            var completedSteps = new Dictionary<FormBuilderStep, bool>();
+            var stepStatuses = new Dictionary<FormBuilderStep, StepStatus>();
+
+            // ═══════════════════════════════════════════════════════════
+            // STEP 1: TEMPLATE SETUP
+            // ═══════════════════════════════════════════════════════════
+            bool step1Complete =
+                !string.IsNullOrEmpty(template.TemplateName) &&
+                !string.IsNullOrEmpty(template.TemplateCode) &&
+                template.CategoryId > 0 &&
+                !string.IsNullOrEmpty(template.TemplateType);
+
+            completedSteps[FormBuilderStep.TemplateSetup] = step1Complete;
+            stepStatuses[FormBuilderStep.TemplateSetup] = step1Complete
+                ? StepStatus.Completed
+                : StepStatus.Active;
+
+            // ═══════════════════════════════════════════════════════════
+            // STEP 2: FORM BUILDER
+            // ═══════════════════════════════════════════════════════════
+            bool step2Complete =
+                template.Sections.Any() &&
+                template.Items.Any() &&
+                template.Sections.All(s => s.Items.Any()); // Each section has at least one field
+
+            completedSteps[FormBuilderStep.FormBuilder] = step2Complete;
+            stepStatuses[FormBuilderStep.FormBuilder] =
+                !step1Complete ? StepStatus.Pending :
+                step2Complete ? StepStatus.Completed :
+                StepStatus.Active;
+
+            // ═══════════════════════════════════════════════════════════
+            // STEP 3: METRIC MAPPING (Optional)
+            // ═══════════════════════════════════════════════════════════
+            // Check if any items have metric mappings
+            bool hasMetrics = template.Items.Any(i => i.MetricMappings != null && i.MetricMappings.Any());
+            bool step3Complete = hasMetrics;
+
+            completedSteps[FormBuilderStep.MetricMapping] = step3Complete;
+            stepStatuses[FormBuilderStep.MetricMapping] =
+                !step2Complete ? StepStatus.Pending :
+                step3Complete ? StepStatus.Completed :
+                StepStatus.Pending; // Optional step
+
+            // ═══════════════════════════════════════════════════════════
+            // STEP 4: APPROVAL WORKFLOW (Conditional)
+            // ═══════════════════════════════════════════════════════════
+            bool step4Complete =
+                !template.RequiresApproval || // If approval not required, skip
+                (template.RequiresApproval && template.WorkflowId.HasValue);
+
+            completedSteps[FormBuilderStep.ApprovalWorkflow] = step4Complete;
+            stepStatuses[FormBuilderStep.ApprovalWorkflow] =
+                !step2Complete ? StepStatus.Pending :
+                step4Complete ? StepStatus.Completed :
+                StepStatus.Active;
+
+            // ═══════════════════════════════════════════════════════════
+            // STEP 5: FORM ASSIGNMENTS (Required)
+            // ═══════════════════════════════════════════════════════════
+            bool step5Complete = template.Assignments.Any();
+
+            completedSteps[FormBuilderStep.FormAssignments] = step5Complete;
+            stepStatuses[FormBuilderStep.FormAssignments] =
+                !step4Complete ? StepStatus.Pending :
+                step5Complete ? StepStatus.Completed :
+                StepStatus.Active;
+
+            // ═══════════════════════════════════════════════════════════
+            // STEP 6: REPORT CONFIGURATION (Optional)
+            // ═══════════════════════════════════════════════════════════
+            // TODO: Check if report configs exist when implemented
+            bool step6Complete = true; // Consider complete for now (optional)
+
+            completedSteps[FormBuilderStep.ReportConfiguration] = step6Complete;
+            stepStatuses[FormBuilderStep.ReportConfiguration] =
+                !step5Complete ? StepStatus.Pending :
+                step6Complete ? StepStatus.Completed :
+                StepStatus.Pending;
+
+            // ═══════════════════════════════════════════════════════════
+            // STEP 7: REVIEW & PUBLISH
+            // ═══════════════════════════════════════════════════════════
+            bool step7Complete = template.PublishStatus == "Published";
+
+            completedSteps[FormBuilderStep.ReviewPublish] = step7Complete;
+            stepStatuses[FormBuilderStep.ReviewPublish] =
+                !step6Complete ? StepStatus.Pending :
+                step7Complete ? StepStatus.Completed :
+                StepStatus.Active;
+
+            // ═══════════════════════════════════════════════════════════
+            // DETERMINE CURRENT STEP (First incomplete required step)
+            // ═══════════════════════════════════════════════════════════
+            FormBuilderStep currentStep = FormBuilderStep.TemplateSetup;
+
+            if (!step1Complete)
+                currentStep = FormBuilderStep.TemplateSetup;
+            else if (!step2Complete)
+                currentStep = FormBuilderStep.FormBuilder;
+            else if (!step4Complete && template.RequiresApproval)
+                currentStep = FormBuilderStep.ApprovalWorkflow;
+            else if (!step5Complete)
+                currentStep = FormBuilderStep.FormAssignments;
+            else
+                currentStep = FormBuilderStep.ReviewPublish;
+
+            // ═══════════════════════════════════════════════════════════
+            // CALCULATE COMPLETION PERCENTAGE
+            // ═══════════════════════════════════════════════════════════
+            int completedCount = completedSteps.Count(kvp => kvp.Value);
+            int completionPercentage = (completedCount * 100) / 7;
+
+            return new FormBuilderResumeInfo
+            {
+                TemplateId = template.TemplateId,
+                TemplateName = template.TemplateName,
+                TemplateCode = template.TemplateCode,
+                PublishStatus = template.PublishStatus,
+                CurrentStep = currentStep,
+                CompletedSteps = completedSteps,
+                StepStatuses = stepStatuses,
+                CompletionPercentage = completionPercentage,
+                LastModifiedDate = template.ModifiedDate
+            };
+        }
+
+        /// <summary>
+        /// Create a new version from a published template
+        /// Copies template data, sections, items, and assignments
+        /// Increments version number and sets status to Draft
+        /// </summary>
+        public async Task<FormTemplate> CreateNewVersionAsync(int publishedTemplateId, int userId)
+        {
+            // Load the published template with all related data
+            var publishedTemplate = await _context.FormTemplates
+                .Include(t => t.Sections)
+                    .ThenInclude(s => s.Items)
+                .Include(t => t.Items)
+                .Include(t => t.Assignments)
+                .FirstOrDefaultAsync(t => t.TemplateId == publishedTemplateId);
+
+            if (publishedTemplate == null)
+                throw new InvalidOperationException($"Template with ID {publishedTemplateId} not found.");
+
+            if (!CanCreateVersion(publishedTemplate))
+                throw new InvalidOperationException($"Cannot create version from template with status '{publishedTemplate.PublishStatus}'. Only published templates can be versioned.");
+
+            // Create new template version
+            var newVersion = new FormTemplate
+            {
+                TemplateName = publishedTemplate.TemplateName,
+                TemplateCode = publishedTemplate.TemplateCode,
+                Description = publishedTemplate.Description,
+                CategoryId = publishedTemplate.CategoryId,
+                TemplateType = publishedTemplate.TemplateType,
+                Version = publishedTemplate.Version + 1, // Increment version
+                IsActive = true,
+                RequiresApproval = publishedTemplate.RequiresApproval,
+                WorkflowId = publishedTemplate.WorkflowId,
+                PublishStatus = "Draft", // New version starts as Draft
+                CreatedBy = userId,
+                CreatedDate = DateTime.UtcNow,
+                ModifiedDate = DateTime.UtcNow,
+                ModifiedBy = userId
+            };
+
+            // Add new template to context
+            _context.FormTemplates.Add(newVersion);
+            await _context.SaveChangesAsync(); // Save to get TemplateId
+
+            // Copy sections and items
+            var sectionMapping = new Dictionary<int, int>(); // Old section ID -> New section ID
+
+            foreach (var oldSection in publishedTemplate.Sections.OrderBy(s => s.DisplayOrder))
+            {
+                var newSection = new FormTemplateSection
+                {
+                    TemplateId = newVersion.TemplateId,
+                    SectionName = oldSection.SectionName,
+                    SectionDescription = oldSection.SectionDescription,
+                    DisplayOrder = oldSection.DisplayOrder,
+                    IsCollapsible = oldSection.IsCollapsible,
+                    IsCollapsedByDefault = oldSection.IsCollapsedByDefault,
+                    IconClass = oldSection.IconClass,
+                    CreatedDate = DateTime.UtcNow,
+                    ModifiedDate = DateTime.UtcNow
+                };
+
+                _context.FormTemplateSections.Add(newSection);
+                await _context.SaveChangesAsync(); // Save to get SectionId
+
+                sectionMapping[oldSection.SectionId] = newSection.SectionId;
+
+                // Copy items for this section
+                foreach (var oldItem in oldSection.Items.OrderBy(i => i.DisplayOrder))
+                {
+                    var newItem = new FormTemplateItem
+                    {
+                        TemplateId = newVersion.TemplateId,
+                        SectionId = newSection.SectionId,
+                        ItemCode = oldItem.ItemCode,
+                        ItemName = oldItem.ItemName,
+                        ItemDescription = oldItem.ItemDescription,
+                        DisplayOrder = oldItem.DisplayOrder,
+                        DataType = oldItem.DataType,
+                        IsRequired = oldItem.IsRequired,
+                        DefaultValue = oldItem.DefaultValue,
+                        PlaceholderText = oldItem.PlaceholderText,
+                        HelpText = oldItem.HelpText,
+                        PrefixText = oldItem.PrefixText,
+                        SuffixText = oldItem.SuffixText,
+                        ConditionalLogic = oldItem.ConditionalLogic,
+                        LayoutType = oldItem.LayoutType,
+                        MatrixGroupId = oldItem.MatrixGroupId,
+                        MatrixRowLabel = oldItem.MatrixRowLabel,
+                        LibraryFieldId = oldItem.LibraryFieldId,
+                        IsLibraryOverride = oldItem.IsLibraryOverride,
+                        Version = 1, // Reset item version for new template version
+                        IsActive = oldItem.IsActive,
+                        CreatedDate = DateTime.UtcNow
+                    };
+
+                    _context.FormTemplateItems.Add(newItem);
+                }
+            }
+
+            // Copy assignments
+            foreach (var oldAssignment in publishedTemplate.Assignments)
+            {
+                var newAssignment = new FormTemplateAssignment
+                {
+                    TemplateId = newVersion.TemplateId,
+                    AssignmentType = oldAssignment.AssignmentType,
+                    TenantType = oldAssignment.TenantType,
+                    TenantGroupId = oldAssignment.TenantGroupId,
+                    TenantId = oldAssignment.TenantId,
+                    RoleId = oldAssignment.RoleId,
+                    DepartmentId = oldAssignment.DepartmentId,
+                    UserGroupId = oldAssignment.UserGroupId,
+                    UserId = oldAssignment.UserId,
+                    AssignedBy = userId,
+                    AssignedDate = DateTime.UtcNow,
+                    IsActive = oldAssignment.IsActive,
+                    Notes = $"Copied from v{publishedTemplate.Version}"
+                };
+
+                _context.FormTemplateAssignments.Add(newAssignment);
+            }
+
+            // Save all changes
+            await _context.SaveChangesAsync();
+
+            // Reload the new template with all relationships
+            return await LoadTemplateForEditingAsync(newVersion.TemplateId) 
+                ?? throw new InvalidOperationException("Failed to reload new version after creation.");
+        }
+
+        /// <summary>
+        /// Check if a new version can be created from this template
+        /// Only published templates can be versioned
+        /// </summary>
+        public bool CanCreateVersion(FormTemplate template)
+        {
+            return template.PublishStatus == "Published";
         }
     }
 }

@@ -1,7 +1,46 @@
-Severity	Code	Description	Project	File	Line	Suppression State
-Error (active)	CS1061	'User' does not contain a definition for 'PrimaryTenant' and no accessible extension method 'PrimaryTenant' accepting a first argument of type 'User' could be found (are you missing a using directive or an assembly reference?)	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Controllers\Forms\FormTemplatesController.cs	441	
-Error (active)	CS1061	'User' does not contain a definition for 'PrimaryTenant' and no accessible extension method 'PrimaryTenant' accepting a first argument of type 'User' could be found (are you missing a using directive or an assembly reference?)	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Services\Identity\UserService.cs	38	
-Error (active)	CS1061	'User' does not contain a definition for 'PrimaryTenantId' and no accessible extension method 'PrimaryTenantId' accepting a first argument of type 'User' could be found (are you missing a using directive or an assembly reference?)	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Services\Identity\UserService.cs	62	
-Error (active)	CS1061	'User' does not contain a definition for 'PrimaryTenantId' and no accessible extension method 'PrimaryTenantId' accepting a first argument of type 'User' could be found (are you missing a using directive or an assembly reference?)	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Services\Identity\UserService.cs	79	
-Error (active)	CS1061	'User' does not contain a definition for 'RegionId' and no accessible extension method 'RegionId' accepting a first argument of type 'User' could be found (are you missing a using directive or an assembly reference?)	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Services\Identity\UserService.cs	54	
-Error (active)	CS1061	'User' does not contain a definition for 'Username' and no accessible extension method 'Username' accepting a first argument of type 'User' could be found (are you missing a using directive or an assembly reference?)	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Services\Identity\UserService.cs	100	
+remixicon.woff2:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
+choices.min.js:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
+remixicon.woff:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
+flatpickr.min.js:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
+app.js:1 Uncaught TypeError: Cannot read properties of null (reading 'addEventListener')
+    at app.js:1:53090
+    at app.js:1:58254Understand this error
+remixicon.ttf:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
+BlockingPageContent.js:2  action SET_STORAGE_DATA @ 18:27:01.441
+BlockingPageContent.js:2  prev state Object
+BlockingPageContent.js:2  action     Object
+BlockingPageContent.js:2  next state Object
+NotificationContent.js:2  action SET_LOCALE @ 18:27:01.526
+NotificationContent.js:2  prev state Object
+NotificationContent.js:2  action     Object
+NotificationContent.js:2  next state Object
+NotificationContent.js:2  action SET_STORAGE_DATA @ 18:27:01.549
+NotificationContent.js:2  prev state Object
+NotificationContent.js:2  action     Object
+NotificationContent.js:2  next state Object
+bootstrap.bundle.min.js:6 Uncaught TypeError: Illegal invocation
+    at Object.find (bootstrap.bundle.min.js:6:8515)
+    at Ks._getChildren (bootstrap.bundle.min.js:6:76297)
+    at Ks._getActiveElem (bootstrap.bundle.min.js:6:76348)
+    at Ks.show (bootstrap.bundle.min.js:6:75104)
+    at HTMLLIElement.<anonymous> (bootstrap.bundle.min.js:6:77902)
+    at HTMLDocument.n (bootstrap.bundle.min.js:6:4238)Understand this error
+app.js:1 Uncaught TypeError: Cannot read properties of null (reading 'classList')
+    at HTMLBodyElement.<anonymous> (app.js:1:49189)Understand this error
+bootstrap.bundle.min.js:6 Uncaught TypeError: Illegal invocation
+    at Object.find (bootstrap.bundle.min.js:6:8515)
+    at Ks._getChildren (bootstrap.bundle.min.js:6:76297)
+    at Ks._getActiveElem (bootstrap.bundle.min.js:6:76348)
+    at Ks.show (bootstrap.bundle.min.js:6:75104)
+    at HTMLLIElement.<anonymous> (bootstrap.bundle.min.js:6:77902)
+    at HTMLDocument.n (bootstrap.bundle.min.js:6:4238)Understand this error
+10app.js:1 Uncaught TypeError: Cannot read properties of null (reading 'classList')
+    at HTMLBodyElement.<anonymous> (app.js:1:49189)Understand this error
+3:2004 Uncaught ReferenceError: Swal is not defined
+    at showSavingIndicator (3:2004:17)
+    at saveDraftAndNavigate (3:1873:17)
+    at HTMLFormElement.<anonymous> (3:1865:17)
+    at HTMLFormElement.dispatch (jquery.min.js:2:40035)
+    at v.handle (jquery.min.js:2:38006)Understand this error
+2app.js:1 Uncaught TypeError: Cannot read properties of null (reading 'classList')
+    at HTMLBodyElement.<anonymous> (app.js:1:49189)Understand this error

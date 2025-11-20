@@ -1,58 +1,42 @@
 @*
     Wizard Step: Settings (Tab 1.2)
-    Contains: Template Type, Estimated Time, KPI Category
-    Note: Approval workflow moved to Step 4, Assignments to Step 5
+    Contains: Template Type/Schedule, Description
+    Note: Approval workflow in Step 4, Assignments in Step 5, Metrics in Step 3
 *@
 
 <div class="row">
     <div class="col-md-6">
         <div class="mb-3">
             <label for="TemplateType" class="form-label">
-                Template Type <span class="text-danger">*</span>
+                Template Type/Schedule <span class="text-danger">*</span>
             </label>
             <select class="form-select" id="TemplateType" name="TemplateType" required>
                 <option value="">Select type...</option>
-                <option value="Monthly">Monthly</option>
-                <option value="Quarterly">Quarterly</option>
-                <option value="Annual">Annual</option>
-                <option value="OnDemand">On Demand</option>
+                <option value="Daily" selected="@(Model?.TemplateType == "Daily" ? "selected" : null)">Daily</option>
+                <option value="Weekly" selected="@(Model?.TemplateType == "Weekly" ? "selected" : null)">Weekly</option>
+                <option value="Monthly" selected="@(Model?.TemplateType == "Monthly" ? "selected" : null)">Monthly</option>
+                <option value="Quarterly" selected="@(Model?.TemplateType == "Quarterly" ? "selected" : null)">Quarterly</option>
+                <option value="Annual" selected="@(Model?.TemplateType == "Annual" ? "selected" : null)">Annual</option>
+                <option value="OnDemand" selected="@(Model?.TemplateType == "OnDemand" ? "selected" : null)">On Demand (Event-triggered)</option>
             </select>
             <div class="invalid-feedback">Please select a template type</div>
-            <div class="form-text">How often should this form be submitted?</div>
-        </div>
-    </div>
-
-    <div class="col-md-6">
-        <div class="mb-3">
-            <label for="EstimatedCompletionTime" class="form-label">
-                Estimated Completion Time (minutes)
-            </label>
-            <input type="number"
-                   class="form-control"
-                   id="EstimatedCompletionTime"
-                   name="EstimatedCompletionTime"
-                   placeholder="e.g., 15"
-                   min="1"
-                   max="240">
-            <div class="form-text">How long does it typically take to fill this form?</div>
+            <div class="form-text">When should this form be submitted?</div>
         </div>
     </div>
 </div>
 
 <div class="row">
-    <div class="col-md-6">
+    <div class="col-12">
         <div class="mb-3">
-            <label for="KPICategoryId" class="form-label">
-                KPI Category
+            <label for="Description" class="form-label">
+                Description / Form Introduction
             </label>
-            <select class="form-select" id="KPICategoryId" name="KPICategoryId">
-                <option value="">None - No metrics mapping</option>
-                <option value="1">IT Operations</option>
-                <option value="2">Compliance</option>
-                <option value="3">Performance</option>
-                <option value="4">Security</option>
-            </select>
-            <div class="form-text">Select if this form will populate KPI metrics (configured in Step 3)</div>
+            <textarea class="form-control"
+                      id="Description"
+                      name="Description"
+                      rows="4"
+                      placeholder="Describe the purpose of this form template...">@(Model?.Description)</textarea>
+            <div class="form-text"> Introduction that the user will see before filling the form</div>
         </div>
     </div>
 </div>

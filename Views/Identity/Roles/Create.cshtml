@@ -43,6 +43,9 @@
 </div>
 
 @section Scripts {
+    <!-- External JS for bulk user selection -->
+    <script src="~/assets/js/pages/assignment-manager-bulk-users.js"></script>
+
     <script>
         $(document).ready(function() {
             // ═══════════════════════════════════════════════════════════
@@ -177,58 +180,22 @@
             });
 
             // ═══════════════════════════════════════════════════════════
-            // STEP 3: USERS - JavaScript
+            // STEP 3: USERS - JavaScript (using external module)
             // ═══════════════════════════════════════════════════════════
 
-            // User search
-            $('#userSearch').on('input', function() {
-                var searchTerm = $(this).val().toLowerCase();
-
-                $('.user-card').each(function() {
-                    var username = $(this).data('username').toLowerCase();
-                    if (username.includes(searchTerm)) {
-                        $(this).show();
-                    } else {
-                        $(this).hide();
-                    }
-                });
+            // Initialize bulk user selection module
+            var userSelectionApi = initBulkUserSelection({
+                managerId: 'roleUsers',
+                ajaxEndpoint: '@Url.Action("GetUsersGroupedByTenant", "Roles")',
+                containerSelector: '#tenantGroupedUsers_roleUsers',
+                searchInputSelector: '#bulkUserSearch_roleUsers',
+                selectAllSelector: '#selectAllUsers_roleUsers',
+                deselectAllSelector: '#deselectAllUsers_roleUsers',
+                selectedCountSelector: '#selectedCount_roleUsers',
+                loadingSelector: '#loadingUsers_roleUsers',
+                emptyStateSelector: '#emptyState_roleUsers',
+                checkboxName: 'SelectedUserIds'
             });
-
-            // Select all users
-            $('#selectAllUsers').on('click', function() {
-                $('.user-checkbox:visible').prop('checked', true);
-                updateUserCounts();
-            });
-
-            // Deselect all users
-            $('#deselectAllUsers').on('click', function() {
-                $('.user-checkbox').prop('checked', false);
-                updateUserCounts();
-            });
-
-            // Select all in tenant
-            $('.select-all-tenant').on('click', function() {
-                var tenantId = $(this).data('tenant');
-                $('.user-checkbox[data-tenant="' + tenantId + '"]').prop('checked', true);
-                updateUserCounts();
-            });
-
-            // Update counts when user checkboxes change
-            $('.user-checkbox').on('change', updateUserCounts);
-
-            function updateUserCounts() {
-                // Update total count
-                var totalSelected = $('.user-checkbox:checked').length;
-                $('#selectedUsersCount').text(totalSelected);
-
-                // Update per-tenant counts
-                $('.tenant-user-count').each(function() {
-                    var tenantId = $(this).closest('.tenant-group').data('tenant-id');
-                    var total = $('.user-checkbox[data-tenant="' + tenantId + '"]').length;
-                    var selected = $('.user-checkbox[data-tenant="' + tenantId + '"]:checked').length;
-                    $(this).text(selected + '/' + total);
-                });
-            }
 
             // ═══════════════════════════════════════════════════════════
             // STEP 4: REVIEW - JavaScript
@@ -270,8 +237,8 @@
                     $('#review_permissionsDetailed').html(permHtml);
                 }
 
-                // Users
-                var selectedUsers = $('.user-checkbox:checked');
+                // Users (using external module API)
+                var selectedUsers = userSelectionApi ? userSelectionApi.getSelectedUsers() : [];
                 $('#review_userCount').text(selectedUsers.length);
 
                 if (selectedUsers.length === 0) {
@@ -281,9 +248,8 @@
 
                     // Detailed users list
                     var userHtml = '<ul class="list-group">';
-                    selectedUsers.each(function() {
-                        var userName = $(this).parent().find('.fw-bold').text();
-                        userHtml += '<li class="list-group-item">' + userName + '</li>';
+                    selectedUsers.forEach(function(user) {
+                        userHtml += '<li class="list-group-item">' + user.fullName + ' (' + user.employeeNumber + ')</li>';
                     });
                     userHtml += '</ul>';
                     $('#review_usersDetailed').html(userHtml);

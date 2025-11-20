@@ -1,0 +1,181 @@
+@model FormReporting.Models.Entities.Forms.FormTemplate
+@using FormReporting.Models.ViewModels.Components
+@using FormReporting.Extensions
+@{
+    Layout = "~/Views/Shared/_BuilderLayout.cshtml";
+    ViewData["Title"] = "Form Builder - " + Model.TemplateName;
+    var progress = ViewData["Progress"] as FormBuilderProgressViewModel;
+}
+
+<!-- ============================================================================ -->
+<!-- PROGRESS TRACKER - Same component used by all wizard steps -->
+<!-- ============================================================================ -->
+<partial name="~/Views/Shared/Components/FormBuilder/_FormBuilderProgress.cshtml" model="progress" />
+
+<!-- ============================================================================ -->
+<!-- MAIN CONTENT AREA -->
+<!-- ============================================================================ -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-light">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="card-title mb-1">
+                            <i class="ri-layout-grid-line text-primary me-2"></i>
+                            Form Builder
+                        </h5>
+                        <p class="text-muted mb-0 small">
+                            Design your form structure with sections and fields
+                        </p>
+                    </div>
+                    <div>
+                        <span class="badge bg-info-subtle text-info">
+                            Template: @Model.TemplateCode
+                        </span>
+                        <span class="badge bg-secondary-subtle text-secondary ms-2">
+                            v@Model.Version
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body">
+                <!-- ============================================================ -->
+                <!-- PLACEHOLDER: Form Builder UI will be implemented here -->
+                <!-- ============================================================ -->
+                <div class="text-center py-5">
+                    <div class="mb-4">
+                        <i class="ri-tools-line display-4 text-muted"></i>
+                    </div>
+                    <h4 class="text-muted mb-3">Form Builder Under Construction</h4>
+                    <p class="text-muted mb-4">
+                        This is where you'll be able to:
+                    </p>
+                    <div class="row justify-content-center">
+                        <div class="col-md-8">
+                            <div class="list-group">
+                                <div class="list-group-item">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0">
+                                            <i class="ri-layout-column-line text-primary fs-20"></i>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3 text-start">
+                                            <h6 class="mb-1">Add Sections</h6>
+                                            <p class="text-muted mb-0 small">
+                                                Organize your form into logical sections
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="list-group-item">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0">
+                                            <i class="ri-input-method-line text-success fs-20"></i>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3 text-start">
+                                            <h6 class="mb-1">Add Fields</h6>
+                                            <p class="text-muted mb-0 small">
+                                                Text, number, dropdown, date, file upload, and more
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="list-group-item">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0">
+                                            <i class="ri-drag-move-line text-warning fs-20"></i>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3 text-start">
+                                            <h6 class="mb-1">Drag & Drop Reordering</h6>
+                                            <p class="text-muted mb-0 small">
+                                                Easily rearrange sections and fields
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="list-group-item">
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0">
+                                            <i class="ri-settings-3-line text-info fs-20"></i>
+                                        </div>
+                                        <div class="flex-grow-1 ms-3 text-start">
+                                            <h6 class="mb-1">Field Configuration</h6>
+                                            <p class="text-muted mb-0 small">
+                                                Validation rules, conditional logic, and more
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- ============================================================ -->
+                <!-- END PLACEHOLDER -->
+                <!-- ============================================================ -->
+            </div>
+
+            <div class="card-footer bg-light">
+                <div class="d-flex justify-content-between align-items-center">
+                    <a href="@Url.Action("Create", "FormTemplates", new { id = Model.TemplateId })" 
+                       class="btn btn-soft-secondary">
+                        <i class="ri-arrow-left-line me-1"></i>
+                        Back to Basic Info
+                    </a>
+                    <div>
+                        <button type="button" class="btn btn-soft-primary me-2" disabled>
+                            <i class="ri-save-line me-1"></i>
+                            Save Progress
+                        </button>
+                        <button type="button" class="btn btn-primary" disabled>
+                            Continue to Metrics
+                            <i class="ri-arrow-right-line ms-1"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================================ -->
+<!-- ALERT: Template Information -->
+<!-- ============================================================================ -->
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="alert alert-info border-0" role="alert">
+            <div class="d-flex align-items-start">
+                <div class="flex-shrink-0">
+                    <i class="ri-information-line fs-16"></i>
+                </div>
+                <div class="flex-grow-1 ms-2">
+                    <strong>Current Template Details:</strong><br>
+                    <ul class="mb-0 mt-2">
+                        <li><strong>Name:</strong> @Model.TemplateName</li>
+                        <li><strong>Code:</strong> @Model.TemplateCode</li>
+                        <li><strong>Category:</strong> @Model.Category?.CategoryName</li>
+                        <li><strong>Type:</strong> @Model.TemplateType</li>
+                        <li><strong>Status:</strong> <span class="badge bg-warning-subtle text-warning">@Model.PublishStatus</span></li>
+                        <li><strong>Sections:</strong> @Model.Sections.Count</li>
+                        <li><strong>Total Fields:</strong> @Model.Items.Count</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // TODO: Form Builder JavaScript will be implemented here
+        console.log('Form Builder loaded for template:', @Model.TemplateId);
+        console.log('Template data:', @Html.Raw(Json.Serialize(new {
+            templateId = Model.TemplateId,
+            templateName = Model.TemplateName,
+            templateCode = Model.TemplateCode,
+            sections = Model.Sections.Count,
+            items = Model.Items.Count
+        })));
+    </script>
+}

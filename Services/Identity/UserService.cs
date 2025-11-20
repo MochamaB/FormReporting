@@ -146,5 +146,38 @@ namespace FormReporting.Services.Identity
             var user = await GetUserByIdAsync(currentUser, targetUserId);
             return user != null;
         }
+
+        /// <summary>
+        /// Get accessible users grouped by tenant (for bulk selection UIs like AssignmentManager)
+        /// Returns anonymous objects formatted for AJAX responses with tenant grouping
+        /// </summary>
+        public async Task<List<object>> GetUsersGroupedByTenantAsync(ClaimsPrincipal currentUser, string? searchQuery = null)
+        {
+            // Get accessible users with scope filtering
+            var users = await GetAccessibleUsersAsync(currentUser, searchQuery);
+
+            // Group by tenant and return structured data
+            var groupedUsers = users
+                .GroupBy(u => new { u.TenantId, TenantName = u.PrimaryTenant?.TenantName ?? "No Tenant" })
+                .OrderBy(g => g.Key.TenantName)
+                .Select(g => new
+                {
+                    tenantId = g.Key.TenantId,
+                    tenantName = g.Key.TenantName,
+                    userCount = g.Count(),
+                    users = g.Select(u => new
+                    {
+                        userId = u.UserId,
+                        fullName = u.FullName,
+                        email = u.Email,
+                        employeeNumber = u.EmployeeNumber ?? "",
+                        departmentName = u.Department?.DepartmentName ?? "No Department"
+                    }).ToList()
+                })
+                .Cast<object>()
+                .ToList();
+
+            return groupedUsers;
+        }
     }
 }

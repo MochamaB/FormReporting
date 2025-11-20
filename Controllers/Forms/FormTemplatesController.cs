@@ -174,10 +174,18 @@ namespace FormReporting.Controllers.Forms
         }
 
         /// <summary>
-        /// Create - Display form for creating a new template
+        /// Create - Display form for creating a new template OR resume editing a draft
         /// </summary>
-        public async Task<IActionResult> Create()
+        /// <param name="id">Optional: Template ID to resume (must be Draft status)</param>
+        public async Task<IActionResult> Create(int? id = null)
         {
+            // If ID provided, this is a RESUME operation
+            if (id.HasValue)
+            {
+                return await ResumeDraft(id.Value);
+            }
+
+            // Otherwise, create NEW template
             // Build progress tracker - Step 1 active, no template ID yet
             var progress = new FormBuilderProgressConfig
             {
@@ -197,6 +205,158 @@ namespace FormReporting.Controllers.Forms
             ViewBag.Categories = await _categoryService.GetCategorySelectListAsync();
 
             return View("~/Views/Forms/FormTemplates/Create.cshtml");
+        }
+
+        /// <summary>
+        /// Edit - Create a new version from a published template
+        /// Clones the published template as a new draft version and starts wizard
+        /// </summary>
+        /// <param name="id">Published template ID to version</param>
+        [HttpGet("Edit/{id}")]
+        public async Task<IActionResult> Edit(int id)
+        {
+            try
+            {
+                // Load published template
+                var publishedTemplate = await _templateService.LoadTemplateForEditingAsync(id);
+
+                if (publishedTemplate == null)
+                {
+                    TempData["ErrorMessage"] = "Template not found.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // Validate template can be versioned (must be published)
+                if (!_templateService.CanCreateVersion(publishedTemplate))
+                {
+                    TempData["ErrorMessage"] = $"Cannot create version from template with status '{publishedTemplate.PublishStatus}'. Only published templates can be edited.";
+                    return RedirectToAction(nameof(Index));
+                }
+
+                // Create new version via service
+                var newVersion = await _templateService.CreateNewVersionAsync(id, userId: 1); // TODO: Get current user ID
+
+                // Show success message
+                TempData["SuccessMessage"] = $"Created new version {newVersion.Version} from '{publishedTemplate.TemplateName}'. You can now make changes and publish when ready.";
+
+                // Redirect to Create with new version ID to start wizard
+                return RedirectToAction(nameof(Create), new { id = newVersion.TemplateId });
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Error creating new version: {ex.Message}";
+                return RedirectToAction(nameof(Index));
+            }
+        }
+
+        /// <summary>
+        /// ResumeDraft - Resume editing an existing draft template
+        /// Analyzes progress and routes to appropriate step (PRIVATE HELPER)
+        /// </summary>
+        private async Task<IActionResult> ResumeDraft(int id)
+        {
+            // Load template with all related data
+            var template = await _templateService.LoadTemplateForEditingAsync(id);
+
+            if (template == null)
+            {
+                TempData["ErrorMessage"] = "Template not found.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Only drafts can be resumed
+            if (template.PublishStatus != "Draft")
+            {
+                TempData["ErrorMessage"] = "Cannot resume a published template. Use Edit to create a new version.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Analyze progress and determine current step
+            var resumeInfo = _templateService.AnalyzeTemplateProgress(template);
+
+            // Build progress tracker with detected statuses
+            var progress = new FormBuilderProgressConfig
+            {
+                BuilderId = $"template-{template.TemplateId}",
+                TemplateId = template.TemplateId,
+                TemplateName = template.TemplateName,
+                TemplateVersion = $"v{template.Version}",
+                PublishStatus = template.PublishStatus,
+                CurrentStep = resumeInfo.CurrentStep,
+                StepStatuses = resumeInfo.StepStatuses
+            }
+            .AtStep(resumeInfo.CurrentStep)
+            .BuildProgress();
+
+            ViewData["Progress"] = progress;
+
+            // Route to appropriate step view based on current step
+            return resumeInfo.CurrentStep switch
+            {
+                FormBuilderStep.TemplateSetup => await ResumeTemplateSetup(template),
+                FormBuilderStep.FormBuilder => RedirectToAction("FormBuilder", new { id }),
+                FormBuilderStep.MetricMapping => RedirectToAction("MetricMapping", new { id }),
+                FormBuilderStep.ApprovalWorkflow => RedirectToAction("ApprovalWorkflow", new { id }),
+                FormBuilderStep.FormAssignments => RedirectToAction("Assignments", new { id }),
+                FormBuilderStep.ReportConfiguration => RedirectToAction("ReportConfiguration", new { id }),
+                FormBuilderStep.ReviewPublish => RedirectToAction("ReviewPublish", new { id }),
+                _ => await ResumeTemplateSetup(template)
+            };
+        }
+
+        /// <summary>
+        /// Resume template setup (Step 1) - Helper method to prepare view (PRIVATE HELPER)
+        /// </summary>
+        private async Task<IActionResult> ResumeTemplateSetup(Models.Entities.Forms.FormTemplate template)
+        {
+            // Get categories for dropdown
+            ViewBag.Categories = await _categoryService.GetCategorySelectListAsync();
+
+            // Return to Create view with template data (it will populate the form)
+            return View("~/Views/Forms/FormTemplates/Create.cshtml", template);
+        }
+
+        /// <summary>
+        /// STEP 2: Form Builder - Build sections and fields
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> FormBuilder(int id)
+        {
+            // Load template with all related data
+            var template = await _templateService.LoadTemplateForEditingAsync(id);
+
+            if (template == null)
+            {
+                TempData["ErrorMessage"] = "Template not found.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Only drafts can be edited
+            if (template.PublishStatus != "Draft")
+            {
+                TempData["ErrorMessage"] = "Cannot edit published templates.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Build progress tracker for Step 2
+            var progress = new FormBuilderProgressConfig
+            {
+                BuilderId = $"template-{template.TemplateId}",
+                TemplateId = template.TemplateId,
+                TemplateName = template.TemplateName,
+                TemplateVersion = $"v{template.Version}",
+                PublishStatus = template.PublishStatus,
+                CurrentStep = FormBuilderStep.FormBuilder,
+                ShowSaveDraft = true,
+                ExitUrl = Url.Action("Index", "FormTemplates") ?? "/Forms/FormTemplates"
+            }
+            .AtStep(FormBuilderStep.FormBuilder)
+            .BuildProgress();
+
+            ViewData["Progress"] = progress;
+
+            // Pass template to view
+            return View("~/Views/Forms/FormTemplates/FormBuilder.cshtml", template);
         }
 
         /// <summary>
@@ -228,18 +388,23 @@ namespace FormReporting.Controllers.Forms
                     _context.FormTemplates.Add(newTemplate);
                     await _context.SaveChangesAsync();
 
+                    // Analyze progress for response
+                    var newResumeInfo = _templateService.AnalyzeTemplateProgress(newTemplate);
+
                     return Json(new
                     {
                         success = true,
                         templateId = newTemplate.TemplateId,
                         message = "Template saved as draft",
-                        isNew = true
+                        isNew = true,
+                        currentStep = (int)newResumeInfo.CurrentStep,
+                        completionPercentage = newResumeInfo.CompletionPercentage
                     });
                 }
                 else
                 {
                     // UPDATE EXISTING DRAFT
-                    var template = await _context.FormTemplates.FindAsync(dto.TemplateId);
+                    var template = await _templateService.LoadTemplateForEditingAsync(dto.TemplateId.Value);
 
                     if (template == null)
                         return Json(new { success = false, message = "Template not found" });
@@ -247,23 +412,38 @@ namespace FormReporting.Controllers.Forms
                     if (template.PublishStatus != "Draft")
                         return Json(new { success = false, message = "Cannot edit published template" });
 
-                    // Update fields
-                    template.TemplateName = dto.TemplateName ?? template.TemplateName;
-                    template.TemplateCode = dto.TemplateCode ?? template.TemplateCode;
+                    // Update fields - only update if values are provided
+                    if (!string.IsNullOrWhiteSpace(dto.TemplateName))
+                        template.TemplateName = dto.TemplateName;
+                    
+                    if (!string.IsNullOrWhiteSpace(dto.TemplateCode))
+                        template.TemplateCode = dto.TemplateCode;
+                    
+                    // Description can be null/empty - always update
                     template.Description = dto.Description;
-                    template.CategoryId = dto.CategoryId > 0 ? dto.CategoryId : template.CategoryId;
-                    template.TemplateType = dto.TemplateType ?? template.TemplateType;
+                    
+                    if (dto.CategoryId > 0)
+                        template.CategoryId = dto.CategoryId;
+                    
+                    // TemplateType can be null/empty - always update
+                    template.TemplateType = dto.TemplateType;
+                    
                     template.ModifiedDate = DateTime.UtcNow;
                     template.ModifiedBy = 1; // TODO: Get from current user context
 
                     await _context.SaveChangesAsync();
+
+                    // Analyze progress for response
+                    var resumeInfo = _templateService.AnalyzeTemplateProgress(template);
 
                     return Json(new
                     {
                         success = true,
                         templateId = template.TemplateId,
                         message = "Draft updated",
-                        isNew = false
+                        isNew = false,
+                        currentStep = (int)resumeInfo.CurrentStep,
+                        completionPercentage = resumeInfo.CompletionPercentage
                     });
                 }
             }

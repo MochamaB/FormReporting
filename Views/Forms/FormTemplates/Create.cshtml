@@ -1,15 +1,16 @@
+@model FormReporting.Models.Entities.Forms.FormTemplate
 @using FormReporting.Models.ViewModels.Components
 @using FormReporting.Extensions
 @{
     Layout = "~/Views/Shared/_BuilderLayout.cshtml";
-    ViewData["Title"] = "Create Form Template";
+    ViewData["Title"] = Model != null ? "Resume Creation of Form Template" : "Create Form Template";
     var progress = ViewData["Progress"] as FormBuilderProgressViewModel;
 
     // Build wizard configuration
     var wizardConfig = new WizardConfig
     {
         FormId = "templateConfigForm",
-        FormAction = Url.Action("SaveTemplateConfiguration", "FormTemplates") ?? "#",
+        FormAction = "#", // Handled by AJAX submit event
         FormMethod = "POST",
         Layout = WizardLayout.Vertical,
         Steps = new List<WizardStep>
@@ -19,9 +20,9 @@
                 StepId = "basic-info",
                 StepNumber = 1,
                 Title = "Basic Information",
-                Label = "Template Details",
-                Description = "Name, category, and description",
-                Instructions = "Provide the basic information for your form template",
+                Label = "Template Identity",
+                Description = "Name, code, and category",
+                Instructions = "Identify your form template with a unique name and code",
                 Icon = "ri-information-line",
                 State = WizardStepState.Active,
                 ContentPartialPath = "~/Views/Forms/FormTemplates/Partials/_BasicInformation.cshtml",
@@ -34,8 +35,8 @@
                 StepNumber = 2,
                 Title = "Settings",
                 Label = "Configuration",
-                Description = "Type, time, and KPI category",
-                Instructions = "Configure how this template will be used",
+                Description = "Schedule and description",
+                Instructions = "Define when this template should be used and its purpose",
                 Icon = "ri-settings-3-line",
                 State = WizardStepState.Pending,
                 ContentPartialPath = "~/Views/Forms/FormTemplates/Partials/_Settings.cshtml",
@@ -89,8 +90,12 @@
 
     <script>
         $(document).ready(function() {
+            // Initialize templateId from Model (for resume) or hidden field
+            var templateId = @(Model?.TemplateId ?? 0);
+            
             // Track form changes for unsaved changes warning
             var formChanged = false;
+            var isSaving = false;
 
             $('#templateConfigForm').on('change', 'input, select, textarea', function() {
                 formChanged = true;
@@ -306,9 +311,11 @@
             };
 
             // ========================================================================
-            // FORM SUBMIT VALIDATION
+            // FORM SUBMIT VALIDATION & NAVIGATION
             // ========================================================================
             $('#templateConfigForm').on('submit', function(e) {
+                e.preventDefault(); // Prevent default form submission
+                
                 // Clear previous validation errors
                 clearAllValidationErrors();
 
@@ -348,7 +355,6 @@
                 }
 
                 if (!isValid) {
-                    e.preventDefault();
                     // Focus first invalid field if exists
                     if (firstInvalidField) {
                         firstInvalidField.focus();
@@ -356,10 +362,53 @@
                     return false;
                 }
 
-                // Mark form as saved
-                formChanged = false;
-                return true;
+                // Save draft and navigate to FormBuilder
+                saveDraftAndNavigate();
             });
+            
+            // Save draft and navigate to next step
+            function saveDraftAndNavigate() {
+                if (isSaving) return;
+                
+                isSaving = true;
+                showSavingIndicator();
+                
+                const formData = {
+                    TemplateId: templateId,
+                    TemplateName: $('#TemplateName').val(),
+                    TemplateCode: $('#TemplateCode').val(),
+                    Description: $('#Description').val(),
+                    CategoryId: parseInt($('#CategoryId').val()) || 0,
+                    TemplateType: $('#TemplateType').val()
+                };
+                
+                // Debug: Log form data being sent
+                console.log('Saving draft with data:', formData);
+                
+                $.ajax({
+                    url: '@Url.Action("SaveDraft", "FormTemplates")',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(formData),
+                    success: function(response) {
+                        if (response.success) {
+                            formChanged = false;
+                            
+                            // Navigate to FormBuilder with the template ID
+                            const navigateTemplateId = response.templateId || templateId;
+                            window.location.href = '@Url.Action("FormBuilder", "FormTemplates")?id=' + navigateTemplateId;
+                        } else {
+                            showSaveErrorIndicator(response.message);
+                            isSaving = false;
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        showSaveErrorIndicator('Failed to save template');
+                        isSaving = false;
+                        console.error('Save failed:', error);
+                    }
+                });
+            }
 
             // ========================================================================
             // AUTO-CLEAR VALIDATION ON INPUT CHANGE
@@ -387,8 +436,8 @@
             // ========================================================================
             
             let autosaveTimer = null;
-            let templateId = null; // Will be set after first save
-            let isSaving = false;
+            // templateId already declared above - reuse it
+            // isSaving already declared above - reuse it
             
             // Auto-save every 30 seconds if form has changes
             function startAutosave() {

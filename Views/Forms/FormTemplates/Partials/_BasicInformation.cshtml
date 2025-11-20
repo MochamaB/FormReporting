@@ -1,7 +1,10 @@
 @*
     Wizard Step 1: Basic Information
-    Contains: Template Name, Code, Category, Version, Description
+    Contains: Template Name, Code, Category, Version
 *@
+
+@* Hidden field to track TemplateId for updates *@
+<input type="hidden" id="TemplateId" name="TemplateId" value="@(Model?.TemplateId ?? 0)" />
 
 <div class="row">
     <div class="col-md-6">
@@ -13,6 +16,7 @@
                    class="form-control"
                    id="TemplateName"
                    name="TemplateName"
+                   value="@(Model?.TemplateName ?? "")"
                    placeholder="e.g., Monthly ICT Report"
                    required>
             <div class="invalid-feedback">Please enter a template name</div>
@@ -30,6 +34,7 @@
                        class="form-control"
                        id="TemplateCode"
                        name="TemplateCode"
+                       value="@(Model?.TemplateCode ?? "")"
                        placeholder="Auto-generated"
                        readonly>
                 <button class="btn btn-outline-secondary" type="button" id="editCodeBtn" title="Edit template code manually">
@@ -54,7 +59,9 @@
                 {
                     foreach (var category in ViewBag.Categories)
                     {
-                        <option value="@category.CategoryId">@category.CategoryName</option>
+                        <option value="@category.CategoryId" selected="@(Model?.CategoryId == category.CategoryId ? "selected" : null)">
+                            @category.CategoryName
+                        </option>
                     }
                 }
             </select>
@@ -71,25 +78,9 @@
                    class="form-control"
                    id="Version"
                    name="Version"
-                   value="1.0"
+                   value="@(Model?.Version.ToString() ?? "1")"
                    readonly>
             <div class="form-text">Version will be managed automatically</div>
-        </div>
-    </div>
-</div>
-
-<div class="row">
-    <div class="col-12">
-        <div class="mb-3">
-            <label for="Description" class="form-label">
-                Description
-            </label>
-            <textarea class="form-control"
-                      id="Description"
-                      name="Description"
-                      rows="4"
-                      placeholder="Describe the purpose of this form template..."></textarea>
-            <div class="form-text">Provide a brief description of what this form is used for</div>
         </div>
     </div>
 </div>
