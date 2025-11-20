@@ -182,13 +182,13 @@ namespace FormReporting.Controllers.Forms
             var progress = new FormBuilderProgressConfig
             {
                 BuilderId = Guid.NewGuid().ToString("N"),
-                CurrentStep = FormBuilderStep.TemplateConfiguration,
+                CurrentStep = FormBuilderStep.TemplateSetup,
                 TemplateId = null,
                 TemplateName = null,
                 ShowSaveDraft = false, // Can't save draft until template created
                 ExitUrl = Url.Action("Index", "FormTemplates") ?? "/Forms/FormTemplates"
             }
-            .AtStep(FormBuilderStep.TemplateConfiguration)
+            .AtStep(FormBuilderStep.TemplateSetup)
             .BuildProgress();
 
             ViewData["Progress"] = progress;
@@ -196,24 +196,81 @@ namespace FormReporting.Controllers.Forms
             // Get active categories for dropdown (using service)
             ViewBag.Categories = await _categoryService.GetCategorySelectListAsync();
 
-            // Initialize Assignment Manager for approval workflow
-            var approvalWorkflowManager = new AssignmentManagerConfig
-            {
-                ManagerId = "template-approval-workflow",
-                ContextLabel = "Approval Levels",
-                HelpText = "Define who needs to approve submissions for this form template",
-                ShowLevels = true,
-                AllowMultiplePerLevel = false,
-                IsCollapsible = false,
-                SearchEndpoint = Url.Action("SearchAssignableEntities", "FormTemplates")
-            }
-            .WithAssignmentType("User", "Specific User", "ri-user-line", isDefault: true)
-            .WithAssignmentType("Role", "By Role", "ri-shield-user-line")
-            .BuildAssignmentManager();
-
-            ViewData["ApprovalWorkflowManager"] = approvalWorkflowManager;
-
             return View("~/Views/Forms/FormTemplates/Create.cshtml");
+        }
+
+        /// <summary>
+        /// SaveDraft - Save or update template as draft (AJAX endpoint for autosave)
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> SaveDraft([FromBody] FormTemplateDraftDto dto)
+        {
+            try
+            {
+                if (dto.TemplateId == 0 || dto.TemplateId == null)
+                {
+                    // CREATE NEW DRAFT
+                    var newTemplate = new Models.Entities.Forms.FormTemplate
+                    {
+                        TemplateName = dto.TemplateName ?? "Untitled Template",
+                        TemplateCode = dto.TemplateCode ?? await _templateService.GenerateUniqueTemplateCodeAsync(dto.TemplateName ?? "Template"),
+                        Description = dto.Description,
+                        CategoryId = dto.CategoryId,
+                        TemplateType = dto.TemplateType ?? "Monthly",
+                        Version = 1,
+                        PublishStatus = "Draft", // ✅ Save as Draft
+                        IsActive = true,
+                        CreatedBy = 1, // TODO: Get from current user context
+                        CreatedDate = DateTime.UtcNow,
+                        ModifiedDate = DateTime.UtcNow
+                    };
+
+                    _context.FormTemplates.Add(newTemplate);
+                    await _context.SaveChangesAsync();
+
+                    return Json(new
+                    {
+                        success = true,
+                        templateId = newTemplate.TemplateId,
+                        message = "Template saved as draft",
+                        isNew = true
+                    });
+                }
+                else
+                {
+                    // UPDATE EXISTING DRAFT
+                    var template = await _context.FormTemplates.FindAsync(dto.TemplateId);
+
+                    if (template == null)
+                        return Json(new { success = false, message = "Template not found" });
+
+                    if (template.PublishStatus != "Draft")
+                        return Json(new { success = false, message = "Cannot edit published template" });
+
+                    // Update fields
+                    template.TemplateName = dto.TemplateName ?? template.TemplateName;
+                    template.TemplateCode = dto.TemplateCode ?? template.TemplateCode;
+                    template.Description = dto.Description;
+                    template.CategoryId = dto.CategoryId > 0 ? dto.CategoryId : template.CategoryId;
+                    template.TemplateType = dto.TemplateType ?? template.TemplateType;
+                    template.ModifiedDate = DateTime.UtcNow;
+                    template.ModifiedBy = 1; // TODO: Get from current user context
+
+                    await _context.SaveChangesAsync();
+
+                    return Json(new
+                    {
+                        success = true,
+                        templateId = template.TemplateId,
+                        message = "Draft updated",
+                        isNew = false
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error saving draft: {ex.Message}" });
+            }
         }
 
         /// <summary>
@@ -437,9 +494,12 @@ namespace FormReporting.Controllers.Forms
                         var userResults = users.Select(u => new
                         {
                             id = u.UserId,
+                            type = "User",
                             name = u.FullName,
-                            details = $"{u.Email} | {u.PrimaryTenant?.TenantName ?? "No Tenant"}",
-                            icon = "ri-user-line"
+                            details = u.Email,
+                            badge = u.Department?.DepartmentName,
+                            tenantId = u.TenantId,
+                            tenantName = u.PrimaryTenant?.TenantName
                         });
                         return Json(userResults);
 
@@ -452,9 +512,9 @@ namespace FormReporting.Controllers.Forms
                             .Select(r => new
                             {
                                 id = r.RoleId,
+                                type = "Role",
                                 name = r.RoleName,
-                                details = r.Description,
-                                icon = "ri-shield-user-line"
+                                details = r.Description
                             })
                             .ToListAsync();
                         return Json(roles);
@@ -469,9 +529,9 @@ namespace FormReporting.Controllers.Forms
                             .Select(d => new
                             {
                                 id = d.DepartmentId,
+                                type = "Department",
                                 name = d.DepartmentName,
-                                details = d.Tenant.TenantName,
-                                icon = "ri-building-line"
+                                details = d.Tenant.TenantName
                             })
                             .ToListAsync();
                         return Json(departments);
@@ -479,6 +539,47 @@ namespace FormReporting.Controllers.Forms
                     default:
                         return Json(new List<object>());
                 }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { error = ex.Message });
+            }
+        }
+        
+        /// <summary>
+        /// AJAX: Get users grouped by tenant for bulk selection
+        /// Used in bulk assignment modals with accordion grouping
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> GetUsersGroupedByTenant(string? search = null)
+        {
+            try
+            {
+                // Get accessible users with scope filtering
+                var users = await _userService.GetAccessibleUsersAsync(User, search);
+                
+                // Group by tenant
+                var groupedUsers = users
+                    .GroupBy(u => new { u.TenantId, TenantName = u.PrimaryTenant?.TenantName ?? "No Tenant" })
+                    .OrderBy(g => g.Key.TenantName)
+                    .Select(g => new
+                    {
+                        tenantId = g.Key.TenantId,
+                        tenantName = g.Key.TenantName,
+                        userCount = g.Count(),
+                        users = g.Select(u => new
+                        {
+                            userId = u.UserId,
+                            fullName = u.FullName,
+                            email = u.Email,
+                            employeeNumber = u.UserName, // Assuming UserName contains employee number
+                            jobTitle = "", // Add if you have this field
+                            departmentName = u.Department?.DepartmentName ?? "No Department"
+                        }).ToList()
+                    })
+                    .ToList();
+                
+                return Json(groupedUsers);
             }
             catch (Exception ex)
             {

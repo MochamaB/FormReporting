@@ -59,10 +59,11 @@ namespace FormReporting.Models.ViewModels.Identity
     }
 
     /// <summary>
-    /// View model for creating/editing roles
+    /// View model for creating/editing roles with wizard support
     /// </summary>
     public class RoleEditViewModel
     {
+        // Step 1: Basic Details
         public int RoleId { get; set; }
 
         [Required(ErrorMessage = "Role name is required")]
@@ -86,6 +87,23 @@ namespace FormReporting.Models.ViewModels.Identity
 
         [Display(Name = "Active")]
         public bool IsActive { get; set; } = true;
+
+        // Step 2: Assign Permissions
+        /// <summary>
+        /// List of selected permission IDs
+        /// </summary>
+        public List<int> SelectedPermissionIds { get; set; } = new();
+
+        /// <summary>
+        /// Optional: Copy permissions from this role ID
+        /// </summary>
+        public int? CopyFromRoleId { get; set; }
+
+        // Step 3: Assign Users
+        /// <summary>
+        /// List of selected user IDs to assign to this role
+        /// </summary>
+        public List<int> SelectedUserIds { get; set; } = new();
     }
 
     /// <summary>

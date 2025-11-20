@@ -1,0 +1,290 @@
+@model FormReporting.Models.ViewModels.Components.AssignmentManagerViewModel
+
+@*
+    Modal Content: Add Form Assignment (Medium Complexity)
+    
+    Database Model: FormReporting.Models.Entities.Forms.FormAssignment
+    
+    Required Fields:
+    - FormTemplateId (int): Provided by parent context
+    - AssignmentType (string): "User", "Role", "Department", "UserGroup", "Tenant"
+    - TargetId (int): ID of the assigned entity
+    - TargetName (string): Display name
+    - TargetDetails (string?): Additional info
+*@
+
+@* Assignment Type Selection *@
+<div class="mb-4">
+    <label class="form-label">Assignment Type <span class="text-danger">*</span></label>
+    <div class="btn-group w-100" role="group" aria-label="Assignment type">
+        <input type="radio" 
+               class="btn-check" 
+               name="assignmentType_@Model.ManagerId" 
+               id="typeUser_@Model.ManagerId" 
+               value="User">
+        <label class="btn btn-outline-primary" for="typeUser_@Model.ManagerId">
+            <i class="ri-user-line me-1"></i>User
+        </label>
+        
+        <input type="radio" 
+               class="btn-check" 
+               name="assignmentType_@Model.ManagerId" 
+               id="typeRole_@Model.ManagerId" 
+               value="Role"
+               checked>
+        <label class="btn btn-outline-success" for="typeRole_@Model.ManagerId">
+            <i class="ri-shield-user-line me-1"></i>Role
+        </label>
+        
+        <input type="radio" 
+               class="btn-check" 
+               name="assignmentType_@Model.ManagerId" 
+               id="typeDepartment_@Model.ManagerId" 
+               value="Department">
+        <label class="btn btn-outline-info" for="typeDepartment_@Model.ManagerId">
+            <i class="ri-building-line me-1"></i>Department
+        </label>
+        
+        <input type="radio" 
+               class="btn-check" 
+               name="assignmentType_@Model.ManagerId" 
+               id="typeUserGroup_@Model.ManagerId" 
+               value="UserGroup">
+        <label class="btn btn-outline-warning" for="typeUserGroup_@Model.ManagerId">
+            <i class="ri-group-line me-1"></i>User Group
+        </label>
+        
+        <input type="radio" 
+               class="btn-check" 
+               name="assignmentType_@Model.ManagerId" 
+               id="typeTenant_@Model.ManagerId" 
+               value="Tenant">
+        <label class="btn btn-outline-secondary" for="typeTenant_@Model.ManagerId">
+            <i class="ri-community-line me-1"></i>Factory
+        </label>
+    </div>
+    <div class="form-text mt-2">
+        Select who should have access to this form template
+    </div>
+</div>
+
+@* Search Box *@
+<div class="mb-3">
+    <label for="entitySearch_@Model.ManagerId" class="form-label">
+        Search <span class="text-danger">*</span>
+    </label>
+    <div class="input-group">
+        <span class="input-group-text">
+            <i class="ri-search-line"></i>
+        </span>
+        <input type="text" 
+               class="form-control" 
+               id="entitySearch_@Model.ManagerId" 
+               placeholder="Type to search..." />
+    </div>
+    <div class="form-text" id="searchHint_@Model.ManagerId">
+        Search by name, code, or description
+    </div>
+    <div id="entityResults_@Model.ManagerId" class="search-results mt-2" style="display: none;"></div>
+</div>
+
+@* Selected Entity Preview *@
+<div id="selectedEntity_@Model.ManagerId" class="selected-preview mb-3" style="display: none;">
+    <div class="alert alert-success mb-0">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <span id="selectedEntityIcon_@Model.ManagerId"></span>
+                <strong>Selected:</strong> <span id="selectedEntityName_@Model.ManagerId"></span>
+                <br>
+                <small class="text-muted" id="selectedEntityDetails_@Model.ManagerId"></small>
+                <input type="hidden" id="selectedEntityId_@Model.ManagerId" />
+                <input type="hidden" id="selectedEntityType_@Model.ManagerId" />
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="clearEntity_@Model.ManagerId">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+@* Access Level (Optional Enhancement) *@
+<div class="mb-3">
+    <label for="accessLevel_@Model.ManagerId" class="form-label">Access Level</label>
+    <select class="form-select" id="accessLevel_@Model.ManagerId">
+        <option value="Fill" selected>Can Fill Form</option>
+        <option value="View">View Only</option>
+        <option value="Edit">Can Edit Submissions</option>
+        <option value="Admin">Full Admin Access</option>
+    </select>
+    <div class="form-text">Define what the assigned entity can do with this form</div>
+</div>
+
+@* Valid Date Range (Optional) *@
+<div class="row">
+    <div class="col-md-6 mb-3">
+        <label for="validFrom_@Model.ManagerId" class="form-label">Valid From</label>
+        <input type="date" 
+               class="form-control" 
+               id="validFrom_@Model.ManagerId" 
+               value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+    </div>
+    <div class="col-md-6 mb-3">
+        <label for="validTo_@Model.ManagerId" class="form-label">Valid Until</label>
+        <input type="date" 
+               class="form-control" 
+               id="validTo_@Model.ManagerId" />
+        <div class="form-text">Leave empty for permanent access</div>
+    </div>
+</div>
+
+<style>
+    .search-results {
+        max-height: 250px;
+        overflow-y: auto;
+        border: 1px solid #e9ecef;
+        border-radius: 0.25rem;
+    }
+    
+    .search-results .list-group-item {
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    
+    .search-results .list-group-item:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .btn-check:checked + .btn {
+        font-weight: 600;
+    }
+</style>
+
+<script>
+    $(document).ready(function() {
+        var managerId = '@Model.ManagerId';
+        var searchTimeout = null;
+        
+        // Update search hint based on selected type
+        function updateSearchHint() {
+            var selectedType = $('input[name="assignmentType_' + managerId + '"]:checked').val();
+            var hints = {
+                'User': 'Search by name, email, or employee number',
+                'Role': 'Search by role name or code',
+                'Department': 'Search by department name or code',
+                'UserGroup': 'Search by group name',
+                'Tenant': 'Search by factory/branch name or code'
+            };
+            $('#searchHint_' + managerId).text(hints[selectedType] || 'Search by name');
+        }
+        
+        // Update hint on type change
+        $('input[name="assignmentType_' + managerId + '"]').on('change', function() {
+            updateSearchHint();
+            $('#entitySearch_' + managerId).val('');
+            $('#entityResults_' + managerId).hide().empty();
+            $('#selectedEntity_' + managerId).hide();
+        });
+        
+        // Initialize hint
+        updateSearchHint();
+        
+        // Search entities
+        $('#entitySearch_' + managerId).on('input', function() {
+            var query = $(this).val();
+            var assignmentType = $('input[name="assignmentType_' + managerId + '"]:checked').val();
+            
+            clearTimeout(searchTimeout);
+            
+            if (query.length < 2) {
+                $('#entityResults_' + managerId).hide().empty();
+                return;
+            }
+            
+            searchTimeout = setTimeout(function() {
+                $.ajax({
+                    url: '@Model.SearchEndpoint',
+                    data: { type: assignmentType, query: query },
+                    success: function(results) {
+                        var $results = $('#entityResults_' + managerId);
+                        $results.empty();
+                        
+                        if (results.length === 0) {
+                            $results.html('<div class="p-3 text-muted text-center"><i class="ri-information-line me-1"></i>No results found</div>');
+                        } else {
+                            var $list = $('<div class="list-group"></div>');
+                            results.forEach(function(item) {
+                                var iconMap = {
+                                    'User': 'ri-user-line',
+                                    'Role': 'ri-shield-user-line',
+                                    'Department': 'ri-building-line',
+                                    'UserGroup': 'ri-group-line',
+                                    'Tenant': 'ri-community-line'
+                                };
+                                var icon = '<i class="' + iconMap[item.type] + ' me-2"></i>';
+                                var badge = item.badge ? '<span class="badge bg-secondary-subtle text-secondary ms-2">' + item.badge + '</span>' : '';
+                                
+                                var $item = $('<a href="#" class="list-group-item list-group-item-action"></a>')
+                                    .data('id', item.id)
+                                    .data('type', item.type)
+                                    .data('name', item.name)
+                                    .data('details', item.details || '')
+                                    .html('<div class="d-flex justify-content-between align-items-center">' +
+                                          '<div>' + icon + '<strong>' + item.name + '</strong><br><small class="text-muted">' + (item.details || '') + '</small></div>' +
+                                          '<div>' + badge + '</div></div>');
+                                $list.append($item);
+                            });
+                            $results.html($list);
+                        }
+                        $results.show();
+                    },
+                    error: function() {
+                        $('#entityResults_' + managerId)
+                            .html('<div class="p-3 text-danger text-center"><i class="ri-error-warning-line me-1"></i>Error loading results</div>')
+                            .show();
+                    }
+                });
+            }, 300);
+        });
+        
+        // Select entity from results
+        $(document).on('click', '#entityResults_' + managerId + ' .list-group-item', function(e) {
+            e.preventDefault();
+            var id = $(this).data('id');
+            var type = $(this).data('type');
+            var name = $(this).data('name');
+            var details = $(this).data('details');
+            
+            var iconMap = {
+                'User': '<i class="ri-user-line me-2"></i>',
+                'Role': '<i class="ri-shield-user-line me-2"></i>',
+                'Department': '<i class="ri-building-line me-2"></i>',
+                'UserGroup': '<i class="ri-group-line me-2"></i>',
+                'Tenant': '<i class="ri-community-line me-2"></i>'
+            };
+            
+            $('#selectedEntityId_' + managerId).val(id);
+            $('#selectedEntityType_' + managerId).val(type);
+            $('#selectedEntityIcon_' + managerId).html(iconMap[type]);
+            $('#selectedEntityName_' + managerId).text(name);
+            $('#selectedEntityDetails_' + managerId).text(details);
+            $('#selectedEntity_' + managerId).show();
+            $('#entityResults_' + managerId).hide();
+            $('#entitySearch_' + managerId).val('');
+            
+            // Enable add button in parent modal
+            $('#addAssignmentBtn_' + managerId).prop('disabled', false);
+        });
+        
+        // Clear selected entity
+        $('#clearEntity_' + managerId).on('click', function() {
+            $('#selectedEntityId_' + managerId).val('');
+            $('#selectedEntityType_' + managerId).val('');
+            $('#selectedEntityName_' + managerId).text('');
+            $('#selectedEntityDetails_' + managerId).text('');
+            $('#selectedEntity_' + managerId).hide();
+            
+            // Disable add button in parent modal
+            $('#addAssignmentBtn_' + managerId).prop('disabled', true);
+        });
+    });
+</script>

@@ -1,0 +1,114 @@
+@model FormReporting.Models.ViewModels.Identity.RoleEditViewModel
+
+<div class="step-content">
+    <div class="row">
+        <div class="col-md-12 mb-3">
+            <div class="alert alert-success">
+                <i class="ri-checkbox-circle-line me-2"></i>
+                <strong>Ready to Create!</strong> Review the details below and click "Create Role" to finish.
+            </div>
+        </div>
+    </div>
+
+    <!-- Basic Details Summary -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-primary text-white">
+                    <h6 class="mb-0">
+                        <i class="ri-information-line me-2"></i>Basic Details
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <dl class="row mb-0">
+                                <dt class="col-sm-4">Role Name:</dt>
+                                <dd class="col-sm-8" id="review_roleName">-</dd>
+
+                                <dt class="col-sm-4">Role Code:</dt>
+                                <dd class="col-sm-8"><code id="review_roleCode">-</code></dd>
+
+                                <dt class="col-sm-4">Scope Level:</dt>
+                                <dd class="col-sm-8" id="review_scopeLevel">-</dd>
+                            </dl>
+                        </div>
+                        <div class="col-md-6">
+                            <dl class="row mb-0">
+                                <dt class="col-sm-4">Status:</dt>
+                                <dd class="col-sm-8" id="review_status">-</dd>
+
+                                <dt class="col-sm-4">Description:</dt>
+                                <dd class="col-sm-8" id="review_description">-</dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Permissions Summary -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="ri-shield-check-line me-2"></i>Permissions
+                        <span class="badge bg-white text-info ms-2" id="review_permissionCount">0</span>
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div id="review_permissionsList">
+                        <p class="text-muted mb-0">No permissions selected.</p>
+                    </div>
+                    <div class="mt-2">
+                        <button type="button" class="btn btn-sm btn-outline-info" id="togglePermissionDetails">
+                            <i class="ri-eye-line"></i> Show All Permissions
+                        </button>
+                    </div>
+                    <div id="review_permissionsDetailed" class="mt-3" style="display: none;">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Users Summary -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h6 class="mb-0">
+                        <i class="ri-user-add-line me-2"></i>Assigned Users
+                        <span class="badge bg-white text-success ms-2" id="review_userCount">0</span>
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div id="review_usersList">
+                        <p class="text-muted mb-0">No users selected.</p>
+                    </div>
+                    <div class="mt-2">
+                        <button type="button" class="btn btn-sm btn-outline-success" id="toggleUserDetails">
+                            <i class="ri-eye-line"></i> Show All Users
+                        </button>
+                    </div>
+                    <div id="review_usersDetailed" class="mt-3" style="display: none;">
+                        <!-- Will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Warning if no permissions/users -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="alert alert-warning" id="review_warnings" style="display: none;">
+                <i class="ri-error-warning-line me-2"></i>
+                <ul class="mb-0" id="review_warningsList"></ul>
+            </div>
+        </div>
+    </div>
+</div>

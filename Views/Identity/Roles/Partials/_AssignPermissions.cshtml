@@ -1,0 +1,156 @@
+@model FormReporting.Models.ViewModels.Identity.RoleEditViewModel
+
+@{
+    var modules = ViewBag.Modules as List<FormReporting.Models.Entities.Identity.Module>;
+    var existingRoles = ViewBag.ExistingRoles as List<dynamic>;
+}
+
+<div class="step-content">
+    <div class="row">
+        <div class="col-md-12 mb-3">
+            <div class="alert alert-info">
+                <i class="ri-information-line me-2"></i>
+                <strong>Tip:</strong> You can copy permissions from an existing role or select individual permissions below.
+                Permissions can also be modified later after role creation.
+            </div>
+        </div>
+    </div>
+
+    <!-- Copy from Existing Role -->
+    <div class="row mb-4">
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-light">
+                    <h6 class="mb-0">
+                        <i class="ri-file-copy-line me-2"></i>Copy from Existing Role (Optional)
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-center">
+                        <div class="col-md-6">
+                            <label for="copyFromRole" class="form-label">Select role to copy permissions from:</label>
+                            <select id="copyFromRole" class="form-select">
+                                <option value="">-- Select a role --</option>
+                                @if (existingRoles != null)
+                                {
+                                    foreach (var role in existingRoles)
+                                    {
+                                        <option value="@role.RoleId">@role.RoleName (@role.RoleCode)</option>
+                                    }
+                                }
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <button type="button" class="btn btn-primary" id="copyPermissionsBtn" disabled>
+                                <i class="ri-file-copy-line me-1"></i>Copy Permissions
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="clearPermissionsBtn">
+                                <i class="ri-close-line me-1"></i>Clear All
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Manual Permission Selection -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h6 class="mb-0">Select Permissions</h6>
+                <div>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="expandAllModules">
+                        <i class="ri-arrow-down-s-line"></i> Expand All
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="collapseAllModules">
+                        <i class="ri-arrow-up-s-line"></i> Collapse All
+                    </button>
+                </div>
+            </div>
+
+            @if (modules != null && modules.Any())
+            {
+                <div class="accordion" id="permissionsAccordion">
+                    @foreach (var module in modules)
+                    {
+                        var moduleId = "module_" + module.ModuleId;
+                        <div class="accordion-item">
+                            <h2 class="accordion-header" id="heading_@moduleId">
+                                <button class="accordion-button collapsed" type="button"
+                                        data-bs-toggle="collapse" data-bs-target="#collapse_@moduleId"
+                                        aria-expanded="false" aria-controls="collapse_@moduleId">
+                                    <i class="@module.Icon me-2"></i>
+                                    <strong>@module.ModuleName</strong>
+                                    <span class="badge bg-secondary ms-2" id="badge_@moduleId">0 / @module.Permissions.Count</span>
+                                </button>
+                            </h2>
+                            <div id="collapse_@moduleId" class="accordion-collapse collapse"
+                                 aria-labelledby="heading_@moduleId" data-bs-parent="#permissionsAccordion">
+                                <div class="accordion-body">
+                                    <div class="mb-2">
+                                        <button type="button" class="btn btn-sm btn-outline-primary select-all-module"
+                                                data-module="@module.ModuleId">
+                                            <i class="ri-checkbox-multiple-line"></i> Select All
+                                        </button>
+                                        <button type="button" class="btn btn-sm btn-outline-secondary deselect-all-module"
+                                                data-module="@module.ModuleId">
+                                            <i class="ri-checkbox-blank-line"></i> Deselect All
+                                        </button>
+                                    </div>
+
+                                    @if (module.Permissions != null && module.Permissions.Any())
+                                    {
+                                        <div class="row">
+                                            @foreach (var permission in module.Permissions)
+                                            {
+                                                <div class="col-md-6 mb-2">
+                                                    <div class="form-check">
+                                                        <input class="form-check-input permission-checkbox"
+                                                               type="checkbox"
+                                                               name="SelectedPermissionIds"
+                                                               value="@permission.PermissionId"
+                                                               id="perm_@permission.PermissionId"
+                                                               data-module="@module.ModuleId" />
+                                                        <label class="form-check-label" for="perm_@permission.PermissionId">
+                                                            <strong>@permission.PermissionName</strong>
+                                                            <small class="text-muted d-block">@permission.PermissionCode</small>
+                                                            @if (!string.IsNullOrEmpty(permission.Description))
+                                                            {
+                                                                <small class="text-muted d-block">@permission.Description</small>
+                                                            }
+                                                        </label>
+                                                    </div>
+                                                </div>
+                                            }
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <p class="text-muted mb-0">No permissions available for this module.</p>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+            else
+            {
+                <div class="alert alert-warning">
+                    <i class="ri-error-warning-line me-2"></i>
+                    No modules with permissions found. Please create modules and permissions first.
+                </div>
+            }
+        </div>
+    </div>
+
+    <!-- Selected Permissions Summary -->
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <div class="alert alert-secondary">
+                <strong>Selected:</strong> <span id="selectedPermissionsCount">0</span> permission(s)
+            </div>
+        </div>
+    </div>
+</div>

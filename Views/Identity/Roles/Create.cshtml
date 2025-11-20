@@ -1,0 +1,388 @@
+@model FormReporting.Models.ViewModels.Identity.RoleEditViewModel
+@using FormReporting.Extensions
+
+@{
+    ViewData["Title"] = "Create Role";
+    var wizard = ViewData["Wizard"] as FormReporting.Models.ViewModels.Components.WizardViewModel;
+    ViewData["WizardViewModel"] = wizard;
+    ViewData["ParentModel"] = Model;
+}
+
+<!-- Page Header -->
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="page-title-box d-flex align-items-center justify-content-between">
+            <h4 class="mb-0">Create New Role</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="/">Home</a></li>
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Roles")">Roles</a></li>
+                    <li class="breadcrumb-item active">Create</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Wizard Form -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Create" asp-controller="Roles" method="post" id="roleCreationWizard">
+                    @Html.AntiForgeryToken()
+
+                    @if (wizard != null)
+                    {
+                        <partial name="~/Views/Shared/Components/Wizards/_VerticalWizard.cshtml" />
+                    }
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // ═══════════════════════════════════════════════════════════
+            // STEP 1: BASIC DETAILS - JavaScript
+            // ═══════════════════════════════════════════════════════════
+
+            // Auto-uppercase role code
+            $('#RoleCode').on('input', function() {
+                this.value = this.value.toUpperCase().replace(/[^A-Z_]/g, '');
+            });
+
+            // Check role code availability
+            let checkTimeout;
+            function checkRoleCode() {
+                clearTimeout(checkTimeout);
+                var code = $('#RoleCode').val().trim();
+
+                if (code.length < 2) {
+                    $('#codeCheckFeedback').html('');
+                    return;
+                }
+
+                checkTimeout = setTimeout(function() {
+                    $.ajax({
+                        url: '@Url.Action("CheckRoleCode", "Roles")',
+                        type: 'GET',
+                        data: { code: code },
+                        success: function(response) {
+                            if (response.exists) {
+                                $('#codeCheckFeedback').html('<span class="text-danger"><i class="ri-close-circle-line"></i> Code already exists</span>');
+                                $('#RoleCode').addClass('is-invalid');
+                            } else if (!response.valid) {
+                                $('#codeCheckFeedback').html('<span class="text-warning"><i class="ri-error-warning-line"></i> Invalid format</span>');
+                                $('#RoleCode').addClass('is-invalid');
+                            } else {
+                                $('#codeCheckFeedback').html('<span class="text-success"><i class="ri-checkbox-circle-line"></i> Code available</span>');
+                                $('#RoleCode').removeClass('is-invalid').addClass('is-valid');
+                            }
+                        }
+                    });
+                }, 500);
+            }
+
+            $('#checkCodeBtn').on('click', checkRoleCode);
+            $('#RoleCode').on('input', checkRoleCode);
+
+            // ═══════════════════════════════════════════════════════════
+            // STEP 2: PERMISSIONS - JavaScript
+            // ═══════════════════════════════════════════════════════════
+
+            // Enable copy button when role selected
+            $('#copyFromRole').on('change', function() {
+                $('#copyPermissionsBtn').prop('disabled', !$(this).val());
+            });
+
+            // Copy permissions from selected role
+            $('#copyPermissionsBtn').on('click', function() {
+                var roleId = $('#copyFromRole').val();
+                if (!roleId) return;
+
+                $.ajax({
+                    url: '@Url.Action("GetRolePermissions", "Roles")',
+                    type: 'GET',
+                    data: { roleId: roleId },
+                    success: function(response) {
+                        if (response.success) {
+                            // Clear all first
+                            $('.permission-checkbox').prop('checked', false);
+
+                            // Check permissions from selected role
+                            response.permissionIds.forEach(function(permId) {
+                                $('#perm_' + permId).prop('checked', true);
+                            });
+
+                            updatePermissionCounts();
+                            alert('Permissions copied successfully!');
+                        } else {
+                            alert('Error: ' + response.message);
+                        }
+                    },
+                    error: function() {
+                        alert('Failed to copy permissions. Please try again.');
+                    }
+                });
+            });
+
+            // Clear all permissions
+            $('#clearPermissionsBtn').on('click', function() {
+                if (confirm('Clear all selected permissions?')) {
+                    $('.permission-checkbox').prop('checked', false);
+                    updatePermissionCounts();
+                }
+            });
+
+            // Select/Deselect all in module
+            $('.select-all-module').on('click', function() {
+                var moduleId = $(this).data('module');
+                $('.permission-checkbox[data-module="' + moduleId + '"]').prop('checked', true);
+                updatePermissionCounts();
+            });
+
+            $('.deselect-all-module').on('click', function() {
+                var moduleId = $(this).data('module');
+                $('.permission-checkbox[data-module="' + moduleId + '"]').prop('checked', false);
+                updatePermissionCounts();
+            });
+
+            // Update counts when checkboxes change
+            $('.permission-checkbox').on('change', updatePermissionCounts);
+
+            function updatePermissionCounts() {
+                // Update total count
+                var totalSelected = $('.permission-checkbox:checked').length;
+                $('#selectedPermissionsCount').text(totalSelected);
+
+                // Update per-module badges
+                $('[id^="badge_module_"]').each(function() {
+                    var moduleId = $(this).attr('id').replace('badge_module_', '');
+                    var total = $('.permission-checkbox[data-module="' + moduleId + '"]').length;
+                    var selected = $('.permission-checkbox[data-module="' + moduleId + '"]:checked').length;
+                    $(this).text(selected + ' / ' + total);
+                });
+            }
+
+            // Expand/Collapse all modules
+            $('#expandAllModules').on('click', function() {
+                $('.accordion-collapse').addClass('show');
+            });
+
+            $('#collapseAllModules').on('click', function() {
+                $('.accordion-collapse').removeClass('show');
+            });
+
+            // ═══════════════════════════════════════════════════════════
+            // STEP 3: USERS - JavaScript
+            // ═══════════════════════════════════════════════════════════
+
+            // User search
+            $('#userSearch').on('input', function() {
+                var searchTerm = $(this).val().toLowerCase();
+
+                $('.user-card').each(function() {
+                    var username = $(this).data('username').toLowerCase();
+                    if (username.includes(searchTerm)) {
+                        $(this).show();
+                    } else {
+                        $(this).hide();
+                    }
+                });
+            });
+
+            // Select all users
+            $('#selectAllUsers').on('click', function() {
+                $('.user-checkbox:visible').prop('checked', true);
+                updateUserCounts();
+            });
+
+            // Deselect all users
+            $('#deselectAllUsers').on('click', function() {
+                $('.user-checkbox').prop('checked', false);
+                updateUserCounts();
+            });
+
+            // Select all in tenant
+            $('.select-all-tenant').on('click', function() {
+                var tenantId = $(this).data('tenant');
+                $('.user-checkbox[data-tenant="' + tenantId + '"]').prop('checked', true);
+                updateUserCounts();
+            });
+
+            // Update counts when user checkboxes change
+            $('.user-checkbox').on('change', updateUserCounts);
+
+            function updateUserCounts() {
+                // Update total count
+                var totalSelected = $('.user-checkbox:checked').length;
+                $('#selectedUsersCount').text(totalSelected);
+
+                // Update per-tenant counts
+                $('.tenant-user-count').each(function() {
+                    var tenantId = $(this).closest('.tenant-group').data('tenant-id');
+                    var total = $('.user-checkbox[data-tenant="' + tenantId + '"]').length;
+                    var selected = $('.user-checkbox[data-tenant="' + tenantId + '"]:checked').length;
+                    $(this).text(selected + '/' + total);
+                });
+            }
+
+            // ═══════════════════════════════════════════════════════════
+            // STEP 4: REVIEW - JavaScript
+            // ═══════════════════════════════════════════════════════════
+
+            // Populate review when navigating to step 4
+            $(document).on('wizardStepChanged', function(e, data) {
+                if (data.toStepId === 'review-confirm') {
+                    populateReviewSummary();
+                }
+            });
+
+            function populateReviewSummary() {
+                // Basic Details
+                $('#review_roleName').text($('#RoleName').val() || '-');
+                $('#review_roleCode').text($('#RoleCode').val() || '-');
+                $('#review_scopeLevel').text($('#ScopeLevelId option:selected').text() || '-');
+                $('#review_status').html($('#IsActive').is(':checked')
+                    ? '<span class="badge bg-success">Active</span>'
+                    : '<span class="badge bg-secondary">Inactive</span>');
+                $('#review_description').text($('#Description').val() || 'No description provided');
+
+                // Permissions
+                var selectedPermissions = $('.permission-checkbox:checked');
+                $('#review_permissionCount').text(selectedPermissions.length);
+
+                if (selectedPermissions.length === 0) {
+                    $('#review_permissionsList').html('<p class="text-muted mb-0">No permissions selected.</p>');
+                } else {
+                    $('#review_permissionsList').html('<p class="text-success mb-0">' + selectedPermissions.length + ' permission(s) selected.</p>');
+
+                    // Detailed permissions list
+                    var permHtml = '<ul class="list-group">';
+                    selectedPermissions.each(function() {
+                        var permName = $(this).parent().find('strong').text();
+                        permHtml += '<li class="list-group-item">' + permName + '</li>';
+                    });
+                    permHtml += '</ul>';
+                    $('#review_permissionsDetailed').html(permHtml);
+                }
+
+                // Users
+                var selectedUsers = $('.user-checkbox:checked');
+                $('#review_userCount').text(selectedUsers.length);
+
+                if (selectedUsers.length === 0) {
+                    $('#review_usersList').html('<p class="text-muted mb-0">No users selected.</p>');
+                } else {
+                    $('#review_usersList').html('<p class="text-success mb-0">' + selectedUsers.length + ' user(s) selected.</p>');
+
+                    // Detailed users list
+                    var userHtml = '<ul class="list-group">';
+                    selectedUsers.each(function() {
+                        var userName = $(this).parent().find('.fw-bold').text();
+                        userHtml += '<li class="list-group-item">' + userName + '</li>';
+                    });
+                    userHtml += '</ul>';
+                    $('#review_usersDetailed').html(userHtml);
+                }
+
+                // Warnings
+                var warnings = [];
+                if (selectedPermissions.length === 0) {
+                    warnings.push('No permissions selected. Role will have no capabilities.');
+                }
+                if (selectedUsers.length === 0) {
+                    warnings.push('No users selected. You can assign users later.');
+                }
+
+                if (warnings.length > 0) {
+                    var warningHtml = '';
+                    warnings.forEach(function(w) {
+                        warningHtml += '<li>' + w + '</li>';
+                    });
+                    $('#review_warningsList').html(warningHtml);
+                    $('#review_warnings').show();
+                } else {
+                    $('#review_warnings').hide();
+                }
+            }
+
+            // Toggle details
+            $('#togglePermissionDetails').on('click', function() {
+                $('#review_permissionsDetailed').slideToggle();
+                var icon = $(this).find('i');
+                icon.toggleClass('ri-eye-line ri-eye-off-line');
+            });
+
+            $('#toggleUserDetails').on('click', function() {
+                $('#review_usersDetailed').slideToggle();
+                var icon = $(this).find('i');
+                icon.toggleClass('ri-eye-line ri-eye-off-line');
+            });
+
+            // ═══════════════════════════════════════════════════════════
+            // WIZARD VALIDATION
+            // ═══════════════════════════════════════════════════════════
+
+            window.wizardValidationCallbacks = window.wizardValidationCallbacks || {};
+
+            // Step 1 validation
+            window.wizardValidationCallbacks['basic-details'] = function() {
+                let isValid = true;
+
+                // Clear previous errors
+                $('.is-invalid').removeClass('is-invalid');
+
+                // Validate Role Name
+                if (!$('#RoleName').val().trim()) {
+                    $('#RoleName').addClass('is-invalid');
+                    $('#RoleName').siblings('.invalid-feedback').text('Role name is required');
+                    isValid = false;
+                }
+
+                // Validate Role Code
+                if (!$('#RoleCode').val().trim()) {
+                    $('#RoleCode').addClass('is-invalid');
+                    $('#RoleCode').siblings('.invalid-feedback').text('Role code is required');
+                    isValid = false;
+                } else if (!/^[A-Z_]+$/.test($('#RoleCode').val())) {
+                    $('#RoleCode').addClass('is-invalid');
+                    $('#RoleCode').siblings('.invalid-feedback').text('Only uppercase letters and underscores allowed');
+                    isValid = false;
+                }
+
+                // Validate Scope Level
+                if (!$('#ScopeLevelId').val()) {
+                    $('#ScopeLevelId').addClass('is-invalid');
+                    $('#ScopeLevelId').siblings('.invalid-feedback').text('Scope level is required');
+                    isValid = false;
+                }
+
+                return isValid;
+            };
+
+            // Step 2 validation - Optional (no validation needed, permissions can be empty)
+            window.wizardValidationCallbacks['assign-permissions'] = function() {
+                return true; // Always valid, permissions are optional
+            };
+
+            // Step 3 validation - Optional (no validation needed, users can be empty)
+            window.wizardValidationCallbacks['assign-users'] = function() {
+                return true; // Always valid, users are optional
+            };
+
+            // Step 4 validation - Final check
+            window.wizardValidationCallbacks['review-confirm'] = function() {
+                // Re-validate basic details
+                return window.wizardValidationCallbacks['basic-details']();
+            };
+
+            // Initialize counts
+            updatePermissionCounts();
+            updateUserCounts();
+        });
+    </script>
+}

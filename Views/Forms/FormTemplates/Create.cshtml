@@ -1,6 +1,7 @@
 @using FormReporting.Models.ViewModels.Components
 @using FormReporting.Extensions
 @{
+    Layout = "~/Views/Shared/_BuilderLayout.cshtml";
     ViewData["Title"] = "Create Form Template";
     var progress = ViewData["Progress"] as FormBuilderProgressViewModel;
 
@@ -33,16 +34,20 @@
                 StepNumber = 2,
                 Title = "Settings",
                 Label = "Configuration",
-                Description = "Type, approval, and options",
+                Description = "Type, time, and KPI category",
                 Instructions = "Configure how this template will be used",
                 Icon = "ri-settings-3-line",
                 State = WizardStepState.Pending,
                 ContentPartialPath = "~/Views/Forms/FormTemplates/Partials/_Settings.cshtml",
                 ShowPrevious = true,
                 ShowNext = false,
-                CustomButtonHtml = @"<button type=""submit"" class=""btn btn-primary btn-label ms-auto"">
+                CustomButtonHtml = @"<button type=""button"" onclick=""saveDraft(true)"" class=""btn btn-soft-secondary me-2"">
+                                        <i class=""ri-save-line label-icon align-middle fs-16 me-2""></i>
+                                        Save Draft
+                                      </button>
+                                      <button type=""submit"" class=""btn btn-primary btn-label"">
                                         <i class=""ri-check-line label-icon align-middle fs-16 me-2""></i>
-                                        Save & Continue to Section Builder
+                                        Save & Continue
                                       </button>"
             }
         }
@@ -293,15 +298,6 @@
                         isValid = false;
                     }
 
-                    // If requires approval, check if approvers are assigned
-                    if ($('#RequiresApproval').is(':checked')) {
-                        var approverCount = $('.assignment-manager[data-manager-id="template-approval-workflow"] tbody tr').length;
-                        if (approverCount === 0) {
-                            showValidationError($('#RequiresApproval'), 'Please add at least one approver');
-                            isValid = false;
-                        }
-                    }
-
                     return isValid;
                 }
 
@@ -351,15 +347,6 @@
                     isValid = false;
                 }
 
-                if ($('#RequiresApproval').is(':checked')) {
-                    var approverCount = $('.assignment-manager[data-manager-id="template-approval-workflow"] tbody tr').length;
-                    if (approverCount === 0) {
-                        showValidationError($('#RequiresApproval'), 'Please add at least one approver');
-                        if (!firstInvalidField) firstInvalidField = $('#RequiresApproval');
-                        isValid = false;
-                    }
-                }
-
                 if (!isValid) {
                     e.preventDefault();
                     // Focus first invalid field if exists
@@ -396,24 +383,128 @@
             });
 
             // ========================================================================
-            // REQUIRES APPROVAL TOGGLE - SHOW/HIDE APPROVAL WORKFLOW SECTION
+            // AUTOSAVE DRAFT - Save every 30 seconds
             // ========================================================================
-
-            // Show/hide approval workflow section based on RequiresApproval checkbox
-            $('#RequiresApproval').on('change', function() {
-                if ($(this).is(':checked')) {
-                    $('#approvalWorkflowSection').slideDown(300);
-                } else {
-                    $('#approvalWorkflowSection').slideUp(300);
-                    // Clear any selected approvers when unchecking
-                    // (In real implementation, would ask for confirmation if approvers exist)
+            
+            let autosaveTimer = null;
+            let templateId = null; // Will be set after first save
+            let isSaving = false;
+            
+            // Auto-save every 30 seconds if form has changes
+            function startAutosave() {
+                autosaveTimer = setInterval(function() {
+                    if (formChanged && !isSaving) {
+                        saveDraft(false); // false = autosave (silent)
+                    }
+                }, 30000); // 30 seconds
+            }
+            
+            // Save draft (manual or auto)
+            function saveDraft(isManual = false) {
+                if (isSaving) return;
+                
+                isSaving = true;
+                
+                if (isManual) {
+                    showSavingIndicator();
+                }
+                
+                const formData = {
+                    TemplateId: templateId,
+                    TemplateName: $('#TemplateName').val(),
+                    TemplateCode: $('#TemplateCode').val(),
+                    Description: $('#Description').val(),
+                    CategoryId: parseInt($('#CategoryId').val()) || 0,
+                    TemplateType: $('#TemplateType').val()
+                };
+                
+                $.ajax({
+                    url: '@Url.Action("SaveDraft", "FormTemplates")',
+                    type: 'POST',
+                    contentType: 'application/json',
+                    data: JSON.stringify(formData),
+                    success: function(response) {
+                        if (response.success) {
+                            // Store templateId for subsequent saves
+                            if (response.templateId) {
+                                templateId = response.templateId;
+                            }
+                            
+                            formChanged = false;
+                            
+                            if (isManual) {
+                                showSavedIndicator(response.message);
+                            } else {
+                                console.log('Draft auto-saved successfully');
+                            }
+                        } else {
+                            if (isManual) {
+                                showSaveErrorIndicator(response.message);
+                            }
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        if (isManual) {
+                            showSaveErrorIndicator('Failed to save draft');
+                        }
+                        console.error('Draft save failed:', error);
+                    },
+                    complete: function() {
+                        isSaving = false;
+                    }
+                });
+            }
+            
+            function showSavingIndicator() {
+                Swal.fire({
+                    title: 'Saving...',
+                    text: 'Please wait',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+            }
+            
+            function showSavedIndicator(message) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Saved!',
+                    text: message,
+                    timer: 2000,
+                    showConfirmButton: false
+                });
+            }
+            
+            function showSaveErrorIndicator(message) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Save Failed',
+                    text: message,
+                    confirmButtonText: 'OK'
+                });
+            }
+            
+            // Start autosave timer
+            startAutosave();
+            
+            // Cleanup on page unload
+            window.addEventListener('beforeunload', function (e) {
+                if (autosaveTimer) {
+                    clearInterval(autosaveTimer);
+                }
+                
+                // Save before leaving if changes exist
+                if (formChanged && !isSaving) {
+                    saveDraft(false);
+                }
+                
+                if (formChanged) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                    return '';
                 }
             });
-
-            // Initialize - show if already checked (for edit scenarios)
-            if ($('#RequiresApproval').is(':checked')) {
-                $('#approvalWorkflowSection').show();
-            }
         });
     </script>
 }

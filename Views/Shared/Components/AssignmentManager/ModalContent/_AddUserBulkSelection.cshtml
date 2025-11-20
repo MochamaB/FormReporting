@@ -1,0 +1,368 @@
+@model FormReporting.Models.ViewModels.Components.AssignmentManagerViewModel
+
+@*
+    Modal Content: Bulk User Selection with Tenant Grouping
+    
+    Use Case: Assigning multiple users at once (e.g., initial role members, bulk assignments)
+    
+    Features:
+    - Search users across accessible tenants
+    - Group results by tenant in collapsible accordions
+    - Multi-select capability
+    - "Select All" per tenant
+    - Selection count badges
+*@
+
+@* Help Text *@
+<div class="alert alert-info mb-3">
+    <i class="ri-information-line me-2"></i>
+    <strong>Select employees who should have this role.</strong>
+    <br><small class="text-muted">You can only see employees within your scope. You can skip this step and assign employees later.</small>
+</div>
+
+@* Search Box *@
+<div class="mb-3">
+    <div class="input-group">
+        <span class="input-group-text">
+            <i class="ri-search-line"></i>
+        </span>
+        <input type="text" 
+               class="form-control" 
+               id="bulkUserSearch_@Model.ManagerId" 
+               placeholder="Search by name or payroll number..." />
+    </div>
+</div>
+
+@* Action Buttons *@
+<div class="d-flex justify-content-end gap-2 mb-3">
+    <button type="button" class="btn btn-sm btn-outline-primary" id="selectAllUsers_@Model.ManagerId">
+        <i class="ri-checkbox-multiple-line me-1"></i>Select All
+    </button>
+    <button type="button" class="btn btn-sm btn-outline-secondary" id="deselectAllUsers_@Model.ManagerId">
+        <i class="ri-checkbox-blank-line me-1"></i>Deselect All
+    </button>
+</div>
+
+@* Loading State *@
+<div id="loadingUsers_@Model.ManagerId" class="text-center py-4" style="display: none;">
+    <div class="spinner-border text-primary" role="status">
+        <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="text-muted mt-2">Loading users...</p>
+</div>
+
+@* Tenant-Grouped User List (Accordions) *@
+<div id="tenantGroupedUsers_@Model.ManagerId" class="tenant-user-list">
+    @* Populated via AJAX *@
+</div>
+
+@* Empty State *@
+<div id="emptyState_@Model.ManagerId" class="text-center py-4" style="display: none;">
+    <i class="ri-user-search-line" style="font-size: 3rem; color: #ccc;"></i>
+    <p class="text-muted mt-2">No users found. Try adjusting your search.</p>
+</div>
+
+@* Selected Count Badge *@
+<div class="mt-3">
+    <span class="badge bg-primary-subtle text-primary" id="selectedCount_@Model.ManagerId">
+        <i class="ri-user-line me-1"></i>0 users selected
+    </span>
+</div>
+
+<style>
+    .tenant-user-list {
+        max-height: 400px;
+        overflow-y: auto;
+        border: 1px solid #e9ecef;
+        border-radius: 0.25rem;
+    }
+    
+    .tenant-accordion-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+        padding: 0.75rem 1rem;
+        cursor: pointer;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background-color 0.2s;
+    }
+    
+    .tenant-accordion-header:hover {
+        background-color: #e9ecef;
+    }
+    
+    .tenant-accordion-header.collapsed .accordion-arrow {
+        transform: rotate(0deg);
+    }
+    
+    .tenant-accordion-header:not(.collapsed) .accordion-arrow {
+        transform: rotate(90deg);
+    }
+    
+    .accordion-arrow {
+        transition: transform 0.2s;
+    }
+    
+    .user-card {
+        border: 1px solid #e9ecef;
+        border-radius: 0.25rem;
+        padding: 0.75rem;
+        margin: 0.5rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        background-color: #fff;
+    }
+    
+    .user-card:hover {
+        border-color: var(--vz-primary);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    
+    .user-card.selected {
+        border-color: var(--vz-primary);
+        background-color: rgba(var(--vz-primary-rgb), 0.05);
+    }
+    
+    .user-card .user-checkbox {
+        width: 18px;
+        height: 18px;
+    }
+    
+    .tenant-select-all-btn {
+        font-size: 0.875rem;
+        padding: 0.25rem 0.5rem;
+    }
+</style>
+
+<script>
+    $(document).ready(function() {
+        var managerId = '@Model.ManagerId';
+        var selectedUserIds = new Set();
+        var searchTimeout = null;
+        var allUsers = []; // Store all loaded users
+        
+        // Load users on modal open
+        loadUsers();
+        
+        // Search handler
+        $('#bulkUserSearch_' + managerId).on('input', function() {
+            clearTimeout(searchTimeout);
+            var query = $(this).val().trim();
+            
+            searchTimeout = setTimeout(function() {
+                loadUsers(query);
+            }, 300);
+        });
+        
+        // Select all users
+        $('#selectAllUsers_' + managerId).on('click', function() {
+            allUsers.forEach(function(user) {
+                selectedUserIds.add(user.userId);
+            });
+            updateUI();
+        });
+        
+        // Deselect all users
+        $('#deselectAllUsers_' + managerId).on('click', function() {
+            selectedUserIds.clear();
+            updateUI();
+        });
+        
+        // Select all in tenant
+        $(document).on('click', '.select-all-tenant-btn', function() {
+            var tenantId = $(this).data('tenant-id');
+            var tenantUsers = allUsers.filter(u => u.tenantId == tenantId);
+            tenantUsers.forEach(function(user) {
+                selectedUserIds.add(user.userId);
+            });
+            updateUI();
+        });
+        
+        // Toggle user selection
+        $(document).on('click', '.user-card', function() {
+            var userId = parseInt($(this).data('user-id'));
+            
+            if (selectedUserIds.has(userId)) {
+                selectedUserIds.delete(userId);
+            } else {
+                selectedUserIds.add(userId);
+            }
+            
+            updateUI();
+        });
+        
+        // User checkbox change
+        $(document).on('change', '.user-checkbox', function(e) {
+            e.stopPropagation(); // Prevent double toggle
+            var userId = parseInt($(this).closest('.user-card').data('user-id'));
+            
+            if ($(this).is(':checked')) {
+                selectedUserIds.add(userId);
+            } else {
+                selectedUserIds.delete(userId);
+            }
+            
+            updateUI();
+        });
+        
+        // Load users from server
+        function loadUsers(searchQuery = '') {
+            $('#loadingUsers_' + managerId).show();
+            $('#tenantGroupedUsers_' + managerId).hide();
+            $('#emptyState_' + managerId).hide();
+            
+            $.ajax({
+                url: '@Url.Action("GetUsersGroupedByTenant", "FormTemplates")',
+                type: 'GET',
+                data: { search: searchQuery },
+                success: function(tenantGroups) {
+                    if (tenantGroups.error) {
+                        alert('Error loading users: ' + tenantGroups.error);
+                        return;
+                    }
+                    
+                    // Flatten all users for easy access
+                    allUsers = [];
+                    tenantGroups.forEach(function(group) {
+                        group.users.forEach(function(user) {
+                            allUsers.push({
+                                userId: user.userId,
+                                fullName: user.fullName,
+                                email: user.email,
+                                employeeNumber: user.employeeNumber,
+                                jobTitle: user.jobTitle,
+                                departmentName: user.departmentName,
+                                tenantId: group.tenantId,
+                                tenantName: group.tenantName
+                            });
+                        });
+                    });
+                    
+                    renderTenantGroups(tenantGroups);
+                    $('#loadingUsers_' + managerId).hide();
+                    
+                    if (tenantGroups.length === 0) {
+                        $('#emptyState_' + managerId).show();
+                    } else {
+                        $('#tenantGroupedUsers_' + managerId).show();
+                    }
+                },
+                error: function() {
+                    alert('Failed to load users. Please try again.');
+                    $('#loadingUsers_' + managerId).hide();
+                }
+            });
+        }
+        
+        // Render tenant groups as accordions
+        function renderTenantGroups(tenantGroups) {
+            var $container = $('#tenantGroupedUsers_' + managerId);
+            $container.empty();
+            
+            if (tenantGroups.length === 0) {
+                return;
+            }
+            
+            var accordionId = 'tenantAccordion_' + managerId;
+            var $accordion = $('<div class="accordion" id="' + accordionId + '"></div>');
+            
+            tenantGroups.forEach(function(group, index) {
+                var isFirstOpen = index === 0;
+                var collapseId = 'collapse_' + managerId + '_' + group.tenantId;
+                var selectedInTenant = group.users.filter(u => selectedUserIds.has(u.userId)).length;
+                
+                var $accordionItem = $('<div class="accordion-item"></div>');
+                
+                // Accordion Header
+                var $header = $('<h2 class="accordion-header"></h2>');
+                var $button = $('<button class="accordion-button ' + (isFirstOpen ? '' : 'collapsed') + '" type="button" data-bs-toggle="collapse" data-bs-target="#' + collapseId + '"></button>')
+                    .html('<div class="d-flex justify-content-between align-items-center w-100 pe-3">' +
+                          '<div><i class="ri-community-line me-2"></i><strong>' + group.tenantName + '</strong></div>' +
+                          '<div><span class="badge bg-secondary">' + selectedInTenant + '/' + group.userCount + '</span></div>' +
+                          '</div>');
+                $header.append($button);
+                
+                // Accordion Body
+                var $collapse = $('<div id="' + collapseId + '" class="accordion-collapse collapse ' + (isFirstOpen ? 'show' : '') + '" data-bs-parent="#' + accordionId + '"></div>');
+                var $body = $('<div class="accordion-body p-2"></div>');
+                
+                // Select All in Tenant button
+                var $selectAllBtn = $('<button type="button" class="btn btn-sm btn-outline-primary mb-2 select-all-tenant-btn" data-tenant-id="' + group.tenantId + '">' +
+                                      '<i class="ri-checkbox-multiple-line me-1"></i>Select All in ' + group.tenantName +
+                                      '</button>');
+                $body.append($selectAllBtn);
+                
+                // User Cards
+                group.users.forEach(function(user) {
+                    var isSelected = selectedUserIds.has(user.userId);
+                    var $userCard = $('<div class="user-card ' + (isSelected ? 'selected' : '') + '" data-user-id="' + user.userId + '"></div>')
+                        .html('<div class="d-flex align-items-start gap-3">' +
+                              '<input type="checkbox" class="form-check-input user-checkbox mt-1" ' + (isSelected ? 'checked' : '') + '>' +
+                              '<div class="flex-grow-1">' +
+                              '<div class="fw-bold">' + user.fullName + '</div>' +
+                              '<small class="text-muted d-block"><i class="ri-user-line me-1"></i>' + user.employeeNumber + ' • ' + (user.jobTitle || 'N/A') + '</small>' +
+                              '<small class="text-muted"><i class="ri-building-line me-1"></i>' + user.departmentName + '</small>' +
+                              '</div>' +
+                              '</div>');
+                    $body.append($userCard);
+                });
+                
+                $collapse.append($body);
+                $accordionItem.append($header, $collapse);
+                $accordion.append($accordionItem);
+            });
+            
+            $container.append($accordion);
+        }
+        
+        // Update UI based on selections
+        function updateUI() {
+            // Update count badge
+            $('#selectedCount_' + managerId).html('<i class="ri-user-line me-1"></i>' + selectedUserIds.size + ' user' + (selectedUserIds.size !== 1 ? 's' : '') + ' selected');
+            
+            // Update user cards
+            $('.user-card').each(function() {
+                var userId = parseInt($(this).data('user-id'));
+                var isSelected = selectedUserIds.has(userId);
+                
+                $(this).toggleClass('selected', isSelected);
+                $(this).find('.user-checkbox').prop('checked', isSelected);
+            });
+            
+            // Update tenant badges
+            var tenantGroups = {};
+            allUsers.forEach(function(user) {
+                if (!tenantGroups[user.tenantId]) {
+                    tenantGroups[user.tenantId] = { total: 0, selected: 0 };
+                }
+                tenantGroups[user.tenantId].total++;
+                if (selectedUserIds.has(user.userId)) {
+                    tenantGroups[user.tenantId].selected++;
+                }
+            });
+            
+            $('.accordion-button .badge').each(function() {
+                var $button = $(this).closest('.accordion-button');
+                var tenantId = $button.find('[data-tenant-id]').data('tenant-id');
+                if (tenantGroups[tenantId]) {
+                    $(this).text(tenantGroups[tenantId].selected + '/' + tenantGroups[tenantId].total);
+                }
+            });
+            
+            // Enable/disable add button
+            if (selectedUserIds.size > 0) {
+                $('#addAssignmentBtn_' + managerId).prop('disabled', false);
+            } else {
+                $('#addAssignmentBtn_' + managerId).prop('disabled', true);
+            }
+        }
+        
+        // Expose selected users for parent modal
+        window['getSelectedUsers_' + managerId] = function() {
+            return Array.from(selectedUserIds).map(function(userId) {
+                return allUsers.find(u => u.userId === userId);
+            });
+        };
+    });
+</script>

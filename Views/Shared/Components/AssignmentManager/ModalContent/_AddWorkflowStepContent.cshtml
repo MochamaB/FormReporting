@@ -1,0 +1,303 @@
+@model FormReporting.Models.ViewModels.Components.AssignmentManagerViewModel
+
+@*
+    Modal Content: Add Workflow Step (Approval Level)
+    
+    Database Model: FormReporting.Models.Entities.Forms.WorkflowStep
+    
+    Required Fields:
+    - StepOrder (int): Level number (1, 2, 3...)
+    - StepName (string): Custom step name
+    - ApproverUserId OR ApproverRoleId: Who approves
+    - IsMandatory (bool): Is this step required?
+    - IsParallel (bool): Can run in parallel with other steps?
+    - DueDays (int?): Days to complete
+    - EscalationRoleId (int?): Escalate to role if overdue
+    - AutoApproveCondition (string?): JSON condition for auto-approval
+*@
+
+<div class="row">
+    @* Step Order/Level *@
+    <div class="col-md-6 mb-3">
+        <label for="stepOrder_@Model.ManagerId" class="form-label">
+            Step Level <span class="text-danger">*</span>
+        </label>
+        <input type="number" 
+               class="form-control" 
+               id="stepOrder_@Model.ManagerId" 
+               placeholder="1, 2, 3..." 
+               min="1" 
+               required />
+        <div class="form-text">Sequential order (Level 1, Level 2, etc.)</div>
+    </div>
+    
+    @* Step Name *@
+    <div class="col-md-6 mb-3">
+        <label for="stepName_@Model.ManagerId" class="form-label">
+            Step Name <span class="text-danger">*</span>
+        </label>
+        <input type="text" 
+               class="form-control" 
+               id="stepName_@Model.ManagerId" 
+               placeholder="e.g., Manager Approval" 
+               required />
+        <div class="form-text">Descriptive name for this approval step</div>
+    </div>
+</div>
+
+<div class="row">
+    @* Approver Type Selection *@
+    <div class="col-md-12 mb-3">
+        <label class="form-label">Approver Type <span class="text-danger">*</span></label>
+        <div class="btn-group w-100" role="group">
+            <input type="radio" 
+                   class="btn-check" 
+                   name="approverType_@Model.ManagerId" 
+                   id="approverUser_@Model.ManagerId" 
+                   value="User" 
+                   checked>
+            <label class="btn btn-outline-primary" for="approverUser_@Model.ManagerId">
+                <i class="ri-user-line me-1"></i>Specific User
+            </label>
+            
+            <input type="radio" 
+                   class="btn-check" 
+                   name="approverType_@Model.ManagerId" 
+                   id="approverRole_@Model.ManagerId" 
+                   value="Role">
+            <label class="btn btn-outline-primary" for="approverRole_@Model.ManagerId">
+                <i class="ri-shield-user-line me-1"></i>By Role
+            </label>
+        </div>
+    </div>
+</div>
+
+@* Search Approver *@
+<div class="mb-3">
+    <label for="approverSearch_@Model.ManagerId" class="form-label">
+        Search Approver <span class="text-danger">*</span>
+    </label>
+    <div class="input-group">
+        <span class="input-group-text">
+            <i class="ri-search-line"></i>
+        </span>
+        <input type="text" 
+               class="form-control" 
+               id="approverSearch_@Model.ManagerId" 
+               placeholder="Type to search users or roles..." />
+    </div>
+    <div id="approverResults_@Model.ManagerId" class="search-results mt-2" style="display: none;"></div>
+</div>
+
+@* Selected Approver Preview *@
+<div id="selectedApprover_@Model.ManagerId" class="selected-preview mb-3" style="display: none;">
+    <div class="alert alert-success mb-0">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <strong>Selected:</strong> <span id="selectedApproverName_@Model.ManagerId"></span>
+                <input type="hidden" id="selectedApproverId_@Model.ManagerId" />
+                <input type="hidden" id="selectedApproverType_@Model.ManagerId" />
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="clearApprover_@Model.ManagerId">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    @* Due Days *@
+    <div class="col-md-6 mb-3">
+        <label for="dueDays_@Model.ManagerId" class="form-label">Due Days</label>
+        <input type="number" 
+               class="form-control" 
+               id="dueDays_@Model.ManagerId" 
+               placeholder="e.g., 3" 
+               min="1" />
+        <div class="form-text">Days to complete this step from submission</div>
+    </div>
+    
+    @* Escalation Role *@
+    <div class="col-md-6 mb-3">
+        <label for="escalationRole_@Model.ManagerId" class="form-label">Escalation Role</label>
+        <select class="form-select" id="escalationRole_@Model.ManagerId">
+            <option value="">-- None --</option>
+            @if (ViewBag.EscalationRoles != null)
+            {
+                @foreach (var role in ViewBag.EscalationRoles)
+                {
+                    <option value="@role.RoleId">@role.RoleName</option>
+                }
+            }
+        </select>
+        <div class="form-text">Notify if step is overdue</div>
+    </div>
+</div>
+
+<div class="row">
+    @* Is Mandatory *@
+    <div class="col-md-6 mb-3">
+        <div class="form-check form-switch">
+            <input class="form-check-input" 
+                   type="checkbox" 
+                   id="isMandatory_@Model.ManagerId" 
+                   checked>
+            <label class="form-check-label" for="isMandatory_@Model.ManagerId">
+                <strong>Mandatory Step</strong>
+                <br><small class="text-muted">Cannot skip this approval level</small>
+            </label>
+        </div>
+    </div>
+    
+    @* Is Parallel *@
+    <div class="col-md-6 mb-3">
+        <div class="form-check form-switch">
+            <input class="form-check-input" 
+                   type="checkbox" 
+                   id="isParallel_@Model.ManagerId">
+            <label class="form-check-label" for="isParallel_@Model.ManagerId">
+                <strong>Parallel Execution</strong>
+                <br><small class="text-muted">Can run alongside other steps of same level</small>
+            </label>
+        </div>
+    </div>
+</div>
+
+@* Advanced Conditions (Collapsible) *@
+<div class="mb-3">
+    <div class="accordion">
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" 
+                        type="button" 
+                        data-bs-toggle="collapse" 
+                        data-bs-target="#advancedConditions_@Model.ManagerId"
+                        aria-expanded="false">
+                    <i class="ri-settings-3-line me-2"></i>Advanced Conditions (Optional)
+                </button>
+            </h2>
+            <div id="advancedConditions_@Model.ManagerId" class="accordion-collapse collapse">
+                <div class="accordion-body">
+                    <div class="mb-3">
+                        <label for="conditionLogic_@Model.ManagerId" class="form-label">
+                            Condition Logic
+                        </label>
+                        <textarea class="form-control" 
+                                  id="conditionLogic_@Model.ManagerId" 
+                                  rows="2"
+                                  placeholder="When should this step trigger?"></textarea>
+                        <div class="form-text">Optional condition for when this step should execute</div>
+                    </div>
+                    
+                    <div class="mb-0">
+                        <label for="autoApproveCondition_@Model.ManagerId" class="form-label">
+                            Auto-Approve Condition (JSON)
+                        </label>
+                        <textarea class="form-control font-monospace" 
+                                  id="autoApproveCondition_@Model.ManagerId" 
+                                  rows="3"
+                                  placeholder='{"field": "amount", "operator": "<", "value": 1000}'></textarea>
+                        <div class="form-text">
+                            Automatically approve if condition is met
+                            <br><small>Example: Auto-approve if amount is less than 1000</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .search-results {
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #e9ecef;
+        border-radius: 0.25rem;
+    }
+    
+    .search-results .list-group-item {
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    
+    .search-results .list-group-item:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+
+<script>
+    $(document).ready(function() {
+        var managerId = '@Model.ManagerId';
+        var searchTimeout = null;
+        
+        // Search approvers (User or Role based on selection)
+        $('#approverSearch_' + managerId).on('input', function() {
+            var query = $(this).val();
+            var approverType = $('input[name="approverType_' + managerId + '"]:checked').val();
+            
+            clearTimeout(searchTimeout);
+            
+            if (query.length < 2) {
+                $('#approverResults_' + managerId).hide().empty();
+                return;
+            }
+            
+            searchTimeout = setTimeout(function() {
+                $.ajax({
+                    url: '@Model.SearchEndpoint',
+                    data: { type: approverType, query: query },
+                    success: function(results) {
+                        var $results = $('#approverResults_' + managerId);
+                        $results.empty();
+                        
+                        if (results.length === 0) {
+                            $results.html('<div class="p-3 text-muted text-center">No results found</div>');
+                        } else {
+                            var $list = $('<div class="list-group"></div>');
+                            results.forEach(function(item) {
+                                var $item = $('<a href="#" class="list-group-item list-group-item-action"></a>')
+                                    .data('id', item.id)
+                                    .data('type', item.type)
+                                    .data('name', item.name)
+                                    .html('<strong>' + item.name + '</strong><br><small class="text-muted">' + (item.details || '') + '</small>');
+                                $list.append($item);
+                            });
+                            $results.html($list);
+                        }
+                        $results.show();
+                    }
+                });
+            }, 300);
+        });
+        
+        // Select approver from results
+        $(document).on('click', '#approverResults_' + managerId + ' .list-group-item', function(e) {
+            e.preventDefault();
+            var id = $(this).data('id');
+            var type = $(this).data('type');
+            var name = $(this).data('name');
+            
+            $('#selectedApproverId_' + managerId).val(id);
+            $('#selectedApproverType_' + managerId).val(type);
+            $('#selectedApproverName_' + managerId).text(name);
+            $('#selectedApprover_' + managerId).show();
+            $('#approverResults_' + managerId).hide();
+            $('#approverSearch_' + managerId).val('');
+        });
+        
+        // Clear selected approver
+        $('#clearApprover_' + managerId).on('click', function() {
+            $('#selectedApproverId_' + managerId).val('');
+            $('#selectedApproverType_' + managerId).val('');
+            $('#selectedApproverName_' + managerId).text('');
+            $('#selectedApprover_' + managerId).hide();
+        });
+        
+        // Change approver type - clear search
+        $('input[name="approverType_' + managerId + '"]').on('change', function() {
+            $('#approverSearch_' + managerId).val('');
+            $('#approverResults_' + managerId).hide().empty();
+        });
+    });
+</script>

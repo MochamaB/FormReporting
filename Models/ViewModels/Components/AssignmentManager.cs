@@ -71,6 +71,12 @@ namespace FormReporting.Models.ViewModels.Components
         /// AJAX endpoint for searching assignable entities
         /// </summary>
         public string? SearchEndpoint { get; set; }
+        
+        /// <summary>
+        /// Path to custom modal content partial for context-specific forms
+        /// If null, uses generic modal content
+        /// </summary>
+        public string? ModalContentPartial { get; set; }
     }
 
     /// <summary>
@@ -91,6 +97,7 @@ namespace FormReporting.Models.ViewModels.Components
         public string CssClasses { get; set; } = string.Empty;
         public string? HelpText { get; set; }
         public string? SearchEndpoint { get; set; }
+        public string? ModalContentPartial { get; set; }
 
         // Computed properties
         public string CollapseId => $"collapse-{ManagerId}";

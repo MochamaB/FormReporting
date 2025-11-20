@@ -15,92 +15,108 @@
             </div>
             <div class="modal-body">
 
-                @* Assignment Type Selection *@
-                <div class="mb-4">
-                    <label class="form-label">Assignment Type</label>
-                    <div class="btn-group w-100" role="group" aria-label="Assignment type">
-                        @foreach (var type in Model.SupportedTypes)
-                        {
-                            <input type="radio"
-                                   class="btn-check"
-                                   name="assignmentType_@(Model.ManagerId)"
-                                   id="type_@(Model.ManagerId)_@(type.TypeCode)"
-                                   value="@type.TypeCode"
-                                   autocomplete="off"
-                                   @(type.IsDefault ? "checked" : "")>
-                            <label class="btn btn-outline-primary" for="type_@(Model.ManagerId)_@(type.TypeCode)">
-                                <i class="@type.Icon me-1"></i>@type.TypeLabel
-                            </label>
-                        }
-                    </div>
-                </div>
-
-                @* Level Selection (if applicable) *@
-                @if (Model.ShowLevels)
+                @* ════════════════════════════════════════════════════════════════ *@
+                @* PLUGGABLE MODAL CONTENT PATTERN                                  *@
+                @* If ModalContentPartial is specified, render custom content      *@
+                @* Otherwise, fall back to generic modal (legacy support)          *@
+                @* ════════════════════════════════════════════════════════════════ *@
+                
+                @if (!string.IsNullOrEmpty(Model.ModalContentPartial))
                 {
-                    <div class="mb-4">
-                        <label for="assignmentLevel_@(Model.ManagerId)" class="form-label">
-                            Approval Level <span class="text-danger">*</span>
-                        </label>
-                        <select class="form-select" id="assignmentLevel_@(Model.ManagerId)">
-                            <option value="">Select level...</option>
-                            @for (int i = 1; i <= 5; i++)
-                            {
-                                <option value="@i">Level @i</option>
-                            }
-                        </select>
-                        <div class="form-text">Select the approval level/step for this assignment</div>
-                    </div>
+                    @* Render custom modal content for specific context *@
+                    <partial name="@Model.ModalContentPartial" model="Model" />
                 }
-
-                @* Search and Select *@
-                <div class="mb-3">
-                    <label for="assignmentSearch_@(Model.ManagerId)" class="form-label">
-                        Search <span class="text-danger">*</span>
-                    </label>
-                    <div class="input-group">
-                        <span class="input-group-text">
-                            <i class="ri-search-line"></i>
-                        </span>
-                        <input type="text"
-                               class="form-control"
-                               id="assignmentSearch_@(Model.ManagerId)"
-                               placeholder="Type to search...">
-                    </div>
-                    <div class="form-text">Search by name, email, or code</div>
-                </div>
-
-                @* Search Results *@
-                <div id="searchResults_@(Model.ManagerId)" class="search-results" style="display: none;">
-                    <div class="list-group">
-                        @* Results will be populated via AJAX *@
-                    </div>
-                </div>
-
-                @* Selected Assignment Preview *@
-                <div id="selectedPreview_@(Model.ManagerId)" class="selected-preview mt-3" style="display: none;">
-                    <div class="alert alert-success mb-0">
-                        <div class="d-flex justify-content-between align-items-center">
-                            <div>
-                                <strong>Selected:</strong>
-                                <span id="selectedName_@(Model.ManagerId)"></span>
-                                <br>
-                                <small id="selectedDetails_@(Model.ManagerId)" class="text-muted"></small>
-                            </div>
-                            <button type="button" class="btn btn-sm btn-outline-secondary" id="clearSelection_@(Model.ManagerId)">
-                                <i class="ri-close-line"></i>
-                            </button>
+                else
+                {
+                    @* FALLBACK: Generic modal content (legacy support) *@
+                    
+                    @* Assignment Type Selection *@
+                    <div class="mb-4">
+                        <label class="form-label">Assignment Type</label>
+                        <div class="btn-group w-100" role="group" aria-label="Assignment type">
+                            @foreach (var type in Model.SupportedTypes)
+                            {
+                                <input type="radio"
+                                       class="btn-check"
+                                       name="assignmentType_@(Model.ManagerId)"
+                                       id="type_@(Model.ManagerId)_@(type.TypeCode)"
+                                       value="@type.TypeCode"
+                                       autocomplete="off"
+                                       @(type.IsDefault ? "checked" : "")>
+                                <label class="btn btn-outline-primary" for="type_@(Model.ManagerId)_@(type.TypeCode)">
+                                    <i class="@type.Icon me-1"></i>@type.TypeLabel
+                                </label>
+                            }
                         </div>
                     </div>
-                </div>
 
-                @* Mandatory Checkbox *@
-                <div class="form-check mt-3">
-                    <input class="form-check-input" type="checkbox" id="assignmentMandatory_@(Model.ManagerId)" checked>
-                    <label class="form-check-label" for="assignmentMandatory_@(Model.ManagerId)">
-                        Required / Mandatory
-                    </label>
-                </div>
+                    @* Level Selection (if applicable) *@
+                    @if (Model.ShowLevels)
+                    {
+                        <div class="mb-4">
+                            <label for="assignmentLevel_@(Model.ManagerId)" class="form-label">
+                                Approval Level <span class="text-danger">*</span>
+                            </label>
+                            <select class="form-select" id="assignmentLevel_@(Model.ManagerId)">
+                                <option value="">Select level...</option>
+                                @for (int i = 1; i <= 5; i++)
+                                {
+                                    <option value="@i">Level @i</option>
+                                }
+                            </select>
+                            <div class="form-text">Select the approval level/step for this assignment</div>
+                        </div>
+                    }
+
+                    @* Search and Select *@
+                    <div class="mb-3">
+                        <label for="assignmentSearch_@(Model.ManagerId)" class="form-label">
+                            Search <span class="text-danger">*</span>
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="ri-search-line"></i>
+                            </span>
+                            <input type="text"
+                                   class="form-control"
+                                   id="assignmentSearch_@(Model.ManagerId)"
+                                   placeholder="Type to search...">
+                        </div>
+                        <div class="form-text">Search by name, email, or code</div>
+                    </div>
+
+                    @* Search Results *@
+                    <div id="searchResults_@(Model.ManagerId)" class="search-results" style="display: none;">
+                        <div class="list-group">
+                            @* Results will be populated via AJAX *@
+                        </div>
+                    </div>
+
+                    @* Selected Assignment Preview *@
+                    <div id="selectedPreview_@(Model.ManagerId)" class="selected-preview mt-3" style="display: none;">
+                        <div class="alert alert-success mb-0">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div>
+                                    <strong>Selected:</strong>
+                                    <span id="selectedName_@(Model.ManagerId)"></span>
+                                    <br>
+                                    <small id="selectedDetails_@(Model.ManagerId)" class="text-muted"></small>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="clearSelection_@(Model.ManagerId)">
+                                    <i class="ri-close-line"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    @* Mandatory Checkbox *@
+                    <div class="form-check mt-3">
+                        <input class="form-check-input" type="checkbox" id="assignmentMandatory_@(Model.ManagerId)" checked>
+                        <label class="form-check-label" for="assignmentMandatory_@(Model.ManagerId)">
+                            Required / Mandatory
+                        </label>
+                    </div>
+                }
 
             </div>
             <div class="modal-footer">

@@ -1,0 +1,214 @@
+@model FormReporting.Models.ViewModels.Components.AssignmentManagerViewModel
+
+@*
+    Modal Content: Add Tenant to Group (Simple Assignment)
+    
+    Database Model: FormReporting.Models.Entities.Organizational.TenantGroupMember
+    
+    Required Fields:
+    - TenantId (int): Tenant/Factory to assign
+    - GroupId (int): Provided by parent context
+    - AssignedDate (DateTime): When assigned
+*@
+
+@* Search Tenant *@
+<div class="mb-3">
+    <label for="tenantSearch_@Model.ManagerId" class="form-label">
+        Search Factory/Branch <span class="text-danger">*</span>
+    </label>
+    <div class="input-group">
+        <span class="input-group-text">
+            <i class="ri-search-line"></i>
+        </span>
+        <input type="text" 
+               class="form-control" 
+               id="tenantSearch_@Model.ManagerId" 
+               placeholder="Type to search factories or branches..." />
+    </div>
+    <div class="form-text">Search by factory name, code, or location</div>
+    <div id="tenantResults_@Model.ManagerId" class="search-results mt-2" style="display: none;"></div>
+</div>
+
+@* Selected Tenant Preview *@
+<div id="selectedTenant_@Model.ManagerId" class="selected-preview mb-3" style="display: none;">
+    <div class="alert alert-success mb-0">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <i class="ri-community-line me-2"></i>
+                <strong>Selected:</strong> <span id="selectedTenantName_@Model.ManagerId"></span>
+                <br>
+                <small class="text-muted">
+                    <i class="ri-building-line me-1"></i><span id="selectedTenantType_@Model.ManagerId"></span>
+                    <span id="selectedTenantLocation_@Model.ManagerId" class="ms-2"></span>
+                </small>
+                <input type="hidden" id="selectedTenantId_@Model.ManagerId" />
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="clearTenant_@Model.ManagerId">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+@* Assignment Date *@
+<div class="mb-3">
+    <label for="assignedDate_@Model.ManagerId" class="form-label">Assignment Date</label>
+    <input type="date" 
+           class="form-control" 
+           id="assignedDate_@Model.ManagerId" 
+           value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+    <div class="form-text">Date when this factory/branch joins the group</div>
+</div>
+
+@* Is Active *@
+<div class="form-check form-switch mb-3">
+    <input class="form-check-input" 
+           type="checkbox" 
+           id="isActive_@Model.ManagerId" 
+           checked>
+    <label class="form-check-label" for="isActive_@Model.ManagerId">
+        <strong>Active Membership</strong>
+        <br><small class="text-muted">Uncheck to create inactive assignment</small>
+    </label>
+</div>
+
+@* Additional Notes (Optional) *@
+<div class="mb-0">
+    <label for="membershipNotes_@Model.ManagerId" class="form-label">Notes (Optional)</label>
+    <textarea class="form-control" 
+              id="membershipNotes_@Model.ManagerId" 
+              rows="2"
+              placeholder="Optional notes about this group membership"></textarea>
+</div>
+
+<style>
+    .search-results {
+        max-height: 300px;
+        overflow-y: auto;
+        border: 1px solid #e9ecef;
+        border-radius: 0.25rem;
+    }
+    
+    .search-results .list-group-item {
+        cursor: pointer;
+        transition: background-color 0.2s;
+        border-left: 3px solid transparent;
+    }
+    
+    .search-results .list-group-item:hover {
+        background-color: #f8f9fa;
+        border-left-color: var(--vz-primary);
+    }
+    
+    .tenant-type-badge {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+</style>
+
+<script>
+    $(document).ready(function() {
+        var managerId = '@Model.ManagerId';
+        var searchTimeout = null;
+        
+        // Search tenants
+        $('#tenantSearch_' + managerId).on('input', function() {
+            var query = $(this).val();
+            
+            clearTimeout(searchTimeout);
+            
+            if (query.length < 2) {
+                $('#tenantResults_' + managerId).hide().empty();
+                return;
+            }
+            
+            searchTimeout = setTimeout(function() {
+                $.ajax({
+                    url: '@Model.SearchEndpoint',
+                    data: { type: 'Tenant', query: query },
+                    success: function(results) {
+                        var $results = $('#tenantResults_' + managerId);
+                        $results.empty();
+                        
+                        if (results.length === 0) {
+                            $results.html('<div class="p-3 text-muted text-center">' +
+                                         '<i class="ri-information-line me-1"></i>No factories or branches found</div>');
+                        } else {
+                            var $list = $('<div class="list-group"></div>');
+                            results.forEach(function(item) {
+                                // Tenant type badge color
+                                var typeColorMap = {
+                                    'Factory': 'success',
+                                    'HeadOffice': 'primary',
+                                    'Subsidiary': 'info',
+                                    'Branch': 'warning'
+                                };
+                                var typeColor = typeColorMap[item.tenantType] || 'secondary';
+                                var typeBadge = '<span class="badge bg-' + typeColor + '-subtle text-' + typeColor + ' tenant-type-badge me-2">' + 
+                                               (item.tenantType || 'N/A') + '</span>';
+                                
+                                var location = item.location ? '<i class="ri-map-pin-line me-1"></i>' + item.location : '';
+                                var regionBadge = item.regionName ? '<span class="badge bg-secondary-subtle text-secondary tenant-type-badge">' + 
+                                                 item.regionName + '</span>' : '';
+                                
+                                var $item = $('<a href="#" class="list-group-item list-group-item-action"></a>')
+                                    .data('id', item.id)
+                                    .data('name', item.name)
+                                    .data('type', item.tenantType || '')
+                                    .data('location', item.location || '')
+                                    .html('<div class="d-flex justify-content-between align-items-start">' +
+                                          '<div class="flex-grow-1">' +
+                                          '<div class="mb-1">' + typeBadge + regionBadge + '</div>' +
+                                          '<div><i class="ri-community-line me-2"></i><strong>' + item.name + '</strong></div>' +
+                                          '<small class="text-muted">' + location + '</small>' +
+                                          '</div>' +
+                                          '</div>');
+                                $list.append($item);
+                            });
+                            $results.html($list);
+                        }
+                        $results.show();
+                    },
+                    error: function() {
+                        $('#tenantResults_' + managerId)
+                            .html('<div class="p-3 text-danger text-center">' +
+                                 '<i class="ri-error-warning-line me-1"></i>Error loading tenants</div>')
+                            .show();
+                    }
+                });
+            }, 300);
+        });
+        
+        // Select tenant from results
+        $(document).on('click', '#tenantResults_' + managerId + ' .list-group-item', function(e) {
+            e.preventDefault();
+            var id = $(this).data('id');
+            var name = $(this).data('name');
+            var type = $(this).data('type');
+            var location = $(this).data('location');
+            
+            $('#selectedTenantId_' + managerId).val(id);
+            $('#selectedTenantName_' + managerId).text(name);
+            $('#selectedTenantType_' + managerId).text(type);
+            $('#selectedTenantLocation_' + managerId).html(location ? '<i class="ri-map-pin-line me-1"></i>' + location : '');
+            $('#selectedTenant_' + managerId).show();
+            $('#tenantResults_' + managerId).hide();
+            $('#tenantSearch_' + managerId).val('');
+            
+            // Enable add button in parent modal
+            $('#addAssignmentBtn_' + managerId).prop('disabled', false);
+        });
+        
+        // Clear selected tenant
+        $('#clearTenant_' + managerId).on('click', function() {
+            $('#selectedTenantId_' + managerId).val('');
+            $('#selectedTenantName_' + managerId).text('');
+            $('#selectedTenantType_' + managerId).text('');
+            $('#selectedTenantLocation_' + managerId).html('');
+            $('#selectedTenant_' + managerId).hide();
+            
+            // Disable add button in parent modal
+            $('#addAssignmentBtn_' + managerId).prop('disabled', true);
+        });
+    });
+</script>

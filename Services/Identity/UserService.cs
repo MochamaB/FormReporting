@@ -102,13 +102,16 @@ namespace FormReporting.Services.Identity
             {
                 var searchLower = searchQuery.ToLower();
                 query = query.Where(u =>
-                    u.FullName.ToLower().Contains(searchLower) ||
+                    u.FirstName.ToLower().Contains(searchLower) ||
+                    u.LastName.ToLower().Contains(searchLower) ||
                     u.Email.ToLower().Contains(searchLower) ||
-                    u.UserName.ToLower().Contains(searchLower));
+                    u.UserName.ToLower().Contains(searchLower) ||
+                    (u.EmployeeNumber != null && u.EmployeeNumber.ToLower().Contains(searchLower)));
             }
 
             return await query
-                .OrderBy(u => u.FullName)
+                .OrderBy(u => u.FirstName)
+                .ThenBy(u => u.LastName)
                 .ToListAsync();
         }
 

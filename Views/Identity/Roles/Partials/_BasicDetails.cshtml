@@ -1,0 +1,93 @@
+@model FormReporting.Models.ViewModels.Identity.RoleEditViewModel
+
+@{
+    var scopeLevels = ViewBag.ScopeLevels as List<FormReporting.Models.Entities.Identity.ScopeLevel>;
+}
+
+<div class="step-content">
+    <div class="row">
+        <div class="col-md-12 mb-3">
+            <div class="alert alert-info">
+                <i class="ri-information-line me-2"></i>
+                <strong>Important:</strong> Role code must be unique and contain only uppercase letters and underscores.
+                Scope level determines which users/tenants this role can access.
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Role Name -->
+        <div class="col-md-6 mb-3">
+            <label asp-for="RoleName" class="form-label">
+                Role Name <span class="text-danger">*</span>
+            </label>
+            <input asp-for="RoleName" class="form-control" placeholder="e.g., Factory Manager" />
+            <div class="invalid-feedback"></div>
+            <small class="text-muted">Display name for this role</small>
+        </div>
+
+        <!-- Role Code -->
+        <div class="col-md-6 mb-3">
+            <label asp-for="RoleCode" class="form-label">
+                Role Code <span class="text-danger">*</span>
+            </label>
+            <div class="input-group">
+                <input asp-for="RoleCode" class="form-control" placeholder="e.g., FACTORY_MGR"
+                       style="text-transform: uppercase;" />
+                <button type="button" class="btn btn-outline-secondary" id="checkCodeBtn"
+                        title="Check availability">
+                    <i class="ri-search-line"></i>
+                </button>
+            </div>
+            <div class="invalid-feedback"></div>
+            <div id="codeCheckFeedback" class="form-text"></div>
+            <small class="text-muted">Unique identifier (uppercase letters and underscores only)</small>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Scope Level -->
+        <div class="col-md-6 mb-3">
+            <label asp-for="ScopeLevelId" class="form-label">
+                Scope Level <span class="text-danger">*</span>
+            </label>
+            <select asp-for="ScopeLevelId" class="form-select">
+                <option value="">Select scope level...</option>
+                @if (scopeLevels != null)
+                {
+                    foreach (var scope in scopeLevels)
+                    {
+                        <option value="@scope.ScopeLevelId">
+                            Level @scope.Level - @scope.ScopeName (@scope.ScopeCode)
+                        </option>
+                    }
+                }
+            </select>
+            <div class="invalid-feedback"></div>
+            <small class="text-muted">Determines access range (Global, Regional, Tenant, etc.)</small>
+        </div>
+
+        <!-- Is Active -->
+        <div class="col-md-6 mb-3">
+            <label class="form-label">Status</label>
+            <div class="form-check form-switch">
+                <input asp-for="IsActive" class="form-check-input" role="switch" id="isActiveSwitch" />
+                <label class="form-check-label" for="isActiveSwitch">
+                    Role is Active
+                </label>
+            </div>
+            <small class="text-muted">Inactive roles cannot be assigned to users</small>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Description -->
+        <div class="col-12 mb-3">
+            <label asp-for="Description" class="form-label">Description</label>
+            <textarea asp-for="Description" class="form-control" rows="3"
+                      placeholder="Describe the purpose and responsibilities of this role..."></textarea>
+            <div class="invalid-feedback"></div>
+            <small class="text-muted">Optional: Detailed description of this role's purpose</small>
+        </div>
+    </div>
+</div>

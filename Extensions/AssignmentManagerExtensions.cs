@@ -32,7 +32,8 @@ namespace FormReporting.Extensions
                 InitiallyCollapsed = config.InitiallyCollapsed,
                 CssClasses = config.CssClasses,
                 HelpText = config.HelpText,
-                SearchEndpoint = config.SearchEndpoint
+                SearchEndpoint = config.SearchEndpoint,
+                ModalContentPartial = config.ModalContentPartial
             };
         }
 
@@ -88,6 +89,7 @@ namespace FormReporting.Extensions
             config.ContextLabel = "Approval Levels";
             config.ShowLevels = true;
             config.AllowMultiplePerLevel = false;
+            config.ModalContentPartial = "~/Views/Shared/Components/AssignmentManager/ModalContent/_AddWorkflowStepContent.cshtml";
             config.SupportedTypes = new List<AssignmentType>
             {
                 new AssignmentType { TypeCode = "User", TypeLabel = "Specific User", Icon = "ri-user-line", IsDefault = true },
@@ -104,6 +106,7 @@ namespace FormReporting.Extensions
             config.ContextLabel = "Form Assignments";
             config.ShowLevels = false;
             config.AllowMultiplePerLevel = true;
+            config.ModalContentPartial = "~/Views/Shared/Components/AssignmentManager/ModalContent/_AddFormAssignmentContent.cshtml";
             config.SupportedTypes = new List<AssignmentType>
             {
                 new AssignmentType { TypeCode = "User", TypeLabel = "Specific User", Icon = "ri-user-line" },
@@ -123,6 +126,7 @@ namespace FormReporting.Extensions
             config.ContextLabel = "Group Members";
             config.ShowLevels = false;
             config.AllowMultiplePerLevel = true;
+            config.ModalContentPartial = "~/Views/Shared/Components/AssignmentManager/ModalContent/_AddUserRoleContent.cshtml";
             config.SupportedTypes = new List<AssignmentType>
             {
                 new AssignmentType { TypeCode = "User", TypeLabel = "Add User", Icon = "ri-user-add-line", IsDefault = true }
@@ -130,6 +134,22 @@ namespace FormReporting.Extensions
             return config;
         }
 
+        /// <summary>
+        /// Fluent API: Configure for bulk user selection (multi-select with tenant grouping)
+        /// </summary>
+        public static AssignmentManagerConfig ForBulkUserSelection(this AssignmentManagerConfig config)
+        {
+            config.ContextLabel = "Assign Users";
+            config.ShowLevels = false;
+            config.AllowMultiplePerLevel = true;
+            config.ModalContentPartial = "~/Views/Shared/Components/AssignmentManager/ModalContent/_AddUserBulkSelection.cshtml";
+            config.SupportedTypes = new List<AssignmentType>
+            {
+                new AssignmentType { TypeCode = "User", TypeLabel = "Select Users", Icon = "ri-user-line", IsDefault = true }
+            };
+            return config;
+        }
+        
         /// <summary>
         /// Fluent API: Make collapsible
         /// </summary>

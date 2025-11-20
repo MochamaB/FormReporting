@@ -5,13 +5,17 @@ namespace FormReporting.Models.ViewModels.Components
     // ============================================================================
 
     /// <summary>
-    /// Form Builder steps
+    /// Form Builder steps - Complete 7-step wizard
     /// </summary>
     public enum FormBuilderStep
     {
-        TemplateConfiguration = 1,  // Basic Info + Settings
-        SectionBuilder = 2,          // Add sections and fields
-        Validation = 3               // Preview, validate, publish
+        TemplateSetup = 1,        // Basic Info + Settings (2 tabs)
+        FormBuilder = 2,          // Sections + Fields + Validation + Conditional Logic
+        MetricMapping = 3,        // Map fields to KPIs
+        ApprovalWorkflow = 4,     // Define approval levels
+        FormAssignments = 5,      // Assign to tenants/roles/users (ACCESS CONTROL)
+        ReportConfiguration = 6,  // Configure reporting and dashboards
+        ReviewPublish = 7         // Validate + Publish
     }
 
     /// <summary>
@@ -42,7 +46,7 @@ namespace FormReporting.Models.ViewModels.Components
         /// <summary>
         /// Current step
         /// </summary>
-        public FormBuilderStep CurrentStep { get; set; } = FormBuilderStep.TemplateConfiguration;
+        public FormBuilderStep CurrentStep { get; set; } = FormBuilderStep.TemplateSetup;
 
         /// <summary>
         /// Template ID (if editing existing template)
@@ -69,9 +73,13 @@ namespace FormReporting.Models.ViewModels.Components
         /// </summary>
         public Dictionary<FormBuilderStep, StepStatus> StepStatuses { get; set; } = new()
         {
-            { FormBuilderStep.TemplateConfiguration, StepStatus.Active },
-            { FormBuilderStep.SectionBuilder, StepStatus.Pending },
-            { FormBuilderStep.Validation, StepStatus.Pending }
+            { FormBuilderStep.TemplateSetup, StepStatus.Active },
+            { FormBuilderStep.FormBuilder, StepStatus.Pending },
+            { FormBuilderStep.MetricMapping, StepStatus.Pending },
+            { FormBuilderStep.ApprovalWorkflow, StepStatus.Pending },
+            { FormBuilderStep.FormAssignments, StepStatus.Pending },
+            { FormBuilderStep.ReportConfiguration, StepStatus.Pending },
+            { FormBuilderStep.ReviewPublish, StepStatus.Pending }
         };
 
         /// <summary>

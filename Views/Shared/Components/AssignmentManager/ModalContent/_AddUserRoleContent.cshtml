@@ -1,0 +1,169 @@
+@model FormReporting.Models.ViewModels.Components.AssignmentManagerViewModel
+
+@*
+    Modal Content: Add User to Role (Simple Assignment)
+    
+    Database Model: FormReporting.Models.Entities.Identity.UserRole
+    
+    Required Fields:
+    - UserId (int): User to assign
+    - RoleId (int): Provided by parent context
+    - AssignedDate (DateTime): When assigned
+    - AssignedBy (int?): Who assigned (from current user)
+*@
+
+@* Search User *@
+<div class="mb-3">
+    <label for="userSearch_@Model.ManagerId" class="form-label">
+        Search User <span class="text-danger">*</span>
+    </label>
+    <div class="input-group">
+        <span class="input-group-text">
+            <i class="ri-search-line"></i>
+        </span>
+        <input type="text" 
+               class="form-control" 
+               id="userSearch_@Model.ManagerId" 
+               placeholder="Type to search by name or email..." />
+    </div>
+    <div class="form-text">Search for users by name, email, or employee number</div>
+    <div id="userResults_@Model.ManagerId" class="search-results mt-2" style="display: none;"></div>
+</div>
+
+@* Selected User Preview *@
+<div id="selectedUser_@Model.ManagerId" class="selected-preview mb-3" style="display: none;">
+    <div class="alert alert-success mb-0">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <i class="ri-user-line me-2"></i>
+                <strong>Selected:</strong> <span id="selectedUserName_@Model.ManagerId"></span>
+                <br>
+                <small class="text-muted" id="selectedUserDetails_@Model.ManagerId"></small>
+                <input type="hidden" id="selectedUserId_@Model.ManagerId" />
+            </div>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="clearUser_@Model.ManagerId">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+@* Assignment Date *@
+<div class="mb-3">
+    <label for="assignedDate_@Model.ManagerId" class="form-label">Assignment Date</label>
+    <input type="date" 
+           class="form-control" 
+           id="assignedDate_@Model.ManagerId" 
+           value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+    <div class="form-text">Date when this role is assigned to the user</div>
+</div>
+
+@* Additional Notes (Optional) *@
+<div class="mb-3">
+    <label for="assignmentNotes_@Model.ManagerId" class="form-label">Notes (Optional)</label>
+    <textarea class="form-control" 
+              id="assignmentNotes_@Model.ManagerId" 
+              rows="2"
+              placeholder="Optional notes about this assignment"></textarea>
+</div>
+
+<style>
+    .search-results {
+        max-height: 250px;
+        overflow-y: auto;
+        border: 1px solid #e9ecef;
+        border-radius: 0.25rem;
+    }
+    
+    .search-results .list-group-item {
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    
+    .search-results .list-group-item:hover {
+        background-color: #f8f9fa;
+    }
+</style>
+
+<script>
+    $(document).ready(function() {
+        var managerId = '@Model.ManagerId';
+        var searchTimeout = null;
+        
+        // Search users
+        $('#userSearch_' + managerId).on('input', function() {
+            var query = $(this).val();
+            
+            clearTimeout(searchTimeout);
+            
+            if (query.length < 2) {
+                $('#userResults_' + managerId).hide().empty();
+                return;
+            }
+            
+            searchTimeout = setTimeout(function() {
+                $.ajax({
+                    url: '@Model.SearchEndpoint',
+                    data: { type: 'User', query: query },
+                    success: function(results) {
+                        var $results = $('#userResults_' + managerId);
+                        $results.empty();
+                        
+                        if (results.length === 0) {
+                            $results.html('<div class="p-3 text-muted text-center"><i class="ri-information-line me-1"></i>No users found</div>');
+                        } else {
+                            var $list = $('<div class="list-group"></div>');
+                            results.forEach(function(item) {
+                                var badge = item.badge ? '<span class="badge bg-secondary-subtle text-secondary ms-2">' + item.badge + '</span>' : '';
+                                var $item = $('<a href="#" class="list-group-item list-group-item-action"></a>')
+                                    .data('id', item.id)
+                                    .data('name', item.name)
+                                    .data('details', item.details || '')
+                                    .html('<div class="d-flex justify-content-between align-items-center">' +
+                                          '<div><strong>' + item.name + '</strong><br><small class="text-muted">' + (item.details || '') + '</small></div>' +
+                                          '<div>' + badge + '</div></div>');
+                                $list.append($item);
+                            });
+                            $results.html($list);
+                        }
+                        $results.show();
+                    },
+                    error: function() {
+                        $('#userResults_' + managerId)
+                            .html('<div class="p-3 text-danger text-center"><i class="ri-error-warning-line me-1"></i>Error loading users</div>')
+                            .show();
+                    }
+                });
+            }, 300);
+        });
+        
+        // Select user from results
+        $(document).on('click', '#userResults_' + managerId + ' .list-group-item', function(e) {
+            e.preventDefault();
+            var id = $(this).data('id');
+            var name = $(this).data('name');
+            var details = $(this).data('details');
+            
+            $('#selectedUserId_' + managerId).val(id);
+            $('#selectedUserName_' + managerId).text(name);
+            $('#selectedUserDetails_' + managerId).text(details);
+            $('#selectedUser_' + managerId).show();
+            $('#userResults_' + managerId).hide();
+            $('#userSearch_' + managerId).val('');
+            
+            // Enable add button in parent modal
+            $('#addAssignmentBtn_' + managerId).prop('disabled', false);
+        });
+        
+        // Clear selected user
+        $('#clearUser_' + managerId).on('click', function() {
+            $('#selectedUserId_' + managerId).val('');
+            $('#selectedUserName_' + managerId).text('');
+            $('#selectedUserDetails_' + managerId).text('');
+            $('#selectedUser_' + managerId).hide();
+            
+            // Disable add button in parent modal
+            $('#addAssignmentBtn_' + managerId).prop('disabled', true);
+        });
+    });
+</script>

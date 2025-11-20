@@ -1,6 +1,9 @@
 using FormReporting.Data;
 using FormReporting.Models.Entities.Identity;
 using FormReporting.Models.ViewModels.Identity;
+using FormReporting.Models.ViewModels.Components;
+using FormReporting.Extensions;
+using FormReporting.Services.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -13,10 +16,12 @@ namespace FormReporting.Controllers.Identity
     public class RolesController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly IUserService _userService;
 
-        public RolesController(ApplicationDbContext context)
+        public RolesController(ApplicationDbContext context, IUserService userService)
         {
             _context = context;
+            _userService = userService;
         }
 
         /// <summary>
@@ -130,7 +135,7 @@ namespace FormReporting.Controllers.Identity
         }
 
         /// <summary>
-        /// Show create role page
+        /// Show create role page with wizard
         /// </summary>
         [HttpGet("Create")]
         public async Task<IActionResult> Create()
@@ -140,18 +145,140 @@ namespace FormReporting.Controllers.Identity
                 IsActive = true
             };
 
-            // Load scope levels for dropdown
+            // ═══════════════════════════════════════════════════════════
+            // STEP 1 DATA: Load Scope Levels
+            // ═══════════════════════════════════════════════════════════
             ViewBag.ScopeLevels = await _context.ScopeLevels
                 .Where(s => s.IsActive)
                 .OrderBy(s => s.Level)
-                .Select(s => new { s.ScopeLevelId, s.ScopeName, s.Level })
                 .ToListAsync();
+
+            // ═══════════════════════════════════════════════════════════
+            // STEP 2 DATA: Load Permissions grouped by Module
+            // ═══════════════════════════════════════════════════════════
+            var modules = await _context.Modules
+                .Include(m => m.Permissions.Where(p => p.IsActive))
+                .Where(m => m.IsActive)
+                .OrderBy(m => m.DisplayOrder)
+                .ToListAsync();
+            ViewBag.Modules = modules;
+
+            // Load existing roles for "Copy from existing role" feature
+            var existingRoles = await _context.Roles
+                .Where(r => r.IsActive)
+                .OrderBy(r => r.RoleName)
+                .Select(r => new { r.RoleId, r.RoleName, r.RoleCode })
+                .ToListAsync();
+            ViewBag.ExistingRoles = existingRoles;
+
+            // ═══════════════════════════════════════════════════════════
+            // STEP 3 DATA: Load Scoped Users (grouped by tenant)
+            // ═══════════════════════════════════════════════════════════
+            var scopedUsers = await _userService.GetAccessibleUsersAsync(User);
+
+            // Group users by tenant for the bulk selection UI
+            var usersByTenant = scopedUsers
+                .GroupBy(u => new { u.TenantId, TenantName = u.PrimaryTenant?.TenantName ?? "No Tenant" })
+                .Select(g => new
+                {
+                    TenantId = g.Key.TenantId,
+                    TenantName = g.Key.TenantName,
+                    Users = g.Select(u => new
+                    {
+                        u.UserId,
+                        u.FullName,
+                        u.EmployeeNumber,
+                        DepartmentName = u.Department?.DepartmentName ?? "No Department",
+                        u.Email
+                    }).ToList()
+                })
+                .OrderBy(g => g.TenantName)
+                .ToList();
+            ViewBag.UsersByTenant = usersByTenant;
+
+            // ═══════════════════════════════════════════════════════════
+            // WIZARD CONFIGURATION
+            // ═══════════════════════════════════════════════════════════
+            var wizardConfig = new WizardConfig
+            {
+                FormId = "roleCreationWizard",
+                Layout = WizardLayout.Vertical,
+                Steps = new List<WizardStep>
+                {
+                    // STEP 1: Basic Role Details
+                    new WizardStep
+                    {
+                        StepId = "basic-details",
+                        StepNumber = 1,
+                        Title = "Basic Details",
+                        Description = "Role information",
+                        Instructions = "Enter role name, code, and scope level",
+                        Icon = "ri-information-line",
+                        State = WizardStepState.Active,
+                        ContentPartialPath = "~/Views/Identity/Roles/Partials/_BasicDetails.cshtml",
+                        ShowPrevious = false,
+                        ShowNext = true,
+                        NextButtonText = "Next: Permissions"
+                    },
+
+                    // STEP 2: Assign Permissions
+                    new WizardStep
+                    {
+                        StepId = "assign-permissions",
+                        StepNumber = 2,
+                        Title = "Assign Permissions",
+                        Description = "Role capabilities",
+                        Instructions = "Select permissions or copy from existing role",
+                        Icon = "ri-shield-check-line",
+                        State = WizardStepState.Pending,
+                        ContentPartialPath = "~/Views/Identity/Roles/Partials/_AssignPermissions.cshtml",
+                        ShowPrevious = true,
+                        ShowNext = true,
+                        NextButtonText = "Next: Users"
+                    },
+
+                    // STEP 3: Assign Users
+                    new WizardStep
+                    {
+                        StepId = "assign-users",
+                        StepNumber = 3,
+                        Title = "Assign Users",
+                        Description = "Role members",
+                        Instructions = "Select users who will have this role (optional)",
+                        Icon = "ri-user-add-line",
+                        State = WizardStepState.Pending,
+                        ContentPartialPath = "~/Views/Identity/Roles/Partials/_AssignUsers.cshtml",
+                        ShowPrevious = true,
+                        ShowNext = true,
+                        NextButtonText = "Next: Review"
+                    },
+
+                    // STEP 4: Review & Confirm
+                    new WizardStep
+                    {
+                        StepId = "review-confirm",
+                        StepNumber = 4,
+                        Title = "Review & Confirm",
+                        Description = "Final review",
+                        Instructions = "Review all settings and create role",
+                        Icon = "ri-checkbox-circle-line",
+                        State = WizardStepState.Pending,
+                        ContentPartialPath = "~/Views/Identity/Roles/Partials/_ReviewAndConfirm.cshtml",
+                        ShowPrevious = true,
+                        ShowNext = false,
+                        CustomButtonHtml = "<button type='submit' class='btn btn-primary'><i class='ri-add-line me-1'></i>Create Role</button>"
+                    }
+                }
+            };
+
+            var wizard = wizardConfig.BuildWizard();
+            ViewData["Wizard"] = wizard;
 
             return View("Views/Identity/Roles/Create.cshtml", model);
         }
 
         /// <summary>
-        /// Handle create role submission
+        /// Handle create role submission with permissions and users
         /// </summary>
         [HttpPost("Create")]
         [ValidateAntiForgeryToken]
@@ -163,11 +290,7 @@ namespace FormReporting.Controllers.Identity
                 if (await _context.Roles.AnyAsync(r => r.RoleCode == model.RoleCode))
                 {
                     ModelState.AddModelError("RoleCode", "A role with this code already exists.");
-                    ViewBag.ScopeLevels = await _context.ScopeLevels
-                        .Where(s => s.IsActive)
-                        .OrderBy(s => s.Level)
-                        .Select(s => new { s.ScopeLevelId, s.ScopeName, s.Level })
-                        .ToListAsync();
+                    await LoadCreateViewData();
                     return View(model);
                 }
 
@@ -175,37 +298,204 @@ namespace FormReporting.Controllers.Identity
                 if (await _context.Roles.AnyAsync(r => r.RoleName == model.RoleName))
                 {
                     ModelState.AddModelError("RoleName", "A role with this name already exists.");
-                    ViewBag.ScopeLevels = await _context.ScopeLevels
-                        .Where(s => s.IsActive)
-                        .OrderBy(s => s.Level)
-                        .Select(s => new { s.ScopeLevelId, s.ScopeName, s.Level })
-                        .ToListAsync();
+                    await LoadCreateViewData();
                     return View(model);
                 }
 
-                var role = new Role
+                // Use transaction for atomic creation
+                using (var transaction = await _context.Database.BeginTransactionAsync())
                 {
-                    RoleName = model.RoleName,
-                    RoleCode = model.RoleCode.ToUpper(),
-                    Description = model.Description,
-                    ScopeLevelId = model.ScopeLevelId,
-                    IsActive = model.IsActive,
-                    CreatedDate = DateTime.UtcNow
-                };
+                    try
+                    {
+                        // 1. Create Role
+                        var role = new Role
+                        {
+                            RoleName = model.RoleName,
+                            RoleCode = model.RoleCode.ToUpper(),
+                            Description = model.Description,
+                            ScopeLevelId = model.ScopeLevelId,
+                            IsActive = model.IsActive,
+                            CreatedDate = DateTime.UtcNow
+                        };
 
-                _context.Roles.Add(role);
-                await _context.SaveChangesAsync();
+                        _context.Roles.Add(role);
+                        await _context.SaveChangesAsync();
 
-                TempData["SuccessMessage"] = $"Role '{role.RoleName}' created successfully.";
-                return RedirectToAction(nameof(Index));
+                        // 2. Create RolePermissions (if any selected)
+                        if (model.SelectedPermissionIds != null && model.SelectedPermissionIds.Any())
+                        {
+                            foreach (var permissionId in model.SelectedPermissionIds)
+                            {
+                                var rolePermission = new RolePermission
+                                {
+                                    RoleId = role.RoleId,
+                                    PermissionId = permissionId,
+                                    IsGranted = true,
+                                    AssignedDate = DateTime.UtcNow,
+                                    AssignedBy = null // TODO: Get current user ID when auth is implemented
+                                };
+                                _context.RolePermissions.Add(rolePermission);
+                            }
+                            await _context.SaveChangesAsync();
+                        }
+
+                        // 3. Create UserRoles (if any users selected)
+                        if (model.SelectedUserIds != null && model.SelectedUserIds.Any())
+                        {
+                            foreach (var userId in model.SelectedUserIds)
+                            {
+                                var userRole = new UserRole
+                                {
+                                    UserId = userId,
+                                    RoleId = role.RoleId,
+                                    AssignedDate = DateTime.UtcNow,
+                                    AssignedBy = null // TODO: Get current user ID when auth is implemented
+                                };
+                                _context.UserRoles.Add(userRole);
+                            }
+                            await _context.SaveChangesAsync();
+                        }
+
+                        // Commit transaction
+                        await transaction.CommitAsync();
+
+                        // Success message with details
+                        var message = $"Role '{role.RoleName}' created successfully.";
+                        if (model.SelectedPermissionIds?.Any() == true)
+                        {
+                            message += $" {model.SelectedPermissionIds.Count} permission(s) assigned.";
+                        }
+                        if (model.SelectedUserIds?.Any() == true)
+                        {
+                            message += $" {model.SelectedUserIds.Count} user(s) assigned.";
+                        }
+
+                        TempData["SuccessMessage"] = message;
+                        return RedirectToAction(nameof(Index));
+                    }
+                    catch (Exception ex)
+                    {
+                        await transaction.RollbackAsync();
+                        ModelState.AddModelError("", "An error occurred while creating the role: " + ex.Message);
+                        await LoadCreateViewData();
+                        return View(model);
+                    }
+                }
             }
 
+            await LoadCreateViewData();
+            return View(model);
+        }
+
+        /// <summary>
+        /// Helper method to load all view data for Create page
+        /// </summary>
+        private async Task LoadCreateViewData()
+        {
+            // Load scope levels
             ViewBag.ScopeLevels = await _context.ScopeLevels
                 .Where(s => s.IsActive)
                 .OrderBy(s => s.Level)
-                .Select(s => new { s.ScopeLevelId, s.ScopeName, s.Level })
                 .ToListAsync();
-            return View("Views/Identity/Roles/Index.cshtml", model);
+
+            // Load modules with permissions
+            var modules = await _context.Modules
+                .Include(m => m.Permissions.Where(p => p.IsActive))
+                .Where(m => m.IsActive)
+                .OrderBy(m => m.DisplayOrder)
+                .ToListAsync();
+            ViewBag.Modules = modules;
+
+            // Load existing roles for copy feature
+            var existingRoles = await _context.Roles
+                .Where(r => r.IsActive)
+                .OrderBy(r => r.RoleName)
+                .Select(r => new { r.RoleId, r.RoleName, r.RoleCode })
+                .ToListAsync();
+            ViewBag.ExistingRoles = existingRoles;
+
+            // Load scoped users grouped by tenant
+            var scopedUsers = await _userService.GetAccessibleUsersAsync(User);
+            var usersByTenant = scopedUsers
+                .GroupBy(u => new { u.TenantId, TenantName = u.PrimaryTenant?.TenantName ?? "No Tenant" })
+                .Select(g => new
+                {
+                    TenantId = g.Key.TenantId,
+                    TenantName = g.Key.TenantName,
+                    Users = g.Select(u => new
+                    {
+                        u.UserId,
+                        u.FullName,
+                        u.EmployeeNumber,
+                        DepartmentName = u.Department?.DepartmentName ?? "No Department",
+                        u.Email
+                    }).ToList()
+                })
+                .OrderBy(g => g.TenantName)
+                .ToList();
+            ViewBag.UsersByTenant = usersByTenant;
+
+            // Rebuild wizard config
+            var wizardConfig = new WizardConfig
+            {
+                FormId = "roleCreationWizard",
+                Layout = WizardLayout.Vertical,
+                Steps = new List<WizardStep>
+                {
+                    new WizardStep
+                    {
+                        StepId = "basic-details",
+                        StepNumber = 1,
+                        Title = "Basic Details",
+                        Description = "Role information",
+                        Icon = "ri-information-line",
+                        State = WizardStepState.Active,
+                        ContentPartialPath = "~/Views/Identity/Roles/Partials/_BasicDetails.cshtml",
+                        ShowPrevious = false,
+                        ShowNext = true
+                    },
+                    new WizardStep
+                    {
+                        StepId = "assign-permissions",
+                        StepNumber = 2,
+                        Title = "Assign Permissions",
+                        Description = "Role capabilities",
+                        Icon = "ri-shield-check-line",
+                        State = WizardStepState.Pending,
+                        ContentPartialPath = "~/Views/Identity/Roles/Partials/_AssignPermissions.cshtml",
+                        ShowPrevious = true,
+                        ShowNext = true
+                    },
+                    new WizardStep
+                    {
+                        StepId = "assign-users",
+                        StepNumber = 3,
+                        Title = "Assign Users",
+                        Description = "Role members",
+                        Icon = "ri-user-add-line",
+                        State = WizardStepState.Pending,
+                        ContentPartialPath = "~/Views/Identity/Roles/Partials/_AssignUsers.cshtml",
+                        ShowPrevious = true,
+                        ShowNext = true
+                    },
+                    new WizardStep
+                    {
+                        StepId = "review-confirm",
+                        StepNumber = 4,
+                        Title = "Review & Confirm",
+                        Description = "Final review",
+                        Icon = "ri-checkbox-circle-line",
+                        State = WizardStepState.Pending,
+                        ContentPartialPath = "~/Views/Identity/Roles/Partials/_ReviewAndConfirm.cshtml",
+                        ShowPrevious = true,
+                        ShowNext = false,
+                        CustomButtonHtml = "<button type='submit' class='btn btn-primary'><i class='ri-add-line me-1'></i>Create Role</button>"
+                    }
+                }
+            };
+
+            var wizard = wizardConfig.BuildWizard();
+            ViewData["Wizard"] = wizard;
         }
 
         /// <summary>
@@ -374,6 +664,55 @@ namespace FormReporting.Controllers.Identity
             };
 
             return Json(new { success = true, data = viewModel });
+        }
+
+        /// <summary>
+        /// AJAX endpoint to check if role code is available
+        /// </summary>
+        [HttpGet("CheckRoleCode")]
+        public async Task<IActionResult> CheckRoleCode(string code, int? excludeId = null)
+        {
+            if (string.IsNullOrWhiteSpace(code))
+            {
+                return Json(new { exists = false, valid = false, message = "Code is required" });
+            }
+
+            // Validate format
+            if (!System.Text.RegularExpressions.Regex.IsMatch(code, @"^[A-Z_]+$"))
+            {
+                return Json(new { exists = false, valid = false, message = "Only uppercase letters and underscores allowed" });
+            }
+
+            // Check if exists
+            var exists = excludeId.HasValue
+                ? await _context.Roles.AnyAsync(r => r.RoleCode == code && r.RoleId != excludeId.Value)
+                : await _context.Roles.AnyAsync(r => r.RoleCode == code);
+
+            return Json(new
+            {
+                exists,
+                valid = !exists,
+                message = exists ? "Code already exists" : "Code is available"
+            });
+        }
+
+        /// <summary>
+        /// AJAX endpoint to get permissions for a role (for copying)
+        /// </summary>
+        [HttpGet("GetRolePermissions")]
+        public async Task<IActionResult> GetRolePermissions(int roleId)
+        {
+            var permissionIds = await _context.RolePermissions
+                .Where(rp => rp.RoleId == roleId && rp.IsGranted)
+                .Select(rp => rp.PermissionId)
+                .ToListAsync();
+
+            return Json(new
+            {
+                success = true,
+                permissionIds,
+                message = $"Found {permissionIds.Count} permission(s)"
+            });
         }
     }
 }

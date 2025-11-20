@@ -1,0 +1,142 @@
+@model FormReporting.Models.ViewModels.Identity.RoleEditViewModel
+
+@{
+    var usersByTenant = ViewBag.UsersByTenant as List<dynamic>;
+}
+
+<div class="step-content">
+    <div class="row">
+        <div class="col-md-12 mb-3">
+            <div class="alert alert-info">
+                <i class="ri-information-line me-2"></i>
+                <strong>Assign Initial Users (Optional)</strong><br />
+                Select users who should have this role. You can only see users within your scope.
+                You can skip this step and assign users later.
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Bulk Actions -->
+    <div class="row mb-3">
+        <div class="col-md-8">
+            <div class="input-group">
+                <span class="input-group-text"><i class="ri-search-line"></i></span>
+                <input type="text" class="form-control" id="userSearch"
+                       placeholder="Search by name or employee number..." />
+            </div>
+        </div>
+        <div class="col-md-4 text-end">
+            <button type="button" class="btn btn-outline-primary" id="selectAllUsers">
+                <i class="ri-checkbox-multiple-line"></i> Select All
+            </button>
+            <button type="button" class="btn btn-outline-secondary" id="deselectAllUsers">
+                <i class="ri-checkbox-blank-line"></i> Deselect All
+            </button>
+        </div>
+    </div>
+
+    <!-- Users Grouped by Tenant -->
+    @if (usersByTenant != null && usersByTenant.Any())
+    {
+        <div class="users-list" id="usersContainer">
+            @foreach (var group in usersByTenant)
+            {
+                var tenantId = group.TenantId;
+                var tenantName = group.TenantName;
+                var users = group.Users as List<dynamic>;
+                var userCount = users?.Count ?? 0;
+
+                <div class="tenant-group mb-3" data-tenant-id="@tenantId">
+                    <!-- Tenant Header -->
+                    <div class="card">
+                        <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                            <div>
+                                <i class="ri-building-line me-2"></i>
+                                <strong>@tenantName</strong>
+                                <span class="badge bg-secondary ms-2 tenant-user-count">0/@userCount</span>
+                            </div>
+                            <div>
+                                <button type="button" class="btn btn-sm btn-link select-all-tenant"
+                                        data-tenant="@tenantId">
+                                    <i class="ri-checkbox-line"></i> Select All in @tenantName
+                                </button>
+                                <button type="button" class="btn btn-sm btn-link text-secondary"
+                                        data-bs-toggle="collapse"
+                                        data-bs-target="#tenant_@tenantId">
+                                    <i class="ri-arrow-down-s-line"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- User Cards -->
+                        <div class="collapse" id="tenant_@tenantId">
+                            <div class="card-body">
+                                <div class="row g-2">
+                                    @if (users != null && users.Any())
+                                    {
+                                        foreach (var user in users)
+                                        {
+                                            <div class="col-md-6 user-card"
+                                                 data-username="@user.FullName @user.EmployeeNumber"
+                                                 data-tenant="@tenantId">
+                                                <div class="card h-100">
+                                                    <div class="card-body p-2">
+                                                        <div class="form-check">
+                                                            <input class="form-check-input user-checkbox"
+                                                                   type="checkbox"
+                                                                   name="SelectedUserIds"
+                                                                   value="@user.UserId"
+                                                                   id="user_@user.UserId"
+                                                                   data-tenant="@tenantId" />
+                                                            <label class="form-check-label w-100" for="user_@user.UserId">
+                                                                <div class="d-flex align-items-start">
+                                                                    <i class="ri-user-line me-2 mt-1"></i>
+                                                                    <div class="flex-grow-1">
+                                                                        <div class="fw-bold">@user.FullName</div>
+                                                                        <small class="text-muted d-block">
+                                                                            <i class="ri-profile-line"></i> @user.EmployeeNumber •
+                                                                            @user.DepartmentName
+                                                                        </small>
+                                                                        <small class="text-muted d-block">
+                                                                            <i class="ri-building-4-line"></i> @user.DepartmentName
+                                                                        </small>
+                                                                    </div>
+                                                                </div>
+                                                            </label>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        }
+                                    }
+                                    else
+                                    {
+                                        <div class="col-12">
+                                            <p class="text-muted mb-0">No users found in this tenant.</p>
+                                        </div>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-warning">
+            <i class="ri-error-warning-line me-2"></i>
+            No users available in your scope. You may not have permission to view users, or there are no users in your accessible tenants.
+        </div>
+    }
+
+    <!-- Selected Users Summary -->
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <div class="alert alert-secondary">
+                <strong>Selected:</strong> <span id="selectedUsersCount">0</span> user(s)
+            </div>
+        </div>
+    </div>
+</div>
