@@ -1,0 +1,85 @@
+<!-- Add Section Modal -->
+<div class="modal fade" id="addSectionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">
+                    <i class="ri-add-line me-2"></i>Add New Section
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addSectionForm">
+                    <!-- Section Name -->
+                    <div class="mb-3">
+                        <label for="sectionName" class="form-label">
+                            Section Name <span class="text-danger">*</span>
+                        </label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="sectionName" 
+                               placeholder="e.g., Personal Information"
+                               required>
+                        <div class="invalid-feedback">
+                            Please enter a section name.
+                        </div>
+                    </div>
+
+                    <!-- Section Description -->
+                    <div class="mb-3">
+                        <label for="sectionDescription" class="form-label">Description</label>
+                        <textarea class="form-control" 
+                                  id="sectionDescription" 
+                                  rows="2"
+                                  placeholder="Optional description for this section"></textarea>
+                    </div>
+
+                    <!-- Icon Class (Optional) -->
+                    <div class="mb-3">
+                        <label for="sectionIcon" class="form-label">Icon (Optional)</label>
+                        <input type="text" 
+                               class="form-control" 
+                               id="sectionIcon" 
+                               placeholder="e.g., ri-user-line">
+                        <small class="text-muted">
+                            Use Remix Icon classes. 
+                            <a href="https://remixicon.com/" target="_blank">Browse icons</a>
+                        </small>
+                    </div>
+
+                    <!-- Collapsible Settings -->
+                    <div class="mb-3">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" 
+                                   type="checkbox" 
+                                   id="isCollapsible" 
+                                   checked>
+                            <label class="form-check-label" for="isCollapsible">
+                                Allow section to be collapsed
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="mb-3" id="collapsedByDefaultContainer">
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" 
+                                   type="checkbox" 
+                                   id="isCollapsedByDefault">
+                            <label class="form-check-label" for="isCollapsedByDefault">
+                                Start collapsed by default
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                    <i class="ri-close-line me-1"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveSectionFromModal()">
+                    <i class="ri-save-line me-1"></i>Save Section
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

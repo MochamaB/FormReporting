@@ -14,17 +14,20 @@ namespace FormReporting.Controllers.Forms
         private readonly ApplicationDbContext _context;
         private readonly IFormCategoryService _categoryService;
         private readonly IFormTemplateService _templateService;
+        private readonly IFormBuilderService _formBuilderService;
         private readonly IUserService _userService;
 
         public FormTemplatesController(
             ApplicationDbContext context,
             IFormCategoryService categoryService,
             IFormTemplateService templateService,
+            IFormBuilderService formBuilderService,
             IUserService userService)
         {
             _context = context;
             _categoryService = categoryService;
             _templateService = templateService;
+            _formBuilderService = formBuilderService;
             _userService = userService;
         }
 
@@ -322,30 +325,30 @@ namespace FormReporting.Controllers.Forms
         [HttpGet]
         public async Task<IActionResult> FormBuilder(int id)
         {
-            // Load template with all related data
-            var template = await _templateService.LoadTemplateForEditingAsync(id);
+            // Load template for form builder
+            var viewModel = await _formBuilderService.LoadForBuilderAsync(id);
 
-            if (template == null)
+            if (viewModel == null)
             {
                 TempData["ErrorMessage"] = "Template not found.";
                 return RedirectToAction(nameof(Index));
             }
 
             // Only drafts can be edited
-            if (template.PublishStatus != "Draft")
+            if (!viewModel.IsEditable)
             {
-                TempData["ErrorMessage"] = "Cannot edit published templates.";
+                TempData["ErrorMessage"] = "Cannot edit published templates. Create a new version to make changes.";
                 return RedirectToAction(nameof(Index));
             }
 
             // Build progress tracker for Step 2
             var progress = new FormBuilderProgressConfig
             {
-                BuilderId = $"template-{template.TemplateId}",
-                TemplateId = template.TemplateId,
-                TemplateName = template.TemplateName,
-                TemplateVersion = $"v{template.Version}",
-                PublishStatus = template.PublishStatus,
+                BuilderId = $"template-{viewModel.TemplateId}",
+                TemplateId = viewModel.TemplateId,
+                TemplateName = viewModel.TemplateName,
+                TemplateVersion = $"v{viewModel.Version}",
+                PublishStatus = viewModel.PublishStatus,
                 CurrentStep = FormBuilderStep.FormBuilder,
                 ShowSaveDraft = true,
                 ExitUrl = Url.Action("Index", "FormTemplates") ?? "/Forms/FormTemplates"
@@ -355,8 +358,8 @@ namespace FormReporting.Controllers.Forms
 
             ViewData["Progress"] = progress;
 
-            // Pass template to view
-            return View("~/Views/Forms/FormTemplates/FormBuilder.cshtml", template);
+            // Pass FormBuilderViewModel to view
+            return View("~/Views/Forms/FormTemplates/FormBuilder.cshtml", viewModel);
         }
 
         /// <summary>

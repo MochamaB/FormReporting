@@ -3,81 +3,69 @@ using Microsoft.EntityFrameworkCore;
 using FormReporting.Data;
 using FormReporting.Models.ViewModels.Organizational;
 using FormReporting.Models.Entities.Organizational;
+using FormReporting.Services.Organizational;
 
 namespace FormReporting.Controllers.Organizational
 {
     public class TenantsController : Controller
     {
         private readonly ApplicationDbContext _context;
+        private readonly ITenantService _tenantService;
 
-        public TenantsController(ApplicationDbContext context)
+        public TenantsController(ApplicationDbContext context, ITenantService tenantService)
         {
             _context = context;
+            _tenantService = tenantService;
         }
 
         /// <summary>
         /// Index - List all tenants with statistics, filters, and pagination
+        /// Uses TenantService for scope-based access control
         /// </summary>
         public async Task<IActionResult> Index(string? search, string? status, string? type, int page = 1)
         {
             const int pageSize = 15; // Items per page
 
-            // Start with base query
-            var query = _context.Tenants
-                .Include(t => t.Region)
-                .Include(t => t.Departments)
-                .AsQueryable();
+            // 1. GET SCOPE-FILTERED TENANTS using TenantService (with search)
+            var scopedTenants = await _tenantService.GetAccessibleTenantsAsync(User, search);
 
-            // Apply search filter
-            if (!string.IsNullOrWhiteSpace(search))
-            {
-                search = search.Trim().ToLower();
-                query = query.Where(t =>
-                    t.TenantCode.ToLower().Contains(search) ||
-                    t.TenantName.ToLower().Contains(search) ||
-                    t.TenantType.ToLower().Contains(search) ||
-                    (t.Location != null && t.Location.ToLower().Contains(search)));
-            }
-
-            // Apply status filter
+            // 2. APPLY STATUS FILTER
             if (!string.IsNullOrWhiteSpace(status))
             {
                 if (status.ToLower() == "active")
-                    query = query.Where(t => t.IsActive);
+                    scopedTenants = scopedTenants.Where(t => t.IsActive).ToList();
                 else if (status.ToLower() == "inactive")
-                    query = query.Where(t => !t.IsActive);
+                    scopedTenants = scopedTenants.Where(t => !t.IsActive).ToList();
             }
 
-            // Apply tenant type filter
+            // 3. APPLY TENANT TYPE FILTER
             if (!string.IsNullOrWhiteSpace(type))
             {
-                query = query.Where(t => t.TenantType.ToLower() == type.ToLower());
+                scopedTenants = scopedTenants.Where(t => t.TenantType.ToLower() == type.ToLower()).ToList();
             }
 
-            // Get total count before pagination
-            var totalItems = await query.CountAsync();
+            // 4. CALCULATE STATISTICS (from scope-filtered data)
+            ViewBag.TotalTenants = scopedTenants.Count(t => t.IsActive);
+            ViewBag.TotalDepartments = scopedTenants.Sum(t => t.Departments.Count(d => d.IsActive));
+            ViewBag.HeadOfficeCount = scopedTenants.Count(t => t.TenantType.ToLower() == "headoffice" && t.IsActive);
+            ViewBag.FactoryCount = scopedTenants.Count(t => t.TenantType.ToLower() == "factory" && t.IsActive);
+            ViewBag.SubsidiaryCount = scopedTenants.Count(t => t.TenantType.ToLower() == "subsidiary" && t.IsActive);
+            ViewBag.InactiveTenants = scopedTenants.Count(t => !t.IsActive);
 
-            // Calculate statistics (on filtered data)
-            var allTenants = await query.ToListAsync();
-
-            ViewBag.TotalTenants = allTenants.Count(t => t.IsActive);
-            ViewBag.TotalDepartments = allTenants.Sum(t => t.Departments.Count(d => d.IsActive));
-            ViewBag.HeadOfficeCount = allTenants.Count(t => t.TenantType.ToLower() == "headoffice" && t.IsActive);
-            ViewBag.FactoryCount = allTenants.Count(t => t.TenantType.ToLower() == "factory" && t.IsActive);
-            ViewBag.SubsidiaryCount = allTenants.Count(t => t.TenantType.ToLower() == "subsidiary" && t.IsActive);
-            ViewBag.InactiveTenants = allTenants.Count(t => !t.IsActive);
-
-            // Calculate trend (tenants created in last 30 days vs previous 30 days)
+            // 5. CALCULATE TREND (from accessible tenants only)
             var thirtyDaysAgo = DateTime.Now.AddDays(-30);
             var sixtyDaysAgo = DateTime.Now.AddDays(-60);
-            var recentTenants = await _context.Tenants.CountAsync(t => t.CreatedDate >= thirtyDaysAgo);
-            var previousTenants = await _context.Tenants.CountAsync(t => t.CreatedDate >= sixtyDaysAgo && t.CreatedDate < thirtyDaysAgo);
+            var recentTenants = scopedTenants.Count(t => t.CreatedDate >= thirtyDaysAgo);
+            var previousTenants = scopedTenants.Count(t => t.CreatedDate >= sixtyDaysAgo && t.CreatedDate < thirtyDaysAgo);
             ViewBag.TenantGrowth = previousTenants > 0
                 ? ((recentTenants - previousTenants) / (double)previousTenants * 100)
                 : 0;
 
-            // Execute query with pagination
-            var tenants = await query
+            // 6. PAGINATION
+            var totalItems = scopedTenants.Count;
+
+            // 7. GET PAGINATED DATA
+            var tenants = scopedTenants
                 .OrderBy(t => t.TenantCode)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
@@ -94,15 +82,15 @@ namespace FormReporting.Controllers.Organizational
                     CreatedDate = t.CreatedDate,
                     ModifiedDate = t.ModifiedDate
                 })
-                .ToListAsync();
+                .ToList();
 
-            // Pass pagination info to view
+            // 8. PASS PAGINATION INFO TO VIEW
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = (int)Math.Ceiling(totalItems / (double)pageSize);
             ViewBag.PageSize = pageSize;
             ViewBag.TotalItems = totalItems;
 
-            // Pass filter values to view for maintaining state
+            // 9. PASS FILTER VALUES TO VIEW for maintaining state
             ViewBag.CurrentSearch = search;
             ViewBag.CurrentStatus = status;
             ViewBag.CurrentType = type;
@@ -300,10 +288,19 @@ namespace FormReporting.Controllers.Organizational
 
         /// <summary>
         /// GET: Edit tenant
+        /// Uses TenantService for scope-based access control
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
+            // Check if user has access to this tenant (scope-based)
+            var canAccess = await _tenantService.CanAccessTenantAsync(User, id);
+            if (!canAccess)
+            {
+                TempData["ErrorMessage"] = "You do not have permission to edit this tenant";
+                return RedirectToAction(nameof(Index));
+            }
+
             var tenant = await _context.Tenants
                 .Include(t => t.Region)
                 .FirstOrDefaultAsync(t => t.TenantId == id);
@@ -377,11 +374,20 @@ namespace FormReporting.Controllers.Organizational
 
         /// <summary>
         /// POST: Update tenant
+        /// Uses TenantService for scope-based access control
         /// </summary>
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(TenantEditViewModel model)
         {
+            // Check if user has access to this tenant (scope-based)
+            var canAccess = await _tenantService.CanAccessTenantAsync(User, model.TenantId);
+            if (!canAccess)
+            {
+                TempData["ErrorMessage"] = "You do not have permission to edit this tenant";
+                return RedirectToAction(nameof(Index));
+            }
+
             // Custom validation
             var validationErrors = model.ValidateBasicDetails();
             foreach (var error in validationErrors)

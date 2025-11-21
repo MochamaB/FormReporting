@@ -1,0 +1,45 @@
+@model FormReporting.Models.ViewModels.Forms.FormBuilderViewModel
+
+@*
+    CENTER PANEL: Canvas
+    Main form design area where sections and fields are displayed
+*@
+
+<div>
+    <!-- Canvas Header -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="mb-0">
+            <i class="ri-layout-grid-line me-1"></i>
+            Form Canvas
+        </h6>
+        <div>
+            <span class="badge bg-info-subtle text-info">
+                @Model.Sections.Count section(s)
+            </span>
+            <span class="badge bg-primary-subtle text-primary ms-1">
+                @Model.TotalFields field(s)
+            </span>
+        </div>
+    </div>
+    
+    <!-- Sections Container (Sortable) -->
+    <div id="sectionsContainer" class="sections-container">
+        @if (Model.Sections.Any())
+        {
+            @foreach (var section in Model.Sections.OrderBy(s => s.DisplayOrder))
+            {
+                <partial name="~/Views/Forms/FormTemplates/Partials/FormBuilder/Components/_BuilderSection.cshtml" 
+                         model="section" />
+            }
+        }
+        else
+        {
+            <!-- Empty State -->
+            <div class="text-center py-5">
+                <i class="ri-inbox-line display-4 text-muted"></i>
+                <h5 class="mt-3 text-muted">No Sections Yet</h5>
+                <p class="text-muted">Click "Add Section" to get started</p>
+            </div>
+        }
+    </div>
+</div>

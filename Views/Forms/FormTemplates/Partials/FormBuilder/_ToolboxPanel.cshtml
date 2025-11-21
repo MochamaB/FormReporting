@@ -1,0 +1,57 @@
+@model FormReporting.Models.ViewModels.Forms.FormBuilderViewModel
+
+@*
+    LEFT PANEL: Toolbox
+    Contains field palette and section manager
+*@
+
+<div class="card" style="margin:-1rem">
+
+    <!-- Card Header -->
+    <div class="card-header">
+        <h6 class="mb-0">
+            <i class="ri-list-check"></i>
+            Form Elements
+        </h6>
+    </div>
+
+    <!-- Card Body -->
+    <div class="card-body pt-0">
+
+        <!-- ========================= -->
+        <!--   SECTION TITLE           -->
+        <!-- ========================= -->
+        <li class="menu-title">
+            <span>Section</span>
+        </li>
+
+        <!-- Draggable Section Template -->
+        <div class="toolbox-item draggable-section mt-2"
+             data-type="section"
+             draggable="true">
+            <div class="d-flex align-items-center p-2 border rounded bg-light">
+                <i class="ri-drag-move-line me-2 text-muted"></i>
+                <div class="flex-grow-1">
+                    <strong>Section</strong>
+                    <p class="mb-0 small text-muted">Drag to canvas</p>
+                </div>
+                <i class="ri-add-box-line fs-4 text-primary"></i>
+            </div>
+        </div>
+
+        <hr class="mt-2 mb-0"/>
+
+       
+        <!-- ========================= -->
+        <!--   FIELD TITLE             -->
+        <!-- ========================= -->
+        <li class="menu-title">
+            <span>Fields</span>
+        </li>
+
+        <!-- Field placeholder -->
+        <p class="text-muted small mt-2">Field palette will be implemented next</p>
+
+    </div>
+</div>
+

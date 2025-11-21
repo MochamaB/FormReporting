@@ -1,0 +1,343 @@
+@using FormReporting.Extensions
+@using FormReporting.Models.ViewModels.Components
+@model FormReporting.Models.ViewModels.Identity.UsersIndexViewModel
+
+@{
+    ViewData["Title"] = "Users Management";
+
+    // ═══════════════════════════════════════════════════════════
+    // SECTION 1: STATISTIC CARDS CONFIGURATION
+    // ═══════════════════════════════════════════════════════════
+
+    var statConfig = new StatsRowConfig
+    {
+        Titles = new List<string> {
+            "Total Users",
+            "Active Users",
+            "Inactive Users",
+            "Email Verified"
+        },
+        Values = new List<string> {
+            Model.TotalUsers.ToString(),
+            Model.ActiveUsers.ToString(),
+            Model.InactiveUsers.ToString(),
+            Model.EmailConfirmedUsers.ToString()
+        },
+        Icons = new List<string> {
+            "ri-team-line",
+            "ri-user-smile-line",
+            "ri-user-unfollow-line",
+            "ri-mail-check-line"
+        },
+        ColorThemes = new List<string> {
+            "primary",
+            "success",
+            "danger",
+            "info"
+        },
+        CardType = CardType.IconLeftCard,
+        Subtitles = new List<string> {
+            "Users in your scope",
+            "Currently active",
+            "Deactivated users",
+            "Verified emails"
+        }
+    };
+
+    // Transform config into renderable cards
+    var statCards = statConfig.BuildStatsRow();
+
+    // ═══════════════════════════════════════════════════════════
+    // SECTION 2: DATATABLE CONFIGURATION
+    // ═══════════════════════════════════════════════════════════
+
+    // Build tenant filter options from accessible tenants
+    var tenantFilterOptions = new List<FilterOption>
+    {
+        new FilterOption
+        {
+            Text = "All Tenants",
+            Value = "",
+            Url = Url.Action("Index", "Users", new { search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus }),
+            IsActive = string.IsNullOrEmpty(ViewBag.CurrentTenant)
+        }
+    };
+
+    // Add accessible tenants to filter
+    var accessibleTenants = ViewBag.AccessibleTenants as IEnumerable<dynamic>;
+    if (accessibleTenants != null)
+    {
+        foreach (var tenant in accessibleTenants)
+        {
+            tenantFilterOptions.Add(new FilterOption
+            {
+                Text = tenant.TenantName,
+                Value = tenant.TenantId.ToString(),
+                Url = Url.Action("Index", "Users", new {
+                    search = ViewBag.CurrentSearch,
+                    status = ViewBag.CurrentStatus,
+                    tenant = tenant.TenantId.ToString()
+                }),
+                IsActive = ViewBag.CurrentTenant == tenant.TenantId.ToString()
+            });
+        }
+    }
+
+    var tableConfig = new DataTableConfig
+    {
+        TableId = "usersTable",
+        Columns = new List<string> {
+            "#",
+            "Name",
+            "Username",
+            "Employee #",
+            "Email",
+            "Tenant",
+            "Department",
+            "Roles",
+            "Last Login",
+            "Status",
+            "Actions"
+        },
+        EnableSearch = true,
+        SearchBox = new SearchBoxConfig
+        {
+            ParameterName = "search",
+            PlaceholderText = "Search by name, email, or employee number...",
+            CurrentValue = ViewBag.CurrentSearch,
+            ActionUrl = Url.Action("Index", "Users") ?? "/Identity/Users"
+        },
+        FilterDropdowns = new List<FilterDropdownConfig>
+        {
+            new FilterDropdownConfig
+            {
+                Label = "Status",
+                Options = new List<FilterOption>
+                {
+                    new FilterOption
+                    {
+                        Text = "All Status",
+                        Value = "",
+                        Url = Url.Action("Index", "Users", new { search = ViewBag.CurrentSearch, tenant = ViewBag.CurrentTenant }),
+                        IsActive = string.IsNullOrEmpty(ViewBag.CurrentStatus)
+                    },
+                    new FilterOption
+                    {
+                        Text = "Active",
+                        Value = "active",
+                        Url = Url.Action("Index", "Users", new { search = ViewBag.CurrentSearch, status = "active", tenant = ViewBag.CurrentTenant }),
+                        IsActive = ViewBag.CurrentStatus == "active"
+                    },
+                    new FilterOption
+                    {
+                        Text = "Inactive",
+                        Value = "inactive",
+                        Url = Url.Action("Index", "Users", new { search = ViewBag.CurrentSearch, status = "inactive", tenant = ViewBag.CurrentTenant }),
+                        IsActive = ViewBag.CurrentStatus == "inactive"
+                    }
+                }
+            },
+            new FilterDropdownConfig
+            {
+                Label = "Tenant",
+                Options = tenantFilterOptions
+            }
+        },
+        CreateButtonText = "Create New User",
+        CreateButtonUrl = Url.Action("Create", "Users") ?? "/Identity/Users/Create",
+        ShowPagination = true,
+        CurrentPage = ViewBag.CurrentPage,
+        TotalPages = ViewBag.TotalPages,
+        TotalRecords = ViewBag.TotalRecords,
+        PageSize = ViewBag.PageSize
+    };
+
+    // Transform config into renderable table
+    var table = tableConfig.BuildDataTable();
+
+    // Calculate row number starting point for pagination
+    int startingNumber = ((ViewBag.CurrentPage - 1) * ViewBag.PageSize) + 1;
+}
+
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- SECTION 3: RENDER STATISTIC CARDS -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<div class="row">
+    @foreach (var card in statCards)
+    {
+        <partial name="~/Views/Shared/Components/StatisticCards/_IconLeftCard.cshtml" model="card" />
+    }
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- SECTION 4: RENDER DATATABLE -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<div class="row mt-3">
+    <div class="col-xl-12">
+        <div class="card">
+            <!-- Card Header: Search, Filters, Create Button -->
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center flex-wrap w-100 gap-2">
+                    <!-- Left: Search and Filters -->
+                    <div class="d-flex gap-2 flex-wrap align-items-center">
+                        @if (table.SearchBox != null)
+                        {
+                            <partial name="~/Views/Shared/Components/DataTable/_SearchBox.cshtml" model="table.SearchBox" />
+                        }
+
+                        @if (table.FilterDropdowns != null && table.FilterDropdowns.Any())
+                        {
+                            foreach (var filterDropdown in table.FilterDropdowns)
+                            {
+                                <partial name="~/Views/Shared/Components/DataTable/_FilterDropdown.cshtml" model="filterDropdown" />
+                            }
+                        }
+                    </div>
+
+                    <!-- Right: Create Button -->
+                    <div class="d-flex gap-2">
+                        @if (!string.IsNullOrEmpty(table.CreateButtonText))
+                        {
+                            <a href="@table.CreateButtonUrl" class="btn btn-primary">
+                                <i class="ri-add-line me-1"></i>@table.CreateButtonText
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card Body: Table -->
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="@table.TableClasses" id="@table.TableId">
+                        <thead class="bg-light">
+                            <tr>
+                                @foreach (var column in table.Columns)
+                                {
+                                    <th>@column</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Users.Any())
+                            {
+                                @for (int i = 0; i < Model.Users.Count; i++)
+                                {
+                                    var user = Model.Users[i];
+                                    var rowNumber = startingNumber + i;
+                                    <tr>
+                                        <td>@rowNumber</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="avatar-xs flex-shrink-0 me-2">
+                                                    <div class="avatar-title bg-primary-subtle text-primary rounded-circle">
+                                                        @user.FirstName.Substring(0, 1)@user.LastName.Substring(0, 1)
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <strong>@user.FullName</strong>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td><code>@user.UserName</code></td>
+                                        <td>@(user.EmployeeNumber ?? "<span class='text-muted'>N/A</span>")</td>
+                                        <td>
+                                            <div class="d-flex flex-column">
+                                                <span>@user.Email</span>
+                                                <small>@Html.Raw(user.EmailBadge)</small>
+                                            </div>
+                                        </td>
+                                        <td>@Html.Raw(user.TenantBadge)</td>
+                                        <td><small class="text-muted">@user.DepartmentName</small></td>
+                                        <td class="text-center">@Html.Raw(user.RolesBadge)</td>
+                                        <td><small class="text-muted">@Html.Raw(user.LastLoginDisplay)</small></td>
+                                        <td>@Html.Raw(user.StatusBadge)</td>
+                                        <td>
+                                            <div class="d-flex gap-1">
+                                                <a href="@Url.Action("Edit", new { id = user.UserId })"
+                                                   class="btn btn-sm btn-success"
+                                                   title="Edit User">
+                                                    <i class="ri-pencil-line"></i>
+                                                </a>
+                                                <a href="@Url.Action("Details", new { id = user.UserId })"
+                                                   class="btn btn-sm btn-info"
+                                                   title="View Details">
+                                                    <i class="ri-eye-line"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="@table.Columns.Count" class="text-center py-4">
+                                        <div class="d-flex flex-column align-items-center">
+                                            <i class="ri-user-search-line" style="font-size: 3rem; color: #ccc;"></i>
+                                            <p class="text-muted mt-2">No users found matching your criteria</p>
+                                            @if (!string.IsNullOrEmpty(ViewBag.CurrentSearch) || !string.IsNullOrEmpty(ViewBag.CurrentStatus))
+                                            {
+                                                <a href="@Url.Action("Index", "Users")" class="btn btn-sm btn-link">
+                                                    <i class="ri-refresh-line me-1"></i>Clear Filters
+                                                </a>
+                                            }
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Card Footer: Pagination -->
+            @if (table.ShowPagination && table.TotalPages > 1)
+            {
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-muted">
+                            Showing @((ViewBag.CurrentPage - 1) * ViewBag.PageSize + 1)
+                            to @Math.Min(ViewBag.CurrentPage * ViewBag.PageSize, ViewBag.TotalRecords)
+                            of @ViewBag.TotalRecords users
+                        </div>
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination pagination-sm mb-0">
+                                <!-- Previous -->
+                                <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
+                                    <a class="page-link"
+                                       href="@Url.Action("Index", new { page = ViewBag.CurrentPage - 1, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, tenant = ViewBag.CurrentTenant })">
+                                        <i class="ri-arrow-left-s-line"></i>
+                                    </a>
+                                </li>
+
+                                <!-- Page Numbers -->
+                                @for (int p = 1; p <= ViewBag.TotalPages; p++)
+                                {
+                                    <li class="page-item @(p == ViewBag.CurrentPage ? "active" : "")">
+                                        <a class="page-link"
+                                           href="@Url.Action("Index", new { page = p, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, tenant = ViewBag.CurrentTenant })">
+                                            @p
+                                        </a>
+                                    </li>
+                                }
+
+                                <!-- Next -->
+                                <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
+                                    <a class="page-link"
+                                       href="@Url.Action("Index", new { page = ViewBag.CurrentPage + 1, search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, tenant = ViewBag.CurrentTenant })">
+                                        <i class="ri-arrow-right-s-line"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>

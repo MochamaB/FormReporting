@@ -1,0 +1,275 @@
+@model FormReporting.Models.ViewModels.Identity.RoleEditViewModel
+@using FormReporting.Models.ViewModels.Components
+@using FormReporting.Extensions
+
+@{
+    ViewData["Title"] = "Edit Role";
+
+    // Configure vertical tabs (reusing wizard partials)
+    var tabsConfig = new TabsConfig
+    {
+        TabsId = "roleEditTabs",
+        Layout = TabsLayout.Vertical,
+        Style = TabsStyle.Pills,
+        ColorTheme = "primary",
+        WrapInCard = false,
+        Tabs = new List<TabConfig>
+        {
+            new TabConfig
+            {
+                TabId = "basic-details",
+                Title = "Basic Details",
+                Icon = "ri-information-line",
+                Description = "Role information",
+                IsActive = true,
+                ContentPartialPath = "~/Views/Identity/Roles/Partials/_BasicDetails.cshtml",
+                DisplayOrder = 1
+            },
+            new TabConfig
+            {
+                TabId = "permissions",
+                Title = "Permissions",
+                Icon = "ri-shield-check-line",
+                Description = "Role capabilities",
+                Badge = Model.SelectedPermissionIds?.Count.ToString() ?? "0",
+                BadgeColor = "primary",
+                ContentPartialPath = "~/Views/Identity/Roles/Partials/_AssignPermissions.cshtml",
+                DisplayOrder = 2
+            },
+            new TabConfig
+            {
+                TabId = "users",
+                Title = "Users",
+                Icon = "ri-user-line",
+                Description = "Role members",
+                Badge = Model.SelectedUserIds?.Count.ToString() ?? "0",
+                BadgeColor = "success",
+                ContentPartialPath = "~/Views/Identity/Roles/Partials/_AssignUsers.cshtml",
+                DisplayOrder = 3
+            }
+        }
+    };
+
+    var tabs = tabsConfig.BuildTabs();
+    ViewData["TabsViewModel"] = tabs;
+    ViewData["ParentModel"] = Model;
+}
+
+
+
+<!-- Display validation errors -->
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <h5 class="alert-heading"><i class="ri-error-warning-line me-2"></i>Validation Errors</h5>
+        <ul class="mb-0">
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <li>@error.ErrorMessage</li>
+            }
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<!-- Main Card Container -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form method="post" action="@Url.Action("Edit", "Roles")" id="roleEditForm">
+                    @Html.AntiForgeryToken()
+                    @Html.HiddenFor(m => m.RoleId)
+
+                    @* Render Vertical Tabs *@
+                    <partial name="~/Views/Shared/Components/Tabs/_VerticalTabs.cshtml" />
+
+                    @* Form Actions *@
+                    <div class="row mt-4 pt-3 border-top">
+                        <div class="col-12">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a href="@Url.Action("Index", "Roles")" class="btn btn-light">
+                                    <i class="ri-close-line me-1"></i>Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="ri-save-line me-1"></i>Save Changes
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <!-- External JS for bulk user selection -->
+    <script src="~/assets/js/pages/assignment-manager-bulk-users.js"></script>
+
+    <script>
+        $(document).ready(function() {
+            // ═══════════════════════════════════════════════════════════
+            // TAB 1: BASIC DETAILS - JavaScript
+            // ═══════════════════════════════════════════════════════════
+
+            // Auto-uppercase role code
+            $('#RoleCode').on('input', function() {
+                this.value = this.value.toUpperCase().replace(/[^A-Z_]/g, '');
+            });
+
+            // Check role code availability
+            let checkTimeout;
+            function checkRoleCode() {
+                clearTimeout(checkTimeout);
+                var code = $('#RoleCode').val().trim();
+
+                if (code.length < 2) {
+                    $('#codeCheckFeedback').html('');
+                    return;
+                }
+
+                checkTimeout = setTimeout(function() {
+                    $.ajax({
+                        url: '@Url.Action("CheckRoleCode", "Roles")',
+                        type: 'GET',
+                        data: {
+                            code: code,
+                            excludeId: @Model.RoleId
+                        },
+                        success: function(response) {
+                            if (response.exists) {
+                                $('#codeCheckFeedback').html('<span class="text-danger"><i class="ri-close-circle-line"></i> Code already exists</span>');
+                                $('#RoleCode').addClass('is-invalid');
+                            } else if (!response.valid) {
+                                $('#codeCheckFeedback').html('<span class="text-warning"><i class="ri-error-warning-line"></i> Invalid format</span>');
+                                $('#RoleCode').addClass('is-invalid');
+                            } else {
+                                $('#codeCheckFeedback').html('<span class="text-success"><i class="ri-checkbox-circle-line"></i> Code is available</span>');
+                                $('#RoleCode').removeClass('is-invalid').addClass('is-valid');
+                            }
+                        }
+                    });
+                }, 500);
+            }
+
+            $('#checkCodeBtn').on('click', checkRoleCode);
+            $('#RoleCode').on('input', checkRoleCode);
+
+            // ═══════════════════════════════════════════════════════════
+            // TAB 2: PERMISSIONS - JavaScript
+            // ═══════════════════════════════════════════════════════════
+
+            // Enable copy button when role selected
+            $('#copyFromRole').on('change', function() {
+                $('#copyPermissionsBtn').prop('disabled', !$(this).val());
+            });
+
+            // Copy permissions from selected role
+            $('#copyPermissionsBtn').on('click', function() {
+                var roleId = $('#copyFromRole').val();
+                if (!roleId) return;
+
+                $.ajax({
+                    url: '@Url.Action("GetRolePermissions", "Roles")',
+                    type: 'GET',
+                    data: { roleId: roleId },
+                    success: function(response) {
+                        if (response.success) {
+                            // Uncheck all first
+                            $('.permission-checkbox').prop('checked', false);
+
+                            // Check permissions from copied role
+                            response.permissionIds.forEach(function(permId) {
+                                $('#perm_' + permId).prop('checked', true);
+                            });
+
+                            updatePermissionCounts();
+                            alert(response.message);
+                        }
+                    },
+                    error: function() {
+                        alert('Failed to load permissions from the selected role.');
+                    }
+                });
+            });
+
+            // Update permission counts
+            function updatePermissionCounts() {
+                var totalSelected = $('.permission-checkbox:checked').length;
+                $('#selectedPermissionsCount').text(totalSelected);
+
+                // Update per-module counts
+                $('.module-permissions').each(function() {
+                    var moduleId = $(this).data('module-id');
+                    var total = $(this).find('.permission-checkbox').length;
+                    var selected = $(this).find('.permission-checkbox:checked').length;
+                    $('#module_count_' + moduleId).text(selected + '/' + total);
+                });
+            }
+
+            // Permission checkbox change
+            $('.permission-checkbox').on('change', updatePermissionCounts);
+
+            // Select/Deselect all in module
+            $('.select-all-module').on('click', function() {
+                var moduleId = $(this).data('module');
+                var $checkboxes = $('.permission-checkbox[data-module="' + moduleId + '"]');
+                var allChecked = $checkboxes.filter(':checked').length === $checkboxes.length;
+                $checkboxes.prop('checked', !allChecked);
+                $(this).html(allChecked ? '<i class="ri-checkbox-line"></i> Select All' : '<i class="ri-checkbox-blank-line"></i> Deselect All');
+                updatePermissionCounts();
+            });
+
+            // Expand/collapse all modules
+            $('#expandAllModules').on('click', function() {
+                $('.accordion-collapse').addClass('show');
+            });
+
+            $('#collapseAllModules').on('click', function() {
+                $('.accordion-collapse').removeClass('show');
+            });
+
+            // Initialize counts
+            updatePermissionCounts();
+
+            // ═══════════════════════════════════════════════════════════
+            // TAB 3: USERS - JavaScript (using external module)
+            // ═══════════════════════════════════════════════════════════
+
+            var userSelectionApi = null;
+
+            // Initialize bulk user selection when Users tab is clicked
+            $('a[href="#users"]').one('shown.bs.tab', function (e) {
+                userSelectionApi = initBulkUserSelection({
+                    managerId: 'roleUsers',
+                    ajaxEndpoint: '@Url.Action("GetUsersGroupedByTenant", "Roles")',
+                    containerSelector: '#tenantGroupedUsers_roleUsers',
+                    searchInputSelector: '#bulkUserSearch_roleUsers',
+                    selectAllSelector: '#selectAllUsers_roleUsers',
+                    deselectAllSelector: '#deselectAllUsers_roleUsers',
+                    selectedCountSelector: '#selectedCount_roleUsers',
+                    loadingSelector: '#loadingUsers_roleUsers',
+                    emptyStateSelector: '#emptyState_roleUsers',
+                    checkboxName: 'SelectedUserIds'
+                });
+
+                // Pre-select existing users after AJAX load completes
+                var existingUserIds = @Html.Raw(Json.Serialize(Model.SelectedUserIds ?? new List<int>()));
+                if (existingUserIds.length > 0) {
+                    setTimeout(function() {
+                        userSelectionApi.setSelection(existingUserIds);
+                    }, 1000); // Wait for AJAX to load
+                }
+            });
+
+            // Update badge count when users are selected/deselected
+            $(document).on('change', '.user-checkbox', function() {
+                if (userSelectionApi) {
+                    var selectedCount = userSelectionApi.getSelectedUserIds().length;
+                    $('a[href="#users"] .badge').text(selectedCount);
+                }
+            });
+        });
+    </script>
+}

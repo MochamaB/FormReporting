@@ -38,6 +38,7 @@ namespace FormReporting.Services.Identity
             IQueryable<User> query = _context.Users
                 .Include(u => u.PrimaryTenant)
                 .Include(u => u.Department)
+                .Include(u => u.UserRoles)
                 .Where(u => u.IsActive);
 
             // Apply scope-based filtering using the scope information

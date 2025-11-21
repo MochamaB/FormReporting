@@ -1,0 +1,183 @@
+
+    .builder-tabs-container {
+        background: #fff;
+        border-bottom: 1px solid #e9ecef;
+        /* Extend to edges like progress bar */
+        width: calc(100% + 3rem);
+        margin-left: -1.5rem;
+        margin-right: -1.5rem;
+        margin-top: 0;
+        margin-bottom: 0;
+        padding: 0 1.5rem;
+    }
+    
+    .builder-content-area {
+        /* Full width, no padding */
+        width: calc(100% + 3rem);
+        margin-left: -1.5rem;
+        margin-right: -1.5rem;
+        margin-top: 0;
+        margin-bottom: 0;
+        min-height: calc(100vh - 250px);
+        background: #f8f9fa;
+    }
+
+    .nav-tabs-custom.card-header-tabs .nav-link {
+        padding: 1rem 1rem;
+        color: #7c7f90;
+    }
+
+    /* Three-panel grid layout for Design tab */
+    .design-grid {
+        display: grid;
+        grid-template-columns: 250px 1fr auto;
+        height: calc(100vh - 250px);
+        transition: grid-template-columns 0.3s ease;
+    }
+
+    .design-grid.properties-collapsed {
+        grid-template-columns: 250px 1fr 0;
+    }
+
+    .design-toolbox {
+        background: #fff;
+        border-right: 1px solid #e9ecef;
+        overflow-y: auto;
+        padding: 1rem;
+    }
+
+    .design-canvas {
+        background: #f3f3f9;
+        overflow-y: auto;
+        padding: 1.5rem;
+    }
+
+    .design-properties {
+        background: #fff;
+        border-left: 1px solid #e9ecef;
+        width: 320px;
+        overflow-y: auto;
+        transition: width 0.3s ease, opacity 0.3s ease;
+        position: relative;
+    }
+
+    .design-properties.collapsed {
+        width: 0;
+        opacity: 0;
+        overflow: hidden;
+    }
+
+    .properties-content {
+        position: relative;
+        height: 100%;
+    }
+
+    .properties-toggle {
+        position: absolute;
+        left: -20px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: #fff;
+        border: 1px solid #e9ecef;
+        border-radius: 4px 0 0 4px;
+        padding: 0.5rem 0.25rem;
+        cursor: pointer;
+        z-index: 10;
+        box-shadow: -2px 0 4px rgba(0,0,0,0.05);
+    }
+
+    .properties-toggle:hover {
+        background: #f8f9fa;
+    }
+
+    /* Properties tabs styling */
+    .design-properties .nav-tabs {
+        font-size: 0.813rem;
+    }
+
+    .design-properties .nav-link {
+        padding: 0.5rem 0.25rem;
+    }
+
+    .design-properties .nav-link i {
+        font-size: 1rem;
+    }
+
+    /* Properties toggle button in main tabs */
+    .properties-toggle-btn {
+        cursor: pointer;
+        padding: 0.5rem 0.75rem;
+        color: #7c7f90;
+        transition: all 0.3s ease;
+    }
+
+    .properties-toggle-btn:hover {
+        color: #405189;
+        background: #f3f6f9;
+        border-radius: 4px;
+    }
+
+    .properties-toggle-btn i {
+        font-size: 1.25rem;
+        transition: transform 0.3s ease;
+    }
+
+    /* Builder section selection state */
+    .builder-section {
+        transition: all 0.2s ease;
+    }
+
+    .builder-section.selected {
+        border-color: #0ab39c !important;
+        box-shadow: 0 0 0 3px rgba(10, 179, 156, 0.1);
+    }
+
+    .drag-handle:hover {
+        color: #495057 !important;
+    }
+    .menu-title {
+        list-style: none;
+        text-transform: uppercase;
+        font-weight: 600;
+        color: var(--vz-primary);
+       
+    }
+    /* Drag-drop styles */
+.toolbox-item {
+    cursor: move;
+    transition: all 0.2s ease;
+}
+
+.toolbox-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.toolbox-item.dragging {
+    opacity: 0.5;
+}
+
+.sections-container.drag-over {
+    background: rgba(10, 179, 156, 0.05);
+    border: 2px dashed #0ab39c;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.sortable-ghost {
+    opacity: 0.4;
+    background: #f8f9fa;
+}
+
+.sortable-drag {
+    opacity: 1;
+}
+
+/* Make drag handle more visible */
+.drag-handle {
+    cursor: move !important;
+}
+
+.builder-section:hover .drag-handle {
+    color: #0ab39c !important;
+}

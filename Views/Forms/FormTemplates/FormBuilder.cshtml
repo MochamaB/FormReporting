@@ -1,4 +1,4 @@
-@model FormReporting.Models.Entities.Forms.FormTemplate
+@model FormReporting.Models.ViewModels.Forms.FormBuilderViewModel
 @using FormReporting.Models.ViewModels.Components
 @using FormReporting.Extensions
 @{
@@ -7,175 +7,430 @@
     var progress = ViewData["Progress"] as FormBuilderProgressViewModel;
 }
 
+<!-- Form Builder CSS -->
+<link href="~/css/form-builder/form-builder.css" rel="stylesheet" />
+
 <!-- ============================================================================ -->
 <!-- PROGRESS TRACKER - Same component used by all wizard steps -->
 <!-- ============================================================================ -->
 <partial name="~/Views/Shared/Components/FormBuilder/_FormBuilderProgress.cshtml" model="progress" />
 
 <!-- ============================================================================ -->
-<!-- MAIN CONTENT AREA -->
+<!-- TABBED NAVIGATION -->
 <!-- ============================================================================ -->
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header bg-light">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h5 class="card-title mb-1">
-                            <i class="ri-layout-grid-line text-primary me-2"></i>
-                            Form Builder
-                        </h5>
-                        <p class="text-muted mb-0 small">
-                            Design your form structure with sections and fields
-                        </p>
-                    </div>
-                    <div>
-                        <span class="badge bg-info-subtle text-info">
-                            Template: @Model.TemplateCode
-                        </span>
-                        <span class="badge bg-secondary-subtle text-secondary ms-2">
-                            v@Model.Version
-                        </span>
-                    </div>
-                </div>
-            </div>
 
-            <div class="card-body">
-                <!-- ============================================================ -->
-                <!-- PLACEHOLDER: Form Builder UI will be implemented here -->
-                <!-- ============================================================ -->
-                <div class="text-center py-5">
-                    <div class="mb-4">
-                        <i class="ri-tools-line display-4 text-muted"></i>
-                    </div>
-                    <h4 class="text-muted mb-3">Form Builder Under Construction</h4>
-                    <p class="text-muted mb-4">
-                        This is where you'll be able to:
-                    </p>
-                    <div class="row justify-content-center">
-                        <div class="col-md-8">
-                            <div class="list-group">
-                                <div class="list-group-item">
-                                    <div class="d-flex align-items-center">
-                                        <div class="flex-shrink-0">
-                                            <i class="ri-layout-column-line text-primary fs-20"></i>
-                                        </div>
-                                        <div class="flex-grow-1 ms-3 text-start">
-                                            <h6 class="mb-1">Add Sections</h6>
-                                            <p class="text-muted mb-0 small">
-                                                Organize your form into logical sections
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="list-group-item">
-                                    <div class="d-flex align-items-center">
-                                        <div class="flex-shrink-0">
-                                            <i class="ri-input-method-line text-success fs-20"></i>
-                                        </div>
-                                        <div class="flex-grow-1 ms-3 text-start">
-                                            <h6 class="mb-1">Add Fields</h6>
-                                            <p class="text-muted mb-0 small">
-                                                Text, number, dropdown, date, file upload, and more
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="list-group-item">
-                                    <div class="d-flex align-items-center">
-                                        <div class="flex-shrink-0">
-                                            <i class="ri-drag-move-line text-warning fs-20"></i>
-                                        </div>
-                                        <div class="flex-grow-1 ms-3 text-start">
-                                            <h6 class="mb-1">Drag & Drop Reordering</h6>
-                                            <p class="text-muted mb-0 small">
-                                                Easily rearrange sections and fields
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="list-group-item">
-                                    <div class="d-flex align-items-center">
-                                        <div class="flex-shrink-0">
-                                            <i class="ri-settings-3-line text-info fs-20"></i>
-                                        </div>
-                                        <div class="flex-grow-1 ms-3 text-start">
-                                            <h6 class="mb-1">Field Configuration</h6>
-                                            <p class="text-muted mb-0 small">
-                                                Validation rules, conditional logic, and more
-                                            </p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <!-- ============================================================ -->
-                <!-- END PLACEHOLDER -->
-                <!-- ============================================================ -->
-            </div>
 
-            <div class="card-footer bg-light">
-                <div class="d-flex justify-content-between align-items-center">
-                    <a href="@Url.Action("Create", "FormTemplates", new { id = Model.TemplateId })" 
-                       class="btn btn-soft-secondary">
-                        <i class="ri-arrow-left-line me-1"></i>
-                        Back to Basic Info
-                    </a>
-                    <div>
-                        <button type="button" class="btn btn-soft-primary me-2" disabled>
-                            <i class="ri-save-line me-1"></i>
-                            Save Progress
-                        </button>
-                        <button type="button" class="btn btn-primary" disabled>
-                            Continue to Metrics
-                            <i class="ri-arrow-right-line ms-1"></i>
-                        </button>
-                    </div>
+<div class="builder-tabs-container">
+    <div class="d-flex justify-content-between align-items-center w-100">
+
+        <!-- Left side: Tabs -->
+        <ul class="nav nav-tabs-custom rounded card-header-tabs border-bottom-0 mb-0" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#builder-summary" role="tab">
+                    <i class="ri-list-check-2"></i>
+                    Summary
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="tab" href="#builder-design" role="tab">
+                    <i class="ri-paint-brush-line"></i>
+                    Design
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#builder-preview" role="tab">
+                    <i class="ri-eye-line"></i>
+                    Preview
+                </a>
+            </li>
+        </ul>
+
+        <!-- Middle-right: Add Section button -->
+        <div class="add-section-header-btn ms-3">
+            <button type="button"
+                    class="btn btn-primary btn-sm"
+                    onclick="addSection()">
+                <i class="ri-add-line me-1"></i>
+                Add Section
+            </button>
+        </div>
+
+        <!-- Far Right: Properties toggle -->
+        <div class="properties-toggle-btn ms-3"
+             onclick="toggleProperties()"
+             title="Toggle Properties Panel">
+            <i class="ri-arrow-left-s-line" id="propertiesToggleIcon"></i>
+        </div>
+
+    </div>
+</div>
+
+
+<!-- ============================================================================ -->
+<!-- TAB CONTENT AREA -->
+<!-- ============================================================================ -->
+<div class="builder-content-area">
+    <div class="tab-content text-muted">
+        <!-- TAB 1: Summary -->
+        <div class="tab-pane" id="builder-summary" role="tabpanel">
+            <div class="p-4 text-center">
+                <i class="ri-list-check-2 display-4 text-success"></i>
+                <h5 class="mt-3">Summary Tab</h5>
+                <p class="text-muted">Template: @Model.TemplateName</p>
+                <p class="text-muted">Sections: @Model.Sections.Count</p>
+                <p class="text-muted">Fields: @Model.TotalFields</p>
+            </div>
+        </div>
+        
+        <!-- TAB 2: Design -->
+        <div class="tab-pane active" id="builder-design" role="tabpanel">
+            <div class="design-grid" id="designGrid">
+                <!-- LEFT: Toolbox -->
+                <div class="design-toolbox">
+                    <partial name="~/Views/Forms/FormTemplates/Partials/FormBuilder/_ToolboxPanel.cshtml" model="Model" />
+                </div>
+                
+                <!-- CENTER: Canvas -->
+                <div class="design-canvas">
+                    <partial name="~/Views/Forms/FormTemplates/Partials/FormBuilder/_CanvasPanel.cshtml" model="Model" />
+                </div>
+                
+                <!-- RIGHT: Properties (Collapsible) -->
+                <div class="design-properties" id="propertiesPanel">
+                    <partial name="~/Views/Forms/FormTemplates/Partials/FormBuilder/_PropertiesPanel.cshtml" model="Model" />
                 </div>
             </div>
         </div>
+        
+        <!-- TAB 3: Preview -->
+        <div class="tab-pane" id="builder-preview" role="tabpanel">
+            <div class="p-4 text-center">
+                <i class="ri-eye-line display-4 text-success"></i>
+                <h5 class="mt-3">Preview Tab</h5>
+                <p class="text-muted">See how your form looks</p>
+            </div>
+        </div>
     </div>
+</div>
+
+<!-- ============================================================================ -->
+<!-- ACTION BUTTONS -->
+<!-- ============================================================================ -->
+<div class="mt-4">
+    <div class="d-flex justify-content-between align-items-center">
+        <a href="@Url.Action("Create", "FormTemplates", new { id = Model.TemplateId })" 
+           class="btn btn-soft-secondary">
+            <i class="ri-arrow-left-line me-1"></i>
+            Back to Basic Info
+        </a>
+        <button type="button" class="btn btn-soft-primary" onclick="addSection()">
+            <i class="ri-add-line me-1"></i>
+            Add Section
+        </button>
+        <div>
+            <button type="button" class="btn btn-soft-primary me-2" disabled>
+                <i class="ri-save-line me-1"></i>
+                Save Progress
+            </button>
+            <button type="button" class="btn btn-primary" disabled>
+                Continue to Metrics
+                <i class="ri-arrow-right-line ms-1"></i>
+            </button>
+        </div>
+    </div>
+    <partial name="~/Views/Forms/FormTemplates/Partials/FormBuilder/Components/_Addsectionmodal.cshtml" />
 </div>
 
 <!-- ============================================================================ -->
 <!-- ALERT: Template Information -->
 <!-- ============================================================================ -->
-<div class="row mt-3">
-    <div class="col-12">
-        <div class="alert alert-info border-0" role="alert">
-            <div class="d-flex align-items-start">
-                <div class="flex-shrink-0">
-                    <i class="ri-information-line fs-16"></i>
-                </div>
-                <div class="flex-grow-1 ms-2">
-                    <strong>Current Template Details:</strong><br>
-                    <ul class="mb-0 mt-2">
-                        <li><strong>Name:</strong> @Model.TemplateName</li>
-                        <li><strong>Code:</strong> @Model.TemplateCode</li>
-                        <li><strong>Category:</strong> @Model.Category?.CategoryName</li>
-                        <li><strong>Type:</strong> @Model.TemplateType</li>
-                        <li><strong>Status:</strong> <span class="badge bg-warning-subtle text-warning">@Model.PublishStatus</span></li>
-                        <li><strong>Sections:</strong> @Model.Sections.Count</li>
-                        <li><strong>Total Fields:</strong> @Model.Items.Count</li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+
 
 @section Scripts {
+     <!-- SortableJS Library (already included in Velzon) -->
+    <script src="~/assets/libs/sortablejs/Sortable.min.js"></script>
+
     <script>
-        // TODO: Form Builder JavaScript will be implemented here
+        // Form Builder initialized
         console.log('Form Builder loaded for template:', @Model.TemplateId);
-        console.log('Template data:', @Html.Raw(Json.Serialize(new {
-            templateId = Model.TemplateId,
-            templateName = Model.TemplateName,
-            templateCode = Model.TemplateCode,
-            sections = Model.Sections.Count,
-            items = Model.Items.Count
-        })));
+        
+        // Properties panel collapse/expand
+        let propertiesCollapsed = false;
+        
+        function toggleProperties() {
+            const panel = document.getElementById('propertiesPanel');
+            const grid = document.getElementById('designGrid');
+            const icon = document.getElementById('propertiesToggleIcon');
+            
+            propertiesCollapsed = !propertiesCollapsed;
+            
+            if (propertiesCollapsed) {
+                panel.classList.add('collapsed');
+                grid.classList.add('properties-collapsed');
+                icon.classList.remove('ri-arrow-left-s-line');
+                icon.classList.add('ri-arrow-right-s-line');
+            } else {
+                panel.classList.remove('collapsed');
+                grid.classList.remove('properties-collapsed');
+                icon.classList.remove('ri-arrow-right-s-line');
+                icon.classList.add('ri-arrow-left-s-line');
+            }
+        }
+
+        // Section selection state
+        let selectedSectionId = null;
+
+        function selectSection(sectionId) {
+            // Remove previous selection
+            document.querySelectorAll('.builder-section').forEach(section => {
+                section.classList.remove('selected');
+            });
+
+            // Add selection to clicked section
+            const section = document.getElementById('section-' + sectionId);
+            if (section) {
+                section.classList.add('selected');
+                selectedSectionId = sectionId;
+                console.log('Selected section:', sectionId);
+                
+                // TODO: Load section properties in right panel
+            }
+        }
+
+        function toggleSectionCollapse(sectionId) {
+            const body = document.getElementById('section-body-' + sectionId);
+            const icon = document.getElementById('collapse-icon-' + sectionId);
+            
+            if (body.style.display === 'none') {
+                body.style.display = 'block';
+                icon.classList.remove('ri-add-line');
+                icon.classList.add('ri-subtract-line');
+            } else {
+                body.style.display = 'none';
+                icon.classList.remove('ri-subtract-line');
+                icon.classList.add('ri-add-line');
+            }
+        }
+
+        function duplicateSection(sectionId) {
+            console.log('Duplicating section:', sectionId);
+            alert('Duplicate section functionality will be implemented next');
+            // TODO: API call to duplicate section
+        }
+        
+        // Add Section functionality
+       // Show Add Section Modal
+        function showAddSectionModal() {
+            // Reset form
+            document.getElementById('addSectionForm').reset();
+            document.getElementById('isCollapsible').checked = true;
+            document.getElementById('isCollapsedByDefault').checked = false;
+            
+            // Show modal
+            const modal = new bootstrap.Modal(document.getElementById('addSectionModal'));
+            modal.show();
+        }
+
+        // End of Add section functionality
+
+// Toggle collapsed by default option based on collapsible checkbox
+document.getElementById('isCollapsible')?.addEventListener('change', function() {
+    const container = document.getElementById('collapsedByDefaultContainer');
+    if (this.checked) {
+        container.style.display = 'block';
+    } else {
+        container.style.display = 'none';
+        document.getElementById('isCollapsedByDefault').checked = false;
+    }
+});
+
+// Save Section from Modal
+async function saveSectionFromModal() {
+    const form = document.getElementById('addSectionForm');
+    
+    // Validate form
+    if (!form.checkValidity()) {
+        form.classList.add('was-validated');
+        return;
+    }
+
+    // Get form values
+    const name = document.getElementById('sectionName').value.trim();
+    const description = document.getElementById('sectionDescription').value.trim();
+    const icon = document.getElementById('sectionIcon').value.trim();
+    const isCollapsible = document.getElementById('isCollapsible').checked;
+    const isCollapsedByDefault = document.getElementById('isCollapsedByDefault').checked;
+
+    // Disable save button
+    const saveBtn = event.target;
+    saveBtn.disabled = true;
+    saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
+
+    try {
+        const response = await fetch('/api/formbuilder/sections/add', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                templateId: @Model.TemplateId,
+                section: {
+                    sectionName: name,
+                    sectionDescription: description || null,
+                    iconClass: icon || null,
+                    isCollapsible: isCollapsible,
+                    isCollapsedByDefault: isCollapsedByDefault
+                }
+            })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            console.log('Section added:', result.section);
+            
+            // Close modal
+            bootstrap.Modal.getInstance(document.getElementById('addSectionModal')).hide();
+            
+            // Reload page to show new section
+            location.reload();
+        } else {
+            alert('Error: ' + (result.message || 'Failed to add section'));
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = '<i class="ri-save-line me-1"></i>Save Section';
+        }
+    } catch (error) {
+        console.error('Error adding section:', error);
+        alert('An error occurred while adding the section');
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="ri-save-line me-1"></i>Save Section';
+    }
+}
+
+// Update existing addSection() to use modal
+function addSection() {
+    showAddSectionModal();
+}
+        // Initialize drag-drop for sections
+let sectionsSortable;
+
+document.addEventListener('DOMContentLoaded', function() {
+    initializeSectionDragDrop();
+});
+
+function initializeSectionDragDrop() {
+    const sectionsContainer = document.getElementById('sectionsContainer');
+    
+    if (!sectionsContainer) return;
+
+    // Make sections container sortable (for reordering)
+    sectionsSortable = new Sortable(sectionsContainer, {
+        animation: 150,
+        handle: '.drag-handle',
+        ghostClass: 'sortable-ghost',
+        dragClass: 'sortable-drag',
+        onEnd: function(evt) {
+            // Section reordered
+            updateSectionOrder();
+        }
+    });
+
+    // Enable dropping section template from toolbox
+    sectionsContainer.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'copy';
+        sectionsContainer.classList.add('drag-over');
+    });
+
+    sectionsContainer.addEventListener('dragleave', function(e) {
+        sectionsContainer.classList.remove('drag-over');
+    });
+
+    sectionsContainer.addEventListener('drop', function(e) {
+        e.preventDefault();
+        sectionsContainer.classList.remove('drag-over');
+        
+        const type = e.dataTransfer.getData('type');
+        if (type === 'section') {
+            // Show modal to create new section
+            showAddSectionModal();
+        }
+    });
+
+    // Make toolbox section template draggable
+    const draggableSection = document.querySelector('.draggable-section');
+    if (draggableSection) {
+        draggableSection.addEventListener('dragstart', function(e) {
+            e.dataTransfer.effectAllowed = 'copy';
+            e.dataTransfer.setData('type', 'section');
+            this.classList.add('dragging');
+        });
+
+        draggableSection.addEventListener('dragend', function(e) {
+            this.classList.remove('dragging');
+        });
+    }
+}
+
+// Update section display order after drag-drop reordering
+async function updateSectionOrder() {
+    const sections = document.querySelectorAll('.builder-section');
+    const updates = [];
+
+    sections.forEach((section, index) => {
+        const sectionId = parseInt(section.dataset.sectionId);
+        updates.push({
+            sectionId: sectionId,
+            displayOrder: index + 1
+        });
+    });
+
+    try {
+        const response = await fetch('/api/formbuilder/sections/reorder', {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                templateId: @Model.TemplateId,
+                sections: updates
+            })
+        });
+
+        const result = await response.json();
+        
+        if (result.success) {
+            console.log('Section order updated');
+            // Optional: Show toast notification
+        } else {
+            console.error('Failed to update order');
+            // Reload to restore correct order
+            location.reload();
+        }
+    } catch (error) {
+        console.error('Error updating section order:', error);
+        location.reload();
+    }
+}
+
+        // Step 10: Edit Section
+        function editSection(sectionId) {
+            alert('Edit Section functionality will be implemented in Step 10-11');
+            console.log('Editing section:', sectionId);
+        }
+        
+        // Step 12: Delete Section
+        function deleteSection(sectionId) {
+            if (confirm('Delete this section?')) {
+                alert('Delete Section functionality will be implemented in Step 12-13');
+                console.log('Deleting section:', sectionId);
+            }
+        }
+        
+        // Step 18: Add Field to Section
+        function addFieldToSection(sectionId) {
+            alert('Add Field functionality will be implemented in Step 18-21');
+            console.log('Adding field to section:', sectionId);
+        }
     </script>
 }

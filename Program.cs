@@ -40,15 +40,18 @@ builder.Services.AddDataProtection();
 // Forms services
 builder.Services.AddScoped<IFormCategoryService, FormCategoryService>();
 builder.Services.AddScoped<IFormTemplateService, FormTemplateService>();
+builder.Services.AddScoped<IFormBuilderService, FormBuilderService>();
 
 // Identity services
 builder.Services.AddScoped<IScopeService, ScopeService>();
 builder.Services.AddScoped<IUserService, UserService>();
 
+// Organizational services
+builder.Services.AddScoped<FormReporting.Services.Organizational.ITenantService, FormReporting.Services.Organizational.TenantService>();
+
 // Register authentication services
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IClaimsService, ClaimsService>();
-builder.Services.AddScoped<IScopeService, ScopeService>();
 // TODO: Register remaining services (Step 6)
 // builder.Services.AddScoped<INotificationService, NotificationService>();
 

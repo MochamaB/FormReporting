@@ -494,7 +494,6 @@ namespace FormReporting.Controllers.Identity
                     .ToList(),
                 // Load existing users
                 SelectedUserIds = role.UserRoles
-                    .Where(ur => ur.IsActive)
                     .Select(ur => ur.UserId)
                     .ToList()
             };
@@ -600,8 +599,8 @@ namespace FormReporting.Controllers.Identity
                                 RoleId = model.RoleId,
                                 PermissionId = permissionId,
                                 IsGranted = true,
-                                CreatedDate = DateTime.UtcNow,
-                                CreatedBy = "System" // TODO: Replace with actual user
+                                AssignedDate = DateTime.UtcNow,
+                                AssignedBy = null // TODO: Get current user ID when auth is implemented
                             };
                             _context.RolePermissions.Add(rolePermission);
                         }
@@ -625,9 +624,8 @@ namespace FormReporting.Controllers.Identity
                             {
                                 UserId = userId,
                                 RoleId = model.RoleId,
-                                IsActive = true,
-                                CreatedDate = DateTime.UtcNow,
-                                CreatedBy = "System" // TODO: Replace with actual user
+                                AssignedDate = DateTime.UtcNow,
+                                AssignedBy = null // TODO: Get current user ID when auth is implemented
                             };
                             _context.UserRoles.Add(userRole);
                         }

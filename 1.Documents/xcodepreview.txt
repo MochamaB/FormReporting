@@ -1,46 +1,24 @@
-remixicon.woff2:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
-choices.min.js:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
-remixicon.woff:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
-flatpickr.min.js:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
-app.js:1 Uncaught TypeError: Cannot read properties of null (reading 'addEventListener')
-    at app.js:1:53090
-    at app.js:1:58254Understand this error
-remixicon.ttf:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
-BlockingPageContent.js:2  action SET_STORAGE_DATA @ 18:27:01.441
-BlockingPageContent.js:2  prev state Object
-BlockingPageContent.js:2  action     Object
-BlockingPageContent.js:2  next state Object
-NotificationContent.js:2  action SET_LOCALE @ 18:27:01.526
-NotificationContent.js:2  prev state Object
-NotificationContent.js:2  action     Object
-NotificationContent.js:2  next state Object
-NotificationContent.js:2  action SET_STORAGE_DATA @ 18:27:01.549
-NotificationContent.js:2  prev state Object
-NotificationContent.js:2  action     Object
-NotificationContent.js:2  next state Object
-bootstrap.bundle.min.js:6 Uncaught TypeError: Illegal invocation
-    at Object.find (bootstrap.bundle.min.js:6:8515)
-    at Ks._getChildren (bootstrap.bundle.min.js:6:76297)
-    at Ks._getActiveElem (bootstrap.bundle.min.js:6:76348)
-    at Ks.show (bootstrap.bundle.min.js:6:75104)
-    at HTMLLIElement.<anonymous> (bootstrap.bundle.min.js:6:77902)
-    at HTMLDocument.n (bootstrap.bundle.min.js:6:4238)Understand this error
-app.js:1 Uncaught TypeError: Cannot read properties of null (reading 'classList')
-    at HTMLBodyElement.<anonymous> (app.js:1:49189)Understand this error
-bootstrap.bundle.min.js:6 Uncaught TypeError: Illegal invocation
-    at Object.find (bootstrap.bundle.min.js:6:8515)
-    at Ks._getChildren (bootstrap.bundle.min.js:6:76297)
-    at Ks._getActiveElem (bootstrap.bundle.min.js:6:76348)
-    at Ks.show (bootstrap.bundle.min.js:6:75104)
-    at HTMLLIElement.<anonymous> (bootstrap.bundle.min.js:6:77902)
-    at HTMLDocument.n (bootstrap.bundle.min.js:6:4238)Understand this error
-10app.js:1 Uncaught TypeError: Cannot read properties of null (reading 'classList')
-    at HTMLBodyElement.<anonymous> (app.js:1:49189)Understand this error
-3:2004 Uncaught ReferenceError: Swal is not defined
-    at showSavingIndicator (3:2004:17)
-    at saveDraftAndNavigate (3:1873:17)
-    at HTMLFormElement.<anonymous> (3:1865:17)
-    at HTMLFormElement.dispatch (jquery.min.js:2:40035)
-    at v.handle (jquery.min.js:2:38006)Understand this error
-2app.js:1 Uncaught TypeError: Cannot read properties of null (reading 'classList')
-    at HTMLBodyElement.<anonymous> (app.js:1:49189)Understand this error
+Severity	Code	Description	Project	File	Line	Suppression State
+Error (active)	RZ2005	The 'section' directive must appear at the start of the line.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\Partials\FormBuilder\_ToolboxPanel.cshtml	53	
+Error (active)	RZ2005	The 'section' directive must appear at the start of the line.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\Partials\FormBuilder\_ToolboxPanel.cshtml	54	
+Error (active)	RZ2005	The 'section' directive must appear at the start of the line.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\Partials\FormBuilder\_ToolboxPanel.cshtml	56	
+Error (active)	RZ2005	The 'section' directive must appear at the start of the line.		C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\Partials\FormBuilder\_CanvasPanel.cshtml	31	
+Error (active)	RZ2005	The 'section' directive must appear at the start of the line.		C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\Partials\FormBuilder\_CanvasPanel.cshtml	39	
+Error (active)	RZ2005	The 'section' directive must appear at the start of the line.		C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\Partials\FormBuilder\_CanvasPanel.cshtml	41	
+Error (active)	RZ2005	The 'section' directive must appear at the start of the line.		C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\Partials\FormBuilder\_CanvasPanel.cshtml	45	
+Error (active)	RZ2005	The 'section' directive must appear at the start of the line.		C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\Partials\FormBuilder\_CanvasPanel.cshtml	54	
+Error (active)	RZ2005	The 'section' directive must appear at the start of the line.		C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\Partials\FormBuilder\_CanvasPanel.cshtml	59	
+Error (active)	RZ2005	The 'section' directive must appear at the start of the line.		C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\Partials\FormBuilder\_CanvasPanel.cshtml	74	
+Error (active)	RZ2005	The 'section' directive must appear at the start of the line.		C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\Partials\FormBuilder\_CanvasPanel.cshtml	97	
+Error (active)	RZ1011	The 'section' directives value(s) must be separated by whitespace.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\Partials\FormBuilder\_ToolboxPanel.cshtml	53	
+Error (active)	RZ1011	The 'section' directives value(s) must be separated by whitespace.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\Partials\FormBuilder\_ToolboxPanel.cshtml	54	
+Error (active)	RZ1011	The 'section' directives value(s) must be separated by whitespace.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\Partials\FormBuilder\_ToolboxPanel.cshtml	56	
+Error (active)	RZ1011	The 'section' directives value(s) must be separated by whitespace.		C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\Partials\FormBuilder\_CanvasPanel.cshtml	31	
+Error (active)	RZ1011	The 'section' directives value(s) must be separated by whitespace.		C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\Partials\FormBuilder\_CanvasPanel.cshtml	39	
+Error (active)	RZ1011	The 'section' directives value(s) must be separated by whitespace.		C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\Partials\FormBuilder\_CanvasPanel.cshtml	41	
+Error (active)	RZ1011	The 'section' directives value(s) must be separated by whitespace.		C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\Partials\FormBuilder\_CanvasPanel.cshtml	45	
+Error (active)	RZ1011	The 'section' directives value(s) must be separated by whitespace.		C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\Partials\FormBuilder\_CanvasPanel.cshtml	50	
+Error (active)	RZ1011	The 'section' directives value(s) must be separated by whitespace.		C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\Partials\FormBuilder\_CanvasPanel.cshtml	54	
+Error (active)	RZ1011	The 'section' directives value(s) must be separated by whitespace.		C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\Partials\FormBuilder\_CanvasPanel.cshtml	59	
+Error (active)	RZ1011	The 'section' directives value(s) must be separated by whitespace.		C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\Partials\FormBuilder\_CanvasPanel.cshtml	74	
+Error (active)	RZ1011	The 'section' directives value(s) must be separated by whitespace.		C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\Partials\FormBuilder\_CanvasPanel.cshtml	97	
