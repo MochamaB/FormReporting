@@ -1,9 +1,184 @@
 @model FormReporting.Models.ViewModels.Forms.FormBuilderViewModel
 
 @*
-    CONFIGURATION TAB: Field-type specific settings
-    - FormItemConfiguration table (Key-Value pairs)
-    - minValue, maxValue, minLength, maxLength
-    - allowedFileTypes, maxFileSize, ratingMax
-    - dateFormat, allowMultiple, rows, cols, step
+    CONFIGURATION TAB: Layout and display settings
+    - Section: Column layout, width, background, spacing
+    - Field: Type-specific settings (validation limits, file types, etc.)
 *@
+
+<!-- Empty State (No Selection) -->
+<div id="config-empty" class="text-center py-5">
+    <img src="~/assets/images/svg/configurations.svg" alt="Configuration settings" class="mb-3" style="width: 180px; height: 180px; opacity: 0.8;">
+    <p class="text-muted mt-3 mb-0">Select a section or field to configure</p>
+    <small class="text-muted">Layout and display settings</small>
+</div>
+
+<!-- Section Configuration Form -->
+<div id="config-section" style="display: none;">
+    <div class="mb-3">
+        <div class="d-flex align-items-center mb-3">
+            <i class="ri-layout-grid-line fs-5 text-primary me-2"></i>
+            <h6 class="mb-0">Section Layout</h6>
+        </div>
+    </div>
+
+    <form id="sectionConfigForm">
+        <!-- Column Layout -->
+        <div class="mb-4">
+            <label class="form-label small fw-semibold">Column Layout</label>
+            <div class="row g-2">
+                <div class="col-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="config_columnLayout" id="config_col1" value="1" checked>
+                        <label class="form-check-label small" for="config_col1">
+                            <i class="ri-layout-line me-1"></i> Single Column
+                        </label>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="config_columnLayout" id="config_col2" value="2">
+                        <label class="form-check-label small" for="config_col2">
+                            <i class="ri-layout-column-line me-1"></i> Two Columns
+                        </label>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="config_columnLayout" id="config_col3" value="3">
+                        <label class="form-check-label small" for="config_col3">
+                            <i class="ri-layout-grid-line me-1"></i> Three Columns
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <small class="text-muted">How fields are arranged horizontally</small>
+        </div>
+
+        <!-- Section Width -->
+        <div class="mb-4">
+            <label class="form-label small fw-semibold">Section Width</label>
+            <div class="row g-2">
+                <div class="col-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="config_sectionWidth" id="config_width100" value="100" checked>
+                        <label class="form-check-label small" for="config_width100">
+                            Full Width (100%)
+                        </label>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="config_sectionWidth" id="config_width80" value="80">
+                        <label class="form-check-label small" for="config_width80">
+                            Centered (80%)
+                        </label>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="config_sectionWidth" id="config_width60" value="60">
+                        <label class="form-check-label small" for="config_width60">
+                            Narrow (60%)
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <small class="text-muted">Container width for this section</small>
+        </div>
+
+        <!-- Background Style -->
+        <div class="mb-4">
+            <label class="form-label small fw-semibold">Background Style</label>
+            <div class="row g-2">
+                <div class="col-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="config_backgroundStyle" id="config_bgTransparent" value="transparent" checked>
+                        <label class="form-check-label small" for="config_bgTransparent">
+                            Transparent (default)
+                        </label>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="config_backgroundStyle" id="config_bgLight" value="light">
+                        <label class="form-check-label small" for="config_bgLight">
+                            Light Gray
+                        </label>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="config_backgroundStyle" id="config_bgCard" value="card">
+                        <label class="form-check-label small" for="config_bgCard">
+                            White Card
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <small class="text-muted">Visual appearance of the section</small>
+        </div>
+
+        <!-- Show Section Number -->
+        <div class="mb-4">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="config_showSectionNumber" checked>
+                <label class="form-check-label small" for="config_showSectionNumber">
+                    Display section number
+                </label>
+            </div>
+            <small class="text-muted d-block ms-4">Shows "Section 1", "Section 2", etc.</small>
+        </div>
+
+        <!-- Spacing -->
+        <div class="mb-4">
+            <label class="form-label small fw-semibold">Spacing</label>
+
+            <div class="row g-2">
+                <div class="col-12">
+                    <label for="config_topPadding" class="form-label small text-muted mb-1">Top Padding</label>
+                    <select class="form-select form-select-sm" id="config_topPadding">
+                        <option value="none">None</option>
+                        <option value="small">Small (0.5rem)</option>
+                        <option value="medium" selected>Medium (1rem)</option>
+                        <option value="large">Large (1.5rem)</option>
+                        <option value="xlarge">Extra Large (2rem)</option>
+                    </select>
+                </div>
+
+                <div class="col-12">
+                    <label for="config_bottomPadding" class="form-label small text-muted mb-1">Bottom Padding</label>
+                    <select class="form-select form-select-sm" id="config_bottomPadding">
+                        <option value="none">None</option>
+                        <option value="small">Small (0.5rem)</option>
+                        <option value="medium" selected>Medium (1rem)</option>
+                        <option value="large">Large (1.5rem)</option>
+                        <option value="xlarge">Extra Large (2rem)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Save Button -->
+        <div class="d-grid gap-2 mt-4">
+            <button type="button"
+                    class="btn btn-primary btn-sm"
+                    onclick="saveSectionConfiguration()">
+                <i class="ri-save-line me-1"></i>Save Configuration
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Field Configuration Form (Future - Dynamic based on field type) -->
+<div id="config-field" style="display: none;">
+    <div class="text-center py-4">
+        <img src="~/assets/images/svg/configurations.svg" alt="Field configuration" class="mb-3" style="width: 120px; height: 120px; opacity: 0.7;">
+        <p class="text-muted">Field-specific configuration</p>
+        <small class="text-muted">Min/max values, file types, date formats, etc.</small>
+        <div class="alert alert-info mt-3 mb-0" role="alert">
+            <i class="ri-information-line me-1"></i>
+            Field configuration will be implemented in Phase 2
+        </div>
+    </div>
+</div>

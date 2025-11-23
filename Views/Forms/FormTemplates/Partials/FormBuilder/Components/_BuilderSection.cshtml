@@ -1,88 +1,85 @@
 @model FormReporting.Models.ViewModels.Forms.SectionDto
 
 @*
-    BUILDER SECTION COMPONENT
-    Displays a section in the form builder canvas with edit/delete/collapse actions
+    BUILDER SECTION COMPONENT - SurveyJS Style
+    Displays a section with transparent background and selection state
 *@
 
-<div class="card builder-section mb-3" 
+<div class="card builder-section"
      data-section-id="@Model.SectionId"
      data-order="@Model.DisplayOrder"
-     id="section-@Model.SectionId">
-    
+     id="section-@Model.SectionId"
+     onclick="selectSection(@Model.SectionId)">
+
     <!-- Section Header -->
     <div class="card-header d-flex align-items-center gap-2">
         <!-- Drag Handle -->
-        <div class="drag-handle" style="cursor: move; color: #adb5bd;">
-            <i class="ri-draggable"></i>
-        </div>
-        
-        <!-- Section Info (Clickable) -->
-        <div class="flex-grow-1" onclick="selectSection(@Model.SectionId)" style="cursor: pointer;">
-            <h5 class="card-title mb-0">@Model.SectionName</h5>
+       
+
+        <!-- Section Info -->
+        <div class="flex-grow-1">
+            <h5 class="card-title">@Model.SectionName</h5>
             @if (!string.IsNullOrEmpty(Model.SectionDescription))
             {
                 <p class="text-muted mb-0 small">@Model.SectionDescription</p>
             }
         </div>
-        
+
         <!-- Action Buttons -->
-        <div class="d-flex gap-1">
-            <button type="button" 
-                    class="btn btn-soft-secondary btn-sm" 
+        <div class="d-flex gap-1" onclick="event.stopPropagation();">
+        <!-- Drag Handle moved here -->
+        <div class="drag-handle mr-2" style="border-right:2px solid #c6c6c6;">
+            <i class="ri-draggable" style="font-size:1.5rem"></i>
+        </div>
+            <button type="button"
+                    class="btn btn-soft-secondary btn-sm"
                     onclick="duplicateSection(@Model.SectionId)"
                     title="Duplicate Section">
                 <i class="ri-file-copy-line"></i>
                 <span class="d-none d-md-inline ms-1">Duplicate</span>
             </button>
-            <button type="button" 
-                    class="btn btn-soft-danger btn-sm" 
+            <button type="button"
+                    class="btn btn-soft-danger btn-sm"
                     onclick="deleteSection(@Model.SectionId)"
                     title="Delete Section">
                 <i class="ri-delete-bin-line"></i>
                 <span class="d-none d-md-inline ms-1">Delete</span>
             </button>
-            <button type="button" 
-                    class="btn btn-soft-info btn-sm" 
+            <button type="button"
+                    class="btn btn-soft-primary btn-sm"
                     onclick="toggleSectionCollapse(@Model.SectionId)"
                     title="Collapse/Expand">
                 <i class="ri-subtract-line" id="collapse-icon-@Model.SectionId"></i>
             </button>
         </div>
     </div>
-    
+
     <!-- Section Body (Collapsible) -->
     <div class="card-body" id="section-body-@Model.SectionId">
         <!-- Fields Container -->
-        <div class="fields-container" data-section-id="@Model.SectionId">
-            @if (Model.Fields.Any())
-            {
-                @foreach (var field in Model.Fields.OrderBy(f => f.DisplayOrder))
+        <!-- Fields Container -->
+@if (Model.Fields.Any())
+{
+    <div class="fields-container" data-section-id="@Model.SectionId" onclick="event.stopPropagation();">
+        @foreach (var field in Model.Fields.OrderBy(f => f.DisplayOrder))
+        {
+            <div class="alert alert-secondary mb-2" role="alert">
+                <strong>@field.ItemName</strong>
+                <span class="badge bg-info-subtle text-info ms-2">@field.DataType</span>
+                @if (field.IsRequired)
                 {
-                    <div class="alert alert-secondary mb-2" role="alert">
-                        <strong>@field.ItemName</strong>
-                        <span class="badge bg-info-subtle text-info ms-2">@field.DataType</span>
-                        @if (field.IsRequired)
-                        {
-                            <span class="text-danger">*</span>
-                        }
-                    </div>
+                    <span class="text-danger">*</span>
                 }
-            }
-            else
-            {
-                <div class="text-center text-muted py-3">
-                    <i class="ri-inbox-line fs-3"></i>
-                    <p class="mb-0 small">No fields in this section</p>
-                </div>
-            }
-        </div>
-        
+            </div>
+        }
+    </div>
+}
+
         <!-- Add Question Button -->
         <div class="text-center mt-3">
-            <button type="button" 
-                    class="btn btn-soft-success btn-sm w-100" 
-                    onclick="addFieldToSection(@Model.SectionId)">
+            <button type="button"
+                    class="btn btn-primary btn-lg w-100"
+                    onclick="event.stopPropagation(); addFieldToSection(@Model.SectionId)">
                 <i class="ri-add-line me-1"></i>
                 Add Question
             </button>

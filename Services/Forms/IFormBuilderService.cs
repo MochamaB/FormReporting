@@ -46,6 +46,35 @@ namespace FormReporting.Services.Forms
         Task<SectionDto?> AddSectionAsync(int templateId, CreateSectionDto dto);
 
         /// <summary>
+        /// Get section by ID for editing
+        /// </summary>
+        /// <param name="sectionId">Section ID</param>
+        /// <returns>Section DTO or null if not found</returns>
+        Task<SectionDto?> GetSectionByIdAsync(int sectionId);
+
+        /// <summary>
+        /// Update section properties
+        /// </summary>
+        /// <param name="sectionId">Section ID</param>
+        /// <param name="dto">Updated section data</param>
+        /// <returns>True if successful</returns>
+        Task<bool> UpdateSectionAsync(int sectionId, UpdateSectionDto dto);
+
+        /// <summary>
+        /// Delete a section and all its fields
+        /// </summary>
+        /// <param name="sectionId">Section ID to delete</param>
+        /// <returns>True if successful</returns>
+        Task<bool> DeleteSectionAsync(int sectionId);
+
+        /// <summary>
+        /// Duplicate a section with all its fields
+        /// </summary>
+        /// <param name="sectionId">Section ID to duplicate</param>
+        /// <returns>Duplicated section DTO or null if failed</returns>
+        Task<SectionDto?> DuplicateSectionAsync(int sectionId);
+
+        /// <summary>
         /// Update display order of sections after drag-drop reordering
         /// </summary>
         /// <param name="templateId">Template ID</param>

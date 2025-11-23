@@ -267,6 +267,208 @@ namespace FormReporting.Services.Forms
         }
 
         /// <summary>
+        /// Get section by ID for editing
+        /// </summary>
+        public async Task<SectionDto?> GetSectionByIdAsync(int sectionId)
+        {
+            var section = await _context.FormTemplateSections
+                .Include(s => s.Items.OrderBy(i => i.DisplayOrder))
+                    .ThenInclude(i => i.Validations)
+                .Include(s => s.Items)
+                    .ThenInclude(i => i.Options)
+                .FirstOrDefaultAsync(s => s.SectionId == sectionId);
+
+            if (section == null)
+                return null;
+
+            return MapToSectionDto(section);
+        }
+
+        /// <summary>
+        /// Update section properties
+        /// </summary>
+        public async Task<bool> UpdateSectionAsync(int sectionId, UpdateSectionDto dto)
+        {
+            try
+            {
+                var section = await _context.FormTemplateSections
+                    .FirstOrDefaultAsync(s => s.SectionId == sectionId);
+
+                if (section == null)
+                    return false;
+
+                // Update properties
+                section.SectionName = dto.SectionName;
+                section.SectionDescription = dto.SectionDescription;
+                section.IconClass = dto.IconClass;
+                section.IsCollapsible = dto.IsCollapsible;
+                section.IsCollapsedByDefault = dto.IsCollapsedByDefault;
+                section.ModifiedDate = DateTime.UtcNow;
+
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Log error if you have logging configured
+                Console.WriteLine($"Error updating section: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Delete a section and all its fields
+        /// </summary>
+        public async Task<bool> DeleteSectionAsync(int sectionId)
+        {
+            try
+            {
+                var section = await _context.FormTemplateSections
+                    .Include(s => s.Items) // Include fields for cascade delete
+                    .FirstOrDefaultAsync(s => s.SectionId == sectionId);
+
+                if (section == null)
+                    return false;
+
+                // Remove section (cascade will delete related items)
+                _context.FormTemplateSections.Remove(section);
+                await _context.SaveChangesAsync();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                // Log error if you have logging configured
+                Console.WriteLine($"Error deleting section: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Duplicate a section with all its fields
+        /// </summary>
+        public async Task<SectionDto?> DuplicateSectionAsync(int sectionId)
+        {
+            try
+            {
+                // Load original section with all related data
+                var originalSection = await _context.FormTemplateSections
+                    .Include(s => s.Items.OrderBy(i => i.DisplayOrder))
+                        .ThenInclude(i => i.Validations)
+                    .Include(s => s.Items)
+                        .ThenInclude(i => i.Options)
+                    .FirstOrDefaultAsync(s => s.SectionId == sectionId);
+
+                if (originalSection == null)
+                    return null;
+
+                // Get next display order for template
+                var maxOrder = await _context.FormTemplateSections
+                    .Where(s => s.TemplateId == originalSection.TemplateId)
+                    .MaxAsync(s => (int?)s.DisplayOrder) ?? 0;
+
+                // Create new section (copy)
+                var newSection = new Models.Entities.Forms.FormTemplateSection
+                {
+                    TemplateId = originalSection.TemplateId,
+                    SectionName = $"{originalSection.SectionName} (Copy)",
+                    SectionDescription = originalSection.SectionDescription,
+                    DisplayOrder = maxOrder + 1,
+                    IsCollapsible = originalSection.IsCollapsible,
+                    IsCollapsedByDefault = originalSection.IsCollapsedByDefault,
+                    IconClass = originalSection.IconClass,
+                    CreatedDate = DateTime.UtcNow,
+                    ModifiedDate = DateTime.UtcNow
+                };
+
+                _context.FormTemplateSections.Add(newSection);
+                await _context.SaveChangesAsync(); // Save to get new SectionId
+
+                // Duplicate all fields in the section
+                foreach (var originalItem in originalSection.Items.OrderBy(i => i.DisplayOrder))
+                {
+                    var newItem = new Models.Entities.Forms.FormTemplateItem
+                    {
+                        TemplateId = originalSection.TemplateId,
+                        SectionId = newSection.SectionId,
+                        ItemCode = await GenerateFieldCodeAsync(newSection.SectionId), // Generate new code
+                        ItemName = originalItem.ItemName,
+                        ItemDescription = originalItem.ItemDescription,
+                        DataType = originalItem.DataType,
+                        IsRequired = originalItem.IsRequired,
+                        DisplayOrder = originalItem.DisplayOrder,
+                        PlaceholderText = originalItem.PlaceholderText,
+                        HelpText = originalItem.HelpText,
+                        PrefixText = originalItem.PrefixText,
+                        SuffixText = originalItem.SuffixText,
+                        DefaultValue = originalItem.DefaultValue,
+                        ConditionalLogic = originalItem.ConditionalLogic,
+                        LayoutType = originalItem.LayoutType,
+                        MatrixGroupId = originalItem.MatrixGroupId,
+                        MatrixRowLabel = originalItem.MatrixRowLabel,
+                        LibraryFieldId = originalItem.LibraryFieldId,
+                        IsLibraryOverride = originalItem.IsLibraryOverride,
+                        Version = originalItem.Version,
+                        IsActive = originalItem.IsActive,
+                        CreatedDate = DateTime.UtcNow
+                    };
+
+                    _context.FormTemplateItems.Add(newItem);
+                    await _context.SaveChangesAsync(); // Save to get new ItemId
+
+                    // Duplicate validations
+                    foreach (var originalValidation in originalItem.Validations ?? new List<Models.Entities.Forms.FormItemValidation>())
+                    {
+                        var newValidation = new Models.Entities.Forms.FormItemValidation
+                        {
+                            ItemId = newItem.ItemId,
+                            ValidationType = originalValidation.ValidationType,
+                            MinValue = originalValidation.MinValue,
+                            MaxValue = originalValidation.MaxValue,
+                            MinLength = originalValidation.MinLength,
+                            MaxLength = originalValidation.MaxLength,
+                            RegexPattern = originalValidation.RegexPattern,
+                            CustomExpression = originalValidation.CustomExpression,
+                            ErrorMessage = originalValidation.ErrorMessage,
+                            Severity = originalValidation.Severity,
+                            ValidationOrder = originalValidation.ValidationOrder,
+                            IsActive = originalValidation.IsActive,
+                            CreatedDate = DateTime.UtcNow
+                        };
+
+                        _context.FormItemValidations.Add(newValidation);
+                    }
+
+                    // Duplicate options
+                    foreach (var originalOption in originalItem.Options ?? new List<Models.Entities.Forms.FormItemOption>())
+                    {
+                        var newOption = new Models.Entities.Forms.FormItemOption
+                        {
+                            ItemId = newItem.ItemId,
+                            OptionLabel = originalOption.OptionLabel,
+                            OptionValue = originalOption.OptionValue,
+                            DisplayOrder = originalOption.DisplayOrder,
+                            IsDefault = originalOption.IsDefault
+                        };
+
+                        _context.FormItemOptions.Add(newOption);
+                    }
+
+                    await _context.SaveChangesAsync();
+                }
+
+                // Return as DTO
+                return MapToSectionDto(newSection);
+            }
+            catch (Exception ex)
+            {
+                // Log error if you have logging configured
+                Console.WriteLine($"Error duplicating section: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Update display order of sections after drag-drop reordering
         /// </summary>
         public async Task<bool> ReorderSectionsAsync(int templateId, List<SectionOrderDto> sections)

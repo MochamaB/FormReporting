@@ -74,11 +74,89 @@ namespace FormReporting.Controllers.API
                 return BadRequest(new { success = false, message = "Invalid request data" });
 
             var section = await _formBuilderService.AddSectionAsync(request.TemplateId, request.Section);
-            
+
             if (section == null)
                 return NotFound(new { success = false, message = "Template not found" });
 
             return Ok(new { success = true, section });
+        }
+
+        /// <summary>
+        /// Get section details by ID
+        /// </summary>
+        [HttpGet("sections/{sectionId}")]
+        public async Task<IActionResult> GetSection(int sectionId)
+        {
+            var section = await _formBuilderService.GetSectionByIdAsync(sectionId);
+
+            if (section == null)
+                return NotFound(new { success = false, message = "Section not found" });
+
+            return Ok(new { success = true, data = section });
+        }
+
+        /// <summary>
+        /// Update section properties
+        /// </summary>
+        [HttpPut("sections/{sectionId}")]
+        public async Task<IActionResult> UpdateSection(int sectionId, [FromBody] UpdateSectionDto request)
+        {
+            if (!ModelState.IsValid)
+                return BadRequest(new { success = false, message = "Invalid request data" });
+
+            var success = await _formBuilderService.UpdateSectionAsync(sectionId, request);
+
+            if (!success)
+                return NotFound(new { success = false, message = "Section not found or update failed" });
+
+            return Ok(new { success = true, message = "Section updated successfully" });
+        }
+
+        /// <summary>
+        /// Update section configuration (layout, spacing, etc.)
+        /// TODO: Implement FormItemConfiguration table to store key-value pairs
+        /// </summary>
+        [HttpPut("sections/{sectionId}/configuration")]
+        public async Task<IActionResult> UpdateSectionConfiguration(int sectionId, [FromBody] dynamic configData)
+        {
+            // TODO: Implement configuration storage using FormItemConfiguration table
+            // For now, return success to allow frontend testing
+            // Configuration will be stored as key-value pairs:
+            // - columnLayout, sectionWidth, backgroundStyle, showSectionNumber, topPadding, bottomPadding
+
+            return Ok(new
+            {
+                success = true,
+                message = "Configuration saved (placeholder - will be implemented with FormItemConfiguration table)"
+            });
+        }
+
+        /// <summary>
+        /// Delete a section and all its fields
+        /// </summary>
+        [HttpDelete("sections/{sectionId}")]
+        public async Task<IActionResult> DeleteSection(int sectionId)
+        {
+            var success = await _formBuilderService.DeleteSectionAsync(sectionId);
+
+            if (!success)
+                return NotFound(new { success = false, message = "Section not found or delete failed" });
+
+            return Ok(new { success = true, message = "Section deleted successfully" });
+        }
+
+        /// <summary>
+        /// Duplicate a section with all its fields
+        /// </summary>
+        [HttpPost("sections/{sectionId}/duplicate")]
+        public async Task<IActionResult> DuplicateSection(int sectionId)
+        {
+            var duplicatedSection = await _formBuilderService.DuplicateSectionAsync(sectionId);
+
+            if (duplicatedSection == null)
+                return NotFound(new { success = false, message = "Section not found or duplication failed" });
+
+            return Ok(new { success = true, section = duplicatedSection, message = "Section duplicated successfully" });
         }
 
         /// <summary>

@@ -8,7 +8,32 @@
         margin-right: -1.5rem;
         margin-top: 0;
         margin-bottom: 0;
-        padding: 0 1.5rem;
+        padding: 0.75rem 1.5rem;
+    }
+
+    .builder-tabs-container .nav-tabs-custom {
+        margin-bottom: 0 !important;
+    }
+
+    .properties-toggle-btn {
+        width: 32px;
+        height: 32px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        background: #f3f6f9;
+        transition: all 0.2s ease;
+    }
+
+    .properties-toggle-btn:hover {
+        background: #e9ecef;
+    }
+
+    .properties-toggle-btn i {
+        font-size: 1.25rem;
+        color: #495057;
+        transition: transform 0.3s ease;
     }
     
     .builder-content-area {
@@ -41,7 +66,7 @@
 
     .design-toolbox {
         background: #fff;
-        border-right: 1px solid #e9ecef;
+        border-right: 2px solid #c6c6c6;;
         overflow-y: auto;
         padding: 1rem;
     }
@@ -49,13 +74,13 @@
     .design-canvas {
         background: #f3f3f9;
         overflow-y: auto;
-        padding: 1.5rem;
+        padding: 2rem;
     }
 
     .design-properties {
         background: #fff;
-        border-left: 1px solid #e9ecef;
-        width: 320px;
+        border-left: 2px solid #c6c6c6;;
+        width: 360px;
         overflow-y: auto;
         transition: width 0.3s ease, opacity 0.3s ease;
         position: relative;
@@ -122,25 +147,148 @@
         transition: transform 0.3s ease;
     }
 
-    /* Builder section selection state */
+    /* ============================================
+       SECTION CARD - SurveyJS Style
+       ============================================ */
+
+    /* Default state: Transparent, no visible border */
     .builder-section {
+        background: transparent !important;
+        border: 2px solid transparent !important;
+        border-radius: 0px;
+        margin-bottom: 1.5rem;
+        padding: 1.25rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        position: relative;
+    }
+
+    /* Hover state: Subtle background */
+    .builder-section:hover {
+        background: rgba(64, 81, 137, 0.03) !important;
+        border-color: rgba(64, 81, 137, 0.15) !important;
+    }
+
+    /* Selected state: Primary border with subtle background */
+    .builder-section.selected {
+        background: rgba(64, 81, 137, 0.05) !important;
+        border: 2px solid var(--vz-primary) !important;
+        box-shadow: 0 0 0 3px rgba(64, 81, 137, 0.1) !important;
+    }
+
+    /* Section header - transparent background */
+    .builder-section .card-header {
+        background: transparent !important;
+        border-bottom: 2px solid rgba(0, 0, 0, 0.08);
+        padding: 0 0 0.75rem 0;
+        margin-bottom: 1rem;
+    }
+
+    /* Section body - transparent background */
+    .builder-section .card-body {
+        background: transparent !important;
+        padding: 0;
+    }
+
+    /* Section title styling */
+    .builder-section .card-title {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 0.25rem;
+    }
+
+    /* Description text */
+    .builder-section .card-header .text-muted {
+        font-size: 0.875rem;
+        color: #74788d !important;
+    }
+
+    /* Action buttons - hide by default, show on hover/selected */
+    .builder-section .d-flex.gap-1 {
+        opacity: 0;
+        transition: opacity 0.2s ease;
+    }
+
+    .builder-section:hover .d-flex.gap-1,
+    .builder-section.selected .d-flex.gap-1 {
+        opacity: 1;
+    }
+
+    /* Drag handle - subtle by default */
+    .builder-section .drag-handle {
+        color: #adb5bd;
+        cursor: move !important;
+        opacity: 0;
         transition: all 0.2s ease;
     }
 
-    .builder-section.selected {
-        border-color: #0ab39c !important;
-        box-shadow: 0 0 0 3px rgba(10, 179, 156, 0.1);
+    .builder-section:hover .drag-handle {
+        opacity: 1;
+        color: #74788d;
     }
 
-    .drag-handle:hover {
-        color: #495057 !important;
+    .builder-section.selected .drag-handle {
+        opacity: 1;
+        color: var(--vz-primary) !important;
     }
+
+    /* Fields container - subtle background when empty */
+    .builder-section .fields-container {
+        background: rgba(0, 0, 0, 0.02);
+        border: 1px dashed rgba(0, 0, 0, 0.1);
+        border-radius: 6px;
+        padding: 1rem;
+        min-height: 80px;
+        transition: all 0.2s ease;
+    }
+
+    .builder-section:hover .fields-container {
+        background: rgba(64, 81, 137, 0.03);
+        border-color: rgba(64, 81, 137, 0.15);
+    }
+
+    .builder-section.selected .fields-container {
+        background: rgba(64, 81, 137, 0.05);
+        border-color: var(--vz-primary);
+        border-style: solid;
+    }
+
+    /* Empty state styling */
+    .builder-section .fields-container .text-center.text-muted {
+        color: #adb5bd !important;
+    }
+
+    /* Add Question button */
+    .builder-section .btn-soft-success {
+        background: transparent !important;
+        border: 1px dashed #0ab39c !important;
+        color: #0ab39c !important;
+        transition: all 0.2s ease;
+        font-weight: 500;
+    }
+
+    .builder-section .btn-soft-success:hover {
+        background: rgba(10, 179, 156, 0.08) !important;
+        border-style: solid !important;
+        border-color: #0ab39c !important;
+    }
+
+    /* Remove default card box-shadow */
+    .builder-section.card {
+        box-shadow: none !important;
+    }
+
+    .builder-section.selected.card {
+        box-shadow: 0 0 0 3px rgba(64, 81, 137, 0.1) !important;
+    }
+
     .menu-title {
         list-style: none;
         text-transform: uppercase;
         font-weight: 600;
         color: var(--vz-primary);
-       
+
     }
     /* Drag-drop styles */
 .toolbox-item {
@@ -165,12 +313,14 @@
 }
 
 .sortable-ghost {
-    opacity: 0.4;
-    background: #f8f9fa;
+    opacity: 0.5;
+    background: rgba(64, 81, 137, 0.08) !important;
+    border: 2px dashed var(--vz-primary) !important;
 }
 
 .sortable-drag {
-    opacity: 1;
+    opacity: 0.9;
+    cursor: move;
 }
 
 /* Make drag handle more visible */
@@ -180,4 +330,128 @@
 
 .builder-section:hover .drag-handle {
     color: #0ab39c !important;
+}
+
+/* ===================================================================== */
+/* CUSTOM SCROLLBAR STYLES - Hidden until hover, thin scrollbar */
+/* ===================================================================== */
+
+/* Toolbox scrollbar */
+.design-toolbox {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color 0.3s ease;
+}
+
+.design-toolbox:hover {
+    scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
+}
+
+/* Webkit browsers (Chrome, Edge, Safari) */
+.design-toolbox::-webkit-scrollbar {
+    width: 6px;
+}
+
+.design-toolbox::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.design-toolbox::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    border-radius: 10px;
+    transition: background-color 0.3s ease;
+}
+
+.design-toolbox:hover::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.design-toolbox::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Canvas scrollbar */
+.design-canvas {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color 0.3s ease;
+}
+
+.design-canvas:hover {
+    scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
+}
+
+.design-canvas::-webkit-scrollbar {
+    width: 6px;
+}
+
+.design-canvas::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.design-canvas::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    border-radius: 10px;
+    transition: background-color 0.3s ease;
+}
+
+.design-canvas:hover::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.design-canvas::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Properties panel scrollbar */
+.design-properties {
+    scrollbar-width: thin;
+    scrollbar-color: transparent transparent;
+    transition: scrollbar-color 0.3s ease;
+}
+
+.design-properties:hover {
+    scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
+}
+
+.design-properties::-webkit-scrollbar {
+    width: 6px;
+}
+
+.design-properties::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.design-properties::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    border-radius: 10px;
+    transition: background-color 0.3s ease;
+}
+
+.design-properties:hover::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.3);
+}
+
+.design-properties::-webkit-scrollbar-thumb:hover {
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+/* Form header preview styling */
+.form-header-preview {
+    background: transparent;
+    padding: 0;
+}
+
+.form-header-preview .form-title {
+    color: #495057;
+    font-weight: 600;
+    font-size: 1.75rem;
+}
+
+.form-header-preview .form-description {
+    font-size: 0.875rem;
+}
+
+.form-header-icon {
+    opacity: 0.5;
 }

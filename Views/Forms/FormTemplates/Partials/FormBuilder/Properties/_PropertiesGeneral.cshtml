@@ -1,9 +1,124 @@
 @model FormReporting.Models.ViewModels.Forms.FormBuilderViewModel
 
 @*
-    GENERAL TAB: Basic field properties
-    - ItemName, ItemCode, ItemDescription
-    - DataType, DisplayOrder, IsRequired
-    - DefaultValue, PlaceholderText, HelpText
-    - PrefixText, SuffixText, LayoutType
+    GENERAL TAB: Basic properties for selected element (Section or Field)
+    - Section: Name, Description, Icon, Order, Collapsible
+    - Field: Name, Code, Description, Placeholder, Required, etc.
 *@
+
+<!-- Empty State (No Selection) -->
+<div id="properties-empty" class="text-center py-5">
+    <img src="~/assets/images/svg/general.svg" alt="Select element" class="mb-3" style="width: 180px; height: 180px; opacity: 0.8;">
+    <p class="text-muted mt-3 mb-0">Select a section or field to edit its properties</p>
+    <small class="text-muted">Click on any element in the canvas</small>
+</div>
+
+<!-- Section Properties Form -->
+<div id="properties-section-general" style="display: none;">
+    <div class="mb-3">
+        <div class="d-flex align-items-center mb-3">
+            <i class="ri-layout-line fs-5 text-primary me-2"></i>
+            <h6 class="mb-0">Section Properties</h6>
+        </div>
+    </div>
+
+    <form id="sectionGeneralForm">
+        <!-- Section Name -->
+        <div class="mb-3">
+            <label for="prop_sectionName" class="form-label fw-semibold">
+                Section Name <span class="text-danger">*</span>
+            </label>
+            <input type="text"
+                   class="form-control"
+                   id="prop_sectionName"
+                   placeholder="e.g., General Information"
+                   required>
+            <div class="invalid-feedback">Section name is required</div>
+        </div>
+
+        <!-- Description -->
+        <div class="mb-3">
+            <label for="prop_sectionDescription" class="form-label fw-semibold">
+                Description
+            </label>
+            <textarea class="form-control"
+                      id="prop_sectionDescription"
+                      rows="2"
+                      placeholder="Optional description"></textarea>
+            <small class="text-muted">Helps users understand this section</small>
+        </div>
+
+        <!-- Icon -->
+        <div class="mb-3">
+            <label for="prop_iconClass" class="form-label fw-semibold">
+                Icon (Optional)
+            </label>
+            <div class="input-group">
+                <span class="input-group-text">
+                    <i id="prop_iconPreview" class="ri-layout-line"></i>
+                </span>
+                <input type="text"
+                       class="form-control"
+                       id="prop_iconClass"
+                       placeholder="ri-icon-name">
+            </div>
+            <small class="text-muted">
+                Use <a href="https://remixicon.com/" target="_blank" class="text-decoration-none">Remix Icons</a>
+            </small>
+        </div>
+
+        <!-- Display Order (Read-only) -->
+        <div class="mb-3">
+            <label for="prop_displayOrder" class="form-label fw-semibold">
+                Display Order
+            </label>
+            <input type="number"
+                   class="form-control"
+                   id="prop_displayOrder"
+                   readonly
+                   disabled>
+            <small class="text-muted">Managed by drag-drop reordering</small>
+        </div>
+
+        <!-- Collapsible Settings -->
+        <div class="mb-3">
+            <div class="form-check form-switch">
+                <input class="form-check-input"
+                       type="checkbox"
+                       id="prop_isCollapsible">
+                <label class="form-check-label" for="prop_isCollapsible">
+                    Allow section to be collapsed
+                </label>
+            </div>
+        </div>
+
+        <!-- Collapsed by Default -->
+        <div class="mb-3" id="prop_collapsedContainer" style="display: none;">
+            <div class="form-check form-switch ms-3">
+                <input class="form-check-input"
+                       type="checkbox"
+                       id="prop_isCollapsedByDefault">
+                <label class="form-check-label" for="prop_isCollapsedByDefault">
+                    Start collapsed by default
+                </label>
+            </div>
+        </div>
+
+        <!-- Save Button -->
+        <div class="d-grid gap-2 mt-4">
+            <button type="button"
+                    class="btn btn-primary"
+                    onclick="saveSectionProperties()">
+                <i class="ri-save-line me-1"></i>Save Changes
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Field Properties Form (Future Phase 2) -->
+<div id="properties-field-general" style="display: none;">
+    <p class="text-muted text-center py-4">
+        <i class="ri-file-list-line fs-4 d-block mb-2"></i>
+        Field properties will be implemented in Phase 2
+    </p>
+</div>
