@@ -25,6 +25,7 @@ const FormBuilder = {
         // Initialize all components
         FormBuilderLayout.init();
         FormBuilderDragDrop.init(templateId);
+        FormBuilderFields.init();
         FormBuilderProperties.init();
 
         // Setup event listeners

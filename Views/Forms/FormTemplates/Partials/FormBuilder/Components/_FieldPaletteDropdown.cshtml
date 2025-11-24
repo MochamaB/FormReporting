@@ -1,0 +1,180 @@
+@model int
+
+@*
+    Field Palette Dropdown Component
+    Displays all 21 field types in dropdown format for section "Add Question" button
+    @param Model - SectionId to add field to
+*@
+
+<!-- INPUT FIELDS -->
+<h6 class="dropdown-header">
+    <i class="ri-text me-1"></i> Input Fields
+</h6>
+
+<a class="dropdown-item" href="javascript:void(0);" onclick="showAddFieldModal(event, @Model, 'Text')">
+    <i class="ri-text text-primary me-2"></i>
+    <strong>Text</strong>
+    <span class="text-muted small d-block ms-4">Single line text input</span>
+</a>
+
+<a class="dropdown-item" href="javascript:void(0);" onclick="showAddFieldModal(event, @Model, 'TextArea')">
+    <i class="ri-file-text-line text-primary me-2"></i>
+    <strong>Text Area</strong>
+    <span class="text-muted small d-block ms-4">Multi-line text input</span>
+</a>
+
+<a class="dropdown-item" href="javascript:void(0);" onclick="showAddFieldModal(event, @Model, 'Number')">
+    <i class="ri-hashtag text-primary me-2"></i>
+    <strong>Number</strong>
+    <span class="text-muted small d-block ms-4">Integer numbers</span>
+</a>
+
+<a class="dropdown-item" href="javascript:void(0);" onclick="showAddFieldModal(event, @Model, 'Decimal')">
+    <i class="ri-function-line text-primary me-2"></i>
+    <strong>Decimal</strong>
+    <span class="text-muted small d-block ms-4">Decimal numbers</span>
+</a>
+
+<div class="dropdown-divider"></div>
+
+<!-- DATE/TIME FIELDS -->
+<h6 class="dropdown-header">
+    <i class="ri-calendar-line me-1"></i> Date & Time
+</h6>
+
+<a class="dropdown-item" href="javascript:void(0);" onclick="showAddFieldModal(event, @Model, 'Date')">
+    <i class="ri-calendar-line text-success me-2"></i>
+    <strong>Date</strong>
+    <span class="text-muted small d-block ms-4">Date picker</span>
+</a>
+
+<a class="dropdown-item" href="javascript:void(0);" onclick="showAddFieldModal(event, @Model, 'Time')">
+    <i class="ri-time-line text-success me-2"></i>
+    <strong>Time</strong>
+    <span class="text-muted small d-block ms-4">Time picker</span>
+</a>
+
+<a class="dropdown-item" href="javascript:void(0);" onclick="showAddFieldModal(event, @Model, 'DateTime')">
+    <i class="ri-calendar-event-line text-success me-2"></i>
+    <strong>Date & Time</strong>
+    <span class="text-muted small d-block ms-4">Date and time picker</span>
+</a>
+
+<div class="dropdown-divider"></div>
+
+<!-- SELECTION FIELDS -->
+<h6 class="dropdown-header">
+    <i class="ri-list-check me-1"></i> Selection
+</h6>
+
+<a class="dropdown-item" href="javascript:void(0);" onclick="showAddFieldModal(event, @Model, 'Dropdown')">
+    <i class="ri-arrow-down-s-line text-info me-2"></i>
+    <strong>Dropdown</strong>
+    <span class="text-muted small d-block ms-4">Single select dropdown</span>
+</a>
+
+<a class="dropdown-item" href="javascript:void(0);" onclick="showAddFieldModal(event, @Model, 'Radio')">
+    <i class="ri-radio-button-line text-info me-2"></i>
+    <strong>Radio Buttons</strong>
+    <span class="text-muted small d-block ms-4">Radio button group</span>
+</a>
+
+<a class="dropdown-item" href="javascript:void(0);" onclick="showAddFieldModal(event, @Model, 'Checkbox')">
+    <i class="ri-checkbox-line text-info me-2"></i>
+    <strong>Checkbox</strong>
+    <span class="text-muted small d-block ms-4">Single or multiple</span>
+</a>
+
+<a class="dropdown-item" href="javascript:void(0);" onclick="showAddFieldModal(event, @Model, 'MultiSelect')">
+    <i class="ri-list-check text-info me-2"></i>
+    <strong>Multi-Select</strong>
+    <span class="text-muted small d-block ms-4">Multiple selection</span>
+</a>
+
+<div class="dropdown-divider"></div>
+
+<!-- MEDIA FIELDS -->
+<h6 class="dropdown-header">
+    <i class="ri-image-line me-1"></i> Media
+</h6>
+
+<a class="dropdown-item" href="javascript:void(0);" onclick="showAddFieldModal(event, @Model, 'FileUpload')">
+    <i class="ri-file-upload-line text-warning me-2"></i>
+    <strong>File Upload</strong>
+    <span class="text-muted small d-block ms-4">File upload field</span>
+</a>
+
+<a class="dropdown-item" href="javascript:void(0);" onclick="showAddFieldModal(event, @Model, 'Image')">
+    <i class="ri-image-line text-warning me-2"></i>
+    <strong>Image</strong>
+    <span class="text-muted small d-block ms-4">Image upload</span>
+</a>
+
+<a class="dropdown-item" href="javascript:void(0);" onclick="showAddFieldModal(event, @Model, 'Signature')">
+    <i class="ri-quill-pen-line text-warning me-2"></i>
+    <strong>Signature</strong>
+    <span class="text-muted small d-block ms-4">Digital signature</span>
+</a>
+
+<div class="dropdown-divider"></div>
+
+<!-- RATING FIELDS -->
+<h6 class="dropdown-header">
+    <i class="ri-star-line me-1"></i> Rating
+</h6>
+
+<a class="dropdown-item" href="javascript:void(0);" onclick="showAddFieldModal(event, @Model, 'Rating')">
+    <i class="ri-star-line text-danger me-2"></i>
+    <strong>Rating</strong>
+    <span class="text-muted small d-block ms-4">Star/heart rating</span>
+</a>
+
+<a class="dropdown-item" href="javascript:void(0);" onclick="showAddFieldModal(event, @Model, 'Slider')">
+    <i class="ri-contrast-2-line text-danger me-2"></i>
+    <strong>Slider</strong>
+    <span class="text-muted small d-block ms-4">Slider input</span>
+</a>
+
+<div class="dropdown-divider"></div>
+
+<!-- CONTACT FIELDS -->
+<h6 class="dropdown-header">
+    <i class="ri-contacts-line me-1"></i> Contact
+</h6>
+
+<a class="dropdown-item" href="javascript:void(0);" onclick="showAddFieldModal(event, @Model, 'Email')">
+    <i class="ri-mail-line text-secondary me-2"></i>
+    <strong>Email</strong>
+    <span class="text-muted small d-block ms-4">Email with validation</span>
+</a>
+
+<a class="dropdown-item" href="javascript:void(0);" onclick="showAddFieldModal(event, @Model, 'Phone')">
+    <i class="ri-phone-line text-secondary me-2"></i>
+    <strong>Phone</strong>
+    <span class="text-muted small d-block ms-4">Phone number</span>
+</a>
+
+<a class="dropdown-item" href="javascript:void(0);" onclick="showAddFieldModal(event, @Model, 'Url')">
+    <i class="ri-links-line text-secondary me-2"></i>
+    <strong>URL</strong>
+    <span class="text-muted small d-block ms-4">URL input</span>
+</a>
+
+<div class="dropdown-divider"></div>
+
+<!-- SPECIALIZED FIELDS -->
+<h6 class="dropdown-header">
+    <i class="ri-tools-line me-1"></i> Specialized
+</h6>
+
+<a class="dropdown-item" href="javascript:void(0);" onclick="showAddFieldModal(event, @Model, 'Currency')">
+    <i class="ri-money-dollar-circle-line text-success me-2"></i>
+    <strong>Currency</strong>
+    <span class="text-muted small d-block ms-4">Money input</span>
+</a>
+
+<a class="dropdown-item" href="javascript:void(0);" onclick="showAddFieldModal(event, @Model, 'Percentage')">
+    <i class="ri-percent-line text-success me-2"></i>
+    <strong>Percentage</strong>
+    <span class="text-muted small d-block ms-4">Percentage input</span>
+</a>

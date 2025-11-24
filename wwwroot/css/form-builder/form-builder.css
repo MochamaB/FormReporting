@@ -312,10 +312,29 @@
     padding: 1rem;
 }
 
+/* Section drag ghost - grey background with section hover border (not dashed) */
 .sortable-ghost {
-    opacity: 0.5;
-    background: rgba(64, 81, 137, 0.08) !important;
-    border: 2px dashed var(--vz-primary) !important;
+    opacity: 0.8;
+    background: rgba(64, 81, 137, 0.03) !important;  /* Same as section hover */
+    border: 2px solid rgba(64, 81, 137, 0.15) !important;  /* Solid, not dashed */
+}
+
+/* Field drag ghost - white background */
+.sortable-ghost-field {
+    opacity: 0.8;
+    background: #ffffff !important;
+    border: 2px solid rgba(64, 81, 137, 0.15) !important;
+    border-radius: 6px;
+    padding: 0.75rem;
+    min-height: 60px;
+}
+
+/* Fields container drop zone indicator when dragging fields */
+.fields-container.sortable-drag-over {
+    background: rgba(10, 179, 156, 0.08) !important;
+    border: 2px solid #0ab39c !important;
+    border-style: solid !important;
+    min-height: 100px;
 }
 
 .sortable-drag {
@@ -330,6 +349,21 @@
 
 .builder-section:hover .drag-handle {
     color: #0ab39c !important;
+}
+
+/* Field items in toolbox - draggable */
+.field-item {
+    cursor: move !important;
+    transition: all 0.2s ease;
+}
+
+.field-item:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.field-item.dragging {
+    opacity: 0.5;
 }
 
 /* ===================================================================== */

@@ -8,6 +8,8 @@ const FormBuilderDragDrop = {
     // SortableJS instances
     toolboxSortable: null,
     sectionsSortable: null,
+    fieldPaletteSortable: null,  // NEW: For field palette in toolbox
+    fieldDropZones: [],           // NEW: Array of sortable instances for each section
 
     // Current template ID
     templateId: null,
@@ -18,8 +20,10 @@ const FormBuilderDragDrop = {
      */
     init: function(templateId) {
         this.templateId = templateId;
-        this.initializeToolboxDragDrop();
-        this.initializeSectionDragDrop();
+        this.initializeToolboxDragDrop();       // Section drag from toolbox
+        this.initializeSectionDragDrop();        // Section drop and reorder
+        this.initializeFieldPaletteDragDrop();   // NEW: Field drag from toolbox
+        this.initializeFieldDropZones();         // NEW: Field drop into sections
         console.log('FormBuilder Drag & Drop initialized');
     },
 
@@ -80,18 +84,26 @@ const FormBuilderDragDrop = {
         this.sectionsSortable = new Sortable(sectionsContainer, {
             group: {
                 name: 'sections',
-                pull: false,    // Don't allow pulling sections out
-                put: true       // Allow sections from toolbox
+                pull: false,           // Don't allow pulling sections out
+                put: ['sections']      // ONLY accept items from 'sections' group (reject 'fields')
             },
             animation: 150,
             handle: '.drag-handle',           // Only drag by handle on existing sections
             draggable: '.builder-section',    // Only .builder-section elements can be dragged/reordered
             ghostClass: 'sortable-ghost',
             dragClass: 'sortable-drag',
+            fallbackTolerance: 3,              // Better handling for nested sortables
 
             // CRITICAL: Filter out nested elements that should NOT be drop zones
             filter: '.fields-container, .card-body, .btn, .form-check-input, input, textarea, select',
             preventOnFilter: false,
+
+            // Prevent fields from being dropped in sectionsContainer
+            onMove: (evt) => {
+                // Reject any item that's not a section (e.g., field items)
+                return evt.dragged.classList.contains('builder-section') ||
+                       evt.dragged.classList.contains('draggable-section');
+            },
 
             onEnd: (evt) => {
                 // Only update order if this was a reorder (not a clone from toolbox)
@@ -151,5 +163,158 @@ const FormBuilderDragDrop = {
             // Reload to restore correct order on error
             FormBuilder.reload();
         }
+    },
+
+    /**
+     * Initialize field palette drag-drop in toolbox
+     * Fields can be cloned and dragged to sections
+     * Initializes SortableJS on each field-category individually
+     */
+    initializeFieldPaletteDragDrop: function() {
+        // Find all field-category containers
+        const fieldCategories = document.querySelectorAll('.field-palette-container .field-category');
+
+        if (fieldCategories.length === 0) {
+            console.warn('No field categories found - field palette drag-drop not initialized');
+            return;
+        }
+
+        // Initialize SortableJS on each field category
+        // This allows individual field items to be dragged from their categories
+        fieldCategories.forEach((category) => {
+            new Sortable(category, {
+                group: {
+                    name: 'fields',
+                    pull: 'clone',    // Clone items from toolbox
+                    put: false        // Don't allow items to be put back
+                },
+                sort: false,           // Disable sorting in toolbox
+                draggable: '.draggable-field',  // Only field items are draggable
+                animation: 150,
+                ghostClass: 'sortable-ghost-field',
+
+                // Filter out category headers
+                filter: 'h6',
+
+                onEnd: (evt) => {
+                    // Remove the cloned element after drag ends
+                    if (evt.item && evt.pullMode === 'clone') {
+                        evt.item.remove();
+                    }
+                }
+            });
+        });
+
+        console.log(`Field palette drag-drop initialized for ${fieldCategories.length} categories`);
+    },
+
+    /**
+     * Initialize field drop zones for all sections
+     * Creates sortable instances for each fields-container
+     */
+    initializeFieldDropZones: function() {
+        const fieldsContainers = document.querySelectorAll('.fields-container');
+
+        if (fieldsContainers.length === 0) {
+            console.warn('No fields containers found - field drop zones not initialized');
+            return;
+        }
+
+        fieldsContainers.forEach(container => {
+            const sectionId = container.dataset.sectionId;
+
+            const sortableInstance = new Sortable(container, {
+                group: {
+                    name: 'fields',
+                    pull: false,        // Don't allow pulling fields out (for now)
+                    put: ['fields']     // ONLY accept items from 'fields' group
+                },
+                animation: 150,
+                ghostClass: 'sortable-ghost-field',
+                draggable: '.field-preview',  // For reordering existing fields later
+                fallbackTolerance: 3,          // Better handling for nested sortables
+
+                // Only accept field items (from palette or reordering)
+                onMove: (evt) => {
+                    // Highlight drop zone when hovering
+                    if (evt.to && evt.to.classList.contains('fields-container')) {
+                        evt.to.classList.add('sortable-drag-over');
+                    }
+
+                    // Remove highlight from previous container
+                    if (evt.from && evt.from !== evt.to && evt.from.classList.contains('fields-container')) {
+                        evt.from.classList.remove('sortable-drag-over');
+                    }
+
+                    // Accept if it's a draggable field or existing field preview
+                    return evt.dragged.classList.contains('draggable-field') ||
+                           evt.dragged.classList.contains('field-preview');
+                },
+
+                // Called when field is dropped from palette into section
+                onAdd: (evt) => {
+                    // Remove drag-over class
+                    container.classList.remove('sortable-drag-over');
+                    const fieldType = evt.item.dataset.fieldType;
+
+                    // Remove the dropped clone element
+                    evt.item.remove();
+
+                    // Remove empty state message if it exists
+                    const emptyMessage = container.querySelector('.empty-fields-message');
+                    if (emptyMessage) {
+                        emptyMessage.remove();
+                    }
+
+                    // Open modal to configure the field
+                    console.log(`Field ${fieldType} dropped into section ${sectionId}`);
+                    FormBuilderFields.showAddFieldModal(null, sectionId, fieldType);
+                },
+
+                // Called when existing field is reordered within section (future)
+                onUpdate: (_evt) => {
+                    // Remove drag-over class
+                    container.classList.remove('sortable-drag-over');
+
+                    console.log(`Field reordered in section ${sectionId}`);
+                    // TODO: Implement field reorder API call
+                    // this.updateFieldOrder(sectionId);
+                },
+
+                // Clean up drag-over classes when drag ends (success or cancel)
+                onEnd: (_evt) => {
+                    // Remove drag-over class from all fields-containers
+                    document.querySelectorAll('.fields-container').forEach(fc => {
+                        fc.classList.remove('sortable-drag-over');
+                    });
+                }
+            });
+
+            this.fieldDropZones.push({
+                sectionId: sectionId,
+                instance: sortableInstance
+            });
+        });
+
+        console.log(`Field drop zones initialized for ${fieldsContainers.length} sections`);
+    },
+
+    /**
+     * Reinitialize field drop zones
+     * Called when sections are added, deleted, or duplicated
+     */
+    reinitializeDropZones: function() {
+        console.log('Reinitializing field drop zones...');
+
+        // Destroy existing drop zone instances
+        this.fieldDropZones.forEach(dropZone => {
+            if (dropZone.instance) {
+                dropZone.instance.destroy();
+            }
+        });
+        this.fieldDropZones = [];
+
+        // Reinitialize all drop zones
+        this.initializeFieldDropZones();
     }
 };

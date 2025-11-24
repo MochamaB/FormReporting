@@ -56,33 +56,53 @@
 
     <!-- Section Body (Collapsible) -->
     <div class="card-body" id="section-body-@Model.SectionId">
-        <!-- Fields Container -->
-        <!-- Fields Container -->
-@if (Model.Fields.Any())
-{
-    <div class="fields-container" data-section-id="@Model.SectionId" onclick="event.stopPropagation();">
-        @foreach (var field in Model.Fields.OrderBy(f => f.DisplayOrder))
-        {
-            <div class="alert alert-secondary mb-2" role="alert">
-                <strong>@field.ItemName</strong>
-                <span class="badge bg-info-subtle text-info ms-2">@field.DataType</span>
-                @if (field.IsRequired)
+        <!-- Fields Container - Always render for drag-drop target -->
+        <div class="fields-container"
+             data-section-id="@Model.SectionId"
+             onclick="event.stopPropagation();">
+            @if (Model.Fields.Any())
+            {
+                @foreach (var field in Model.Fields.OrderBy(f => f.DisplayOrder))
                 {
-                    <span class="text-danger">*</span>
+                    <div class="alert alert-secondary mb-2 field-preview"
+                         data-field-id="@field.ItemId"
+                         role="alert">
+                        <strong>@field.ItemName</strong>
+                        <span class="badge bg-info-subtle text-info ms-2">@field.DataType</span>
+                        @if (field.IsRequired)
+                        {
+                            <span class="text-danger">*</span>
+                        }
+                    </div>
                 }
-            </div>
-        }
-    </div>
-}
+            }
+            else
+            {
+                <div class="text-center text-muted py-3 empty-fields-message">
+                    <i class="ri-add-box-fill fs-4"></i>
+                    <p class="mb-0 small">Drag fields here or click Add Question</p>
+                </div>
+            }
+        </div>
 
-        <!-- Add Question Button -->
+        <!-- Add Question Dropdown -->
         <div class="text-center mt-3">
-            <button type="button"
-                    class="btn btn-primary btn-lg w-100"
-                    onclick="event.stopPropagation(); addFieldToSection(@Model.SectionId)">
-                <i class="ri-add-line me-1"></i>
-                Add Question
-            </button>
+            <div class="dropdown" onclick="event.stopPropagation();">
+                <button class="btn btn-primary btn-lg w-100 dropdown-toggle"
+                        type="button"
+                        id="addQuestionDropdown-@Model.SectionId"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false">
+                    <i class="ri-add-line me-1"></i>
+                    Add Question
+                </button>
+                <ul class="dropdown-menu w-100"
+                    aria-labelledby="addQuestionDropdown-@Model.SectionId"
+                    style="max-height: 400px; overflow-y: auto;">
+                    <partial name="~/Views/Forms/FormTemplates/Partials/FormBuilder/Components/_FieldPaletteDropdown.cshtml"
+                             model="@Model.SectionId" />
+                </ul>
+            </div>
         </div>
     </div>
 </div>

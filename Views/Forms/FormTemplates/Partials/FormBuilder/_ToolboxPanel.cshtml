@@ -38,17 +38,19 @@
             </div>
         </div>
 
-        <hr class="mt-2 mb-0"/>
+        <hr class="mt-3 mb-0"/>
 
         <!-- ========================= -->
-        <!--   FIELD TITLE             -->
+        <!--   FIELDS PALETTE          -->
         <!-- ========================= -->
         <li class="menu-title">
             <span>Fields</span>
         </li>
 
-        <!-- Field placeholder -->
-        <p class="text-muted small mt-2">Field palette will be implemented next</p>
+        <!-- Field Palette Component - Wrapped in dedicated container for SortableJS -->
+        <div class="mt-3 field-palette-container">
+            <partial name="~/Views/Forms/FormTemplates/Partials/FormBuilder/Components/_FieldPalette.cshtml" />
+        </div>
 
     </div>
 </div>

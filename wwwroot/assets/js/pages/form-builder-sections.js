@@ -83,6 +83,8 @@ const FormBuilderSections = {
                 modal.hide();
 
                 // Reload page to show new section
+                // NOTE: Full page reload reinitializes all drop zones automatically
+                // Future optimization: Update DOM dynamically and call FormBuilderDragDrop.reinitializeDropZones()
                 FormBuilder.reload();
             } else {
                 alert('Error: ' + (result.message || 'Failed to add section'));
@@ -175,6 +177,8 @@ const FormBuilderSections = {
                 modal.hide();
 
                 // Reload page to reflect changes
+                // NOTE: Full page reload reinitializes all drop zones automatically
+                // Future optimization: Remove section from DOM and call FormBuilderDragDrop.reinitializeDropZones()
                 FormBuilder.reload();
             } else {
                 alert('Error: ' + (result.message || 'Failed to delete section'));
@@ -257,6 +261,8 @@ const FormBuilderSections = {
                 modal.hide();
 
                 // Reload page to show duplicated section
+                // NOTE: Full page reload reinitializes all drop zones automatically
+                // Future optimization: Add section to DOM and call FormBuilderDragDrop.reinitializeDropZones()
                 FormBuilder.reload();
             } else {
                 alert('Error: ' + (result.message || 'Failed to duplicate section'));
@@ -271,15 +277,7 @@ const FormBuilderSections = {
         }
     },
 
-    /**
-     * Add field to section (placeholder)
-     * @param {number} sectionId - Section ID to add field to
-     */
-    addFieldToSection: function(sectionId) {
-        // TODO: Implement add field functionality
-        alert('Add Field functionality will be implemented later');
-        console.log('Adding field to section:', sectionId);
-    }
+    // NOTE: Field-related functions have been moved to form-builder-fields.js
 };
 
 // Expose functions globally for inline onclick handlers
@@ -319,6 +317,4 @@ window.confirmDuplicateSection = function() {
     FormBuilderSections.confirmDuplicateSection();
 };
 
-window.addFieldToSection = function(sectionId) {
-    FormBuilderSections.addFieldToSection(sectionId);
-};
+// NOTE: Field-related global functions are now in form-builder-fields.js

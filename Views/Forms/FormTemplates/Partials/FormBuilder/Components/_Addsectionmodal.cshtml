@@ -1,12 +1,12 @@
 <!-- Add Section Modal -->
 <div class="modal fade" id="addSectionModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">
-                    <i class="ri-add-line me-2"></i>Add New Section
+        <div class="modal-content ">
+            <div class="modal-header bg-primary pb-2">
+                <h5 class="modal-title text-white">
+                    <i class="ri-add-line me-2 text-white"></i>Add New Section
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form id="addSectionForm">
@@ -72,8 +72,9 @@
                     </div>
                 </form>
             </div>
+            <hr/>
             <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                <button type="button" class="btn btn-danger" data-bs-dismiss="modal">
                     <i class="ri-close-line me-1"></i>Cancel
                 </button>
                 <button type="button" class="btn btn-primary" onclick="saveSectionFromModal(event)">
