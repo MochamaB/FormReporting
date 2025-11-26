@@ -20,7 +20,7 @@
         position: -webkit-sticky;
         position: sticky;
         top: 0;
-        z-index: 1020;
+        z-index: 1; /* Below sidebar (sidebar is typically z-index: 1000+) */
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 
         /* Extend to edges of container-fluid (offset its padding) */
@@ -39,6 +39,7 @@
         display: flex;
         align-items: center;
         gap: 0.75rem;
+        border-bottom: 7px solid #e9ecef; /* Grey for pending/default */
     }
 
     .progress-step.navigable {
@@ -50,15 +51,18 @@
     }
 
     .progress-step.active {
-        background-color: rgba(var(--vz-primary-rgb), 0.05);
+        background-color: rgba(var(--vz-secondary-rgb), 0.08);
+        border-bottom: 7px solid var(--vz-secondary); /* Secondary color for active */
     }
 
     .progress-step.completed {
         background-color: rgba(var(--vz-success-rgb), 0.03);
+        border-bottom: 7px solid var(--vz-success); /* Green for completed */
     }
 
     .progress-step.error {
         background-color: rgba(var(--vz-danger-rgb), 0.03);
+        border-bottom: 7px solid var(--vz-danger); /* Red for error */
     }
 
     .progress-step::after {
@@ -94,8 +98,8 @@
     }
 
     .progress-step.active .step-icon-wrapper {
-        border-color: var(--vz-primary);
-        background: rgba(var(--vz-primary-rgb), 0.1);
+        border-color: var(--vz-secondary);
+        background: rgba(var(--vz-secondary-rgb), 0.1);
     }
 
     .progress-step.completed .step-icon-wrapper {
@@ -115,7 +119,7 @@
         right: -8px;
         width: 24px;
         height: 24px;
-        background: var(--vz-primary);
+        background: #b1b1b1; /* Grey for pending/inactive steps */
         color: white;
         border-radius: 50%;
         font-size: 12px;
@@ -124,6 +128,10 @@
         align-items: center;
         justify-content: center;
         border: 2px solid #fff;
+    }
+
+    .form-builder-progress .progress-step.active .step-number {
+        background: var(--vz-secondary); /* Secondary color for active step */
     }
 
     .form-builder-progress .progress-step.completed .step-number {
@@ -156,35 +164,14 @@
         line-height: 1.3;
     }
 
+    /* Overall progress bar removed - using step bottom borders instead */
     .overall-progress {
-        height: 3px;
-        background: #e9ecef;
-        position: absolute;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        width: 100%;
+        display: none;
     }
 
-    .exit-button-wrapper {
-        position: absolute;
-        top: 12px;
-        right: 20px;
-        z-index: 10;
-    }
 </style>
 
 <div class="form-builder-progress">
-    @* Exit Button (Top Right) *@
-    @if (Model.ShowExit)
-    {
-        <div class="exit-button-wrapper">
-            <a href="@Model.ExitUrl" class="btn btn-light btn-sm" id="exitBtn">
-                <i class="ri-close-line me-1"></i>Exit
-            </a>
-        </div>
-    }
-
     @* Step Indicators *@
     <div class="d-flex">
         @foreach (var step in Model.Steps)
@@ -198,8 +185,22 @@
 
                 @* Step Icon *@
                 <div class="step-icon-wrapper">
-                    <i class="@step.IconClasses"></i>
-                    <div class="step-number">@step.StepNumber</div>
+                    @if (step.IsCompleted)
+                    {
+                        <i class="ri-checkbox-circle-fill text-success fs-20"></i>
+                    }
+                    else if (step.IsActive)
+                    {
+                        <i class="@step.Icon text-secondary fs-20"></i>
+                    }
+                    else
+                    {
+                        <i class="@step.Icon text-muted fs-20"></i>
+                    }
+                    @if (!step.IsCompleted)
+                    {
+                        <div class="step-number">@step.StepNumber</div>
+                    }
                 </div>
 
                 @* Step Text Content *@
@@ -214,49 +215,55 @@
         }
     </div>
 
-    @* Overall Progress Bar (Bottom) *@
-    <div class="overall-progress">
-        <div class="progress-bar @Model.ProgressBarClass"
-             role="progressbar"
-             style="width: @Model.ProgressPercentage%"
-             aria-valuenow="@Model.ProgressPercentage"
-             aria-valuemin="0"
-             aria-valuemax="100">
+</div>
+
+<!-- Exit Confirmation Modal -->
+<div class="modal fade" id="exitConfirmModal" tabindex="-1" aria-labelledby="exitConfirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-warning-subtle">
+                <h5 class="modal-title" id="exitConfirmModalLabel">
+                    <i class="ri-alert-line me-2"></i>Confirm Exit
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="exitModalMessage" class="mb-0">
+                    Are you sure you want to exit the Form Builder?
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="ri-close-line me-1"></i>Cancel
+                </button>
+                <button type="button" class="btn btn-danger" id="confirmExitBtn">
+                    <i class="ri-logout-box-line me-1"></i>Exit
+                </button>
+            </div>
         </div>
     </div>
 </div>
 
-@section Scripts {
-    <script>
-        function navigateToStep(url) {
-            // Check if there are unsaved changes
-            if (typeof hasUnsavedChanges === 'function' && hasUnsavedChanges()) {
-                if (!confirm('You have unsaved changes. Are you sure you want to leave?')) {
-                    return;
-                }
-            }
+<!-- Info Modal (for save draft messages) -->
+<div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-info-subtle">
+                <h5 class="modal-title" id="infoModalLabel">
+                    <i class="ri-information-line me-2"></i>Information
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="infoModalMessage" class="mb-0"></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" data-bs-dismiss="modal">
+                    <i class="ri-check-line me-1"></i>OK
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
-            window.location.href = url;
-        }
 
-        // Save draft handler
-        $(document).ready(function() {
-            $('#saveDraftBtn').on('click', function() {
-                if (typeof saveDraft === 'function') {
-                    saveDraft();
-                } else {
-                    alert('Save draft functionality not implemented for this step');
-                }
-            });
-
-            // Exit confirmation
-            $('#exitBtn').on('click', function(e) {
-                if (typeof hasUnsavedChanges === 'function' && hasUnsavedChanges()) {
-                    if (!confirm('You have unsaved changes. Are you sure you want to exit?')) {
-                        e.preventDefault();
-                    }
-                }
-            });
-        });
-    </script>
-}

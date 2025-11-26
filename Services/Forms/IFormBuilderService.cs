@@ -81,6 +81,60 @@ namespace FormReporting.Services.Forms
         /// <param name="sections">List of section IDs with new display orders</param>
         /// <returns>True if successful</returns>
         Task<bool> ReorderSectionsAsync(int templateId, List<SectionOrderDto> sections);
+
+        /// <summary>
+        /// Add a new field to a section
+        /// </summary>
+        /// <param name="dto">Field creation data</param>
+        /// <returns>Created field DTO or null if failed</returns>
+        Task<FieldDto?> AddFieldAsync(CreateFieldDto dto);
+
+        /// <summary>
+        /// Get field by ID for editing
+        /// </summary>
+        /// <param name="fieldId">Field ID</param>
+        /// <returns>Field DTO or null if not found</returns>
+        Task<FieldDto?> GetFieldByIdAsync(int fieldId);
+
+        /// <summary>
+        /// Update field properties
+        /// </summary>
+        /// <param name="fieldId">Field ID</param>
+        /// <param name="dto">Updated field data</param>
+        /// <returns>True if successful</returns>
+        Task<bool> UpdateFieldAsync(int fieldId, UpdateFieldDto dto);
+
+        /// <summary>
+        /// Update field type with smart option handling
+        /// Auto-creates default options when changing to selection fields (Dropdown, Radio, etc.)
+        /// Preserves existing options when changing types (data preservation)
+        /// </summary>
+        /// <param name="fieldId">Field ID</param>
+        /// <param name="newType">New field type (e.g., "Dropdown", "Text", etc.)</param>
+        /// <returns>True if successful</returns>
+        Task<bool> UpdateFieldTypeAsync(int fieldId, string newType);
+
+        /// <summary>
+        /// Delete a field
+        /// </summary>
+        /// <param name="fieldId">Field ID to delete</param>
+        /// <returns>True if successful</returns>
+        Task<bool> DeleteFieldAsync(int fieldId);
+
+        /// <summary>
+        /// Duplicate a field with all its settings
+        /// </summary>
+        /// <param name="fieldId">Field ID to duplicate</param>
+        /// <returns>Duplicated field DTO or null if failed</returns>
+        Task<FieldDto?> DuplicateFieldAsync(int fieldId);
+
+        /// <summary>
+        /// Update display order of fields after drag-drop reordering
+        /// </summary>
+        /// <param name="sectionId">Section ID</param>
+        /// <param name="fields">List of field IDs with new display orders</param>
+        /// <returns>True if successful</returns>
+        Task<bool> ReorderFieldsAsync(int sectionId, List<FieldOrderDto> fields);
     }
 
     /// <summary>
@@ -89,6 +143,15 @@ namespace FormReporting.Services.Forms
     public class SectionOrderDto
     {
         public int SectionId { get; set; }
+        public int DisplayOrder { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for field reordering
+    /// </summary>
+    public class FieldOrderDto
+    {
+        public int ItemId { get; set; }
         public int DisplayOrder { get; set; }
     }
 }

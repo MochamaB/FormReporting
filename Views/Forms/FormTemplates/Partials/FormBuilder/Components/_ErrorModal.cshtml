@@ -1,0 +1,57 @@
+@*
+    Error Modal - Show error messages with better UX
+*@
+
+<div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-danger">
+            <!-- Modal Header -->
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title" id="errorModalLabel">
+                    <i class="ri-error-warning-line me-2"></i>
+                    <span id="errorModalTitle">Error</span>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <!-- Modal Body -->
+            <div class="modal-body">
+                <div class="d-flex align-items-start">
+                    <div class="flex-shrink-0">
+                        <i class="ri-alert-line text-danger" style="font-size: 3rem;"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h6 class="mb-2 fw-semibold" id="errorModalHeading">Operation Failed</h6>
+                        <p class="mb-0 text-muted" id="errorModalMessage">
+                            An error occurred while processing your request. Please try again.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Technical Details (Collapsible) -->
+                <div class="mt-3" id="errorDetailsContainer" style="display: none;">
+                    <a class="text-muted small" data-bs-toggle="collapse" href="#errorDetails" role="button" aria-expanded="false">
+                        <i class="ri-arrow-down-s-line"></i> Show technical details
+                    </a>
+                    <div class="collapse mt-2" id="errorDetails">
+                        <div class="alert alert-light border mb-0">
+                            <pre class="mb-0 small" id="errorTechnicalDetails" style="white-space: pre-wrap; word-wrap: break-word;"></pre>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                    <i class="ri-close-line me-1"></i>
+                    Close
+                </button>
+                <button type="button" class="btn btn-danger" id="errorModalRetryBtn" style="display: none;">
+                    <i class="ri-refresh-line me-1"></i>
+                    Retry
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

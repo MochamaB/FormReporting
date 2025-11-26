@@ -235,10 +235,11 @@
 
     /* Fields container - subtle background when empty */
     .builder-section .fields-container {
-        background: rgba(0, 0, 0, 0.02);
-        border: 1px dashed rgba(0, 0, 0, 0.1);
-        border-radius: 6px;
-        padding: 1rem;
+        background: #f3f3f9;
+        border: none;
+        border-bottom: 1px dashed rgba(0, 0, 0, 0.1);
+        border-radius: 0px;
+        padding: 0rem;
         min-height: 80px;
         transition: all 0.2s ease;
     }
@@ -249,9 +250,9 @@
     }
 
     .builder-section.selected .fields-container {
-        background: rgba(64, 81, 137, 0.05);
-        border-color: var(--vz-primary);
-        border-style: solid;
+        background: rgba(0, 0, 0, 0.0);
+        border: none;
+        border-bottom: 2px solid #c6c6c6;
     }
 
     /* Empty state styling */
@@ -488,4 +489,91 @@
 
 .form-header-icon {
     opacity: 0.5;
+}
+
+/* ============================================================================
+   BUILDER FIELD PREVIEW CARDS
+   ============================================================================ */
+
+/* Field card styling */
+.builder-field-card {
+    transition: all 0.2s ease;
+}
+
+.builder-field-card .card {
+    transition: all 0.2s ease;
+    background: #ffffff;
+}
+
+.builder-field-card:hover .card {
+    box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.08);
+    border-color: #0ab39c !important;
+}
+
+/* Drag handle styling */
+.field-drag-handle {
+    opacity: 0.4;
+    transition: opacity 0.2s ease;
+}
+
+.builder-field-card:hover .field-drag-handle {
+    opacity: 1;
+}
+
+/* Action buttons - hidden by default, shown on hover */
+.builder-field-card .field-actions {
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.builder-field-card:hover .field-actions {
+    opacity: 1;
+}
+
+/* Field preview content - disabled appearance */
+.field-preview-content {
+    position: relative;
+}
+
+.field-preview-content::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: transparent;
+    pointer-events: none;
+}
+
+/* Override form control styling in preview mode */
+.field-preview-content input[disabled],
+.field-preview-content textarea[disabled],
+.field-preview-content select[disabled] {
+    background-color: #f8f9fa !important;
+    cursor: not-allowed;
+}
+
+/* Field stats and metadata */
+.field-description {
+    font-size: 0.85rem;
+}
+
+.field-stats {
+    font-size: 0.8rem;
+}
+
+/* Selected field state (for future implementation) */
+.builder-field-card.selected .card {
+    border-color: #405189 !important;
+    background: rgba(64, 81, 137, 0.02);
+}
+
+/* Hover shadow utility */
+.hover-shadow-sm {
+    transition: box-shadow 0.2s ease;
+}
+
+.hover-shadow-sm:hover {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
 }

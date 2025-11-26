@@ -89,6 +89,11 @@ namespace FormReporting.Models.ViewModels.Forms
         public int OptionCount { get; set; }
 
         /// <summary>
+        /// List of options (for Dropdown, Radio, Checkbox, MultiSelect)
+        /// </summary>
+        public List<FieldOptionDto> Options { get; set; } = new();
+
+        /// <summary>
         /// Has conditional logic configured?
         /// </summary>
         public bool HasConditionalLogic => !string.IsNullOrEmpty(ConditionalLogic);
@@ -106,13 +111,36 @@ namespace FormReporting.Models.ViewModels.Forms
     {
         public int SectionId { get; set; }
         public string ItemName { get; set; } = string.Empty;
+        public string? ItemDescription { get; set; } // Optional description
         public string? ItemCode { get; set; } // Optional - will be auto-generated if not provided
-        public FormFieldType DataType { get; set; } = FormFieldType.Text;
+
+        // Accept DataType as string from JSON, then convert to enum
+        public string DataType { get; set; } = "Text";
+
+        // Computed property to get the enum value
+        public FormFieldType DataTypeEnum
+        {
+            get
+            {
+                if (Enum.TryParse<FormFieldType>(DataType, ignoreCase: true, out var result))
+                    return result;
+                return FormFieldType.Text; // Default fallback
+            }
+        }
+
         public bool IsRequired { get; set; }
         public int DisplayOrder { get; set; } // Optional - will be auto-calculated if 0
         public string? PlaceholderText { get; set; }
         public string? HelpText { get; set; }
         public string? DefaultValue { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for updating field type only (inline quick edit)
+    /// </summary>
+    public class UpdateFieldTypeDto
+    {
+        public string DataType { get; set; } = "Text";
     }
 
     /// <summary>
@@ -128,5 +156,17 @@ namespace FormReporting.Models.ViewModels.Forms
         public string? PrefixText { get; set; }
         public string? SuffixText { get; set; }
         public string? DefaultValue { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for field options (used by Dropdown, Radio, Checkbox, MultiSelect)
+    /// </summary>
+    public class FieldOptionDto
+    {
+        public int OptionId { get; set; }
+        public string OptionLabel { get; set; } = string.Empty;
+        public string OptionValue { get; set; } = string.Empty;
+        public int DisplayOrder { get; set; }
+        public bool IsDefault { get; set; }
     }
 }

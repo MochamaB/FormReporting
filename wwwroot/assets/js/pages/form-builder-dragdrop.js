@@ -231,8 +231,9 @@ const FormBuilderDragDrop = {
                 },
                 animation: 150,
                 ghostClass: 'sortable-ghost-field',
-                draggable: '.field-preview',  // For reordering existing fields later
+                draggable: '.builder-field-card',  // For dragging field cards (new and existing)
                 fallbackTolerance: 3,          // Better handling for nested sortables
+                handle: '.field-drag-handle',  // Only drag by handle
 
                 // Only accept field items (from palette or reordering)
                 onMove: (evt) => {
@@ -246,9 +247,9 @@ const FormBuilderDragDrop = {
                         evt.from.classList.remove('sortable-drag-over');
                     }
 
-                    // Accept if it's a draggable field or existing field preview
+                    // Accept if it's a draggable field from palette or existing builder field card
                     return evt.dragged.classList.contains('draggable-field') ||
-                           evt.dragged.classList.contains('field-preview');
+                           evt.dragged.classList.contains('builder-field-card');
                 },
 
                 // Called when field is dropped from palette into section

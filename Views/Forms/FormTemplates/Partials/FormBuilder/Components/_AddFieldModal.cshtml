@@ -1,13 +1,12 @@
 @*
-    Add Field Modal
-    Empty placeholder for now - full implementation will come later
-    Field type-specific forms will be added in future phases
+    Add Field Modal - Simplified
+    Quick add with just basic info. Configure everything else in Properties Panel.
 *@
 
-<!-- Add Field Modal -->
-<div class="modal fade" id="addFieldModal" tabindex="-1" aria-labelledby="addFieldModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
+<div class="modal fade" id="addFieldModal" tabindex="-1" aria-labelledby="addFieldModalLabel" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
+            <!-- Modal Header -->
             <div class="modal-header bg-primary pb-2">
                 <h5 class="modal-title text-white" id="addFieldModalLabel">
                     <i class="ri-add-circle-line me-2"></i>
@@ -15,27 +14,135 @@
                 </h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
+
+            <!-- Modal Body -->
             <div class="modal-body">
-                <div class="text-center py-5">
-                    <i class="ri-hammer-line text-muted" style="font-size: 4rem;"></i>
-                    <h5 class="mt-3 mb-2">Field Editor Coming Soon</h5>
-                    <p class="text-muted mb-0">
-                        Selected Field Type: <strong id="selectedFieldType" class="text-primary">None</strong>
-                    </p>
-                    <p class="text-muted small mt-2">
-                        This modal will contain field-specific forms for:
-                        <br>Question text, validation rules, options, and more
-                    </p>
+                <!-- Field Type Info Alert -->
+                <div class="alert alert-info mb-4">
+                    <div class="d-flex align-items-center">
+                        <i class="ri-information-line fs-4 me-3"></i>
+                        <div>
+                            <strong>Field Type:</strong> <span id="fieldTypeDisplay" class="text-primary fw-semibold">Not Selected</span>
+                            
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Quick Add Form -->
+                <form id="addFieldForm" novalidate>
+                    <!-- Hidden Fields -->
+                    <input type="hidden" id="fieldType" name="fieldType" />
+                    <input type="hidden" id="fieldSectionId" name="sectionId" />
+
+                    <!-- Field Label (Required) -->
+                    <div class="mb-4">
+                        <label for="itemName" class="form-label">
+                            <strong>Question / Field Label</strong> <span class="text-danger">*</span>
+                        </label>
+                        <input type="text"
+                               class="form-control "
+                               id="itemName"
+                               name="itemName"
+                               maxlength="200"
+                               placeholder="e.g., How many servers do you have?"
+                               required
+                               autofocus>
+                        <div class="invalid-feedback">
+                            Please enter a field label (max 200 characters)
+                        </div>
+                        <div class="form-text">
+                            <i class="ri-lightbulb-line me-1"></i>
+                            This is the question or label users will see.
+                            <span class="float-end">
+                                <span id="itemNameCount">0</span> / 200
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Field Description (Optional) -->
+                    <div class="mb-4">
+                        <label for="itemDescription" class="form-label">
+                            <strong>Description</strong> <span class="text-muted">(Optional)</span>
+                        </label>
+                        <textarea class="form-control"
+                                  id="itemDescription"
+                                  name="itemDescription"
+                                  rows="2"
+                                  maxlength="1000"
+                                  placeholder="Add additional context or instructions for this field..."></textarea>
+                        <div class="form-text">
+                            <i class="ri-information-line me-1"></i>
+                            Provide helpful context for users filling this field.
+                            <span class="float-end">
+                                <span id="itemDescriptionCount">0</span> / 1000
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Required Field Checkbox -->
+                    <div class="mb-3">
+                        <div class="form-check form-switch form-switch-lg">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   role="switch"
+                                   id="isRequired"
+                                   name="isRequired">
+                            <label class="form-check-label" for="isRequired">
+                                <strong>Required Field</strong>
+                                <span class="text-muted ms-2">- Users must fill this field before submitting</span>
+                            </label>
+                        </div>
+                    </div>
+
+                 
+                </form>
             </div>
+
+            <!-- Modal Footer -->
             <div class="modal-footer">
-                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
-                    Close
+                <button type="button" class="btn btn-warning" data-bs-dismiss="modal">
+                    <i class="ri-close-line me-1"></i>
+                    Cancel
                 </button>
-                <button type="button" class="btn btn-primary" disabled>
-                    <i class="ri-save-line me-1"></i>Save Field
+                <button type="button" class="btn btn-success" id="btnAddField" onclick="saveFieldFromModal()">
+                    <i class="ri-add-circle-line me-1"></i>
+                    Add Field
                 </button>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    // Character counters
+    document.addEventListener('DOMContentLoaded', function() {
+        // Item Name counter
+        const itemNameInput = document.getElementById('itemName');
+        const itemNameCount = document.getElementById('itemNameCount');
+        if (itemNameInput && itemNameCount) {
+            itemNameInput.addEventListener('input', function() {
+                itemNameCount.textContent = this.value.length;
+            });
+        }
+
+        // Item Description counter
+        const itemDescInput = document.getElementById('itemDescription');
+        const itemDescCount = document.getElementById('itemDescriptionCount');
+        if (itemDescInput && itemDescCount) {
+            itemDescInput.addEventListener('input', function() {
+                itemDescCount.textContent = this.value.length;
+            });
+        }
+    });
+
+    // Reset modal when closed
+    document.getElementById('addFieldModal')?.addEventListener('hidden.bs.modal', function() {
+        const form = document.getElementById('addFieldForm');
+        if (form) {
+            form.reset();
+            form.classList.remove('was-validated');
+            document.getElementById('itemNameCount').textContent = '0';
+            document.getElementById('itemDescriptionCount').textContent = '0';
+        }
+    });
+</script>

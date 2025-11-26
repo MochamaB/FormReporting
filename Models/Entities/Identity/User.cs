@@ -140,8 +140,8 @@ namespace FormReporting.Models.Entities.Identity
         // Navigation properties
         /// <summary>
         /// Primary/Home Tenant this user belongs to
+        /// Relationship configured in UserConfiguration.cs via Fluent API
         /// </summary>
-        [ForeignKey(nameof(TenantId))]
         public virtual Tenant PrimaryTenant { get; set; } = null!;
 
         /// <summary>

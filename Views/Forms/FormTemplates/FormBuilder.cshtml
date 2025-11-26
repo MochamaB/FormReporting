@@ -47,7 +47,9 @@
 
         <!-- Right side: Action buttons -->
         <div class="d-flex align-items-center gap-2">
-         <!-- Add Section button -->
+           
+            
+            <!-- Add Section button -->
             <button type="button"
                     class="btn btn-primary btn-sm"
                     onclick="addSection()">
@@ -68,6 +70,15 @@
                 <i class="ri-save-line me-1"></i>
                 Save Progress
             </button>
+             @* Exit Builder Button *@
+            @if (progress?.ShowExit == true)
+            {
+                <a href="@progress.ExitUrl" 
+                   class="btn btn-danger btn-sm" 
+                   id="exitBtn">
+                    <i class="ri-close-line me-1"></i>Exit Builder
+                </a>
+            }
 
             <!-- Continue to Metrics -->
             <button type="button" class="btn btn-success btn-sm" disabled>
@@ -142,6 +153,7 @@
 <partial name="~/Views/Forms/FormTemplates/Partials/FormBuilder/Components/_DeleteSectionModal.cshtml" />
 <partial name="~/Views/Forms/FormTemplates/Partials/FormBuilder/Components/_DuplicateSectionModal.cshtml" />
 <partial name="~/Views/Forms/FormTemplates/Partials/FormBuilder/Components/_AddFieldModal.cshtml" />
+<partial name="~/Views/Forms/FormTemplates/Partials/FormBuilder/Components/_ErrorModal.cshtml" />
 
 <!-- ============================================================================ -->
 <!-- ALERT: Template Information -->
@@ -153,6 +165,7 @@
     <script src="~/assets/libs/sortablejs/Sortable.min.js"></script>
 
     <!-- Form Builder JavaScript Modules -->
+    <script src="~/assets/js/pages/form-builder-progress.js"></script>
     <script src="~/assets/js/pages/form-builder-layout.js"></script>
     <script src="~/assets/js/pages/form-builder-sections.js"></script>
     <script src="~/assets/js/pages/form-builder-dragdrop.js"></script>

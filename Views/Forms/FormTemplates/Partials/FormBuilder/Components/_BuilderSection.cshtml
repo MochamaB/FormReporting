@@ -64,16 +64,8 @@
             {
                 @foreach (var field in Model.Fields.OrderBy(f => f.DisplayOrder))
                 {
-                    <div class="alert alert-secondary mb-2 field-preview"
-                         data-field-id="@field.ItemId"
-                         role="alert">
-                        <strong>@field.ItemName</strong>
-                        <span class="badge bg-info-subtle text-info ms-2">@field.DataType</span>
-                        @if (field.IsRequired)
-                        {
-                            <span class="text-danger">*</span>
-                        }
-                    </div>
+                    <!-- Use builder field preview component for WYSIWYG preview with builder UI -->
+                    <partial name="~/Views/Forms/FormTemplates/Partials/FormBuilder/Components/_BuilderFieldPreview.cshtml" model="@field" />
                 }
             }
             else

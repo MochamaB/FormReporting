@@ -82,6 +82,19 @@ namespace FormReporting.Services.Forms
                 dataType = parsedType;
             }
 
+            // Map options to DTO
+            var optionsDto = item.Options?
+                .OrderBy(o => o.DisplayOrder)
+                .Select(o => new FieldOptionDto
+                {
+                    OptionId = o.OptionId,
+                    OptionLabel = o.OptionLabel,
+                    OptionValue = o.OptionValue,
+                    DisplayOrder = o.DisplayOrder,
+                    IsDefault = o.IsDefault
+                })
+                .ToList() ?? new List<FieldOptionDto>();
+
             return new FieldDto
             {
                 ItemId = item.ItemId,
@@ -99,7 +112,8 @@ namespace FormReporting.Services.Forms
                 DefaultValue = item.DefaultValue,
                 ConditionalLogic = item.ConditionalLogic,
                 ValidationCount = item.Validations?.Count ?? 0,
-                OptionCount = item.Options?.Count ?? 0
+                OptionCount = item.Options?.Count ?? 0,
+                Options = optionsDto  // Include full option details
             };
         }
 
@@ -485,7 +499,7 @@ namespace FormReporting.Services.Forms
                 {
                     var section = await _context.FormTemplateSections
                         .FirstOrDefaultAsync(s => s.SectionId == item.SectionId && s.TemplateId == templateId);
-                    
+
                     if (section != null)
                     {
                         section.DisplayOrder = item.DisplayOrder;
@@ -501,6 +515,438 @@ namespace FormReporting.Services.Forms
                 Console.WriteLine($"Error reordering sections: {ex.Message}");
                 return false;
             }
+        }
+
+        /// <summary>
+        /// Add a new field to a section
+        /// </summary>
+        public async Task<FieldDto?> AddFieldAsync(CreateFieldDto dto)
+        {
+            try
+            {
+                Console.WriteLine($"AddFieldAsync called - SectionId: {dto.SectionId}, ItemName: {dto.ItemName}, DataType (string): {dto.DataType}");
+
+                // Verify section exists
+                var section = await _context.FormTemplateSections
+                    .Include(s => s.Items)
+                    .FirstOrDefaultAsync(s => s.SectionId == dto.SectionId);
+
+                Console.WriteLine($"Section found: {section != null}, Items count: {section?.Items?.Count ?? 0}");
+
+                if (section == null)
+                {
+                    Console.WriteLine("Section not found - returning null");
+                    return null;
+                }
+
+                // Generate item code if not provided
+                Console.WriteLine("Generating item code...");
+                var itemCode = string.IsNullOrEmpty(dto.ItemCode)
+                    ? await GenerateFieldCodeAsync(dto.SectionId)
+                    : dto.ItemCode;
+                Console.WriteLine($"Item code: {itemCode}");
+
+                // Get next display order if not provided
+                Console.WriteLine("Calculating display order...");
+                var displayOrder = dto.DisplayOrder > 0
+                    ? dto.DisplayOrder
+                    : (section.Items != null && section.Items.Any() ? section.Items.Max(i => i.DisplayOrder) + 1 : 1);
+                Console.WriteLine($"Display order: {displayOrder}");
+
+                // Create new field
+                Console.WriteLine("Creating new field entity...");
+                var newField = new Models.Entities.Forms.FormTemplateItem
+                {
+                    TemplateId = section.TemplateId,
+                    SectionId = dto.SectionId,
+                    ItemCode = itemCode,
+                    ItemName = dto.ItemName,
+                    ItemDescription = dto.ItemDescription, // From modal
+                    DataType = dto.DataType,  // DataType is now a string, no need for .ToString()
+                    IsRequired = dto.IsRequired,
+                    DisplayOrder = displayOrder,
+                    PlaceholderText = dto.PlaceholderText,
+                    HelpText = dto.HelpText,
+                    DefaultValue = dto.DefaultValue,
+                    LayoutType = "Single", // Default layout
+                    Version = 1,
+                    IsActive = true,
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                Console.WriteLine("Adding to context...");
+                _context.FormTemplateItems.Add(newField);
+
+                Console.WriteLine("Saving changes...");
+                await _context.SaveChangesAsync();
+                Console.WriteLine($"Field saved with ID: {newField.ItemId}");
+
+                // Auto-create default options for selection fields
+                if (RequiresOptions(dto.DataType))
+                {
+                    Console.WriteLine($"Field type '{dto.DataType}' requires options - creating 3 defaults...");
+                    await CreateDefaultOptionsAsync(newField.ItemId, 3);
+                }
+
+                // Reload the field with navigation properties to avoid null reference issues
+                Console.WriteLine("Reloading field with navigation properties...");
+                var savedField = await _context.FormTemplateItems
+                    .Include(i => i.Validations)
+                    .Include(i => i.Options)
+                    .FirstOrDefaultAsync(i => i.ItemId == newField.ItemId);
+
+                if (savedField == null)
+                {
+                    Console.WriteLine("ERROR: Could not reload saved field!");
+                    throw new Exception("Field was saved but could not be reloaded");
+                }
+
+                // Return as DTO
+                Console.WriteLine("Mapping to DTO...");
+                var result = MapToFieldDto(savedField);
+                Console.WriteLine("Mapping complete");
+                return result;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error adding field: {ex.Message}");
+                Console.WriteLine($"Stack trace: {ex.StackTrace}");
+                if (ex.InnerException != null)
+                {
+                    Console.WriteLine($"Inner exception: {ex.InnerException.Message}");
+                }
+                throw; // Re-throw to get full error details in controller
+            }
+        }
+
+        /// <summary>
+        /// Get field by ID for editing
+        /// </summary>
+        public async Task<FieldDto?> GetFieldByIdAsync(int fieldId)
+        {
+            var field = await _context.FormTemplateItems
+                .Include(i => i.Validations)
+                .Include(i => i.Options)
+                .FirstOrDefaultAsync(i => i.ItemId == fieldId);
+
+            if (field == null)
+                return null;
+
+            return MapToFieldDto(field);
+        }
+
+        /// <summary>
+        /// Update field properties
+        /// </summary>
+        public async Task<bool> UpdateFieldAsync(int fieldId, UpdateFieldDto dto)
+        {
+            try
+            {
+                var field = await _context.FormTemplateItems
+                    .FirstOrDefaultAsync(i => i.ItemId == fieldId);
+
+                if (field == null)
+                    return false;
+
+                // Update properties
+                field.ItemName = dto.ItemName;
+                field.ItemDescription = dto.ItemDescription;
+                field.IsRequired = dto.IsRequired;
+                field.PlaceholderText = dto.PlaceholderText;
+                field.HelpText = dto.HelpText;
+                field.PrefixText = dto.PrefixText;
+                field.SuffixText = dto.SuffixText;
+                field.DefaultValue = dto.DefaultValue;
+
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating field: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Delete a field
+        /// </summary>
+        public async Task<bool> DeleteFieldAsync(int fieldId)
+        {
+            try
+            {
+                var field = await _context.FormTemplateItems
+                    .Include(i => i.Validations)
+                    .Include(i => i.Options)
+                    .Include(i => i.Configurations)
+                    .FirstOrDefaultAsync(i => i.ItemId == fieldId);
+
+                if (field == null)
+                    return false;
+
+                // Remove field (cascade will delete related items)
+                _context.FormTemplateItems.Remove(field);
+                await _context.SaveChangesAsync();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting field: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Duplicate a field with all its settings
+        /// </summary>
+        public async Task<FieldDto?> DuplicateFieldAsync(int fieldId)
+        {
+            try
+            {
+                // Load original field with all related data
+                var originalField = await _context.FormTemplateItems
+                    .Include(i => i.Validations)
+                    .Include(i => i.Options)
+                    .Include(i => i.Configurations)
+                    .FirstOrDefaultAsync(i => i.ItemId == fieldId);
+
+                if (originalField == null)
+                    return null;
+
+                // Generate new field code
+                var newItemCode = await GenerateFieldCodeAsync(originalField.SectionId);
+
+                // Get next display order
+                var maxOrder = await _context.FormTemplateItems
+                    .Where(i => i.SectionId == originalField.SectionId)
+                    .MaxAsync(i => (int?)i.DisplayOrder) ?? 0;
+
+                // Create new field (copy)
+                var newField = new Models.Entities.Forms.FormTemplateItem
+                {
+                    TemplateId = originalField.TemplateId,
+                    SectionId = originalField.SectionId,
+                    ItemCode = newItemCode,
+                    ItemName = $"{originalField.ItemName} (Copy)",
+                    ItemDescription = originalField.ItemDescription,
+                    DataType = originalField.DataType,
+                    IsRequired = originalField.IsRequired,
+                    DisplayOrder = maxOrder + 1,
+                    PlaceholderText = originalField.PlaceholderText,
+                    HelpText = originalField.HelpText,
+                    PrefixText = originalField.PrefixText,
+                    SuffixText = originalField.SuffixText,
+                    DefaultValue = originalField.DefaultValue,
+                    ConditionalLogic = originalField.ConditionalLogic,
+                    LayoutType = originalField.LayoutType,
+                    MatrixGroupId = originalField.MatrixGroupId,
+                    MatrixRowLabel = originalField.MatrixRowLabel,
+                    LibraryFieldId = originalField.LibraryFieldId,
+                    IsLibraryOverride = originalField.IsLibraryOverride,
+                    Version = 1,
+                    IsActive = true,
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                _context.FormTemplateItems.Add(newField);
+                await _context.SaveChangesAsync();
+
+                // Duplicate validations
+                foreach (var validation in originalField.Validations ?? new List<Models.Entities.Forms.FormItemValidation>())
+                {
+                    var newValidation = new Models.Entities.Forms.FormItemValidation
+                    {
+                        ItemId = newField.ItemId,
+                        ValidationType = validation.ValidationType,
+                        MinValue = validation.MinValue,
+                        MaxValue = validation.MaxValue,
+                        MinLength = validation.MinLength,
+                        MaxLength = validation.MaxLength,
+                        RegexPattern = validation.RegexPattern,
+                        CustomExpression = validation.CustomExpression,
+                        ErrorMessage = validation.ErrorMessage,
+                        Severity = validation.Severity,
+                        ValidationOrder = validation.ValidationOrder,
+                        IsActive = validation.IsActive,
+                        CreatedDate = DateTime.UtcNow
+                    };
+
+                    _context.FormItemValidations.Add(newValidation);
+                }
+
+                // Duplicate options
+                foreach (var option in originalField.Options ?? new List<Models.Entities.Forms.FormItemOption>())
+                {
+                    var newOption = new Models.Entities.Forms.FormItemOption
+                    {
+                        ItemId = newField.ItemId,
+                        OptionLabel = option.OptionLabel,
+                        OptionValue = option.OptionValue,
+                        DisplayOrder = option.DisplayOrder,
+                        IsDefault = option.IsDefault
+                    };
+
+                    _context.FormItemOptions.Add(newOption);
+                }
+
+                // Duplicate configurations
+                foreach (var config in originalField.Configurations ?? new List<Models.Entities.Forms.FormItemConfiguration>())
+                {
+                    var newConfig = new Models.Entities.Forms.FormItemConfiguration
+                    {
+                        ItemId = newField.ItemId,
+                        ConfigKey = config.ConfigKey,
+                        ConfigValue = config.ConfigValue
+                    };
+
+                    _context.FormItemConfigurations.Add(newConfig);
+                }
+
+                await _context.SaveChangesAsync();
+
+                // Return as DTO
+                return MapToFieldDto(newField);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error duplicating field: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Update display order of fields after drag-drop reordering
+        /// </summary>
+        public async Task<bool> ReorderFieldsAsync(int sectionId, List<FieldOrderDto> fields)
+        {
+            try
+            {
+                // Verify section exists
+                var section = await _context.FormTemplateSections.FindAsync(sectionId);
+                if (section == null)
+                    return false;
+
+                // Update each field's display order
+                foreach (var item in fields)
+                {
+                    var field = await _context.FormTemplateItems
+                        .FirstOrDefaultAsync(i => i.ItemId == item.ItemId && i.SectionId == sectionId);
+
+                    if (field != null)
+                    {
+                        field.DisplayOrder = item.DisplayOrder;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error reordering fields: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Update field type (inline quick edit)
+        /// </summary>
+        public async Task<bool> UpdateFieldTypeAsync(int fieldId, string newType)
+        {
+            try
+            {
+                var field = await _context.FormTemplateItems
+                    .Include(f => f.Options)
+                    .FirstOrDefaultAsync(f => f.ItemId == fieldId);
+
+                if (field == null)
+                    return false;
+
+                var oldType = field.DataType ?? "Text";
+                var oldNeedsOptions = RequiresOptions(oldType);
+                var newNeedsOptions = RequiresOptions(newType);
+
+                Console.WriteLine($"Changing field type from {oldType} to {newType}");
+                Console.WriteLine($"Old needs options: {oldNeedsOptions}, New needs options: {newNeedsOptions}");
+
+                // Case 1: Changing TO an options field (no options exist)
+                if (!oldNeedsOptions && newNeedsOptions)
+                {
+                    if (!field.Options.Any())
+                    {
+                        Console.WriteLine("Creating default options...");
+                        await CreateDefaultOptionsAsync(fieldId, 3);
+                    }
+                }
+
+                // Case 2: Changing FROM options field (options exist)
+                // We keep the options (data preservation) - they just won't be used
+                // No action needed
+
+                // Case 3: Both need options - keep existing ones
+                // No action needed
+
+                // Update field type
+                field.DataType = newType;
+                await _context.SaveChangesAsync();
+
+                Console.WriteLine("Field type updated successfully");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating field type: {ex.Message}");
+                return false;
+            }
+        }
+
+        // ========================================================================
+        // HELPER METHODS - Option Management
+        // ========================================================================
+
+        /// <summary>
+        /// Check if field type requires options (Dropdown, Radio, Checkbox, MultiSelect)
+        /// </summary>
+        private bool RequiresOptions(string dataType)
+        {
+            return dataType switch
+            {
+                "Dropdown" => true,
+                "Radio" => true,
+                "Checkbox" => true,
+                "MultiSelect" => true,
+                _ => false
+            };
+        }
+
+        /// <summary>
+        /// Create default options for selection fields
+        /// Uses existing FormItemOption model - no modifications needed
+        /// </summary>
+        /// <param name="fieldId">Field ID to create options for</param>
+        /// <param name="count">Number of default options to create (default: 3)</param>
+        private async Task CreateDefaultOptionsAsync(int fieldId, int count = 3)
+        {
+            var defaultOptions = new List<Models.Entities.Forms.FormItemOption>();
+
+            for (int i = 1; i <= count; i++)
+            {
+                defaultOptions.Add(new Models.Entities.Forms.FormItemOption
+                {
+                    ItemId = fieldId,
+                    OptionLabel = $"Option {i}",           // User-facing label
+                    OptionValue = $"option_{i}",           // System identifier (lowercase_underscore)
+                    DisplayOrder = i,
+                    IsDefault = false,                     // No default selection
+                    IsActive = true
+                });
+            }
+
+            _context.FormItemOptions.AddRange(defaultOptions);
+            await _context.SaveChangesAsync();
+
+            Console.WriteLine($"Created {count} default options for field {fieldId}");
         }
     }
 }

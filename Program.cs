@@ -14,7 +14,15 @@ builder.Services.AddHttpContextAccessor();
 
 // Add DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+{
+    // Configure SQL Server with query splitting to avoid cartesian explosion
+    // This significantly improves performance when using multiple .Include() statements
+    // See: https://docs.microsoft.com/en-us/ef/core/querying/single-split-queries
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        sqlOptions => sqlOptions.UseQuerySplittingBehavior(QuerySplittingBehavior.SplitQuery)
+    );
+});
 
 // Configure Cookie Authentication (not using ASP.NET Core Identity to preserve existing User model)
 builder.Services.AddAuthentication(Microsoft.AspNetCore.Authentication.Cookies.CookieAuthenticationDefaults.AuthenticationScheme)

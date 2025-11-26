@@ -1,0 +1,299 @@
+@model FormReporting.Models.ViewModels.Forms.FieldDto
+
+@*
+    Builder Field Preview - Redesigned with collapsible header matching section style
+    Shows WYSIWYG preview of field while adding drag handles, edit buttons, etc.
+    Field type can be changed inline via dropdown in header
+*@
+
+@{
+    // Map options from FieldDto to FormFieldViewModel
+    var fieldOptions = Model.Options?
+        .Select(o => new FormReporting.Models.ViewModels.Components.FormFieldOption
+        {
+            Value = o.OptionValue,
+            Label = o.OptionLabel,
+            IsSelected = o.IsDefault
+        })
+        .ToList() ?? new List<FormReporting.Models.ViewModels.Components.FormFieldOption>();
+
+    // Map FieldDto to FormFieldViewModel for existing field components
+    var fieldViewModel = new FormReporting.Models.ViewModels.Components.FormFieldViewModel
+    {
+        FieldId = Model.ItemId.ToString(),
+        FieldName = Model.ItemName,
+        FieldDescription = Model.ItemDescription,
+        FieldType = Model.DataType,
+        IsRequired = Model.IsRequired,
+        PlaceholderText = Model.PlaceholderText,
+        HelpText = Model.HelpText,
+        PrefixText = Model.PrefixText,
+        SuffixText = Model.SuffixText,
+        DefaultValue = Model.DefaultValue,
+        InputName = $"field_{Model.ItemId}",
+        InputId = $"field_{Model.ItemId}",
+        ColumnWidth = 12,
+        IsDisabled = true, // Preview mode
+        CurrentValue = Model.DefaultValue,
+        Options = fieldOptions  // Use mapped options from database
+    };
+}
+
+<!-- Builder Field Card -->
+<div class="card builder-field-card mb-2 p-3"
+     data-field-id="@Model.ItemId"
+     data-field-type="@Model.DataType"
+     id="field-@Model.ItemId">
+
+    <!-- Field Header (Similar to Section Header) -->
+    <div class="card-header d-flex align-items-center gap-2 py-2" style="cursor: pointer;" onclick="toggleFieldCollapse(@Model.ItemId)">
+
+        <!-- Left: Field Code Badge -->
+        <div class="flex-grow-1">
+            <span class="badge bg-secondary-subtle text-secondary" style="font-family: monospace; font-size: 0.75rem;">
+                @Model.ItemCode
+            </span>
+            <!-- Required Badge -->
+            @if (Model.IsRequired)
+            {
+                <span class="ms-2 badge bg-danger-subtle text-danger">
+                    <i class="ri-asterisk"></i> Required
+                </span>
+            }
+            
+        </div>
+
+        <!-- Right: Actions -->
+        <div class="d-flex gap-1 align-items-center" onclick="event.stopPropagation();">
+
+            <!-- Drag Handle -->
+            <div class="field-drag-handle me-2" style="border-right:2px solid #e9ecef; padding-right: 8px; cursor: move;" title="Drag to reorder">
+                <i class="ri-draggable" style="font-size:1.2rem;"></i>
+            </div>
+
+            <!-- Field Type Dropdown (Inline Edit) -->
+            <div class="dropdown">
+                <button class="btn btn-sm btn-soft-info dropdown-toggle"
+                        type="button"
+                        id="fieldTypeDropdown-@Model.ItemId"
+                        data-bs-toggle="dropdown"
+                        aria-expanded="false"
+                        title="Change field type">
+                    <i class="@GetFieldIcon(Model.DataType) me-1"></i>
+                    @Model.DataType
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end"
+                    aria-labelledby="fieldTypeDropdown-@Model.ItemId"
+                    style="max-height: 400px; overflow-y: auto; min-width: 220px;">
+
+                    <!-- INPUT FIELDS -->
+                    <h6 class="dropdown-header"><i class="ri-text me-1"></i> Input Fields</h6>
+                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="changeFieldType(@Model.ItemId, 'Text')">
+                        <i class="ri-text text-primary me-2"></i>Text
+                    </a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="changeFieldType(@Model.ItemId, 'TextArea')">
+                        <i class="ri-file-text-line text-primary me-2"></i>Text Area
+                    </a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="changeFieldType(@Model.ItemId, 'Number')">
+                        <i class="ri-hashtag text-primary me-2"></i>Number
+                    </a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="changeFieldType(@Model.ItemId, 'Decimal')">
+                        <i class="ri-function-line text-primary me-2"></i>Decimal
+                    </a></li>
+
+                    <li><hr class="dropdown-divider"></li>
+
+                    <!-- DATE/TIME FIELDS -->
+                    <h6 class="dropdown-header"><i class="ri-calendar-line me-1"></i> Date & Time</h6>
+                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="changeFieldType(@Model.ItemId, 'Date')">
+                        <i class="ri-calendar-line text-success me-2"></i>Date
+                    </a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="changeFieldType(@Model.ItemId, 'Time')">
+                        <i class="ri-time-line text-success me-2"></i>Time
+                    </a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="changeFieldType(@Model.ItemId, 'DateTime')">
+                        <i class="ri-calendar-event-line text-success me-2"></i>Date & Time
+                    </a></li>
+
+                    <li><hr class="dropdown-divider"></li>
+
+                    <!-- SELECTION FIELDS -->
+                    <h6 class="dropdown-header"><i class="ri-list-check me-1"></i> Selection</h6>
+                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="changeFieldType(@Model.ItemId, 'Dropdown')">
+                        <i class="ri-arrow-down-s-line text-info me-2"></i>Dropdown
+                    </a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="changeFieldType(@Model.ItemId, 'Radio')">
+                        <i class="ri-radio-button-line text-info me-2"></i>Radio Buttons
+                    </a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="changeFieldType(@Model.ItemId, 'Checkbox')">
+                        <i class="ri-checkbox-line text-info me-2"></i>Checkbox
+                    </a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="changeFieldType(@Model.ItemId, 'MultiSelect')">
+                        <i class="ri-list-check text-info me-2"></i>Multi-Select
+                    </a></li>
+
+                    <li><hr class="dropdown-divider"></li>
+
+                    <!-- MEDIA FIELDS -->
+                    <h6 class="dropdown-header"><i class="ri-image-line me-1"></i> Media</h6>
+                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="changeFieldType(@Model.ItemId, 'FileUpload')">
+                        <i class="ri-file-upload-line text-warning me-2"></i>File Upload
+                    </a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="changeFieldType(@Model.ItemId, 'Image')">
+                        <i class="ri-image-line text-warning me-2"></i>Image
+                    </a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="changeFieldType(@Model.ItemId, 'Signature')">
+                        <i class="ri-quill-pen-line text-warning me-2"></i>Signature
+                    </a></li>
+
+                    <li><hr class="dropdown-divider"></li>
+
+                    <!-- OTHER FIELDS -->
+                    <h6 class="dropdown-header"><i class="ri-star-line me-1"></i> Other</h6>
+                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="changeFieldType(@Model.ItemId, 'Rating')">
+                        <i class="ri-star-line text-danger me-2"></i>Rating
+                    </a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="changeFieldType(@Model.ItemId, 'Slider')">
+                        <i class="ri-contrast-2-line text-danger me-2"></i>Slider
+                    </a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="changeFieldType(@Model.ItemId, 'Email')">
+                        <i class="ri-mail-line text-secondary me-2"></i>Email
+                    </a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="changeFieldType(@Model.ItemId, 'Phone')">
+                        <i class="ri-phone-line text-secondary me-2"></i>Phone
+                    </a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="changeFieldType(@Model.ItemId, 'Url')">
+                        <i class="ri-links-line text-secondary me-2"></i>URL
+                    </a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="changeFieldType(@Model.ItemId, 'Currency')">
+                        <i class="ri-money-dollar-circle-line text-success me-2"></i>Currency
+                    </a></li>
+                    <li><a class="dropdown-item" href="javascript:void(0);" onclick="changeFieldType(@Model.ItemId, 'Percentage')">
+                        <i class="ri-percent-line text-success me-2"></i>Percentage
+                    </a></li>
+                </ul>
+            </div>
+
+            
+
+            <!-- Duplicate Button -->
+            <button type="button"
+                    class="btn btn-soft-secondary btn-sm"
+                    onclick="duplicateField(@Model.ItemId)"
+                    title="Duplicate Field">
+                <i class="ri-file-copy-line"></i>
+                 <span class="d-none d-md-inline ms-1">Duplicate</span>
+            </button>
+
+            <!-- Delete Button -->
+            <button type="button"
+                    class="btn btn-soft-danger btn-sm"
+                    onclick="deleteField(@Model.ItemId)"
+                    title="Delete Field">
+                <i class="ri-delete-bin-line"></i>
+                 <span class="d-none d-md-inline ms-1">Delete</span>
+            </button>
+
+            <!-- Collapse/Expand Button -->
+            <button type="button"
+                    class="btn btn-soft-primary btn-sm"
+                    onclick="event.stopPropagation(); toggleFieldCollapse(@Model.ItemId)"
+                    title="Collapse/Expand">
+                <i class="ri-subtract-line" id="field-collapse-icon-@Model.ItemId"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- Field Body (Collapsible) -->
+    <div class="card-body" id="field-body-@Model.ItemId">
+
+        <!-- Field Preview (Using existing field components) -->
+        <div class="field-preview-content" style="pointer-events: none; opacity: 0.85;">
+            @{
+                // Render appropriate field component based on type
+                var fieldPartialPath = $"~/Views/Shared/Components/Form/Fields/_{Model.DataType}Field.cshtml";
+            }
+
+            @try
+            {
+                <partial name="@fieldPartialPath" model="@fieldViewModel" />
+            }
+            catch
+            {
+                // Fallback: If specific field component doesn't exist, show basic preview
+                <div class="alert alert-light mb-0">
+                    <strong>@Model.ItemName</strong>
+                    @if (Model.IsRequired) { <span class="text-danger">*</span> }
+                    <br />
+                    <small class="text-muted">[@Model.DataType field - Preview not available]</small>
+                </div>
+            }
+        </div>
+
+        <!-- Field Metadata Footer -->
+        <div class="mt-3 pt-3 border-top">
+            <div class="d-flex gap-3 flex-wrap">
+                @if (!string.IsNullOrEmpty(Model.ItemDescription))
+                {
+                    <small class="text-muted">
+                        <i class="ri-information-line me-1"></i>
+                        @Model.ItemDescription
+                    </small>
+                }
+                @if (Model.HasValidation)
+                {
+                    <small class="text-success">
+                        <i class="ri-shield-check-line me-1"></i>
+                        @Model.ValidationCount validation rule@(Model.ValidationCount > 1 ? "s" : "")
+                    </small>
+                }
+                @if (Model.OptionCount > 0)
+                {
+                    <small class="text-primary">
+                        <i class="ri-list-check me-1"></i>
+                        @Model.OptionCount option@(Model.OptionCount > 1 ? "s" : "")
+                    </small>
+                }
+                @if (Model.HasConditionalLogic)
+                {
+                    <small class="text-warning">
+                        <i class="ri-git-branch-line me-1"></i>
+                        Conditional logic
+                    </small>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    // Helper function to get icon for field type
+    private string GetFieldIcon(FormReporting.Models.Common.FormFieldType fieldType)
+    {
+        return fieldType switch
+        {
+            FormReporting.Models.Common.FormFieldType.Text => "ri-text",
+            FormReporting.Models.Common.FormFieldType.TextArea => "ri-file-text-line",
+            FormReporting.Models.Common.FormFieldType.Number => "ri-hashtag",
+            FormReporting.Models.Common.FormFieldType.Decimal => "ri-percent-line",
+            FormReporting.Models.Common.FormFieldType.Date => "ri-calendar-line",
+            FormReporting.Models.Common.FormFieldType.Time => "ri-time-line",
+            FormReporting.Models.Common.FormFieldType.DateTime => "ri-calendar-event-line",
+            FormReporting.Models.Common.FormFieldType.Dropdown => "ri-arrow-down-s-line",
+            FormReporting.Models.Common.FormFieldType.Radio => "ri-radio-button-line",
+            FormReporting.Models.Common.FormFieldType.Checkbox => "ri-checkbox-line",
+            FormReporting.Models.Common.FormFieldType.MultiSelect => "ri-checkbox-multiple-line",
+            FormReporting.Models.Common.FormFieldType.FileUpload => "ri-file-upload-line",
+            FormReporting.Models.Common.FormFieldType.Image => "ri-image-line",
+            FormReporting.Models.Common.FormFieldType.Signature => "ri-quill-pen-line",
+            FormReporting.Models.Common.FormFieldType.Rating => "ri-star-line",
+            FormReporting.Models.Common.FormFieldType.Slider => "ri-slider-line",
+            FormReporting.Models.Common.FormFieldType.Email => "ri-mail-line",
+            FormReporting.Models.Common.FormFieldType.Phone => "ri-phone-line",
+            FormReporting.Models.Common.FormFieldType.Url => "ri-link",
+            FormReporting.Models.Common.FormFieldType.Currency => "ri-money-dollar-circle-line",
+            FormReporting.Models.Common.FormFieldType.Percentage => "ri-percent-line",
+            _ => "ri-input-field"
+        };
+    }
+}

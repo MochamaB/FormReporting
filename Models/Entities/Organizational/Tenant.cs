@@ -127,8 +127,8 @@ namespace FormReporting.Models.Entities.Organizational
 
         /// <summary>
         /// User who last modified this record
+        /// Relationship configured in TenantConfiguration.cs via Fluent API
         /// </summary>
-        [ForeignKey(nameof(ModifiedBy))]
         public virtual User? Modifier { get; set; }
 
         /// <summary>

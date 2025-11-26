@@ -456,6 +456,184 @@ namespace FormReporting.Controllers.Forms
             }
         }
 
+        // ============================================================================
+        // AJAX ENDPOINTS FOR FORM BUILDER - FIELD OPERATIONS
+        // ============================================================================
+
+        /// <summary>
+        /// AJAX: Add a new field to a section
+        /// </summary>
+        [HttpPost]
+        [Route("/Forms/FormTemplates/AddField")]
+        public async Task<IActionResult> AddField([FromBody] CreateFieldDto dto)
+        {
+            try
+            {
+                // Validate input
+                if (string.IsNullOrWhiteSpace(dto.ItemName))
+                {
+                    return Json(new { success = false, message = "Field name is required" });
+                }
+
+                if (dto.SectionId <= 0)
+                {
+                    return Json(new { success = false, message = "Invalid section ID" });
+                }
+
+                // Call service to add field
+                var newField = await _formBuilderService.AddFieldAsync(dto);
+
+                if (newField == null)
+                {
+                    return Json(new { success = false, message = "Failed to add field. Section not found." });
+                }
+
+                return Json(new
+                {
+                    success = true,
+                    message = "Field added successfully",
+                    field = newField
+                });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error adding field: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// AJAX: Update an existing field
+        /// </summary>
+        [HttpPost]
+        [Route("/Forms/FormTemplates/UpdateField")]
+        public async Task<IActionResult> UpdateField(int id, [FromBody] UpdateFieldDto dto)
+        {
+            try
+            {
+                var success = await _formBuilderService.UpdateFieldAsync(id, dto);
+
+                if (success)
+                {
+                    return Json(new { success = true, message = "Field updated successfully" });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Field not found" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error updating field: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// AJAX: Update field type only (inline quick edit)
+        /// Uses service method for smart option handling (auto-creates defaults for selection fields)
+        /// </summary>
+        [HttpPost]
+        [Route("/Forms/FormTemplates/UpdateFieldType/{id}")]
+        public async Task<IActionResult> UpdateFieldType(int id, [FromBody] UpdateFieldTypeDto dto)
+        {
+            try
+            {
+                // Call service method which handles smart option creation
+                var success = await _formBuilderService.UpdateFieldTypeAsync(id, dto.DataType);
+
+                if (!success)
+                {
+                    return Json(new { success = false, message = "Field not found" });
+                }
+
+                return Json(new { success = true, message = "Field type updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error updating field type: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// AJAX: Delete a field
+        /// </summary>
+        [HttpPost]
+        [Route("/Forms/FormTemplates/DeleteField")]
+        public async Task<IActionResult> DeleteField(int id)
+        {
+            try
+            {
+                var success = await _formBuilderService.DeleteFieldAsync(id);
+
+                if (success)
+                {
+                    return Json(new { success = true, message = "Field deleted successfully" });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Field not found" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error deleting field: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// AJAX: Duplicate a field
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> DuplicateField(int id)
+        {
+            try
+            {
+                var newField = await _formBuilderService.DuplicateFieldAsync(id);
+
+                if (newField != null)
+                {
+                    return Json(new
+                    {
+                        success = true,
+                        message = "Field duplicated successfully",
+                        field = newField
+                    });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Field not found" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error duplicating field: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// AJAX: Reorder fields after drag-drop
+        /// </summary>
+        [HttpPost]
+        public async Task<IActionResult> ReorderFields(int sectionId, [FromBody] List<FieldOrderDto> fields)
+        {
+            try
+            {
+                var success = await _formBuilderService.ReorderFieldsAsync(sectionId, fields);
+
+                if (success)
+                {
+                    return Json(new { success = true, message = "Fields reordered successfully" });
+                }
+                else
+                {
+                    return Json(new { success = false, message = "Section not found" });
+                }
+            }
+            catch (Exception ex)
+            {
+                return Json(new { success = false, message = $"Error reordering fields: {ex.Message}" });
+            }
+        }
+
         /// <summary>
         /// Preview - Display template preview
         /// </summary>
