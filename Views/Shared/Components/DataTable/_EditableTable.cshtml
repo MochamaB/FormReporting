@@ -1,0 +1,42 @@
+@model FormReporting.Models.ViewModels.Components.EditableTableViewModel
+
+@*
+    Editable DataTable Partial View
+    
+    Reusable component for bulk data entry and editing
+    Features:
+    - Add/remove rows dynamically
+    - Multi-select with bulk actions
+    - Column sorting
+    - Auto-reindexing for model binding
+    - Multiple input types
+    - Validation support
+    
+    Usage:
+    var config = new EditableTableConfig { ... }.BuildEditableTable();
+    <partial name="~/Views/Shared/Components/DataTable/_EditableTable.cshtml" model="config" />
+*@
+
+@{
+    var wrapperClass = Model.WrapInCard ? "card" : "";
+    var tableClass = $"table align-middle table-nowrap {Model.TableCssClass}";
+}
+
+@if (Model.WrapInCard)
+{
+    <div class="@wrapperClass">
+        @if (!string.IsNullOrEmpty(Model.CardTitle))
+        {
+            <div class="card-header">
+                <h5 class="card-title mb-0">@Model.CardTitle</h5>
+            </div>
+        }
+        <div class="card-body">
+            @await Html.PartialAsync("~/Views/Shared/Components/DataTable/_EditableTableContent.cshtml", Model)
+        </div>
+    </div>
+}
+else
+{
+    @await Html.PartialAsync("~/Views/Shared/Components/DataTable/_EditableTableContent.cshtml", Model)
+}

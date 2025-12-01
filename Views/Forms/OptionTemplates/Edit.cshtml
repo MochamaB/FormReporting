@@ -1,0 +1,82 @@
+@using FormReporting.Extensions
+@using FormReporting.Models.ViewModels.Components
+@model FormReporting.Models.ViewModels.Forms.OptionTemplateEditViewModel
+
+@{
+    ViewData["Title"] = "Edit Option Template";
+
+    // ═══════════════════════════════════════════════════════════
+    // CONFIGURE VERTICAL WIZARD
+    // ═══════════════════════════════════════════════════════════
+    
+    var wizardConfig = new WizardConfig
+    {
+        FormId = "editTemplateWizard",
+        FormAction = Url.Action("Edit", "OptionTemplates") ?? "/Forms/OptionTemplates/Edit",
+        FormMethod = "POST",
+        Layout = WizardLayout.Vertical,
+        Steps = new List<WizardStep>
+        {
+            // STEP 1: Template Properties
+            new WizardStep
+            {
+                StepNumber = 1,
+                Title = "Template Info",
+                Label = "Template Info",
+                Description = "Update template properties",
+                Instructions = "Modify the basic information about this option template. The template code must remain unique.",
+                Icon = "ri-file-text-line",
+                State = WizardStepState.Active,
+                ContentPartialPath = "~/Views/Forms/OptionTemplates/_TemplateInfo.cshtml",
+                ShowNext = true,
+                ShowPrevious = false,
+                NextButtonText = "Next: Manage Options"
+            },
+            // STEP 2: Option Items
+            new WizardStep
+            {
+                StepNumber = 2,
+                Title = "Option Items",
+                Label = "Option Items",
+                Description = "Manage options",
+                Instructions = "Add, edit, or remove the options for this template. Changes will be saved when you click Update Template.",
+                Icon = "ri-list-check",
+                State = WizardStepState.Pending,
+                ContentPartialPath = "~/Views/Forms/OptionTemplates/_OptionItems.cshtml",
+                ShowNext = false,
+                ShowPrevious = true,
+                PreviousButtonText = "Back to Template Info",
+                CustomButtonHtml = "<button type=\"submit\" class=\"btn btn-success\"><i class=\"ri-save-line me-1\"></i>Update Template</button>"
+            }
+        }
+    };
+
+    var wizard = wizardConfig.BuildWizard();
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-light">
+                <h4 class="card-title mb-0">
+                    <i class="ri-edit-line me-2"></i>
+                    Edit Template: @Model.TemplateName
+                </h4>
+                <p class="text-muted mb-0 mt-1">Update template properties and manage options</p>
+            </div>
+            <div class="card-body">
+                <!-- Hidden field for TemplateId -->
+                <input type="hidden" name="TemplateId" value="@Model.TemplateId" form="@wizard.FormId" />
+                
+                @{
+                    // Pass the OptionTemplateEditViewModel to wizard step partials
+                    ViewData["ParentModel"] = Model;
+                }
+                
+                <form id="@wizard.FormId" method="@wizard.FormMethod" action="@wizard.FormAction">
+                    <partial name="~/Views/Shared/Components/Wizards/_VerticalWizard.cshtml" model="wizard" />
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

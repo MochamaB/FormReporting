@@ -116,7 +116,7 @@ else if (Model.FieldType == SimpleFieldType.Select)
                         @(Model.IsRequired ? "required" : "")>
                     @foreach (var option in Model.Options)
                     {
-                        <option value="@option.Value" selected="@(option.IsSelected)">@option.Text</option>
+                        <option value="@option.Value" @@(option.IsSelected || option.Value == Model.Value ? "selected" : "")>@option.Text</option>
                     }
                 </select>
                 @if (!string.IsNullOrEmpty(Model.HelpText))
@@ -134,7 +134,7 @@ else if (Model.FieldType == SimpleFieldType.Select)
                     @(Model.IsRequired ? "required" : "")>
                 @foreach (var option in Model.Options)
                 {
-                    <option value="@option.Value" selected="@(option.IsSelected)">@option.Text</option>
+                    <option value="@option.Value" @@(option.IsSelected || option.Value == Model.Value ? "selected" : "")>@option.Text</option>
                 }
             </select>
             <label for="@Model.InputId">@Model.Label</label>
@@ -153,7 +153,7 @@ else if (Model.FieldType == SimpleFieldType.Select)
                     @(Model.IsRequired ? "required" : "")>
                 @foreach (var option in Model.Options)
                 {
-                    <option value="@option.Value" selected="@(option.IsSelected)">@option.Text</option>
+                    <option value="@option.Value" @@(option.IsSelected || option.Value == Model.Value ? "selected" : "")>@option.Text</option>
                 }
             </select>
             @if (!string.IsNullOrEmpty(Model.HelpText))

@@ -14,7 +14,7 @@
     <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
         <i class="ri-filter-line me-1"></i>@Model.Label
     </button>
-    <ul class="dropdown-menu">
+    <ul class="dropdown-menu" style="max-height: 250px; overflow-y: auto;">
         @foreach (var option in Model.Options)
         {
             <li>

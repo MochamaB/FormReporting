@@ -39,6 +39,11 @@ namespace FormReporting.Models.ViewModels.Forms
         public FormFieldType DataType { get; set; } = FormFieldType.Text;
 
         /// <summary>
+        /// Data type as string name (for display purposes)
+        /// </summary>
+        public string DataTypeName => DataType.ToString();
+
+        /// <summary>
         /// Is this field required?
         /// </summary>
         public bool IsRequired { get; set; }
@@ -72,6 +77,63 @@ namespace FormReporting.Models.ViewModels.Forms
         /// Default value
         /// </summary>
         public string? DefaultValue { get; set; }
+
+        // ========================================================================
+        // FIELD-SPECIFIC CONFIGURATION PROPERTIES
+        // These are loaded from FormItemConfiguration key-value store
+        // ========================================================================
+
+        /// <summary>
+        /// Minimum numeric value (for Number, Decimal, Currency, Percentage fields)
+        /// </summary>
+        public decimal? MinValue { get; set; }
+
+        /// <summary>
+        /// Maximum numeric value (for Number, Decimal, Currency, Percentage fields)
+        /// </summary>
+        public decimal? MaxValue { get; set; }
+
+        /// <summary>
+        /// Step/increment value (for Number, Decimal fields)
+        /// Example: 0.5, 1, 10
+        /// </summary>
+        public decimal? Step { get; set; }
+
+        /// <summary>
+        /// Number of decimal places allowed (for Decimal, Currency, Percentage fields)
+        /// </summary>
+        public int? DecimalPlaces { get; set; }
+
+        /// <summary>
+        /// Allow negative numbers (for Number, Decimal fields)
+        /// </summary>
+        public bool? AllowNegative { get; set; }
+
+        /// <summary>
+        /// Minimum text length (for Text, TextArea, Email, Phone, URL fields)
+        /// </summary>
+        public int? MinLength { get; set; }
+
+        /// <summary>
+        /// Maximum text length (for Text, TextArea, Email, Phone, URL fields)
+        /// </summary>
+        public int? MaxLength { get; set; }
+
+        /// <summary>
+        /// Input mask pattern (for Text, Phone fields)
+        /// Example: "(###) ###-####"
+        /// </summary>
+        public string? InputMask { get; set; }
+
+        /// <summary>
+        /// Text transform (None, Uppercase, Lowercase, Capitalize)
+        /// </summary>
+        public string? TextTransform { get; set; }
+
+        /// <summary>
+        /// Auto-trim whitespace from start/end
+        /// </summary>
+        public bool? AutoTrim { get; set; }
 
         /// <summary>
         /// Conditional logic JSON
@@ -144,6 +206,14 @@ namespace FormReporting.Models.ViewModels.Forms
     }
 
     /// <summary>
+    /// DTO for moving a field to a different section (cross-section drag)
+    /// </summary>
+    public class MoveFieldToSectionDto
+    {
+        public int SectionId { get; set; }
+    }
+
+    /// <summary>
     /// DTO for updating an existing field
     /// </summary>
     public class UpdateFieldDto
@@ -156,6 +226,18 @@ namespace FormReporting.Models.ViewModels.Forms
         public string? PrefixText { get; set; }
         public string? SuffixText { get; set; }
         public string? DefaultValue { get; set; }
+
+        // Field-Specific Configuration Properties
+        public decimal? MinValue { get; set; }
+        public decimal? MaxValue { get; set; }
+        public decimal? Step { get; set; }
+        public int? DecimalPlaces { get; set; }
+        public bool? AllowNegative { get; set; }
+        public int? MinLength { get; set; }
+        public int? MaxLength { get; set; }
+        public string? InputMask { get; set; }
+        public string? TextTransform { get; set; }
+        public bool? AutoTrim { get; set; }
     }
 
     /// <summary>
@@ -168,5 +250,101 @@ namespace FormReporting.Models.ViewModels.Forms
         public string OptionValue { get; set; } = string.Empty;
         public int DisplayOrder { get; set; }
         public bool IsDefault { get; set; }
+        public bool IsActive { get; set; } = true;
+    }
+
+    // ========================================================================
+    // VALIDATION DTOs
+    // ========================================================================
+
+    /// <summary>
+    /// DTO for field validation rules
+    /// </summary>
+    public class ValidationRuleDto
+    {
+        public int ValidationId { get; set; }
+        public string ValidationType { get; set; } = string.Empty;
+        
+        // Inline parameters
+        public decimal? MinValue { get; set; }
+        public decimal? MaxValue { get; set; }
+        public int? MinLength { get; set; }
+        public int? MaxLength { get; set; }
+        public string? RegexPattern { get; set; }
+        public string? CustomExpression { get; set; }
+        
+        public int ValidationOrder { get; set; }
+        public string ErrorMessage { get; set; } = string.Empty;
+        public string Severity { get; set; } = "Error";
+        public bool IsActive { get; set; } = true;
+        
+        /// <summary>
+        /// Display-friendly summary of the validation rule
+        /// </summary>
+        public string ValidationSummary => GetValidationSummary();
+        
+        private string GetValidationSummary()
+        {
+            return ValidationType switch
+            {
+                "Required" => "Required field",
+                "MinLength" => $"Min {MinLength} characters",
+                "MaxLength" => $"Max {MaxLength} characters",
+                "Email" => "Valid email format",
+                "Phone" => "Valid phone number",
+                "URL" => "Valid URL format",
+                "MinValue" => $"Min value: {MinValue}",
+                "MaxValue" => $"Max value: {MaxValue}",
+                "Range" => $"Range: {MinValue} - {MaxValue}",
+                "Pattern" => $"Pattern: {RegexPattern}",
+                "Integer" => "Must be an integer",
+                "Decimal" => "Must be a decimal number",
+                "Date" => "Valid date format",
+                "Number" => "Must be a number",
+                _ => ValidationType
+            };
+        }
+    }
+
+    /// <summary>
+    /// DTO for creating a new validation rule
+    /// </summary>
+    public class CreateValidationDto
+    {
+        public string ValidationType { get; set; } = string.Empty;
+        public decimal? MinValue { get; set; }
+        public decimal? MaxValue { get; set; }
+        public int? MinLength { get; set; }
+        public int? MaxLength { get; set; }
+        public string? RegexPattern { get; set; }
+        public string? CustomExpression { get; set; }
+        public string ErrorMessage { get; set; } = string.Empty;
+        public string Severity { get; set; } = "Error";
+    }
+
+    /// <summary>
+    /// DTO for updating an existing validation rule
+    /// </summary>
+    public class UpdateValidationDto
+    {
+        public string ValidationType { get; set; } = string.Empty;
+        public decimal? MinValue { get; set; }
+        public decimal? MaxValue { get; set; }
+        public int? MinLength { get; set; }
+        public int? MaxLength { get; set; }
+        public string? RegexPattern { get; set; }
+        public string? CustomExpression { get; set; }
+        public string ErrorMessage { get; set; } = string.Empty;
+        public string Severity { get; set; } = "Error";
+        public bool IsActive { get; set; } = true;
+    }
+
+    /// <summary>
+    /// DTO for reordering validation rules
+    /// </summary>
+    public class ReorderValidationDto
+    {
+        public int ValidationId { get; set; }
+        public int ValidationOrder { get; set; }
     }
 }

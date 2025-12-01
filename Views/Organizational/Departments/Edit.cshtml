@@ -1,0 +1,311 @@
+@using FormReporting.Extensions
+@using FormReporting.Models.ViewModels.Components
+@model FormReporting.Models.Entities.Organizational.Department
+
+@{
+    ViewData["Title"] = "Edit Department";
+
+    // ═══════════════════════════════════════════════════════════
+    // CONFIGURE FORM
+    // ═══════════════════════════════════════════════════════════
+    
+    var formConfig = new SimpleFormConfig
+    {
+        FormId = "editDepartmentForm",
+        FormAction = Url.Action("Edit", "Departments") ?? "/Organizational/Departments/Edit",
+        FormMethod = "POST",
+        SubmitButtonText = "Update Department",
+        CancelButtonUrl = Url.Action("Index", "Departments") ?? "/Organizational/Departments",
+        ShowCancelButton = true,
+        ShowResetButton = false,
+        StyleType = FormStyleType.Standard,
+        CardTitle = $"Edit Department: {Model.DepartmentName}",
+        CardSubtitle = "Update department information",
+        WrapInCard = true,
+        Fields = new List<SimpleFormFieldConfig>
+        {
+            // Hidden field for DepartmentId
+            new SimpleFormFieldConfig
+            {
+                PropertyName = "DepartmentId",
+                FieldType = SimpleFieldType.Hidden,
+                Value = Model.DepartmentId,
+                DisplayOrder = 1
+            },
+            
+            // Hidden fields for audit tracking (preserve existing values)
+            new SimpleFormFieldConfig
+            {
+                PropertyName = "CreatedDate",
+                FieldType = SimpleFieldType.Hidden,
+                Value = Model.CreatedDate,
+                DisplayOrder = 2
+            },
+            
+            // Tenant Selection (Read-only for edit to prevent data integrity issues)
+            new SimpleFormFieldConfig
+            {
+                PropertyName = "TenantId",
+                Label = "Tenant",
+                FieldType = SimpleFieldType.Select,
+                Value = Model.TenantId,
+                IsRequired = true,
+                Options = ViewBag.Tenants != null 
+                    ? ((List<FormReporting.Models.Entities.Organizational.Tenant>)ViewBag.Tenants)
+                        .Select(t => new SelectOption 
+                        { 
+                            Value = t.TenantId.ToString(), 
+                            Text = t.TenantName 
+                        }).ToList()
+                    : new List<SelectOption>(),
+                HelpText = "Tenant cannot be changed after creation",
+                ColumnClass = "col-md-6",
+                DisplayOrder = 3
+            },
+            
+            // Department Code
+            new SimpleFormFieldConfig
+            {
+                PropertyName = "DepartmentCode",
+                Label = "Department Code",
+                FieldType = SimpleFieldType.Text,
+                Value = Model.DepartmentCode,
+                IsRequired = true,
+                PlaceholderText = "Enter department code (e.g., ICT, FIN, HR)",
+                HelpText = "Unique code for the department within the tenant",
+                ColumnClass = "col-md-6",
+                DisplayOrder = 4
+            },
+            
+            // Department Name
+            new SimpleFormFieldConfig
+            {
+                PropertyName = "DepartmentName",
+                Label = "Department Name",
+                FieldType = SimpleFieldType.Text,
+                Value = Model.DepartmentName,
+                IsRequired = true,
+                PlaceholderText = "Enter department name (e.g., ICT Department)",
+                HelpText = "Full name of the department",
+                ColumnClass = "col-md-12",
+                DisplayOrder = 5
+            },
+            
+            // Parent Department (Optional)
+            new SimpleFormFieldConfig
+            {
+                PropertyName = "ParentDepartmentId",
+                Label = "Parent Department (Optional)",
+                FieldType = SimpleFieldType.Select,
+                Value = Model.ParentDepartmentId,
+                IsRequired = false,
+                Options = ViewBag.ParentDepartments != null 
+                    ? new List<SelectOption> { new SelectOption { Value = "", Text = "-- No Parent (Top Level) --" } }
+                        .Concat(((List<FormReporting.Models.Entities.Organizational.Department>)ViewBag.ParentDepartments)
+                            .Select(d => new SelectOption 
+                            { 
+                                Value = d.DepartmentId.ToString(), 
+                                Text = d.DepartmentName,
+                                IsSelected = d.DepartmentId == Model.ParentDepartmentId
+                            })).ToList()
+                    : new List<SelectOption> { new SelectOption { Value = "", Text = "-- No Parent (Top Level) --" } },
+                HelpText = "Select a parent department to create a hierarchical structure",
+                ColumnClass = "col-md-6",
+                DisplayOrder = 6
+            },
+            
+            // Is Active
+            new SimpleFormFieldConfig
+            {
+                PropertyName = "IsActive",
+                Label = "Active",
+                FieldType = SimpleFieldType.Checkbox,
+                Value = Model.IsActive,
+                HelpText = "Uncheck to deactivate this department",
+                ColumnClass = "col-md-6",
+                DisplayOrder = 7
+            },
+            
+            // Description
+            new SimpleFormFieldConfig
+            {
+                PropertyName = "Description",
+                Label = "Description (Optional)",
+                FieldType = SimpleFieldType.TextArea,
+                Value = Model.Description,
+                Rows = 4,
+                PlaceholderText = "Enter department description",
+                HelpText = "Optional description of the department's purpose and responsibilities",
+                ColumnClass = "col-12",
+                DisplayOrder = 8
+            }
+        }
+    };
+
+    // Transform config into renderable form
+    var form = formConfig.BuildForm();
+}
+
+<!-- Page Header -->
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Edit Department</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Dashboard")">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Departments")">Departments</a></li>
+                    <li class="breadcrumb-item active">Edit</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Info Alert -->
+<div class="row">
+    <div class="col-lg-10 offset-lg-1">
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <i class="ri-information-line me-2"></i>
+            <strong>Note:</strong> The tenant cannot be changed after department creation. To move a department to a different tenant, create a new department.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+<!-- Render Form -->
+<div class="row">
+    <div class="col-lg-10 offset-lg-1">
+        <partial name="~/Views/Shared/Components/SimpleForms/_SimpleForm.cshtml" model="form" />
+    </div>
+</div>
+
+<!-- Additional Info Card -->
+<div class="row mt-3">
+    <div class="col-lg-10 offset-lg-1">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-information-line me-2"></i>Department Information
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="mb-2">
+                            <strong>Created:</strong> 
+                            <span class="text-muted">@Model.CreatedDate.ToString("dd MMM, yyyy HH:mm")</span>
+                        </p>
+                        <p class="mb-2">
+                            <strong>Last Modified:</strong> 
+                            <span class="text-muted">@Model.ModifiedDate.ToString("dd MMM, yyyy HH:mm")</span>
+                        </p>
+                    </div>
+                    <div class="col-md-6">
+                        @if (Model.Users != null && Model.Users.Any())
+                        {
+                            <p class="mb-2">
+                                <strong>Assigned Users:</strong> 
+                                <span class="badge bg-info-subtle text-info">@Model.Users.Count user(s)</span>
+                            </p>
+                            <p class="text-muted small">
+                                <i class="ri-alert-line me-1"></i>
+                                This department has users assigned. Deactivate instead of deleting.
+                            </p>
+                        }
+                        else
+                        {
+                            <p class="mb-2">
+                                <strong>Assigned Users:</strong> 
+                                <span class="text-muted">None</span>
+                            </p>
+                        }
+                        
+                        @if (Model.ChildDepartments != null && Model.ChildDepartments.Any())
+                        {
+                            <p class="mb-2">
+                                <strong>Sub-Departments:</strong> 
+                                <span class="badge bg-success-subtle text-success">@Model.ChildDepartments.Count</span>
+                            </p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Load parent departments when tenant changes (though disabled in edit mode)
+        function loadParentDepartments(tenantId) {
+            const parentSelect = document.querySelector('select[name="ParentDepartmentId"]');
+            
+            if (!parentSelect) return;
+            
+            if (!tenantId) {
+                parentSelect.innerHTML = '<option value="">-- No Parent (Top Level) --</option>';
+                return;
+            }
+            
+            // Show loading state
+            const currentValue = parentSelect.value;
+            parentSelect.innerHTML = '<option value="">Loading...</option>';
+            
+            // Fetch departments for selected tenant
+            fetch(`/Organizational/Departments/GetDepartmentsByTenant?tenantId=${tenantId}`)
+                .then(response => response.json())
+                .then(data => {
+                    parentSelect.innerHTML = '<option value="">-- No Parent (Top Level) --</option>';
+                    
+                    data.forEach(dept => {
+                        // Exclude current department and its descendants
+                        if (dept.isActive && dept.id != @Model.DepartmentId) {
+                            const option = document.createElement('option');
+                            option.value = dept.id;
+                            option.textContent = dept.name;
+                            if (dept.id == currentValue) {
+                                option.selected = true;
+                            }
+                            parentSelect.appendChild(option);
+                        }
+                    });
+                })
+                .catch(error => {
+                    console.error('Error loading departments:', error);
+                    parentSelect.innerHTML = '<option value="">-- Error Loading Departments --</option>';
+                });
+        }
+        
+        // Auto-uppercase department code and setup event handlers
+        document.addEventListener('DOMContentLoaded', function() {
+            // Auto-uppercase department code
+            const codeInput = document.querySelector('input[name="DepartmentCode"]');
+            if (codeInput) {
+                codeInput.addEventListener('input', function() {
+                    this.value = this.value.toUpperCase();
+                });
+            }
+            
+            // Get tenant select and disable it (read-only for edit)
+            const tenantSelect = document.querySelector('select[name="TenantId"]');
+            if (tenantSelect) {
+                // Disable tenant select to prevent changes
+                tenantSelect.disabled = true;
+                
+                // Load departments for current tenant
+                if (tenantSelect.value) {
+                    loadParentDepartments(tenantSelect.value);
+                }
+                
+                // Re-enable tenant select on form submit (so value is posted)
+                const form = document.getElementById('editDepartmentForm');
+                if (form) {
+                    form.addEventListener('submit', function() {
+                        tenantSelect.disabled = false;
+                    });
+                }
+            }
+        });
+    </script>
+}

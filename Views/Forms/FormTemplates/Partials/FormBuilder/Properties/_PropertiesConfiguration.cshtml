@@ -170,15 +170,171 @@
     </form>
 </div>
 
-<!-- Field Configuration Form (Future - Dynamic based on field type) -->
+<!-- Field Configuration Form -->
 <div id="config-field" style="display: none;">
-    <div class="text-center py-4">
-        <img src="~/assets/images/svg/configurations.svg" alt="Field configuration" class="mb-3" style="width: 120px; height: 120px; opacity: 0.7;">
-        <p class="text-muted">Field-specific configuration</p>
-        <small class="text-muted">Min/max values, file types, date formats, etc.</small>
-        <div class="alert alert-info mt-3 mb-0" role="alert">
-            <i class="ri-information-line me-1"></i>
-            Field configuration will be implemented in Phase 2
+
+    <!-- Options Manager (for Dropdown, Radio, Checkbox, MultiSelect) -->
+    <div id="field-options-manager" style="display: none;">
+        <div class="mb-2">
+            <div class="d-flex align-items-center justify-content-between mb-2">
+                <div class="d-flex align-items-center">
+                    <i class="ri-list-check fs-5 text-primary me-2"></i>
+                    <h6 class="mb-0">Field Options</h6>
+                </div>
+                <button type="button" class="btn btn-success btn-sm" onclick="FormBuilderOptions.addOption()">
+                    <i class="ri-add-line"></i> Add Option
+                </button>
+            </div>
+            <small class="text-muted">Drag to reorder • Minimum 2 required</small>
+        </div>
+
+        <!-- Options Table -->
+        <div class="table-responsive mb-3">
+            <table class="table table-sm table-borderless align-middle mb-0" style="font-size: 0.875rem;">
+                <thead style="background-color: #f3f6f9;">
+                    <tr>
+                        <th style="width: 30px;"></th>
+                        <th style="width: 40%;">Value</th>
+                        <th style="width: 40%;">Text</th>
+                        <th style="width: 30px;" class="text-end">Default</th>
+                    </tr>
+                </thead>
+                <tbody id="options-list">
+                    <!-- Dynamic option items will be inserted here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Field-Specific Configuration (Number Fields) -->
+    <div id="config-number-fields" style="display: none;">
+        <div class="mb-3">
+            <div class="d-flex align-items-center mb-2">
+                <i class="ri-hashtag fs-5 text-primary me-2"></i>
+                <h6 class="mb-0">Number Configuration</h6>
+            </div>
+            <small class="text-muted">Configure numeric input constraints and behavior</small>
+        </div>
+
+        <div class="row g-3">
+            <!-- Min Value -->
+            <div class="col-md-6">
+                <label class="form-label">Minimum Value</label>
+                <input type="number" class="form-control" id="config-minValue" step="any"
+                       placeholder="No minimum" onchange="FormBuilderConfiguration.saveConfig('minValue', this.value)">
+                <small class="text-muted">Smallest allowed value</small>
+            </div>
+
+            <!-- Max Value -->
+            <div class="col-md-6">
+                <label class="form-label">Maximum Value</label>
+                <input type="number" class="form-control" id="config-maxValue" step="any"
+                       placeholder="No maximum" onchange="FormBuilderConfiguration.saveConfig('maxValue', this.value)">
+                <small class="text-muted">Largest allowed value</small>
+            </div>
+
+            <!-- Step -->
+            <div class="col-md-6">
+                <label class="form-label">Step / Increment</label>
+                <input type="number" class="form-control" id="config-step" step="any"
+                       placeholder="1" onchange="FormBuilderConfiguration.saveConfig('step', this.value)">
+                <small class="text-muted">Increment value (e.g., 0.5, 1, 10)</small>
+            </div>
+
+            <!-- Decimal Places -->
+            <div class="col-md-6">
+                <label class="form-label">Decimal Places</label>
+                <select class="form-select" id="config-decimalPlaces"
+                        onchange="FormBuilderConfiguration.saveConfig('decimalPlaces', this.value)">
+                    <option value="">Auto</option>
+                    <option value="0">0 (integers only)</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                </select>
+                <small class="text-muted">Number of decimal places</small>
+            </div>
+
+            <!-- Allow Negative -->
+            <div class="col-12">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="config-allowNegative"
+                           onchange="FormBuilderConfiguration.saveConfig('allowNegative', this.checked)">
+                    <label class="form-check-label" for="config-allowNegative">
+                        Allow Negative Numbers
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Field-Specific Configuration (Text Fields) -->
+    <div id="config-text-fields" style="display: none;">
+        <div class="mb-3">
+            <div class="d-flex align-items-center mb-2">
+                <i class="ri-text fs-5 text-primary me-2"></i>
+                <h6 class="mb-0">Text Configuration</h6>
+            </div>
+            <small class="text-muted">Configure text input constraints and formatting</small>
+        </div>
+
+        <div class="row g-3">
+            <!-- Min Length -->
+            <div class="col-md-6">
+                <label class="form-label">Minimum Length</label>
+                <input type="number" class="form-control" id="config-minLength" min="0"
+                       placeholder="No minimum" onchange="FormBuilderConfiguration.saveConfig('minLength', this.value)">
+                <small class="text-muted">Minimum characters required</small>
+            </div>
+
+            <!-- Max Length -->
+            <div class="col-md-6">
+                <label class="form-label">Maximum Length</label>
+                <input type="number" class="form-control" id="config-maxLength" min="1"
+                       placeholder="No maximum" onchange="FormBuilderConfiguration.saveConfig('maxLength', this.value)">
+                <small class="text-muted">Maximum characters allowed</small>
+            </div>
+
+            <!-- Input Mask -->
+            <div class="col-12">
+                <label class="form-label">Input Mask <span class="badge bg-secondary-subtle text-secondary">Optional</span></label>
+                <input type="text" class="form-control" id="config-inputMask"
+                       placeholder="e.g., (###) ###-####" onchange="FormBuilderConfiguration.saveConfig('inputMask', this.value)">
+                <small class="text-muted">Pattern for formatting input (# = digit, @@ = letter)</small>
+            </div>
+
+            <!-- Text Transform -->
+            <div class="col-md-6">
+                <label class="form-label">Text Transform</label>
+                <select class="form-select" id="config-textTransform"
+                        onchange="FormBuilderConfiguration.saveConfig('textTransform', this.value)">
+                    <option value="">None</option>
+                    <option value="uppercase">UPPERCASE</option>
+                    <option value="lowercase">lowercase</option>
+                    <option value="capitalize">Capitalize Each Word</option>
+                </select>
+                <small class="text-muted">Automatic text formatting</small>
+            </div>
+
+            <!-- Auto Trim -->
+            <div class="col-md-6 d-flex align-items-end">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="config-autoTrim" checked
+                           onchange="FormBuilderConfiguration.saveConfig('autoTrim', this.checked)">
+                    <label class="form-check-label" for="config-autoTrim">
+                        Auto-trim Whitespace
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- No Configuration Message (for fields without special config) -->
+    <div id="config-no-settings" style="display: none;">
+        <div class="alert alert-info mb-0">
+            <i class="ri-information-line me-2"></i>
+            This field type does not have additional configuration options.
         </div>
     </div>
 </div>

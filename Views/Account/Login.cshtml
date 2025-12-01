@@ -33,7 +33,7 @@
 }
 
 <form asp-action="Login" asp-controller="Account" method="post">
-    <input type="hidden" asp-for="@ViewData["ReturnUrl"]" />
+    <input type="hidden" asp-for="ReturnUrl" />
     
     <div class="mb-3">
         <label asp-for="UserName" class="form-label">Username or Email</label>

@@ -1,0 +1,766 @@
+@model FormReporting.Models.ViewModels.Components.EditableTableViewModel
+
+<!-- Action Buttons -->
+<div class="mb-3 d-flex gap-2 justify-content-end">
+    @if (Model.Buttons.ShowAddButton)
+    {
+        <button type="button" class="btn btn-primary" id="@(Model.TableId)-add-btn">
+            <i class="@Model.Buttons.AddButtonIcon me-1"></i>@Model.Buttons.AddButtonText
+        </button>
+    }
+    
+    @if (Model.Buttons.ShowClearAllButton)
+    {
+        <button type="button" class="btn btn-soft-secondary" id="@(Model.TableId)-clear-btn">
+            <i class="@Model.Buttons.ClearAllButtonIcon me-1"></i>@Model.Buttons.ClearAllButtonText
+        </button>
+    }
+    
+    @if (Model.AllowMultiSelect && Model.Buttons.ShowDeleteSelectedButton)
+    {
+        <button type="button" class="btn btn-soft-danger" id="@(Model.TableId)-delete-selected-btn" style="display: none;">
+            <i class="ri-delete-bin-line me-1"></i>Delete Selected
+        </button>
+    }
+</div>
+
+<!-- Table -->
+<div class="table-responsive">
+    <table class="table table-sm" 
+           id="@Model.TableId" 
+           data-editable-table 
+           data-config='@Model.ConfigJson'>
+        <thead class="table-light">
+            <tr class="border-bottom">
+                @if (Model.AllowMultiSelect)
+                {
+                    <th class="border-bottom text-center">
+                        <input type="checkbox" class="form-check-input" id="@(Model.TableId)-select-all">
+                    </th>
+                }
+                
+                @if (Model.ShowRowNumbers)
+                {
+                    <th class="border-bottom text-center">#</th>
+                }
+                
+                @foreach (var column in Model.Columns)
+                {
+                    <th @(string.IsNullOrEmpty(column.WidthStyle) ? "" : $"style=\"{column.WidthStyle}\"") 
+                        class="border-bottom @(column.Sortable && Model.AllowSorting ? "sortable" : "")" 
+                        data-property="@column.PropertyName">
+                        @column.Header
+                        @if (column.IsRequired)
+                        {
+                            <span class="text-danger">*</span>
+                        }
+                        @if (column.Sortable && Model.AllowSorting)
+                        {
+                            <i class="ri-arrow-up-down-line ms-1 text-muted sort-icon"></i>
+                        }
+                    </th>
+                }
+                
+                @if (Model.Buttons.ShowRemoveButton)
+                {
+                   <th class="border-bottom text-center">Actions</th>
+                }
+            </tr>
+        </thead>
+        <tbody id="@(Model.TableId)-tbody">
+            @{
+                var existingItems = ViewData["ExistingItems"] as System.Collections.IEnumerable;
+                var hasItems = existingItems != null && existingItems.Cast<object>().Any();
+            }
+            
+            @if (hasItems)
+            {
+                var itemsList = existingItems.Cast<object>().ToList();
+                
+                for (int index = 0; index < itemsList.Count; index++)
+                {
+                    var item = itemsList[index];
+                    var itemType = item.GetType();
+                    
+                    <tr data-index="@index" class="border-bottom">
+                        @if (Model.AllowMultiSelect)
+                        {
+                            <td class="text-center">
+                                <input type="checkbox" class="form-check-input row-select" value="@index">
+                            </td>
+                        }
+                        
+                        @if (Model.ShowRowNumbers)
+                        {
+                            <td class="text-center fw-medium row-number">@(index + 1)</td>
+                        }
+                        
+                        @foreach (var column in Model.Columns)
+                        {
+                            var propInfo = itemType.GetProperty(column.PropertyName);
+                            var propValue = propInfo?.GetValue(item);
+                            
+                            <td data-column="@column.PropertyName" class="@(column.ColumnTypeString == "Checkbox" ? "text-center" : "")">
+                                @switch (column.ColumnTypeString)
+                                {
+                                    case "Checkbox":
+                                        var isChecked = propValue != null && (bool)propValue;
+                                        <input type="checkbox" 
+                                            class="form-check-input @column.InputCssClass" 
+                                            name="@(Model.ItemIndexPropertyName)[@index].@column.PropertyName" 
+                                            value="true"
+                                            @(isChecked ? "checked" : "") />
+                                        break;
+                                        
+                                    case "Select":
+                                        <select class="form-select form-select-sm @column.InputCssClass" 
+                                                name="@(Model.ItemIndexPropertyName)[@index].@column.PropertyName" 
+                                                @(column.IsRequired ? "required" : "")>
+                                            <option value="">Select...</option>
+                                            @if (column.SelectOptions != null)
+                                            {
+                                                foreach (var option in column.SelectOptions)
+                                                {
+                                                    if (propValue?.ToString() == option.Value)
+                                                    {
+                                                        <option value="@option.Value" selected>@option.Text</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value="@option.Value">@option.Text</option>
+                                                    }
+                                                }
+                                            }
+                                        </select>
+                                        break;
+                                        
+                                    case "TextArea":
+                                        <textarea class="form-control form-control-sm @column.InputCssClass" 
+                                                  name="@(Model.ItemIndexPropertyName)[@index].@column.PropertyName" 
+                                                  placeholder="@column.Placeholder" 
+                                                  @(column.IsRequired ? "required" : "")
+                                                  @(column.MaxLength.HasValue ? $"maxlength=\"{column.MaxLength}\"" : "")
+                                                  rows="2">@propValue</textarea>
+                                        break;
+                                        
+                                    case "Color":
+                                        <input type="color" 
+                                               class="form-control form-control-sm form-control-color @column.InputCssClass" 
+                                               name="@(Model.ItemIndexPropertyName)[@index].@column.PropertyName" 
+                                               value="@(propValue ?? column.DefaultValue ?? "#6c757d")" 
+                                               title="Choose color" />
+                                        break;
+                                        
+                                    default:
+                                        <input type="@column.InputTypeAttribute" 
+                                               class="@column.InputCssClass" 
+                                               name="@(Model.ItemIndexPropertyName)[@index].@column.PropertyName" 
+                                               value="@propValue"
+                                               placeholder="@column.Placeholder" 
+                                               @(column.IsRequired ? "required" : "")
+                                               @(column.Min.HasValue ? $"min=\"{column.Min}\"" : "")
+                                               @(column.Max.HasValue ? $"max=\"{column.Max}\"" : "")
+                                               @(column.Step.HasValue ? $"step=\"{column.Step}\"" : "")
+                                               @(column.MaxLength.HasValue ? $"maxlength=\"{column.MaxLength}\"" : "")
+                                               @(!string.IsNullOrEmpty(column.Pattern) ? $"pattern=\"{column.Pattern}\"" : "") />
+                                        break;
+                                }
+                            </td>
+                        }
+                        
+                        @if (Model.Buttons.ShowRemoveButton)
+                        {
+                            <td class="text-center">
+                                <button type="button" class="btn btn-sm btn-danger remove-row-btn" title="Remove">
+                                    <i class="ri-delete-bin-line"></i>
+                                </button>
+                            </td>
+                        }
+                    </tr>
+                }
+            }
+            else
+            {
+                <tr id="@(Model.TableId)-no-items-row">
+                    <td colspan="@(Model.Columns.Count + (Model.ShowRowNumbers ? 1 : 0) + (Model.AllowMultiSelect ? 1 : 0) + (Model.Buttons.ShowRemoveButton ? 1 : 0))" 
+                        class="text-center text-muted py-4">
+                        <i class="ri-inbox-line display-6 d-block mb-2"></i>
+                        <p class="mb-0">@Model.EmptyMessage</p>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Row Template (hidden) -->
+<template id="@(Model.TableId)-row-template">
+    <tr data-index="{INDEX}" class="border-bottom">
+        @if (Model.AllowMultiSelect)
+        {
+            <td class="text-center">
+                <input type="checkbox" class="form-check-input row-select" value="{INDEX}">
+            </td>
+        }
+        
+        @if (Model.ShowRowNumbers)
+        {
+            <td class="text-center fw-medium row-number">{ROW_NUMBER}</td>
+        }
+        
+        @foreach (var column in Model.Columns)
+        {
+            <td data-column="@column.PropertyName">
+                @switch (column.ColumnTypeString)
+                {
+                    case "Checkbox":
+                        @:<input type="checkbox" 
+                        @:       class="form-check-input @column.InputCssClass" 
+                        @:       name="@(Model.ItemIndexPropertyName)[{INDEX}].@column.PropertyName" 
+                        @:       value="true" />
+                        break;
+                        
+                    case "Select":
+                        @:<select class="form-select form-select-sm @column.InputCssClass" 
+                        @:        name="@(Model.ItemIndexPropertyName)[{INDEX}].@column.PropertyName" 
+                        @:        @column.RequiredAttribute>
+                        @:    <option value="">Select...</option>
+                        if (column.SelectOptions != null)
+                        {
+                            foreach (var option in column.SelectOptions)
+                            {
+                                @:<option value="@option.Value">@option.Text</option>
+                            }
+                        }
+                        @:</select>
+                        break;
+                        
+                    case "TextArea":
+                        @:<textarea class="form-control form-control-sm @column.InputCssClass" 
+                        @:          name="@(Model.ItemIndexPropertyName)[{INDEX}].@column.PropertyName" 
+                        @:          placeholder="@column.Placeholder" 
+                        @:          @column.RequiredAttribute 
+                        @:          @column.MaxLengthAttribute 
+                        @:          rows="2"></textarea>
+                        break;
+                        
+                    case "Color":
+                        @:<input type="color" 
+                        @:       class="form-control form-control-sm form-control-color @column.InputCssClass" 
+                        @:       name="@(Model.ItemIndexPropertyName)[{INDEX}].@column.PropertyName" 
+                        @:       value="@(column.DefaultValue ?? "#6c757d")" 
+                        @:       title="Choose color" />
+                        break;
+                        
+                    default:
+                        @:<input type="@column.InputTypeAttribute" 
+                        @:       class="@column.InputCssClass" 
+                        @:       name="@(Model.ItemIndexPropertyName)[{INDEX}].@column.PropertyName" 
+                        @:       placeholder="@column.Placeholder" 
+                        @:       @column.RequiredAttribute 
+                        @:       @column.MinAttribute 
+                        @:       @column.MaxAttribute 
+                        @:       @column.StepAttribute 
+                        @:       @column.MaxLengthAttribute 
+                        @:       @column.PatternAttribute />
+                        break;
+                }
+            </td>
+        }
+        
+        @if (Model.Buttons.ShowRemoveButton)
+        {
+            <td class="text-center">
+                <button type="button" class="btn btn-sm btn-danger remove-row-btn" title="Remove">
+                    <i class="ri-delete-bin-line"></i>
+                </button>
+            </td>
+        }
+    </tr>
+</template>
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="@(Model.TableId)-delete-modal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">
+                    <i class="ri-alert-line text-warning me-2"></i>Confirm Delete
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0" id="@(Model.TableId)-delete-message">Are you sure you want to delete this item?</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="@(Model.TableId)-confirm-delete">
+                    <i class="ri-delete-bin-line me-1"></i>Delete
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Table structure */
+    #@Model.TableId {
+        border-collapse: collapse !important;
+    }
+    
+    #@Model.TableId thead tr {
+        border-bottom: 2px solid #c6c6c6 !important;
+    }
+    
+    #@Model.TableId thead th {
+        border-bottom: 2px solid #c6c6c6 !important;
+    }
+    
+    #@Model.TableId tbody tr {
+        border-bottom: 1px solid #dee2e6 !important;
+        transition: background-color 0.2s ease;
+    }
+    
+    #@Model.TableId tbody tr td {
+        border-bottom: 1px solid #dee2e6 !important;
+    }
+    
+    #@Model.TableId tbody tr:last-child,
+    #@Model.TableId tbody tr:last-child td {
+        border-bottom: 2px solid #c6c6c6 !important;
+    }
+    
+    #@Model.TableId tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    #@Model.TableId tbody tr.selected {
+        background-color: #e7f1ff;
+    }
+    
+    /* No border for empty state row */
+    #@Model.TableId tbody tr[id*="no-items-row"],
+    #@Model.TableId tbody tr[id*="no-items-row"] td {
+        border-bottom: none !important;
+    }
+    
+    #@Model.TableId td,
+    #@Model.TableId th {
+        border-left: none !important;
+        border-right: none !important;
+        border-top: none !important;
+        padding: 0.5rem 0.25rem;
+        vertical-align: middle;
+    }
+    
+    /* Column widths based on content */
+    #@Model.TableId td:has(input[type="checkbox"].row-select) {
+        width: 40px;
+        max-width: 70px;
+    }
+    
+    #@Model.TableId .row-number {
+        width: 50px;
+        max-width: 100px;
+    }
+    
+    #@Model.TableId td:has(input[type="checkbox"]:not(.row-select)) {
+        width: 70px;
+         max-width: 70px;
+    }
+    
+    #@Model.TableId td:has(input[type="number"]) {
+        width: 90px;
+         max-width: 100px;
+    }
+    
+    #@Model.TableId td:has(.remove-row-btn) {
+        width: 80px;
+        max-width: 80px;
+    }
+     #@Model.TableId td input[type="text"] {
+        min-width: 200px;
+    }
+    
+    /* Center checkboxes properly */
+    #@Model.TableId td .form-check-input {
+        margin: 0 auto;
+        display: block;
+    }
+    
+    /* Let table auto-size based on content */
+    #@Model.TableId {
+        table-layout: auto;
+        width: 100%;
+    }
+    /* Remove input borders and outlines until focused */
+    #@Model.TableId input.form-control:not([type="checkbox"]):not([type="color"]),
+    #@Model.TableId select.form-select,
+    #@Model.TableId textarea.form-control {
+        border: 1px solid transparent;
+        background-color: transparent;
+        box-shadow: none;
+        transition: all 0.2s ease;
+    }
+    
+    #@Model.TableId input.form-control:not([type="checkbox"]):not([type="color"]):hover,
+    #@Model.TableId select.form-select:hover,
+    #@Model.TableId textarea.form-control:hover {
+        background-color: #f8f9fa;
+    }
+    
+    #@Model.TableId input.form-control:not([type="checkbox"]):not([type="color"]):focus,
+    #@Model.TableId select.form-select:focus,
+    #@Model.TableId textarea.form-control:focus {
+        border-color: #ced4da;
+        background-color: #ffffff;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.1);
+    }
+    
+    /* Ensure checkboxes remain visible */
+    #@Model.TableId input[type="checkbox"].form-check-input {
+        width: 1.25rem;
+        height: 1.25rem;
+        cursor: pointer;
+    }
+    
+    /* Sortable columns */
+    #@Model.TableId th.sortable {
+        cursor: pointer;
+        user-select: none;
+    }
+    
+    #@Model.TableId th.sortable:hover {
+        background-color: #f8f9fa;
+    }
+    
+    #@Model.TableId th.sortable .sort-icon {
+        opacity: 0.3;
+        transition: opacity 0.2s;
+    }
+    
+    #@Model.TableId th.sortable:hover .sort-icon {
+        opacity: 0.7;
+    }
+    
+    #@Model.TableId th.sort-asc .sort-icon::before {
+        content: "\eb79"; /* ri-arrow-up-line */
+        opacity: 1;
+        color: var(--vz-primary);
+    }
+    
+    #@Model.TableId th.sort-desc .sort-icon::before {
+        content: "\eb78"; /* ri-arrow-down-line */
+        opacity: 1;
+        color: var(--vz-primary);
+    }
+    
+    /* Input styling */
+    #@Model.TableId input[type="color"] {
+        height: 32px;
+        padding: 2px;
+        cursor: pointer;
+    }
+    
+    /* Row number styling */
+    #@Model.TableId .row-number {
+        color: #878a99;
+        font-size: 0.875rem;
+    }
+</style>
+
+<script>
+    (function() {
+        const tableId = '@Model.TableId';
+        const table = document.getElementById(tableId);
+        const tbody = document.getElementById(tableId + '-tbody');
+        const rowTemplate = document.getElementById(tableId + '-row-template');
+        const config = JSON.parse(table.dataset.config);
+        
+        let itemIndex = config.initialRowCount;
+        let sortColumn = null;
+        let sortDirection = 'asc';
+        let deleteCallback = null;
+        
+        // Show delete confirmation modal
+        function showDeleteModal(message, callback) {
+            const modal = new bootstrap.Modal(document.getElementById(tableId + '-delete-modal'));
+            const messageEl = document.getElementById(tableId + '-delete-message');
+            const confirmBtn = document.getElementById(tableId + '-confirm-delete');
+            
+            messageEl.textContent = message;
+            deleteCallback = callback;
+            
+            // Remove old event listeners
+            const newConfirmBtn = confirmBtn.cloneNode(true);
+            confirmBtn.parentNode.replaceChild(newConfirmBtn, confirmBtn);
+            
+            // Add new event listener
+            newConfirmBtn.addEventListener('click', function() {
+                if (deleteCallback) {
+                    deleteCallback();
+                    deleteCallback = null;
+                }
+                modal.hide();
+            });
+            
+            modal.show();
+        }
+        
+        // Initialize
+        function init() {
+            attachAddButtonHandler();
+            attachClearButtonHandler();
+            attachRemoveHandlers();
+            
+            if (config.allowMultiSelect) {
+                attachSelectAllHandler();
+                attachRowSelectHandlers();
+                attachDeleteSelectedHandler();
+            }
+            
+            if (config.allowSorting) {
+                attachSortHandlers();
+            }
+        }
+        
+        // Add row
+        function addRow() {
+            const noItemsRow = document.getElementById(tableId + '-no-items-row');
+            if (noItemsRow) {
+                noItemsRow.remove();
+            }
+            
+            let rowHtml = rowTemplate.innerHTML;
+            rowHtml = rowHtml.replace(/{INDEX}/g, itemIndex);
+            rowHtml = rowHtml.replace(/{ROW_NUMBER}/g, itemIndex + 1);
+            
+            tbody.insertAdjacentHTML('beforeend', rowHtml);
+            itemIndex++;
+            
+            attachRemoveHandlers();
+            if (config.allowMultiSelect) {
+                attachRowSelectHandlers();
+            }
+            updateRowNumbers();
+        }
+        
+        // Attach add button handler
+        function attachAddButtonHandler() {
+            const addBtn = document.getElementById(tableId + '-add-btn');
+            if (addBtn) {
+                addBtn.addEventListener('click', addRow);
+            }
+        }
+        
+        // Attach clear button handler
+        function attachClearButtonHandler() {
+            const clearBtn = document.getElementById(tableId + '-clear-btn');
+            if (clearBtn) {
+                clearBtn.addEventListener('click', function() {
+                    showDeleteModal('Are you sure you want to remove all items?', clearAllRows);
+                });
+            }
+        }
+        
+        // Clear all rows
+        function clearAllRows() {
+            tbody.innerHTML = `
+                <tr id="${tableId}-no-items-row">
+                    <td colspan="${getColspan()}" class="text-center text-muted py-4">
+                        <i class="ri-inbox-line display-6 d-block mb-2"></i>
+                        <p class="mb-0">${config.emptyMessage || 'No items added yet.'}</p>
+                    </td>
+                </tr>
+            `;
+            itemIndex = 0;
+        }
+        
+        // Remove row
+        function removeRow(button) {
+            showDeleteModal('Are you sure you want to delete this item?', function() {
+                button.closest('tr').remove();
+                reindexRows();
+                updateRowNumbers();
+                
+                const rows = tbody.querySelectorAll('tr:not(#' + tableId + '-no-items-row)');
+                if (rows.length === 0) {
+                    clearAllRows();
+                }
+            });
+        }
+        
+        // Attach remove handlers
+        function attachRemoveHandlers() {
+            tbody.querySelectorAll('.remove-row-btn').forEach(btn => {
+                btn.removeEventListener('click', handleRemove);
+                btn.addEventListener('click', handleRemove);
+            });
+        }
+        
+        function handleRemove() {
+            removeRow(this);
+        }
+        
+        // Reindex rows after deletion
+        function reindexRows() {
+            const rows = tbody.querySelectorAll('tr:not(#' + tableId + '-no-items-row)');
+            rows.forEach((row, index) => {
+                row.setAttribute('data-index', index);
+                row.querySelectorAll('input, select, textarea').forEach(input => {
+                    if (input.name) {
+                        const name = input.name.replace(/\[\d+\]/, `[${index}]`);
+                        input.name = name;
+                    }
+                });
+                if (config.allowMultiSelect) {
+                    const checkbox = row.querySelector('.row-select');
+                    if (checkbox) checkbox.value = index;
+                }
+            });
+            itemIndex = rows.length;
+        }
+        
+        // Update row numbers
+        function updateRowNumbers() {
+            tbody.querySelectorAll('.row-number').forEach((cell, index) => {
+                cell.textContent = index + 1;
+            });
+        }
+        
+        // Multi-select functionality
+        function attachSelectAllHandler() {
+            const selectAll = document.getElementById(tableId + '-select-all');
+            if (selectAll) {
+                selectAll.addEventListener('change', function() {
+                    tbody.querySelectorAll('.row-select').forEach(cb => {
+                        cb.checked = this.checked;
+                        updateRowSelection(cb);
+                    });
+                    updateDeleteSelectedButton();
+                });
+            }
+        }
+        
+        function attachRowSelectHandlers() {
+            tbody.querySelectorAll('.row-select').forEach(cb => {
+                cb.removeEventListener('change', handleRowSelect);
+                cb.addEventListener('change', handleRowSelect);
+            });
+        }
+        
+        function handleRowSelect() {
+            updateRowSelection(this);
+            updateDeleteSelectedButton();
+        }
+        
+        function updateRowSelection(checkbox) {
+            const row = checkbox.closest('tr');
+            if (checkbox.checked) {
+                row.classList.add('selected');
+            } else {
+                row.classList.remove('selected');
+            }
+        }
+        
+        function updateDeleteSelectedButton() {
+            const deleteBtn = document.getElementById(tableId + '-delete-selected-btn');
+            const selectedCount = tbody.querySelectorAll('.row-select:checked').length;
+            if (deleteBtn) {
+                deleteBtn.style.display = selectedCount > 0 ? 'inline-block' : 'none';
+                deleteBtn.innerHTML = `<i class="ri-delete-bin-line me-1"></i>Delete Selected (${selectedCount})`;
+            }
+        }
+        
+        function attachDeleteSelectedHandler() {
+            const deleteBtn = document.getElementById(tableId + '-delete-selected-btn');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', function() {
+                    const selected = tbody.querySelectorAll('.row-select:checked');
+                    if (selected.length > 0) {
+                        showDeleteModal(`Delete ${selected.length} selected row(s)?`, function() {
+                            selected.forEach(cb => cb.closest('tr').remove());
+                            reindexRows();
+                            updateRowNumbers();
+                            updateDeleteSelectedButton();
+                            
+                            const rows = tbody.querySelectorAll('tr:not(#' + tableId + '-no-items-row)');
+                            if (rows.length === 0) {
+                                clearAllRows();
+                            }
+                        });
+                    }
+                });
+            }
+        }
+        
+        // Sorting functionality
+        function attachSortHandlers() {
+            table.querySelectorAll('th.sortable').forEach(th => {
+                th.addEventListener('click', function() {
+                    const property = this.dataset.property;
+                    sortTable(property, this);
+                });
+            });
+        }
+        
+        function sortTable(property, th) {
+            const rows = Array.from(tbody.querySelectorAll('tr:not(#' + tableId + '-no-items-row)'));
+            
+            // Toggle sort direction
+            if (sortColumn === property) {
+                sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+            } else {
+                sortDirection = 'asc';
+                sortColumn = property;
+            }
+            
+            // Remove sort classes from all headers
+            table.querySelectorAll('th').forEach(header => {
+                header.classList.remove('sort-asc', 'sort-desc');
+            });
+            
+            // Add sort class to current header
+            th.classList.add(sortDirection === 'asc' ? 'sort-asc' : 'sort-desc');
+            
+            // Sort rows
+            rows.sort((a, b) => {
+                const cellA = a.querySelector(`[data-column="${property}"] input, [data-column="${property}"] select, [data-column="${property}"] textarea`);
+                const cellB = b.querySelector(`[data-column="${property}"] input, [data-column="${property}"] select, [data-column="${property}"] textarea`);
+                
+                let valueA = cellA ? (cellA.value || '') : '';
+                let valueB = cellB ? (cellB.value || '') : '';
+                
+                // Try to parse as numbers
+                const numA = parseFloat(valueA);
+                const numB = parseFloat(valueB);
+                
+                if (!isNaN(numA) && !isNaN(numB)) {
+                    return sortDirection === 'asc' ? numA - numB : numB - numA;
+                }
+                
+                // String comparison
+                return sortDirection === 'asc' 
+                    ? valueA.localeCompare(valueB)
+                    : valueB.localeCompare(valueA);
+            });
+            
+            // Re-append sorted rows
+            rows.forEach(row => tbody.appendChild(row));
+            reindexRows();
+            updateRowNumbers();
+        }
+        
+        // Get colspan for empty message
+        function getColspan() {
+            let count = config.columns.length;
+            if (config.showRowNumbers) count++;
+            if (config.allowMultiSelect) count++;
+            if (config.buttons && config.buttons.showRemoveButton) count++;
+            return count;
+        }
+        
+        // Initialize on load
+        init();
+    })();
+</script>

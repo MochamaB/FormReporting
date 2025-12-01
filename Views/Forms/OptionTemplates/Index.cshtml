@@ -1,0 +1,310 @@
+@using FormReporting.Extensions
+@using FormReporting.Models.ViewModels.Components
+@model FormReporting.Models.ViewModels.Forms.OptionTemplatesIndexViewModel
+
+@{
+    ViewData["Title"] = "Option Templates";
+
+    // ═══════════════════════════════════════════════════════════
+    // DATATABLE CONFIGURATION
+    // ═══════════════════════════════════════════════════════════
+
+    var tableConfig = new DataTableConfig
+    {
+        TableId = "optionTemplatesTable",
+        Columns = new List<string> {
+            "#",
+            "Template Name",
+            "Template Code",
+            "Category",
+            "Options",
+            "Usage",
+            "Scoring",
+            "Type",
+            "Status",
+            "Actions"
+        },
+        EnableSearch = true,
+        SearchBox = new SearchBoxConfig
+        {
+            ParameterName = "search",
+            PlaceholderText = "Search templates...",
+            CurrentValue = ViewBag.CurrentSearch,
+            ActionUrl = Url.Action("Index", "OptionTemplates") ?? "/Forms/OptionTemplates"
+        },
+        FilterDropdowns = new List<FilterDropdownConfig>
+        {
+            // Category Filter
+            new FilterDropdownConfig
+            {
+                Label = "Category",
+                Options = new List<FilterOption>
+                {
+                    new FilterOption
+                    {
+                        Text = "All Categories",
+                        Value = "",
+                        Url = Url.Action("Index", "OptionTemplates", new { search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus }),
+                        IsActive = string.IsNullOrEmpty(ViewBag.CurrentCategory)
+                    }
+                }.Concat(Model.Categories.Select(cat => new FilterOption
+                {
+                    Text = cat,
+                    Value = cat,
+                    Url = Url.Action("Index", "OptionTemplates", new { search = ViewBag.CurrentSearch, category = cat, status = ViewBag.CurrentStatus }),
+                    IsActive = ViewBag.CurrentCategory == cat
+                })).ToList()
+            },
+            // Status Filter
+            new FilterDropdownConfig
+            {
+                Label = "Status",
+                Options = new List<FilterOption>
+                {
+                    new FilterOption
+                    {
+                        Text = "All Status",
+                        Value = "",
+                        Url = Url.Action("Index", "OptionTemplates", new { search = ViewBag.CurrentSearch, category = ViewBag.CurrentCategory }),
+                        IsActive = string.IsNullOrEmpty(ViewBag.CurrentStatus)
+                    },
+                    new FilterOption
+                    {
+                        Text = "Active",
+                        Value = "active",
+                        Url = Url.Action("Index", "OptionTemplates", new { search = ViewBag.CurrentSearch, category = ViewBag.CurrentCategory, status = "active" }),
+                        IsActive = ViewBag.CurrentStatus == "active"
+                    },
+                    new FilterOption
+                    {
+                        Text = "Inactive",
+                        Value = "inactive",
+                        Url = Url.Action("Index", "OptionTemplates", new { search = ViewBag.CurrentSearch, category = ViewBag.CurrentCategory, status = "inactive" }),
+                        IsActive = ViewBag.CurrentStatus == "inactive"
+                    }
+                }
+            }
+        },
+        CreateButtonText = "Create Template",
+        CreateButtonUrl = Url.Action("Create", "OptionTemplates") ?? "/Forms/OptionTemplates/Create",
+        ShowPagination = true,
+        CurrentPage = ViewBag.CurrentPage,
+        TotalPages = ViewBag.TotalPages,
+        TotalRecords = ViewBag.TotalRecords,
+        PageSize = ViewBag.PageSize
+    };
+
+    // Transform config into renderable table
+    var table = tableConfig.BuildDataTable();
+
+    // Calculate row number starting point for pagination
+    int startingNumber = ((ViewBag.CurrentPage - 1) * ViewBag.PageSize) + 1;
+}
+
+
+
+<!-- Info Alert -->
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="alert alert-info alert-border-left alert-dismissible fade show" role="alert">
+            <i class="ri-information-line me-2 align-middle"></i>
+            <strong>Quick Fill Options</strong> - Pre-defined option sets for rapid form building. Use these templates to quickly add common options like satisfaction scales, agreement levels, and binary choices to your forms.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- DATATABLE -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<div class="row">
+    <div class="col-xl-12">
+        <div class="card">
+            <!-- Card Header: Search, Filters, Create Button -->
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center flex-wrap w-100 gap-2">
+                    <!-- Left: Search and Filters -->
+                    <div class="d-flex gap-2 flex-wrap align-items-center">
+                        @if (table.SearchBox != null)
+                        {
+                            <partial name="~/Views/Shared/Components/DataTable/_SearchBox.cshtml" model="table.SearchBox" />
+                        }
+
+                        @if (table.FilterDropdowns != null && table.FilterDropdowns.Any())
+                        {
+                            foreach (var filterDropdown in table.FilterDropdowns)
+                            {
+                                <partial name="~/Views/Shared/Components/DataTable/_FilterDropdown.cshtml" model="filterDropdown" />
+                            }
+                        }
+                    </div>
+
+                    <!-- Right: Action Buttons -->
+                    <div class="d-flex gap-2">
+                        <!-- Manage Categories Button -->
+                        <a href="@Url.Action("ManageCategories", "OptionTemplates")" 
+                           class="btn btn-soft-secondary">
+                            <i class="ri-folder-settings-line me-1"></i>Manage Categories
+                        </a>
+
+                        <!-- Create Template Button -->
+                        @if (!string.IsNullOrEmpty(table.CreateButtonText))
+                        {
+                            <a href="@table.CreateButtonUrl" class="btn btn-primary">
+                                <i class="ri-add-line me-1"></i>@table.CreateButtonText
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card Body: Table -->
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="@table.TableClasses" id="@table.TableId">
+                        <thead class="bg-light">
+                            <tr>
+                                @foreach (var column in table.Columns)
+                                {
+                                    <th>@column</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Templates.Any())
+                            {
+                                @for (int i = 0; i < Model.Templates.Count(); i++)
+                                {
+                                    var template = Model.Templates.ElementAt(i);
+                                    var rowNumber = startingNumber + i;
+                                    <tr>
+                                        <td class="fw-medium">@rowNumber</td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div>
+                                                    <h6 class="mb-0">@template.TemplateName</h6>
+                                                    @if (!string.IsNullOrEmpty(template.SubCategory))
+                                                    {
+                                                        <small class="text-muted">@template.SubCategory</small>
+                                                    }
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td><code class="text-primary">@template.TemplateCode</code></td>
+                                        <td>@Html.Raw(template.CategoryBadge)</td>
+                                        <td>
+                                            <span class="badge bg-primary-subtle text-primary">
+                                                <i class="ri-list-check me-1"></i>@template.ItemCount options
+                                            </span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-info-subtle text-info">
+                                                <i class="ri-bar-chart-line me-1"></i>@template.UsageCount uses
+                                            </span>
+                                        </td>
+                                        <td>@Html.Raw(template.ScoringBadge)</td>
+                                        <td>@Html.Raw(template.TemplateTypeBadge)</td>
+                                        <td>@Html.Raw(template.StatusBadge)</td>
+                                        <td>
+                                            <div class="d-flex gap-1">
+                                                <!-- View Details -->
+                                                
+
+                                                <!-- Edit -->
+                                                <a href="@Url.Action("Edit", new { id = template.TemplateId })" 
+                                                   class="btn btn-sm btn-soft-success"
+                                                   title="Edit Template">
+                                                    <i class="ri-pencil-line"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="10" class="text-center py-4">
+                                        <div class="py-4">
+                                            <i class="ri-inbox-line display-4 text-muted"></i>
+                                            <h5 class="mt-3 text-muted">No templates found</h5>
+                                            <p class="text-muted mb-0">Try adjusting your search or filters</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Card Footer: Pagination -->
+            @if (table.ShowPagination && table.TotalPages > 1)
+            {
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <!-- Showing Info -->
+                        <div class="text-muted">
+                            Showing @startingNumber to @Math.Min(startingNumber + ViewBag.PageSize - 1, ViewBag.TotalRecords) of @ViewBag.TotalRecords templates
+                        </div>
+
+                        <!-- Pagination -->
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination mb-0">
+                                <!-- Previous -->
+                                <li class="page-item @(ViewBag.CurrentPage <= 1 ? "disabled" : "")">
+                                    <a class="page-link" 
+                                       href="@Url.Action("Index", new { 
+                                           search = ViewBag.CurrentSearch, 
+                                           category = ViewBag.CurrentCategory, 
+                                           status = ViewBag.CurrentStatus, 
+                                           page = ViewBag.CurrentPage - 1 
+                                       })">
+                                        <i class="ri-arrow-left-s-line"></i>
+                                    </a>
+                                </li>
+
+                                <!-- Page Numbers -->
+                                @for (int p = Math.Max(1, ViewBag.CurrentPage - 2); p <= Math.Min(ViewBag.TotalPages, ViewBag.CurrentPage + 2); p++)
+                                {
+                                    <li class="page-item @(p == ViewBag.CurrentPage ? "active" : "")">
+                                        <a class="page-link" 
+                                           href="@Url.Action("Index", new { 
+                                               search = ViewBag.CurrentSearch, 
+                                               category = ViewBag.CurrentCategory, 
+                                               status = ViewBag.CurrentStatus, 
+                                               page = p 
+                                           })">
+                                            @p
+                                        </a>
+                                    </li>
+                                }
+
+                                <!-- Next -->
+                                <li class="page-item @(ViewBag.CurrentPage >= ViewBag.TotalPages ? "disabled" : "")">
+                                    <a class="page-link" 
+                                       href="@Url.Action("Index", new { 
+                                           search = ViewBag.CurrentSearch, 
+                                           category = ViewBag.CurrentCategory, 
+                                           status = ViewBag.CurrentStatus, 
+                                           page = ViewBag.CurrentPage + 1 
+                                       })">
+                                        <i class="ri-arrow-right-s-line"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Optional: Add any client-side functionality here
+        console.log('Option Templates Index loaded');
+    </script>
+}

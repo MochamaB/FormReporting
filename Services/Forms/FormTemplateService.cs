@@ -181,10 +181,10 @@ namespace FormReporting.Services.Forms
             // ═══════════════════════════════════════════════════════════
             // STEP 2: FORM BUILDER
             // ═══════════════════════════════════════════════════════════
-            bool step2Complete =
-                template.Sections.Any() &&
-                template.Items.Any() &&
-                template.Sections.All(s => s.Items.Any()); // Each section has at least one field
+            // Check if template has sections and each section has at least one field
+            bool hasSections = template.Sections != null && template.Sections.Any();
+            bool allSectionsHaveFields = hasSections && template.Sections.All(s => s.Items != null && s.Items.Any());
+            bool step2Complete = hasSections && allSectionsHaveFields;
 
             completedSteps[FormBuilderStep.FormBuilder] = step2Complete;
             stepStatuses[FormBuilderStep.FormBuilder] =
@@ -261,6 +261,9 @@ namespace FormReporting.Services.Forms
                 currentStep = FormBuilderStep.TemplateSetup;
             else if (!step2Complete)
                 currentStep = FormBuilderStep.FormBuilder;
+            else if (!step3Complete)
+                // Always go to MetricMapping after FormBuilder (optional but should be visited)
+                currentStep = FormBuilderStep.MetricMapping;
             else if (!step4Complete && template.RequiresApproval)
                 currentStep = FormBuilderStep.ApprovalWorkflow;
             else if (!step5Complete)

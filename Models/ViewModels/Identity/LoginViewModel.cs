@@ -27,5 +27,11 @@ namespace FormReporting.Models.ViewModels.Identity
         /// </summary>
         [Display(Name = "Remember me")]
         public bool RememberMe { get; set; } = false;
+
+        /// <summary>
+        /// URL to redirect to after successful login
+        /// Used for deep linking and preserving user's intended destination
+        /// </summary>
+        public string? ReturnUrl { get; set; }
     }
 }

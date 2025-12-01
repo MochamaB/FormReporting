@@ -1,0 +1,100 @@
+@model FormReporting.Models.ViewModels.Forms.FormBuilderViewModel
+
+@*
+    DETAILS PANEL: Right panel showing selected section/field details
+*@
+
+<div class="details-panel">
+    <!-- Empty State (shown when nothing is selected) -->
+    <div id="details-empty">
+        <partial name="~/Views/Forms/FormTemplates/Partials/FormBuilder/Summary/_SummaryDetailsEmpty.cshtml" />
+    </div>
+
+    <!-- Section Details (shown when section is selected) -->
+    <div id="details-section" style="display: none;">
+        <div class="details-header">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div>
+                    <h6 class="mb-1" id="section-details-name">Section Name</h6>
+                    <small class="text-muted" id="section-details-code">SEC_001</small>
+                </div>
+                <button type="button" class="btn btn-sm btn-soft-secondary" onclick="FormBuilderSummary.clearSelection()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <partial name="~/Views/Forms/FormTemplates/Partials/FormBuilder/Summary/_SummaryDetailsTabs.cshtml" />
+
+        <!-- Tab Content -->
+        <div class="tab-content mt-3" id="section-tab-content">
+            <!-- General Tab -->
+            <div class="tab-pane fade show active" id="section-general" role="tabpanel">
+                <div id="section-general-content"></div>
+            </div>
+
+            <!-- Display Tab -->
+            <div class="tab-pane fade" id="section-display" role="tabpanel">
+                <div id="section-display-content"></div>
+            </div>
+
+            <!-- Fields Tab -->
+            <div class="tab-pane fade" id="section-fields" role="tabpanel">
+                <div id="section-fields-content"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Field Details (shown when field is selected) -->
+    <div id="details-field" style="display: none;">
+        <div class="details-header">
+            <div class="d-flex align-items-center justify-content-between mb-3">
+                <div>
+                    <h6 class="mb-1" id="field-details-name">Field Name</h6>
+                    <small class="text-muted" id="field-details-code">SEC1_001</small>
+                </div>
+                <button type="button" class="btn btn-sm btn-soft-secondary" onclick="FormBuilderSummary.clearSelection()">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <ul class="nav nav-tabs nav-tabs-custom mb-3" role="tablist">
+            <li class="nav-item">
+                <a class="nav-link active" data-bs-toggle="tab" href="#field-general" role="tab">
+                    <i class="ri-file-list-line me-1"></i>General
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#field-validation" role="tab">
+                    <i class="ri-shield-check-line me-1"></i>Validation
+                </a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link" data-bs-toggle="tab" href="#field-options" role="tab">
+                    <i class="ri-list-check me-1"></i>Options
+                </a>
+            </li>
+        </ul>
+
+        <!-- Tab Content -->
+        <div class="tab-content" id="field-tab-content">
+            <!-- General Tab -->
+            <div class="tab-pane fade show active" id="field-general" role="tabpanel">
+                <div id="field-general-content"></div>
+            </div>
+
+            <!-- Validation Tab -->
+            <div class="tab-pane fade" id="field-validation" role="tabpanel">
+                <div id="field-validation-content"></div>
+            </div>
+
+            <!-- Options Tab -->
+            <div class="tab-pane fade" id="field-options" role="tabpanel">
+                <div id="field-options-content"></div>
+            </div>
+        </div>
+    </div>
+</div>

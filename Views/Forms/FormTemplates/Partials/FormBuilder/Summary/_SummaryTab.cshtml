@@ -1,0 +1,46 @@
+@model FormReporting.Models.ViewModels.Forms.FormBuilderViewModel
+
+@*
+    SUMMARY TAB: Two-column layout with hierarchy tree and details panel
+    - Left: Sections and fields hierarchy with drag-drop reordering
+    - Right: Tabbed details panel for selected section/field
+*@
+
+<div class="summary-container">
+    <!-- Left Column: Hierarchy Tree -->
+    <div class="summary-hierarchy">
+        <partial name="~/Views/Forms/FormTemplates/Partials/FormBuilder/Summary/_SummaryHierarchy.cshtml" model="Model" />
+    </div>
+
+    <!-- Right Column: Details Panel -->
+    <div class="summary-details">
+        <partial name="~/Views/Forms/FormTemplates/Partials/FormBuilder/Summary/_SummaryDetails.cshtml" model="Model" />
+    </div>
+</div>
+
+<!-- Embed template data as JSON for JavaScript access -->
+<script id="summary-data" type="application/json">
+@Html.Raw(System.Text.Json.JsonSerializer.Serialize(new {
+    templateId = Model.TemplateId,
+    templateName = Model.TemplateName,
+    sections = Model.Sections.Select(s => new {
+        sectionId = s.SectionId,
+        sectionName = s.SectionName,
+        displayOrder = s.DisplayOrder,
+        isCollapsible = s.IsCollapsible,
+        isCollapsed = s.IsCollapsedByDefault,
+        fieldCount = s.Fields.Count,
+        fields = s.Fields.Select(f => new {
+            itemId = f.ItemId,
+            itemCode = f.ItemCode,
+            itemName = f.ItemName,
+            dataType = f.DataTypeName,
+            isRequired = f.IsRequired,
+            displayOrder = f.DisplayOrder,
+            hasValidation = f.HasValidation,
+            hasConditionalLogic = f.HasConditionalLogic,
+            optionCount = f.OptionCount
+        }).ToList()
+    }).ToList()
+}))
+</script>

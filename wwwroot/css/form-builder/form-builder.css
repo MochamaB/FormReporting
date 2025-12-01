@@ -1,3 +1,48 @@
+    /* ============================================================================
+       PREVENT BODY SCROLLING - Force scrolling within panels only
+       ============================================================================ */
+
+    /* Prevent body scroll when FormBuilder is active */
+    body:has(.builder-content-area) {
+        overflow: hidden;
+        height: 100vh;
+    }
+
+    /* Prevent main-content scroll and remove padding */
+    body:has(.builder-content-area) .main-content {
+        overflow: hidden;
+        padding: 0 !important;  /* Remove default padding */
+    }
+
+    /* Prevent page-content scroll and remove padding */
+    body:has(.builder-content-area) .page-content {
+        overflow: hidden;
+        padding-top: 70px !important;  /* Remove default padding-top that creates gap */
+    }
+
+    /* Remove container padding at top */
+    body:has(.builder-content-area) .container-fluid {
+        padding-top: 0 !important;
+    }
+
+    /* ============================================================================
+       SPACE OPTIMIZATION - Maximize working area
+       ============================================================================ */
+
+    /* Hide footer in FormBuilder - saves ~50px */
+    body:has(.builder-content-area) footer,
+    body:has(.builder-content-area) .footer {
+        display: none !important;
+    }
+
+    /* Hide page title breadcrumb in FormBuilder - saves ~60px */
+    body:has(.builder-content-area) .page-title-box {
+        display: none !important;
+    }
+
+    /* ============================================================================
+       TAB HEADER & CONTENT AREA
+       ============================================================================ */
 
     .builder-tabs-container {
         background: #fff;
@@ -8,7 +53,13 @@
         margin-right: -1.5rem;
         margin-top: 0;
         margin-bottom: 0;
-        padding: 0.75rem 1.5rem;
+        /* Compact padding - saves ~20px */
+        padding: 0.5rem 1.5rem;
+        /* Sticky positioning - stays visible when scrolling */
+        position: sticky;
+        top: 70px;  /* Navbar height */
+        z-index: 100;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
     }
 
     .builder-tabs-container .nav-tabs-custom {
@@ -43,12 +94,16 @@
         margin-right: -1.5rem;
         margin-top: 0;
         margin-bottom: 0;
-        min-height: calc(100vh - 250px);
+        /* Height calculation: Navbar(70) + Progress(80) + Tabs(40) = 190px */
+        /* Breadcrumb, Footer, and all container padding removed */
+        min-height: calc(100vh - 190px);
         background: #f8f9fa;
     }
 
     .nav-tabs-custom.card-header-tabs .nav-link {
-        padding: 1rem 1rem;
+        /* Compact padding - saves vertical space */
+        padding: 0.5rem 0.75rem;
+        font-size: 0.875rem;
         color: #7c7f90;
     }
 
@@ -56,7 +111,9 @@
     .design-grid {
         display: grid;
         grid-template-columns: 250px 1fr auto;
-        height: calc(100vh - 250px);
+        /* Height calculation: Navbar(70) + Progress(80) + Tabs(40) + Padding(40) = 230px */
+        /* Breadcrumb & Footer removed via display:none above */
+        height: calc(100vh - 200px);
         transition: grid-template-columns 0.3s ease;
     }
 
@@ -80,7 +137,7 @@
     .design-properties {
         background: #fff;
         border-left: 2px solid #c6c6c6;;
-        width: 360px;
+        width: 400px;
         overflow-y: auto;
         transition: width 0.3s ease, opacity 0.3s ease;
         position: relative;
@@ -320,22 +377,39 @@
     border: 2px solid rgba(64, 81, 137, 0.15) !important;  /* Solid, not dashed */
 }
 
-/* Field drag ghost - white background */
+/* Field drag ghost - thin horizontal line indicator showing drop position */
 .sortable-ghost-field {
-    opacity: 0.8;
-    background: #ffffff !important;
-    border: 2px solid rgba(64, 81, 137, 0.15) !important;
-    border-radius: 6px;
-    padding: 0.75rem;
-    min-height: 60px;
+    opacity: 0.6 !important;
+    height: 3px !important;
+    min-height: 3px !important;
+    max-height: 3px !important;
+    background: var(--vz-secondary) !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0.5rem 0 !important;
+    box-shadow: 0 0 0 1px var(--vz-secondary) !important;
+    overflow: hidden !important;
 }
 
-/* Fields container drop zone indicator when dragging fields */
-.fields-container.sortable-drag-over {
+/* Hide all content inside ghost element to ensure only the line shows */
+.sortable-ghost-field * {
+    display: none !important;
+}
+
+/* Fields container drop zone indicator when dragging NEW field from palette */
+.fields-container.drag-over-new-field {
     background: rgba(10, 179, 156, 0.08) !important;
     border: 2px solid #0ab39c !important;
     border-style: solid !important;
     min-height: 100px;
+}
+
+/* Fields container drop zone indicator when REORDERING existing fields */
+.fields-container.drag-over-reorder {
+    background: rgba(64, 81, 137, 0.02) !important;
+    border: 1px dashed rgba(64, 81, 137, 0.3) !important;
+    border-style: dashed !important;
 }
 
 .sortable-drag {
@@ -495,19 +569,27 @@
    BUILDER FIELD PREVIEW CARDS
    ============================================================================ */
 
-/* Field card styling */
+/* Field card styling - Base state */
 .builder-field-card {
+    border: 2px solid transparent;
+    border-radius: 0px;
     transition: all 0.2s ease;
-}
-
-.builder-field-card .card {
-    transition: all 0.2s ease;
+    cursor: pointer;
     background: #ffffff;
 }
 
-.builder-field-card:hover .card {
-    box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.08);
-    border-color: #0ab39c !important;
+/* Field card hover - Faint secondary color */
+.builder-field-card:hover {
+    border-color: var(--vz-secondary-subtle) !important;
+    background-color: var(--vz-secondary-bg-subtle);
+    box-shadow: 0 0.125rem 0.25rem rgba(255, 175, 0, 0.1);
+}
+
+/* Field card selected - Full secondary color */
+.builder-field-card.selected-element {
+    border-color: var(--vz-secondary) !important;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 3px rgba(255, 175, 0, 0.2);
 }
 
 /* Drag handle styling */
@@ -563,12 +645,6 @@
     font-size: 0.8rem;
 }
 
-/* Selected field state (for future implementation) */
-.builder-field-card.selected .card {
-    border-color: #405189 !important;
-    background: rgba(64, 81, 137, 0.02);
-}
-
 /* Hover shadow utility */
 .hover-shadow-sm {
     transition: box-shadow 0.2s ease;
@@ -576,4 +652,532 @@
 
 .hover-shadow-sm:hover {
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* ============================================================================
+   OPTIONS MANAGER - Minimal styles using Velzon theme
+   ============================================================================ */
+
+/* Option item container */
+.option-item {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 0.25rem;
+    padding: 0.5rem;
+    margin-bottom: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.option-item:hover {
+    background: #fff;
+    border-color: #d1d5db;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Drag handle */
+.option-drag-handle {
+    cursor: move;
+    color: #adb5bd;
+    font-size: 1.1rem;
+}
+
+.option-drag-handle:hover {
+    color: #6c757d;
+}
+
+/* Option inputs */
+.option-item input[type="text"] {
+    font-size: 0.875rem;
+}
+
+/* Sortable ghost (drag preview) */
+.sortable-ghost {
+    opacity: 0.5;
+    background: #e9ecef !important;
+}
+
+/* Sortable drag (element being dragged) */
+.sortable-drag {
+    opacity: 0.8;
+}
+
+/* ============================================================================
+   OPTIONS TABLE STYLING - Compact design
+   ============================================================================ */
+
+/* Table row hover effect */
+#options-list tr.option-item:hover {
+    background-color: #f8f9fa;
+}
+
+/* Input styling for table cells */
+#options-list .option-value-input,
+#options-list .option-label-input {
+    border: 1px solid transparent !important;
+    background-color: transparent !important;
+    padding: 0.25rem 0.5rem;
+    transition: all 0.2s ease;
+}
+
+/* Show border on focus */
+#options-list .option-value-input:focus,
+#options-list .option-label-input:focus {
+    border-color: #0ab39c !important;
+    background-color: #fff !important;
+    box-shadow: 0 0 0 0.1rem rgba(10, 179, 156, 0.15);
+}
+
+/* Value input (bold) */
+#options-list .option-value-input {
+    font-weight: 500;
+    color: #212529;
+    font-size:12.5px;
+}
+
+/* Label input (lighter) */
+#options-list .option-label-input {
+    color: #6c757d;
+    font-size: 12.5px;
+}
+
+/* Drag handle styling */
+#options-list .option-drag-handle {
+    cursor: move;
+    color: #adb5bd;
+    font-size: 1rem;
+    transition: color 0.2s ease;
+}
+
+#options-list .option-drag-handle:hover {
+    color: #495057;
+}
+
+/* Checkbox styling */
+#options-list .option-default-checkbox {
+    cursor: pointer;
+    width: 15px;
+    height: 15px;
+}
+
+/* Action buttons */
+#options-list .btn-ghost-secondary,
+#options-list .btn-ghost-danger {
+    
+    transition: opacity 0.2s ease;
+}
+
+#options-list tr:hover .btn-ghost-secondary,
+#options-list tr:hover .btn-ghost-danger {
+    opacity: 1;
+}
+
+/* Table header styling */
+#field-options-manager thead th {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+/* Table body spacing */
+#options-list td {
+    padding: 0.5rem 0rem;
+    vertical-align: middle;
+    border: none;
+}
+
+/* Row borders */
+#options-list tr {
+    border-bottom: 1px solid #f3f6f9;
+}
+
+/* Sortable ghost for table rows */
+#options-list .sortable-ghost {
+    opacity: 0.4;
+    background-color: #e3f2fd !important;
+}
+
+/* Dragging state */
+#options-list .sortable-drag {
+    background-color: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* ============================================================================
+   VALIDATIONS TABLE STYLING - Clean design
+   ============================================================================ */
+
+/* Table row hover effect */
+#validations-list tr.validation-item:hover {
+    background-color: #f8f9fa;
+}
+
+/* Drag handle styling */
+#validations-list .validation-drag-handle {
+    cursor: move;
+    color: #adb5bd;
+    font-size: 1rem;
+    transition: color 0.2s ease;
+}
+
+#validations-list .validation-drag-handle:hover {
+    color: #495057;
+}
+
+/* Action buttons */
+#validations-list .btn-ghost-secondary,
+#validations-list .btn-ghost-danger {
+    opacity: 0.5;
+    transition: opacity 0.2s ease;
+}
+
+#validations-list tr:hover .btn-ghost-secondary,
+#validations-list tr:hover .btn-ghost-danger {
+    opacity: 1;
+}
+
+/* Table header styling */
+#validations-table thead th {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+/* Table body spacing */
+#validations-list td {
+    padding: 0.5rem 0.75rem;
+    vertical-align: middle;
+    border: none;
+}
+
+/* Row borders */
+#validations-list tr {
+    border-bottom: 1px solid #f3f6f9;
+}
+
+/* Sortable ghost for table rows */
+#validations-list .sortable-ghost {
+    opacity: 0.4;
+    background-color: #e3f2fd !important;
+}
+
+/* Dragging state */
+#validations-list .sortable-drag {
+    background-color: #fff;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+/* Validation count badge */
+#validation-count-badge {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* Field type badge */
+#current-field-type-badge {
+    font-size: 0.7rem;
+    padding: 0.25rem 0.5rem;
+    font-weight: 500;
+}
+
+/* Validation type hint */
+#field-type-hint {
+    font-size: 0.75rem;
+    font-style: italic;
+}
+
+
+
+.validation-checkbox:hover {
+    background-color: #f8f9fa;
+    border-color: #0ab39c;
+}
+
+.validation-checkbox input[type="checkbox"]:checked + label {
+    color: #0ab39c;
+    font-weight: 500;
+}
+
+.validation-group {
+    margin-bottom: 1rem;
+}
+
+.validation-group small {
+    font-size: 0.7rem;
+    letter-spacing: 0.5px;
+}
+
+/* ============================================================================
+   SUMMARY TAB - Two-column layout with hierarchy tree and details panel
+   ============================================================================ */
+
+/* Main container - Two columns using CSS Grid */
+.summary-container {
+    display: grid;
+    grid-template-columns: 38% 62%;
+    gap: 1rem;
+    height: calc(100vh - 235px); /* Adjust based on header height */
+    overflow: hidden;
+    padding: 1rem;
+    background: #f3f3f9;
+}
+
+/* ============================================================================
+   LEFT COLUMN: HIERARCHY TREE
+   ============================================================================ */
+
+.summary-hierarchy {
+    background: #fff;
+    border-radius: 0rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    margin-top: -1.0rem;
+    margin-bottom: -1.0rem;
+    margin-left: -1.0rem;
+    border-right: 2px solid #c6c6c6;
+}
+
+.hierarchy-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.hierarchy-header {
+    padding: 1rem;
+    border-bottom: 1px solid #e9ecef;
+    flex-shrink: 0;
+}
+
+.hierarchy-tree {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0.5rem;
+}
+
+/* Sections List */
+.sections-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* Section Item */
+.section-item {
+    margin-bottom: 0.5rem;
+    border: 1px solid #e9ecef;
+    border-radius: 0.25rem;
+    background: #fff;
+    transition: all 0.2s ease;
+}
+
+.section-item:hover {
+    box-shadow: 0 0.125rem 0.5rem rgba(0, 0, 0, 0.1);
+}
+
+.section-item.selected {
+    border-color: #0ab39c;
+    background: #f0fdf9;
+}
+
+/* Section Header */
+.section-header {
+    padding: 0.75rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    transition: background 0.2s ease;
+}
+
+.section-header:hover {
+    background: #f8f9fa;
+}
+
+.section-drag-handle {
+    cursor: move;
+    color: #adb5bd;
+    font-size: 1rem;
+    transition: color 0.2s ease;
+}
+
+.section-drag-handle:hover {
+    color: #495057;
+}
+
+.collapse-icon {
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    color: #6c757d;
+}
+
+.section-item.collapsed .collapse-icon {
+    transform: rotate(-90deg);
+}
+
+.section-name {
+    font-weight: 500;
+    color: #212529;
+    flex: 1;
+}
+
+/* Fields List */
+.fields-list {
+    padding: 0.5rem 0.5rem 0.5rem 2.5rem;
+    background: #f8f9fa;
+    border-top: 1px solid #e9ecef;
+    transition: max-height 0.3s ease, opacity 0.3s ease;
+    overflow: hidden;
+}
+
+.section-item.collapsed .fields-list {
+    max-height: 0 !important;
+    opacity: 0;
+    padding-top: 0;
+    padding-bottom: 0;
+    border-top: none;
+}
+
+/* Field Item */
+.field-item {
+    margin-bottom: 0.5rem;
+    border: 1px solid #dee2e6;
+    border-radius: 0.25rem;
+    background: #fff;
+    transition: all 0.2s ease;
+}
+
+.field-item:hover {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.field-item.selected {
+    border-color: #0ab39c;
+    background: #f0fdf9;
+}
+
+.field-content {
+    padding: 0.5rem 0.75rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.field-drag-handle {
+    cursor: move;
+    color: #adb5bd;
+    font-size: 0.875rem;
+    transition: color 0.2s ease;
+}
+
+.field-drag-handle:hover {
+    color: #495057;
+}
+
+.field-name {
+    flex: 1;
+    font-size: 0.875rem;
+    color: #495057;
+}
+
+/* Drag-Drop Visual Feedback */
+.sortable-ghost {
+    opacity: 0.4;
+    background-color: #e3f2fd !important;
+}
+
+.sortable-chosen {
+    background-color: #fff3cd !important;
+}
+
+.sortable-drag {
+    opacity: 0.8;
+    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.2);
+}
+
+/* ============================================================================
+   RIGHT COLUMN: DETAILS PANEL
+   ============================================================================ */
+
+.summary-details {
+    background: #fff;
+    border-radius: 0.25rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.details-panel {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.details-header {
+    flex-shrink: 0;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e9ecef;
+}
+
+/* Details Content Sections */
+#details-empty,
+#details-section,
+#details-field {
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* Tab Content Styling */
+.tab-content {
+    padding: 0rem 0;
+}
+
+/* Info Cards in Details Panel */
+.info-card {
+    background: #f8f9fa;
+    border: 1px solid #e9ecef;
+    border-radius: 0.25rem;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.info-card-label {
+    font-size: 0.75rem;
+    color: #6c757d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+}
+
+.info-card-value {
+    font-size: 0.875rem;
+    color: #212529;
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+    .summary-container {
+        grid-template-columns: 40% 60%;
+    }
+}
+
+@media (max-width: 992px) {
+    .summary-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: 40% 60%;
+    }
 }

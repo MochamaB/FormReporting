@@ -1,4 +1,4 @@
-6[Intervention] Slow network is detected. See <URL> for more details. Fallback font will be used while loading: <URL>
+Failed to load resource: the server responded with a status of 404 ()Understand this error
 remixiconca45.woff2:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
 remixiconca45.woff:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
 remixiconca45.ttf:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
@@ -15,39 +15,31 @@ form-builder.js:23 Form Builder initialized for template: 3
 form-builder-layout.js:14 FormBuilder Layout initialized
 form-builder-dragdrop.js:68 Toolbox drag-drop initialized
 form-builder-dragdrop.js:119 Canvas sections drag-drop initialized
-form-builder-dragdrop.js:208 Field palette drag-drop initialized for 7 categories
-form-builder-dragdrop.js:300 Field drop zones initialized for 2 sections
+form-builder-dragdrop.js:370 Field palette drag-drop initialized for 7 categories
+form-builder-dragdrop.js:495 Field drop zones initialized for 2 sections
 form-builder-dragdrop.js:27 FormBuilder Drag & Drop initialized
 form-builder-fields.js:15 FormBuilderFields initialized
-BlockingPageContent.js:2  action SET_STORAGE_DATA @ 18:58:43.220
+BlockingPageContent.js:2  action SET_STORAGE_DATA @ 00:08:13.293
 BlockingPageContent.js:2  prev state Object
 BlockingPageContent.js:2  action     Object
 BlockingPageContent.js:2  next state Object
-NotificationContent.js:2  action SET_LOCALE @ 18:58:43.250
+NotificationContent.js:2  action SET_LOCALE @ 00:08:13.333
 NotificationContent.js:2  prev state Object
 NotificationContent.js:2  action     Object
 NotificationContent.js:2  next state Object
-NotificationContent.js:2  action SET_STORAGE_DATA @ 18:58:43.261
+NotificationContent.js:2  action SET_STORAGE_DATA @ 00:08:13.379
 NotificationContent.js:2  prev state Object
 NotificationContent.js:2  action     Object
 NotificationContent.js:2  next state Object
-TISProUrlManualScannerLib.js:1 mouseenter href = https://localhost:7220/FormTemplates/Create/3
+app.js:1 Uncaught TypeError: Cannot read properties of null (reading 'classList')
+    at HTMLBodyElement.<anonymous> (app.js:1:49189)Understand this error
+TISProUrlManualScannerLib.js:1 mouseenter href = https://localhost:7220/FormTemplates/FormBuilder/3#prop-configuration
+TISProUrlManualScannerLib.js:1 mouseenter href = https://localhost:7220/FormTemplates/FormBuilder/3#prop-validation
+app.js:1 Uncaught TypeError: Cannot read properties of null (reading 'classList')
+    at HTMLBodyElement.<anonymous> (app.js:1:49189)Understand this error
+:7220/Forms/FormTemplates/ValidateStageCompletion?id=3&currentStage=2:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
+form-builder.js:73 Validation error: SyntaxError: Unexpected end of JSON input
+validateStageCompletion @ form-builder.js:73Understand this error
+app.js:1 Uncaught TypeError: Cannot read properties of null (reading 'classList')
+    at HTMLBodyElement.<anonymous> (app.js:1:49189)Understand this error
 TISProUrlManualScannerLib.js:1 mouseenter href = https://localhost:7220/FormTemplates/FormBuilder/3#prop-advanced
-app.js:1 Uncaught TypeError: Cannot read properties of null (reading 'classList')
-    at HTMLBodyElement.<anonymous> (app.js:1:49189)
-(anonymous) @ app.js:1Understand this error
-form-builder-dragdrop.js:271 Field Dropdown dropped into section 1
-form-builder-fields.js:70 Opening Add Field modal for section: 1 type: Dropdown
-2app.js:1 Uncaught TypeError: Cannot read properties of null (reading 'classList')
-    at HTMLBodyElement.<anonymous> (app.js:1:49189)
-(anonymous) @ app.js:1Understand this error
-33:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was receivedUnderstand this error
-3:1 Unchecked runtime.lastError: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was receivedUnderstand this error
-3:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was receivedUnderstand this error
-3:1 Unchecked runtime.lastError: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was receivedUnderstand this error
-23:1 Uncaught (in promise) Error: A listener indicated an asynchronous response by returning true, but the message channel closed before a response was receivedUnderstand this error
-form-builder-fields.js:142 Saving field: {SectionId: 1, ItemName: 'Local Area Network (LAN)', ItemDescription: null, DataType: 'Dropdown', IsRequired: true, …}DataType: "Dropdown"DisplayOrder: 0IsRequired: trueItemDescription: nullItemName: "Local Area Network (LAN)"SectionId: 1[[Prototype]]: Objectconstructor: ƒ Object()hasOwnProperty: ƒ hasOwnProperty()isPrototypeOf: ƒ isPrototypeOf()propertyIsEnumerable: ƒ propertyIsEnumerable()toLocaleString: ƒ toLocaleString()toString: ƒ toString()valueOf: ƒ valueOf()__defineGetter__: ƒ __defineGetter__()__defineSetter__: ƒ __defineSetter__()__lookupGetter__: ƒ __lookupGetter__()__lookupSetter__: ƒ __lookupSetter__()__proto__: (...)get __proto__: ƒ __proto__()set __proto__: ƒ __proto__()
-app.js:1 Uncaught TypeError: Cannot read properties of null (reading 'classList')
-    at HTMLBodyElement.<anonymous> (app.js:1:49189)
-(anonymous) @ app.js:1Understand this error
-form-builder-fields.js:167 Response text: {"success":false,"message":"Error adding field: Object reference not set to an instance of an object."}

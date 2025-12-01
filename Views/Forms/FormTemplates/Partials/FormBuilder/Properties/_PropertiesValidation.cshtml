@@ -7,3 +7,198 @@
     - RegexPattern, CustomExpression, ErrorMessage
     - Severity, ValidationOrder, IsActive
 *@
+
+<div id="validation-field" class="card-body">
+    
+    <!-- Add New Validation Form -->
+    <div class="card mb-3">
+        <div class="card-body">
+            <div class="mb-3">
+                <h6 class="mb-2">Add Validation Rule</h6>
+                <div id="field-type-info" class="alert alert-info py-2 mb-0" style="display: none;">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="ri-information-line fs-5"></i>
+                        <div>
+                            <strong>Selected Field Type:</strong> 
+                            <span id="current-field-type-display" class="badge bg-primary ms-2" style="font-size: 0.9rem;">Not Set</span>
+                        </div>
+                    </div>
+                    <small class="text-muted d-block mt-1">
+                        Validation options below are filtered based on this field type
+                    </small>
+                </div>
+            </div>
+            
+            <!-- Validation Types as Checkboxes -->
+            <div id="validation-types-container" class="mb-3">
+                <label class="form-label d-block mb-2">Available Validation Rules</label>
+                
+                <!-- Basic Rules -->
+                <div class="validation-group mb-3" data-group="basic">
+                    <small class="text-muted text-uppercase fw-bold d-block mb-2">Basic Rules</small>
+                    <div class="d-flex flex-wrap gap-2">
+                        <div class="form-check validation-checkbox" data-validation-type="Required">
+                            <input class="form-check-input" type="checkbox" value="Required" id="val-required" 
+                                   onchange="FormBuilderValidation.onValidationCheckChange('Required')">
+                            <label class="form-check-label" for="val-required">Required Field</label>
+                        </div>
+                        <div class="form-check validation-checkbox" data-validation-type="Email">
+                            <input class="form-check-input" type="checkbox" value="Email" id="val-email"
+                                   onchange="FormBuilderValidation.onValidationCheckChange('Email')">
+                            <label class="form-check-label" for="val-email">Email Format</label>
+                        </div>
+                        <div class="form-check validation-checkbox" data-validation-type="Phone">
+                            <input class="form-check-input" type="checkbox" value="Phone" id="val-phone"
+                                   onchange="FormBuilderValidation.onValidationCheckChange('Phone')">
+                            <label class="form-check-label" for="val-phone">Phone Number</label>
+                        </div>
+                        <div class="form-check validation-checkbox" data-validation-type="URL">
+                            <input class="form-check-input" type="checkbox" value="URL" id="val-url"
+                                   onchange="FormBuilderValidation.onValidationCheckChange('URL')">
+                            <label class="form-check-label" for="val-url">URL Format</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Text Length Rules -->
+                <div class="validation-group mb-3" data-group="text-length">
+                    <small class="text-muted text-uppercase fw-bold d-block mb-2">Text Length</small>
+                    <div class="d-flex flex-wrap gap-2">
+                        <div class="form-check validation-checkbox" data-validation-type="MinLength">
+                            <input class="form-check-input" type="checkbox" value="MinLength" id="val-minlength"
+                                   onchange="FormBuilderValidation.onValidationCheckChange('MinLength')">
+                            <label class="form-check-label" for="val-minlength">Minimum Length</label>
+                        </div>
+                        <div class="form-check validation-checkbox" data-validation-type="MaxLength">
+                            <input class="form-check-input" type="checkbox" value="MaxLength" id="val-maxlength"
+                                   onchange="FormBuilderValidation.onValidationCheckChange('MaxLength')">
+                            <label class="form-check-label" for="val-maxlength">Maximum Length</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Numeric Rules -->
+                <div class="validation-group mb-3" data-group="numeric">
+                    <small class="text-muted text-uppercase fw-bold d-block mb-2">Numeric</small>
+                    <div class="d-flex flex-wrap gap-2">
+                        <div class="form-check validation-checkbox" data-validation-type="MinValue">
+                            <input class="form-check-input" type="checkbox" value="MinValue" id="val-minvalue"
+                                   onchange="FormBuilderValidation.onValidationCheckChange('MinValue')">
+                            <label class="form-check-label" for="val-minvalue">Minimum Value</label>
+                        </div>
+                        <div class="form-check validation-checkbox" data-validation-type="MaxValue">
+                            <input class="form-check-input" type="checkbox" value="MaxValue" id="val-maxvalue"
+                                   onchange="FormBuilderValidation.onValidationCheckChange('MaxValue')">
+                            <label class="form-check-label" for="val-maxvalue">Maximum Value</label>
+                        </div>
+                        <div class="form-check validation-checkbox" data-validation-type="Range">
+                            <input class="form-check-input" type="checkbox" value="Range" id="val-range"
+                                   onchange="FormBuilderValidation.onValidationCheckChange('Range')">
+                            <label class="form-check-label" for="val-range">Value Range</label>
+                        </div>
+                        <div class="form-check validation-checkbox" data-validation-type="Integer">
+                            <input class="form-check-input" type="checkbox" value="Integer" id="val-integer"
+                                   onchange="FormBuilderValidation.onValidationCheckChange('Integer')">
+                            <label class="form-check-label" for="val-integer">Integer Only</label>
+                        </div>
+                        <div class="form-check validation-checkbox" data-validation-type="Decimal">
+                            <input class="form-check-input" type="checkbox" value="Decimal" id="val-decimal"
+                                   onchange="FormBuilderValidation.onValidationCheckChange('Decimal')">
+                            <label class="form-check-label" for="val-decimal">Decimal Number</label>
+                        </div>
+                        <div class="form-check validation-checkbox" data-validation-type="Number">
+                            <input class="form-check-input" type="checkbox" value="Number" id="val-number"
+                                   onchange="FormBuilderValidation.onValidationCheckChange('Number')">
+                            <label class="form-check-label" for="val-number">Any Number</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Date/Time Rules -->
+                <div class="validation-group mb-3" data-group="datetime">
+                    <small class="text-muted text-uppercase fw-bold d-block mb-2">Date/Time</small>
+                    <div class="d-flex flex-wrap gap-2">
+                        <div class="form-check validation-checkbox" data-validation-type="Date">
+                            <input class="form-check-input" type="checkbox" value="Date" id="val-date"
+                                   onchange="FormBuilderValidation.onValidationCheckChange('Date')">
+                            <label class="form-check-label" for="val-date">Date Format</label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Advanced Rules -->
+                <div class="validation-group mb-3" data-group="advanced">
+                    <small class="text-muted text-uppercase fw-bold d-block mb-2">Advanced</small>
+                    <div class="d-flex flex-wrap gap-2">
+                        <div class="form-check validation-checkbox" data-validation-type="Pattern">
+                            <input class="form-check-input" type="checkbox" value="Pattern" id="val-pattern"
+                                   onchange="FormBuilderValidation.onValidationCheckChange('Pattern')">
+                            <label class="form-check-label" for="val-pattern">Regex Pattern</label>
+                        </div>
+                        <div class="form-check validation-checkbox" data-validation-type="Custom">
+                            <input class="form-check-input" type="checkbox" value="Custom" id="val-custom"
+                                   onchange="FormBuilderValidation.onValidationCheckChange('Custom')">
+                            <label class="form-check-label" for="val-custom">Custom Expression</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Selected Validations Container -->
+            <div id="selected-validations-container" style="display: none;">
+                <hr class="my-3">
+                <h6 class="mb-3">Configure Selected Rules</h6>
+                <div id="selected-validations-list">
+                    <!-- Dynamic forms for each checked validation will appear here -->
+                </div>
+                
+                <!-- Add Button (shows only when validations are selected) -->
+                <div class="mt-3">
+                    <button type="button" class="btn btn-success" onclick="FormBuilderValidation.addSelectedValidations()">
+                        <i class="ri-add-line"></i> Add Selected Rules
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="FormBuilderValidation.clearSelection()">
+                        Clear Selection
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Existing Validations List -->
+    <div class="card">
+        <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <h6 class="mb-0">Active Validation Rules</h6>
+                <span id="validation-count-badge" class="badge bg-primary">0</span>
+            </div>
+            <small class="text-muted d-block mb-3">Drag to reorder • Rules execute in order</small>
+            
+            <!-- Validations Table -->
+            <div class="table-responsive">
+                <table class="table table-sm table-borderless mb-0" id="validations-table">
+                    <thead>
+                        <tr>
+                            <th style="width: 30px;"></th>
+                            <th style="width: 25%;">Type</th>
+                            <th style="width: 40%;">Rule Details</th>
+                            <th style="width: 25%;">Error Message</th>
+                            <th style="width: 80px;" class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="validations-list">
+                        <!-- Validation rules will be dynamically rendered here -->
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Empty State -->
+            <div id="validations-empty" class="text-center py-4" style="display: none;">
+                <i class="ri-shield-check-line text-muted" style="font-size: 2rem;"></i>
+                <p class="text-muted mb-0 mt-2">No validation rules added yet</p>
+                <small class="text-muted">Add rules above to validate user input</small>
+            </div>
+        </div>
+    </div>
+
+</div>

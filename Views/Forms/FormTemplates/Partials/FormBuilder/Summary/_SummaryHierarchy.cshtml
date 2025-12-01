@@ -1,0 +1,124 @@
+@model FormReporting.Models.ViewModels.Forms.FormBuilderViewModel
+
+@*
+    HIERARCHY PANEL: Tree view of sections and fields with drag-drop
+*@
+
+<div class="hierarchy-panel">
+    <!-- Header -->
+    <div class="hierarchy-header">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+            <div>
+                <h6 class="mb-1">Form Structure</h6>
+                <small class="text-muted">@Model.Sections.Count sections • @Model.TotalFields fields</small>
+            </div>
+            <div class="btn-group btn-group-sm" role="group">
+                <button type="button" class="btn btn-soft-secondary" onclick="FormBuilderSummary.expandAll()" title="Expand All">
+                    <i class="ri-arrow-down-s-line"></i>
+                </button>
+                <button type="button" class="btn btn-soft-secondary" onclick="FormBuilderSummary.collapseAll()" title="Collapse All">
+                    <i class="ri-arrow-up-s-line"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hierarchy Tree -->
+    <div class="hierarchy-tree" id="hierarchyTree">
+        @if (Model.Sections.Count == 0)
+        {
+            <div class="text-center py-5">
+                <i class="ri-folder-open-line display-4 text-muted"></i>
+                <p class="text-muted mt-3">No sections yet</p>
+                <button type="button" class="btn btn-sm btn-primary" onclick="addSection()">
+                    <i class="ri-add-line me-1"></i>Add First Section
+                </button>
+            </div>
+        }
+        else
+        {
+            <div id="sections-list" class="sections-list">
+                @foreach (var formsection in Model.Sections.OrderBy(s => s.DisplayOrder))
+                {
+                    <div class="section-item" data-section-id="@formsection.SectionId" data-display-order="@formsection.DisplayOrder">
+                        <!-- Section Header -->
+                        <div class="section-header" onclick="FormBuilderSummary.selectSection(@formsection.SectionId)">
+                            <div class="d-flex align-items-center">
+                                <!-- Drag Handle -->
+                                <i class="ri-draggable section-drag-handle me-2"></i>
+
+                                <!-- Collapse Toggle -->
+                                <i class="ri-arrow-down-s-line collapse-icon me-2" onclick="FormBuilderSummary.toggleSection(@formsection.SectionId); event.stopPropagation();"></i>
+
+                                <!-- Section Icon & Name -->
+                                <i class="ri-folder-3-line text-primary me-2"></i>
+                                <span class="section-name">@formsection.SectionName</span>
+
+                                <!-- Field Count Badge -->
+                                <span class="badge bg-secondary-subtle text-secondary ms-2">@formsection.Fields.Count</span>
+                            </div>
+                        </div>
+
+                        <!-- Fields List (Collapsible) -->
+                        @if (formsection.Fields.Count > 0)
+                        {
+                            <div class="fields-list" data-section-id="@formsection.SectionId">
+                                @foreach (var field in formsection.Fields.OrderBy(f => f.DisplayOrder))
+                                {
+                                    <div class="field-item" data-field-id="@field.ItemId" data-display-order="@field.DisplayOrder">
+                                        <div class="field-content" onclick="FormBuilderSummary.selectField(@field.ItemId)">
+                                            <!-- Drag Handle -->
+                                            <i class="ri-draggable field-drag-handle me-2"></i>
+
+                                            <!-- Field Icon (based on type) -->
+                                            @{
+                                                var fieldIcon = field.DataType switch
+                                                {
+                                                    FormReporting.Models.Common.FormFieldType.Text => "ri-text",
+                                                    FormReporting.Models.Common.FormFieldType.Number => "ri-hashtag",
+                                                    FormReporting.Models.Common.FormFieldType.Date => "ri-calendar-line",
+                                                    FormReporting.Models.Common.FormFieldType.Dropdown => "ri-arrow-down-s-line",
+                                                    FormReporting.Models.Common.FormFieldType.Radio => "ri-radio-button-line",
+                                                    FormReporting.Models.Common.FormFieldType.Checkbox => "ri-checkbox-line",
+                                                    FormReporting.Models.Common.FormFieldType.TextArea => "ri-file-text-line",
+                                                    FormReporting.Models.Common.FormFieldType.Email => "ri-mail-line",
+                                                    FormReporting.Models.Common.FormFieldType.Phone => "ri-phone-line",
+                                                    _ => "ri-input-field"
+                                                };
+                                            }
+                                            <i class="@fieldIcon text-info me-2"></i>
+
+                                            <!-- Field Name -->
+                                            <span class="field-name">@field.ItemName</span>
+
+                                            <!-- Required Badge -->
+                                            @if (field.IsRequired)
+                                            {
+                                                <span class="badge bg-danger-subtle text-danger ms-2" style="font-size: 0.7rem;">Required</span>
+                                            }
+
+                                            <!-- Validation/Logic Indicators -->
+                                            @if (field.HasValidation || field.HasConditionalLogic)
+                                            {
+                                                <span class="ms-auto">
+                                                    @if (field.HasValidation)
+                                                    {
+                                                        <i class="ri-check-double-line text-success" title="Has validation"></i>
+                                                    }
+                                                    @if (field.HasConditionalLogic)
+                                                    {
+                                                        <i class="ri-git-branch-line text-warning" title="Has conditional logic"></i>
+                                                    }
+                                                </span>
+                                            }
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        }
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>

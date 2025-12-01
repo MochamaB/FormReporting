@@ -49,6 +49,7 @@ builder.Services.AddDataProtection();
 builder.Services.AddScoped<IFormCategoryService, FormCategoryService>();
 builder.Services.AddScoped<IFormTemplateService, FormTemplateService>();
 builder.Services.AddScoped<IFormBuilderService, FormBuilderService>();
+builder.Services.AddScoped<IFormItemOptionTemplateService, FormItemOptionTemplateService>();
 
 // Identity services
 builder.Services.AddScoped<IScopeService, ScopeService>();
@@ -56,6 +57,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 
 // Organizational services
 builder.Services.AddScoped<FormReporting.Services.Organizational.ITenantService, FormReporting.Services.Organizational.TenantService>();
+builder.Services.AddScoped<FormReporting.Services.Organizational.IDepartmentService, FormReporting.Services.Organizational.DepartmentService>();
 
 // Register authentication services
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
@@ -92,6 +94,10 @@ using (var scope = app.Services.CreateScope())
         // MenuSectionSeeder.SeedMenuSections(context);
         // ModuleSeeder.SeedModules(context);
         // MenuItemSeeder.SeedMenuItems(context);
+        
+        // 6. Seed Form Builder data
+        // FormItemOptionTemplateSeeder.SeedOptionTemplates(context);
+        
     }
     catch (Exception ex)
     {

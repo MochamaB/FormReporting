@@ -47,9 +47,14 @@ const FormBuilderLayout = {
      * @param {number} sectionId - Section ID to select
      */
     selectSection: function(sectionId) {
-        // Remove previous selection
+        // Remove previous section selections
         document.querySelectorAll('.builder-section').forEach(section => {
-            section.classList.remove('selected');
+            section.classList.remove('selected', 'section-has-selected-field');
+        });
+
+        // Remove field selections
+        document.querySelectorAll('.builder-field-card.selected-element').forEach(field => {
+            field.classList.remove('selected-element');
         });
 
         // Add selection to clicked section

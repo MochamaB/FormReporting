@@ -43,13 +43,14 @@
 <div class="card builder-field-card mb-2 p-3"
      data-field-id="@Model.ItemId"
      data-field-type="@Model.DataType"
-     id="field-@Model.ItemId">
+     id="field-@Model.ItemId"
+     onclick="selectField(@Model.ItemId)">
 
     <!-- Field Header (Similar to Section Header) -->
-    <div class="card-header d-flex align-items-center gap-2 py-2" style="cursor: pointer;" onclick="toggleFieldCollapse(@Model.ItemId)">
+    <div class="card-header d-flex align-items-center gap-2 py-2" style="cursor: pointer;">
 
         <!-- Left: Field Code Badge -->
-        <div class="flex-grow-1">
+        <div class="flex-grow-1" onclick="event.stopPropagation();">
             <span class="badge bg-secondary-subtle text-secondary" style="font-family: monospace; font-size: 0.75rem;">
                 @Model.ItemCode
             </span>

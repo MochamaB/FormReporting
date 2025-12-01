@@ -1,0 +1,142 @@
+@using FormReporting.Models.ViewModels.Components
+@using FormReporting.Extensions
+@model FormReporting.Models.ViewModels.Forms.OptionTemplateEditViewModel
+
+@{
+    // Configure EditableTable for option items
+    var itemsTable = new EditableTableConfig
+    {
+        TableId = "option-items-table",
+        ItemIndexPropertyName = "Items",
+        AllowMultiSelect = true,
+        AllowSorting = false,
+        ShowRowNumbers = true,
+        EmptyMessage = "No options added yet. Click 'Add Option' to start.",
+        InitialRowCount = Model.Items?.Count ?? 0,
+        Buttons = new EditableTableButtons
+        {
+            AddButtonText = "Add Option",
+            AddButtonIcon = "ri-add-line",
+            ClearAllButtonText = "Clear All",
+            ClearAllButtonIcon = "ri-delete-bin-line",
+            ShowAddButton = true,
+            ShowClearAllButton = true,
+            ShowRemoveButton = true,
+            ShowDeleteSelectedButton = true
+        },
+        Columns = new List<EditableTableColumn>
+        {
+            new EditableTableColumn
+            {
+                PropertyName = "OptionLabel",
+                Header = "Option Label",
+                ColumnType = EditableColumnType.Text,
+                IsRequired = true,
+                Placeholder = "e.g., Very Satisfied",
+                Width = "",
+                DisplayOrder = 1
+            },
+            new EditableTableColumn
+            {
+                PropertyName = "OptionValue",
+                Header = "Option Value",
+                ColumnType = EditableColumnType.Text,
+                IsRequired = true,
+                Placeholder = "e.g., very_satisfied",
+                Width = "",
+                DisplayOrder = 2
+            },
+            new EditableTableColumn
+            {
+                PropertyName = "DisplayOrder",
+                Header = "Order",
+                ColumnType = EditableColumnType.Number,
+                Width = "",
+                Min = 0,
+                DisplayOrder = 3,
+                Placeholder = "0"
+            },
+            new EditableTableColumn
+            {
+                PropertyName = "ScoreValue",
+                Header = "Score",
+                ColumnType = EditableColumnType.Decimal,
+                Width = "",
+                Step = 0.01m,
+                Placeholder = "0.00",
+                DisplayOrder = 4,
+                ConditionalDisplay = "HasScoring"
+            },
+            new EditableTableColumn
+            {
+                PropertyName = "ScoreWeight",
+                Header = "Weight",
+                ColumnType = EditableColumnType.Decimal,
+                Width = "",
+                Step = 0.01m,
+                DefaultValue = 1.0m,
+                Placeholder = "1.0",
+                DisplayOrder = 5,
+                ConditionalDisplay = "HasScoring"
+            },
+           
+            new EditableTableColumn
+            {
+                PropertyName = "IsDefault",
+                Header = "Default",
+                ColumnType = EditableColumnType.Checkbox,
+                Width = "",
+                DisplayOrder = 7
+            }
+        }
+    }.BuildEditableTable();
+}
+
+<div class="alert alert-info mb-3">
+    <i class="ri-information-line me-2"></i>
+    <strong>Add Options:</strong> Click "Add Option" to create new options. Each option needs a label (display text) and value (stored data). 
+    Enable scoring in Step 1 to add score values to options.
+</div>
+
+@{
+    // Pass existing items data to the partial
+    ViewData["ExistingItems"] = Model.Items;
+}
+
+<partial name="~/Views/Shared/Components/DataTable/_EditableTable.cshtml" model="itemsTable" />
+
+<div class="alert alert-warning mt-3" id="no-items-warning" style="display: none;">
+    <i class="ri-alert-line me-2"></i>
+    <strong>Warning:</strong> You must add at least one option before saving the template.
+</div>
+
+<script>
+    (function() {
+        const tableId = 'option-items-table';
+        const tbody = document.getElementById(tableId + '-tbody');
+        
+        // Form validation before submit
+        const createForm = document.getElementById('createTemplateWizard');
+        const editForm = document.getElementById('editTemplateWizard');
+        
+        function validateForm(e) {
+            const itemCount = tbody ? tbody.querySelectorAll('tr:not(#' + tableId + '-no-items-row)').length : 0;
+            
+            if (itemCount === 0) {
+                e.preventDefault();
+                const warning = document.getElementById('no-items-warning');
+                if (warning) warning.style.display = 'block';
+                alert('Please add at least one option before saving the template.');
+                return false;
+            }
+        }
+        
+        if (createForm) {
+            createForm.addEventListener('submit', validateForm);
+        }
+        
+        if (editForm) {
+            editForm.addEventListener('submit', validateForm);
+        }
+    })();
+</script>

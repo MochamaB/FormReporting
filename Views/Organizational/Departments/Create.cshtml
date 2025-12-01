@@ -1,0 +1,266 @@
+@using FormReporting.Extensions
+@using FormReporting.Models.ViewModels.Components
+@model FormReporting.Models.Entities.Organizational.Department
+
+@{
+    ViewData["Title"] = "Create Department";
+
+    // ═══════════════════════════════════════════════════════════
+    // CONFIGURE FORM
+    // ═══════════════════════════════════════════════════════════
+    
+    var formConfig = new SimpleFormConfig
+    {
+        FormId = "createDepartmentForm",
+        FormAction = Url.Action("Create", "Departments") ?? "/Organizational/Departments/Create",
+        FormMethod = "POST",
+        SubmitButtonText = "Create Department",
+        CancelButtonUrl = Url.Action("Index", "Departments") ?? "/Organizational/Departments",
+        ShowCancelButton = true,
+        ShowResetButton = false,
+        StyleType = FormStyleType.Standard,
+        CardTitle = "Create New Department",
+        CardSubtitle = "Add a new department to the organizational structure",
+        WrapInCard = true,
+        Fields = new List<SimpleFormFieldConfig>
+        {
+            // Hidden field for DepartmentId (always 0 for create)
+            new SimpleFormFieldConfig
+            {
+                PropertyName = "DepartmentId",
+                FieldType = SimpleFieldType.Hidden,
+                Value = 0,
+                DisplayOrder = 1
+            },
+            
+            // Tenant Selection
+            new SimpleFormFieldConfig
+            {
+                PropertyName = "TenantId",
+                Label = "Tenant",
+                FieldType = SimpleFieldType.Select,
+                Value = Model.TenantId > 0 ? Model.TenantId : null,
+                IsRequired = true,
+                Options = ViewBag.Tenants != null 
+                    ? new List<SelectOption> { new SelectOption { Value = "", Text = "-- Select Tenant --" } }
+                        .Concat(((List<FormReporting.Models.Entities.Organizational.Tenant>)ViewBag.Tenants)
+                            .Select(t => new SelectOption 
+                            { 
+                                Value = t.TenantId.ToString(), 
+                                Text = t.TenantName,
+                                IsSelected = t.TenantId == Model.TenantId
+                            })).ToList()
+                    : new List<SelectOption> { new SelectOption { Value = "", Text = "-- No Tenants Available --" } },
+                HelpText = "Select the tenant this department belongs to",
+                ColumnClass = "col-md-6",
+                DisplayOrder = 2
+            },
+            // Parent Department (Optional)
+            new SimpleFormFieldConfig
+            {
+                PropertyName = "ParentDepartmentId",
+                Label = "Parent Department (Optional)",
+                FieldType = SimpleFieldType.Select,
+                Value = Model.ParentDepartmentId,
+                IsRequired = false,
+                Options = ViewBag.ParentDepartments != null 
+                    ? new List<SelectOption> { new SelectOption { Value = "", Text = "-- No Parent (Top Level) --" } }
+                        .Concat(((List<FormReporting.Models.Entities.Organizational.Department>)ViewBag.ParentDepartments)
+                            .Select(d => new SelectOption 
+                            { 
+                                Value = d.DepartmentId.ToString(), 
+                                Text = d.DepartmentName 
+                            })).ToList()
+                    : new List<SelectOption> { new SelectOption { Value = "", Text = "-- Select Tenant First --" } },
+                HelpText = "Select a parent department to create a hierarchical structure",
+                ColumnClass = "col-md-6",
+                DisplayOrder = 3
+            },
+            
+            // Department Name
+            new SimpleFormFieldConfig
+            {
+                PropertyName = "DepartmentName",
+                Label = "Department Name",
+                FieldType = SimpleFieldType.Text,
+                Value = Model.DepartmentName,
+                IsRequired = true,
+                PlaceholderText = "Enter department name (e.g., Human Resources)",
+                HelpText = "Full name of the department",
+                ColumnClass = "col-md-6",
+                DisplayOrder = 4
+            },
+            // Department Code
+            new SimpleFormFieldConfig
+            {
+                PropertyName = "DepartmentCode",
+                Label = "Department Code",
+                FieldType = SimpleFieldType.Text,
+                Value = Model.DepartmentCode,
+                IsRequired = true,
+                PlaceholderText = "Enter department code (e.g., ICT, FIN, HR)",
+                HelpText = "Unique code for the department within the tenant",
+                ColumnClass = "col-md-6",
+                DisplayOrder = 5
+            },
+            
+            
+            
+            // Is Active
+            new SimpleFormFieldConfig
+            {
+                PropertyName = "IsActive",
+                Label = "Active",
+                FieldType = SimpleFieldType.Checkbox,
+                Value = true,
+                HelpText = "Check to make this department active",
+                ColumnClass = "col-md-6",
+                DisplayOrder = 6
+            },
+            
+            // Description
+            new SimpleFormFieldConfig
+            {
+                PropertyName = "Description",
+                Label = "Description (Optional)",
+                FieldType = SimpleFieldType.TextArea,
+                Value = Model.Description,
+                Rows = 4,
+                PlaceholderText = "Enter department description",
+                HelpText = "Optional description of the department's purpose and responsibilities",
+                ColumnClass = "col-12",
+                DisplayOrder = 7
+            }
+        }
+    };
+
+    // Transform config into renderable form
+    var form = formConfig.BuildForm();
+}
+
+
+
+<!-- Render Form -->
+<div class="row">
+    <div class="col-lg-10 offset-lg-1">
+        <partial name="~/Views/Shared/Components/SimpleForms/_SimpleForm.cshtml" model="form" />
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Load parent departments when tenant changes
+        function loadParentDepartments(tenantId) {
+            const parentSelect = document.querySelector('select[name="ParentDepartmentId"]');
+            
+            if (!parentSelect) {
+                console.error('Parent department select not found');
+                return;
+            }
+            
+            // If no tenant selected, reset to default state
+            if (!tenantId) {
+                parentSelect.disabled = false;
+                parentSelect.innerHTML = '<option value="">-- Select Tenant First --</option>';
+                return;
+            }
+            
+            // Show loading state
+            parentSelect.disabled = true;
+            parentSelect.innerHTML = '<option value="">Loading...</option>';
+            
+            // Fetch departments for selected tenant (only from that tenant)
+            fetch(`/Organizational/Departments/GetDepartmentsByTenant?tenantId=${tenantId}`)
+                .then(response => {
+                    // Check if response is ok before parsing JSON
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    parentSelect.disabled = false;
+                    // Always start with the "No Parent" option
+                    parentSelect.innerHTML = '<option value="">-- No Parent (Top Level) --</option>';
+                    
+                    // Add departments from the selected tenant only
+                    if (data && data.length > 0) {
+                        data.forEach(dept => {
+                            if (dept.isActive) {
+                                const option = document.createElement('option');
+                                option.value = dept.id;
+                                option.textContent = dept.name;
+                                parentSelect.appendChild(option);
+                            }
+                        });
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading departments:', error);
+                    parentSelect.disabled = false;
+                    parentSelect.innerHTML = '<option value="">-- No Parent (Top Level) --</option>';
+                });
+        }
+        
+        // Auto-generate department code from department name
+        function generateDepartmentCode(departmentName) {
+            if (!departmentName) return '';
+            
+            // Split by spaces and get first letter of each word
+            const words = departmentName.trim().split(/\s+/);
+            const code = words
+                .map(word => word.charAt(0).toUpperCase())
+                .join('');
+            
+            return code;
+        }
+        
+        // Setup event handlers
+        document.addEventListener('DOMContentLoaded', function() {
+            const codeInput = document.querySelector('input[name="DepartmentCode"]');
+            const nameInput = document.querySelector('input[name="DepartmentName"]');
+            const tenantSelect = document.querySelector('select[name="TenantId"]');
+            const parentSelect = document.querySelector('select[name="ParentDepartmentId"]');
+            
+            // Initialize parent department to default state
+            if (parentSelect) {
+                parentSelect.innerHTML = '<option value="">-- Select Tenant First --</option>';
+            }
+            
+            // Auto-generate department code from name
+            if (nameInput && codeInput) {
+                nameInput.addEventListener('input', function() {
+                    // Only auto-generate if code field is empty
+                    if (!codeInput.value || codeInput.value === generateDepartmentCode(nameInput.dataset.previousValue || '')) {
+                        const generatedCode = generateDepartmentCode(this.value);
+                        codeInput.value = generatedCode;
+                    }
+                    nameInput.dataset.previousValue = this.value;
+                });
+            }
+            
+            // Manual code entry - allow user to override
+            if (codeInput) {
+                codeInput.addEventListener('input', function() {
+                    this.value = this.value.toUpperCase();
+                });
+            }
+            
+            // Add change event to tenant select
+            if (tenantSelect) {
+                tenantSelect.addEventListener('change', function() {
+                    // Only load departments when tenant is actually selected
+                    if (this.value) {
+                        loadParentDepartments(this.value);
+                    } else {
+                        // Reset parent select when tenant is cleared
+                        if (parentSelect) {
+                            parentSelect.disabled = false;
+                            parentSelect.innerHTML = '<option value="">-- Select Tenant First --</option>';
+                        }
+                    }
+                });
+            }
+        });
+    </script>
+}

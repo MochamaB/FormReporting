@@ -1,0 +1,250 @@
+@model FormReporting.Models.ViewModels.Forms.OptionTemplateEditViewModel
+
+<div class="alert alert-info mb-3">
+    <i class="ri-information-line me-2"></i>
+    <strong>Template Information:</strong> Fill in the basic details about this option template. Required fields are marked with <span class="text-danger">*</span>.
+</div>
+
+<div class="row">
+    <!-- Template Name -->
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label for="TemplateName" class="form-label">
+                Template Name <span class="text-danger">*</span>
+            </label>
+            <input type="text" class="form-control" id="TemplateName" name="TemplateName" 
+                   value="@Model.TemplateName" required 
+                   placeholder="e.g., Satisfaction Scale (5-point)">
+            <div class="form-text">Descriptive name for this template</div>
+        </div>
+    </div>
+
+    <!-- Template Code -->
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label for="TemplateCode" class="form-label">
+                Template Code <span class="text-danger">*</span>
+            </label>
+            <input type="text" class="form-control text-uppercase" id="TemplateCode" name="TemplateCode" 
+                   value="@Model.TemplateCode" required 
+                   placeholder="SATISFACTION_5PT" 
+                   pattern="[A-Z0-9_]+" 
+                   title="Uppercase letters, numbers, and underscores only">
+            <div class="form-text">Unique code (UPPERCASE_WITH_UNDERSCORES)</div>
+        </div>
+    </div>
+
+    <!-- Category -->
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label for="Category" class="form-label">Category</label>
+            <input type="text" class="form-control" id="Category" name="Category" 
+                   value="@Model.Category" 
+                   placeholder="e.g., Rating, Agreement, Binary"
+                   list="category-suggestions">
+            <datalist id="category-suggestions">
+                <option value="Rating"></option>
+                <option value="Agreement"></option>
+                <option value="Binary"></option>
+                <option value="Frequency"></option>
+                <option value="Quality"></option>
+                <option value="Custom"></option>
+            </datalist>
+
+            <div class="form-text">Grouping category for this template</div>
+        </div>
+    </div>
+
+    <!-- Sub-Category -->
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label for="SubCategory" class="form-label">Sub-Category</label>
+            <input type="text" class="form-control" id="SubCategory" name="SubCategory" 
+                   value="@Model.SubCategory" 
+                   placeholder="e.g., Sentiment, Likert, Boolean">
+            <div class="form-text">Optional sub-category</div>
+        </div>
+    </div>
+
+    <!-- Description -->
+    <div class="col-12">
+        <div class="mb-3">
+            <label for="Description" class="form-label">Description</label>
+            <textarea class="form-control" id="Description" name="Description" 
+                      rows="3" placeholder="Brief description of this template">@Model.Description</textarea>
+            <div class="form-text">Explain when to use this template</div>
+        </div>
+    </div>
+
+    <!-- Display Order -->
+    <div class="col-md-4">
+        <div class="mb-3">
+            <label for="DisplayOrder" class="form-label">Display Order</label>
+            <input type="number" class="form-control" id="DisplayOrder" name="DisplayOrder" 
+                   value="@Model.DisplayOrder" min="0" max="999">
+            <div class="form-text">Order in template picker (0 = first)</div>
+        </div>
+    </div>
+
+    <!-- Has Scoring -->
+    <div class="col-md-4">
+        <div class="mb-3">
+            <label for="HasScoring" class="form-label">Scoring</label>
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="HasScoring" name="HasScoring" 
+                       value="true" @(Model.HasScoring ? "checked" : "")>
+                <label class="form-check-label" for="HasScoring">
+                    Enable Scoring
+                </label>
+            </div>
+            <div class="form-text">Check if options have score values</div>
+        </div>
+    </div>
+
+    <!-- Scoring Type -->
+    <div class="col-md-4">
+        <div class="mb-3" id="scoring-type-group">
+            <label for="ScoringType" class="form-label">Scoring Type</label>
+            <input type="text" class="form-control" id="ScoringType" name="ScoringType" 
+                   value="@Model.ScoringType" 
+                   placeholder="e.g., Linear, Custom"
+                   list="scoring-type-suggestions">
+            <datalist id="scoring-type-suggestions">
+                <option value="Linear"></option>
+                <option value="Custom"></option>
+                <option value="Weighted"></option>
+                <option value="Binary"></option>
+            </datalist>
+            <div class="form-text">Type of scoring system</div>
+        </div>
+    </div>
+
+    <!-- Applicable Field Types -->
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label for="ApplicableFieldTypes" class="form-label">Applicable Field Types</label>
+            <input type="text" class="form-control" id="ApplicableFieldTypes" name="ApplicableFieldTypes" 
+                   value="@Model.ApplicableFieldTypes" 
+                   placeholder='["Radio","Dropdown","Checkbox"]'>
+            <div class="form-text">JSON array of compatible field types</div>
+        </div>
+    </div>
+
+    <!-- Recommended For -->
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label for="RecommendedFor" class="form-label">Recommended For</label>
+            <input type="text" class="form-control" id="RecommendedFor" name="RecommendedFor" 
+                   value="@Model.RecommendedFor" 
+                   placeholder="e.g., Customer surveys, quality assessments">
+            <div class="form-text">Use cases for this template</div>
+        </div>
+    </div>
+
+    <!-- Is Active -->
+    <div class="col-12">
+        <div class="mb-3">
+            <div class="form-check">
+                <input class="form-check-input" type="checkbox" id="IsActive" name="IsActive" 
+                       value="true" @(Model.IsActive ? "checked" : "")>
+                <label class="form-check-label" for="IsActive">
+                    <strong>Active</strong> - Make template available for use
+                </label>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        // Toggle scoring type field based on HasScoring checkbox
+        const hasScoringCheckbox = document.getElementById('HasScoring');
+        const scoringTypeGroup = document.getElementById('scoring-type-group');
+        const scoringTypeInput = document.getElementById('ScoringType');
+        
+        if (hasScoringCheckbox) {
+            hasScoringCheckbox.addEventListener('change', function() {
+                if (this.checked) {
+                    scoringTypeGroup.style.opacity = '1';
+                    scoringTypeInput.removeAttribute('disabled');
+                } else {
+                    scoringTypeGroup.style.opacity = '0.5';
+                    scoringTypeInput.setAttribute('disabled', 'disabled');
+                    scoringTypeInput.value = '';
+                }
+            });
+            
+            // Initialize scoring type field state
+            if (!hasScoringCheckbox.checked) {
+                scoringTypeGroup.style.opacity = '0.5';
+                scoringTypeInput.setAttribute('disabled', 'disabled');
+            }
+        }
+        
+        // Auto-uppercase template code
+        const templateCodeInput = document.getElementById('TemplateCode');
+        if (templateCodeInput) {
+            templateCodeInput.addEventListener('input', function() {
+                this.value = this.value.toUpperCase();
+            });
+        }
+        
+        // Real-time validation
+        const templateNameInput = document.getElementById('TemplateName');
+        if (templateNameInput) {
+            templateNameInput.addEventListener('blur', function() {
+                if (!this.value.trim()) {
+                    this.classList.add('is-invalid');
+                } else {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                }
+            });
+        }
+        
+        if (templateCodeInput) {
+            templateCodeInput.addEventListener('blur', function() {
+                const pattern = /^[A-Z0-9_]+$/;
+                if (!this.value.trim()) {
+                    this.classList.add('is-invalid');
+                    this.classList.remove('is-valid');
+                } else if (!pattern.test(this.value)) {
+                    this.classList.add('is-invalid');
+                    this.classList.remove('is-valid');
+                } else {
+                    this.classList.remove('is-invalid');
+                    this.classList.add('is-valid');
+                }
+            });
+        }
+        
+        // Validate Step 1 before proceeding
+        const nextButton = document.querySelector('[data-nexttab]');
+        if (nextButton) {
+            nextButton.addEventListener('click', function(e) {
+                let isValid = true;
+                
+                // Check required fields
+                if (templateNameInput && !templateNameInput.value.trim()) {
+                    templateNameInput.classList.add('is-invalid');
+                    isValid = false;
+                }
+                
+                if (templateCodeInput) {
+                    const pattern = /^[A-Z0-9_]+$/;
+                    if (!templateCodeInput.value.trim() || !pattern.test(templateCodeInput.value)) {
+                        templateCodeInput.classList.add('is-invalid');
+                        isValid = false;
+                    }
+                }
+                
+                if (!isValid) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    alert('Please fill in all required fields correctly before proceeding.');
+                    return false;
+                }
+            });
+        }
+    })();
+</script>

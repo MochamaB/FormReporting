@@ -185,6 +185,21 @@ namespace FormReporting.Data
         public DbSet<FormItemOption> FormItemOptions { get; set; } = null!;
 
         /// <summary>
+        /// Form item option templates (pre-defined option sets)
+        /// </summary>
+        public DbSet<FormItemOptionTemplate> FormItemOptionTemplates { get; set; } = null!;
+
+        /// <summary>
+        /// Form item option template items (options within templates)
+        /// </summary>
+        public DbSet<FormItemOptionTemplateItem> FormItemOptionTemplateItems { get; set; } = null!;
+
+        /// <summary>
+        /// Form item option template categories (optional grouping)
+        /// </summary>
+        public DbSet<FormItemOptionTemplateCategory> FormItemOptionTemplateCategories { get; set; } = null!;
+
+        /// <summary>
         /// Form item configurations
         /// </summary>
         public DbSet<FormItemConfiguration> FormItemConfigurations { get; set; } = null!;
@@ -514,6 +529,9 @@ namespace FormReporting.Data
             modelBuilder.ApplyConfiguration(new FormTemplateSectionConfiguration());
             modelBuilder.ApplyConfiguration(new FormTemplateItemConfiguration());
             modelBuilder.ApplyConfiguration(new FormItemOptionConfiguration());
+            modelBuilder.ApplyConfiguration(new FormItemOptionTemplateConfiguration());
+            modelBuilder.ApplyConfiguration(new FormItemOptionTemplateItemConfiguration());
+            modelBuilder.ApplyConfiguration(new FormItemOptionTemplateCategoryConfiguration());
             modelBuilder.ApplyConfiguration(new FormItemConfigurationConfiguration());
             modelBuilder.ApplyConfiguration(new FormItemValidationConfiguration());
             modelBuilder.ApplyConfiguration(new FormItemCalculationConfiguration());

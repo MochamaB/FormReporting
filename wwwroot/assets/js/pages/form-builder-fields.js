@@ -178,8 +178,8 @@ const FormBuilderFields = {
             // Get anti-forgery token
             const token = document.querySelector('input[name="__RequestVerificationToken"]')?.value;
 
-            // Call API to create field
-            const response = await fetch('/Forms/FormTemplates/AddField', {
+            // Call API to create field (new RESTful endpoint)
+            const response = await fetch('/api/formbuilder/fields', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -281,20 +281,29 @@ const FormBuilderFields = {
      * @param {number} fieldId - Field ID to toggle
      */
     toggleFieldCollapse: function(fieldId) {
+        const fieldCard = document.getElementById(`field-${fieldId}`);
         const fieldBody = document.getElementById(`field-body-${fieldId}`);
         const collapseIcon = document.getElementById(`field-collapse-icon-${fieldId}`);
 
         if (fieldBody && collapseIcon) {
+            // Check if field is currently selected
+            const isSelected = fieldCard && fieldCard.classList.contains('selected-element');
+            
             if (fieldBody.style.display === 'none') {
-                // Expand
+                // Always allow expanding
                 fieldBody.style.display = 'block';
                 collapseIcon.classList.remove('ri-add-line');
                 collapseIcon.classList.add('ri-subtract-line');
             } else {
-                // Collapse
-                fieldBody.style.display = 'none';
-                collapseIcon.classList.remove('ri-subtract-line');
-                collapseIcon.classList.add('ri-add-line');
+                // Only allow collapsing if field is NOT selected
+                if (!isSelected) {
+                    fieldBody.style.display = 'none';
+                    collapseIcon.classList.remove('ri-subtract-line');
+                    collapseIcon.classList.add('ri-add-line');
+                } else {
+                    // Field is selected - don't collapse, maybe show visual feedback
+                    console.log('Cannot collapse selected field');
+                }
             }
         }
     },
@@ -313,9 +322,9 @@ const FormBuilderFields = {
                 DataType: newType
             };
 
-            // Call API to update field type
-            const response = await fetch(`/Forms/FormTemplates/UpdateFieldType/${fieldId}`, {
-                method: 'POST',
+            // Call API to update field type (new RESTful endpoint with PATCH verb)
+            const response = await fetch(`/api/formbuilder/fields/${fieldId}/type`, {
+                method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                 },
@@ -361,11 +370,47 @@ const FormBuilderFields = {
      * Delete field
      * @param {number} fieldId - Field ID to delete
      */
-    deleteField: function(fieldId) {
-        // TODO: Show confirmation modal and delete field
-        console.log('Delete field:', fieldId);
-        if (confirm('Delete this field?')) {
-            alert('Delete field functionality will be implemented later');
+    deleteField: async function(fieldId) {
+        try {
+            // Show confirmation
+            if (!confirm('Are you sure you want to delete this field? This action cannot be undone.')) {
+                return;
+            }
+
+            console.log('Deleting field:', fieldId);
+
+            // Call API to delete field (new RESTful endpoint with DELETE verb)
+            const response = await fetch(`/api/formbuilder/fields/${fieldId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Server error: ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Success - reload to show updated form
+                console.log('Field deleted successfully');
+                window.location.reload();
+            } else {
+                this.showErrorModal(
+                    'Failed to Delete Field',
+                    result.message || 'Unable to delete field. Please try again.',
+                    null
+                );
+            }
+        } catch (error) {
+            console.error('Error deleting field:', error);
+            this.showErrorModal(
+                'Error',
+                'An error occurred while deleting the field. Please try again.',
+                error.message
+            );
         }
     },
 
@@ -373,10 +418,43 @@ const FormBuilderFields = {
      * Duplicate field
      * @param {number} fieldId - Field ID to duplicate
      */
-    duplicateField: function(fieldId) {
-        // TODO: Duplicate field with all settings
-        console.log('Duplicate field:', fieldId);
-        alert('Duplicate field functionality will be implemented later');
+    duplicateField: async function(fieldId) {
+        try {
+            console.log('Duplicating field:', fieldId);
+
+            // Call API to duplicate field (new RESTful endpoint)
+            const response = await fetch(`/api/formbuilder/fields/${fieldId}/duplicate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Server error: ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            if (result.success) {
+                // Success - reload to show duplicated field
+                console.log('Field duplicated successfully');
+                window.location.reload();
+            } else {
+                this.showErrorModal(
+                    'Failed to Duplicate Field',
+                    result.message || 'Unable to duplicate field. Please try again.',
+                    null
+                );
+            }
+        } catch (error) {
+            console.error('Error duplicating field:', error);
+            this.showErrorModal(
+                'Error',
+                'An error occurred while duplicating the field. Please try again.',
+                error.message
+            );
+        }
     },
 
     // ========================================================================

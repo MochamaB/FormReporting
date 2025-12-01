@@ -15,6 +15,25 @@
     @* Anti-forgery token for POST requests *@
     @Html.AntiForgeryToken()
 
+    @* Validation Summary - Show all ModelState errors *@
+    @if (!ViewData.ModelState.IsValid)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <i class="ri-error-warning-line me-2"></i>
+            <strong>Please correct the following errors:</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            <ul class="mb-0 mt-2">
+                @foreach (var modelState in ViewData.ModelState.Values)
+                {
+                    foreach (var error in modelState.Errors)
+                    {
+                        <li>@error.ErrorMessage</li>
+                    }
+                }
+            </ul>
+        </div>
+    }
+
     @* Render all fields *@
     <div class="row">
         @foreach (var field in Model.Fields)

@@ -320,6 +320,53 @@ namespace FormReporting.Controllers.Forms
         }
 
         /// <summary>
+        /// STEP 1: Template Setup - Direct access to edit basic info (no resume logic)
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> TemplateSetup(int id)
+        {
+            // Load template
+            var template = await _context.FormTemplates
+                .Include(t => t.Category)
+                .FirstOrDefaultAsync(t => t.TemplateId == id);
+
+            if (template == null)
+            {
+                TempData["ErrorMessage"] = "Template not found.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Only drafts can be edited
+            if (template.PublishStatus != "Draft")
+            {
+                TempData["ErrorMessage"] = "Cannot edit published templates. Create a new version to make changes.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Build progress tracker for Step 1 - Force Step 1 as active
+            var progress = new FormBuilderProgressConfig
+            {
+                BuilderId = $"template-{template.TemplateId}",
+                TemplateId = template.TemplateId,
+                TemplateName = template.TemplateName,
+                TemplateVersion = $"v{template.Version}",
+                PublishStatus = template.PublishStatus,
+                CurrentStep = FormBuilderStep.TemplateSetup,
+                ShowSaveDraft = true,
+                ExitUrl = Url.Action("Index", "FormTemplates") ?? "/Forms/FormTemplates"
+            }
+            .AtStep(FormBuilderStep.TemplateSetup)
+            .BuildProgress();
+
+            ViewData["Progress"] = progress;
+
+            // Get categories for dropdown
+            ViewBag.Categories = await _categoryService.GetCategorySelectListAsync();
+
+            return View("~/Views/Forms/FormTemplates/Create.cshtml", template);
+        }
+
+        /// <summary>
         /// STEP 2: Form Builder - Build sections and fields
         /// </summary>
         [HttpGet]
@@ -360,6 +407,189 @@ namespace FormReporting.Controllers.Forms
 
             // Pass FormBuilderViewModel to view
             return View("~/Views/Forms/FormTemplates/FormBuilder.cshtml", viewModel);
+        }
+
+        /// <summary>
+        /// STEP 3: Metric Mapping - Map form fields to KPI metrics
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> MetricMapping(int id)
+        {
+            // Load template
+            var template = await _templateService.LoadTemplateForEditingAsync(id);
+
+            if (template == null)
+            {
+                TempData["ErrorMessage"] = "Template not found.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Only drafts can be edited
+            if (template.PublishStatus != "Draft")
+            {
+                TempData["ErrorMessage"] = "Cannot edit published templates. Create a new version to make changes.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Build progress tracker for Step 3
+            var progress = new FormBuilderProgressConfig
+            {
+                BuilderId = $"template-{template.TemplateId}",
+                TemplateId = template.TemplateId,
+                TemplateName = template.TemplateName,
+                TemplateVersion = $"v{template.Version}",
+                PublishStatus = template.PublishStatus,
+                CurrentStep = FormBuilderStep.MetricMapping,
+                ShowSaveDraft = true,
+                ExitUrl = Url.Action("Index", "FormTemplates") ?? "/Forms/FormTemplates"
+            }
+            .AtStep(FormBuilderStep.MetricMapping)
+            .BuildProgress();
+
+            ViewData["Progress"] = progress;
+
+            // Pass template to view (placeholder - will build proper ViewModel later)
+            return View("~/Views/Forms/FormTemplates/MetricMapping.cshtml", template);
+        }
+
+        /// <summary>
+        /// AJAX: Validate template progress before advancing to next stage
+        /// Uses direct database counts for reliable validation
+        /// </summary>
+        [HttpGet("Forms/FormTemplates/ValidateStageCompletion")]
+        public async Task<IActionResult> ValidateStageCompletion(int id, int currentStage)
+        {
+            try
+            {
+                // Validate based on current stage
+                switch ((FormBuilderStep)currentStage)
+                {
+                    case FormBuilderStep.TemplateSetup:
+                        // Step 1 validation - Check basic template fields
+                        var template = await _context.FormTemplates
+                            .Where(t => t.TemplateId == id)
+                            .Select(t => new 
+                            { 
+                                t.TemplateName, 
+                                t.TemplateCode, 
+                                t.CategoryId,
+                                t.TemplateType
+                            })
+                            .FirstOrDefaultAsync();
+
+                        if (template == null)
+                            return Json(new { success = false, isValid = false, message = "Template not found" });
+
+                        bool step1Complete = !string.IsNullOrEmpty(template.TemplateName) &&
+                                           !string.IsNullOrEmpty(template.TemplateCode) &&
+                                           template.CategoryId > 0 &&
+                                           !string.IsNullOrEmpty(template.TemplateType);
+                        
+                        if (!step1Complete)
+                        {
+                            return Json(new 
+                            { 
+                                success = false, 
+                                isValid = false,
+                                message = "Please complete all required fields (Name, Code, Category, Type) before continuing." 
+                            });
+                        }
+                        return Json(new { success = true, isValid = true, message = "Step 1 validation passed" });
+
+                    case FormBuilderStep.FormBuilder:
+                        // Step 2 validation - Use direct database counts
+                        var sectionCount = await _context.FormTemplateSections
+                            .Where(s => s.TemplateId == id)
+                            .CountAsync();
+
+                        var fieldCount = await _context.FormTemplateItems
+                            .Where(i => i.TemplateId == id)
+                            .CountAsync();
+
+                        // Check if any section has no fields
+                        // Get all section IDs for this template
+                        var sectionIds = await _context.FormTemplateSections
+                            .Where(s => s.TemplateId == id)
+                            .Select(s => s.SectionId)
+                            .ToListAsync();
+
+                        // Get section IDs that have at least one field
+                        var sectionsWithFields = await _context.FormTemplateItems
+                            .Where(i => sectionIds.Contains(i.SectionId))
+                            .Select(i => i.SectionId)
+                            .Distinct()
+                            .ToListAsync();
+
+                        // Count sections without fields (client-side evaluation)
+                        var sectionsWithoutFields = sectionIds.Count - sectionsWithFields.Count;
+
+                        if (sectionCount == 0)
+                        {
+                            return Json(new 
+                            { 
+                                success = false, 
+                                isValid = false,
+                                message = "You must add at least one section before continuing.",
+                                sectionsCount = 0,
+                                fieldsCount = 0
+                            });
+                        }
+
+                        if (fieldCount == 0)
+                        {
+                            return Json(new 
+                            { 
+                                success = false, 
+                                isValid = false,
+                                message = "You must add at least one field to your sections before continuing.",
+                                sectionsCount = sectionCount,
+                                fieldsCount = 0
+                            });
+                        }
+
+                        if (sectionsWithoutFields > 0)
+                        {
+                            return Json(new 
+                            { 
+                                success = false, 
+                                isValid = false,
+                                message = $"All sections must have at least one field. {sectionsWithoutFields} section(s) are empty.",
+                                sectionsCount = sectionCount,
+                                fieldsCount = fieldCount
+                            });
+                        }
+
+                        // All validation passed
+                        return Json(new 
+                        { 
+                            success = true, 
+                            isValid = true,
+                            message = "Form Builder validation passed",
+                            sectionsCount = sectionCount,
+                            fieldsCount = fieldCount,
+                            completionPercentage = 28 // Step 2 of 7
+                        });
+
+                    default:
+                        // Other stages - allow for now
+                        return Json(new { success = true, isValid = true, message = "Stage validation passed" });
+                }
+            }
+            catch (Exception ex)
+            {
+                // Log the full exception for debugging
+                Console.WriteLine($"ValidateStageCompletion Error: {ex}");
+                return Json(new
+                {
+                    success = false,
+                    isValid = false,
+                    message = $"Error validating template. Please try again.",
+                    error = ex.Message,
+                    stackTrace = ex.StackTrace,
+                    sectionsCount = 0,
+                    fieldsCount = 0
+                });
+            }
         }
 
         /// <summary>
@@ -457,182 +687,9 @@ namespace FormReporting.Controllers.Forms
         }
 
         // ============================================================================
-        // AJAX ENDPOINTS FOR FORM BUILDER - FIELD OPERATIONS
+        // FIELD OPERATIONS - All field endpoints moved to API/FormBuilderApiController
+        // Use RESTful endpoints: /api/formbuilder/fields/*
         // ============================================================================
-
-        /// <summary>
-        /// AJAX: Add a new field to a section
-        /// </summary>
-        [HttpPost]
-        [Route("/Forms/FormTemplates/AddField")]
-        public async Task<IActionResult> AddField([FromBody] CreateFieldDto dto)
-        {
-            try
-            {
-                // Validate input
-                if (string.IsNullOrWhiteSpace(dto.ItemName))
-                {
-                    return Json(new { success = false, message = "Field name is required" });
-                }
-
-                if (dto.SectionId <= 0)
-                {
-                    return Json(new { success = false, message = "Invalid section ID" });
-                }
-
-                // Call service to add field
-                var newField = await _formBuilderService.AddFieldAsync(dto);
-
-                if (newField == null)
-                {
-                    return Json(new { success = false, message = "Failed to add field. Section not found." });
-                }
-
-                return Json(new
-                {
-                    success = true,
-                    message = "Field added successfully",
-                    field = newField
-                });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = $"Error adding field: {ex.Message}" });
-            }
-        }
-
-        /// <summary>
-        /// AJAX: Update an existing field
-        /// </summary>
-        [HttpPost]
-        [Route("/Forms/FormTemplates/UpdateField")]
-        public async Task<IActionResult> UpdateField(int id, [FromBody] UpdateFieldDto dto)
-        {
-            try
-            {
-                var success = await _formBuilderService.UpdateFieldAsync(id, dto);
-
-                if (success)
-                {
-                    return Json(new { success = true, message = "Field updated successfully" });
-                }
-                else
-                {
-                    return Json(new { success = false, message = "Field not found" });
-                }
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = $"Error updating field: {ex.Message}" });
-            }
-        }
-
-        /// <summary>
-        /// AJAX: Update field type only (inline quick edit)
-        /// Uses service method for smart option handling (auto-creates defaults for selection fields)
-        /// </summary>
-        [HttpPost]
-        [Route("/Forms/FormTemplates/UpdateFieldType/{id}")]
-        public async Task<IActionResult> UpdateFieldType(int id, [FromBody] UpdateFieldTypeDto dto)
-        {
-            try
-            {
-                // Call service method which handles smart option creation
-                var success = await _formBuilderService.UpdateFieldTypeAsync(id, dto.DataType);
-
-                if (!success)
-                {
-                    return Json(new { success = false, message = "Field not found" });
-                }
-
-                return Json(new { success = true, message = "Field type updated successfully" });
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = $"Error updating field type: {ex.Message}" });
-            }
-        }
-
-        /// <summary>
-        /// AJAX: Delete a field
-        /// </summary>
-        [HttpPost]
-        [Route("/Forms/FormTemplates/DeleteField")]
-        public async Task<IActionResult> DeleteField(int id)
-        {
-            try
-            {
-                var success = await _formBuilderService.DeleteFieldAsync(id);
-
-                if (success)
-                {
-                    return Json(new { success = true, message = "Field deleted successfully" });
-                }
-                else
-                {
-                    return Json(new { success = false, message = "Field not found" });
-                }
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = $"Error deleting field: {ex.Message}" });
-            }
-        }
-
-        /// <summary>
-        /// AJAX: Duplicate a field
-        /// </summary>
-        [HttpPost]
-        public async Task<IActionResult> DuplicateField(int id)
-        {
-            try
-            {
-                var newField = await _formBuilderService.DuplicateFieldAsync(id);
-
-                if (newField != null)
-                {
-                    return Json(new
-                    {
-                        success = true,
-                        message = "Field duplicated successfully",
-                        field = newField
-                    });
-                }
-                else
-                {
-                    return Json(new { success = false, message = "Field not found" });
-                }
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = $"Error duplicating field: {ex.Message}" });
-            }
-        }
-
-        /// <summary>
-        /// AJAX: Reorder fields after drag-drop
-        /// </summary>
-        [HttpPost]
-        public async Task<IActionResult> ReorderFields(int sectionId, [FromBody] List<FieldOrderDto> fields)
-        {
-            try
-            {
-                var success = await _formBuilderService.ReorderFieldsAsync(sectionId, fields);
-
-                if (success)
-                {
-                    return Json(new { success = true, message = "Fields reordered successfully" });
-                }
-                else
-                {
-                    return Json(new { success = false, message = "Section not found" });
-                }
-            }
-            catch (Exception ex)
-            {
-                return Json(new { success = false, message = $"Error reordering fields: {ex.Message}" });
-            }
-        }
 
         /// <summary>
         /// Preview - Display template preview

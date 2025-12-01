@@ -1,0 +1,462 @@
+@using FormReporting.Extensions
+@using FormReporting.Models.ViewModels.Components
+@model List<FormReporting.Models.Entities.Organizational.Department>
+
+@{
+    ViewData["Title"] = "Departments Management";
+
+    // Build stat cards config from ViewBag data
+    var statConfig = new StatsRowConfig
+    {
+        Titles = new List<string> { "Total Departments", "Inactive Departments", "Parent Departments", "Child Departments" },
+        Values = new List<string> {
+            ViewBag.TotalDepartments.ToString(),
+            ViewBag.InactiveDepartments.ToString(),
+            ViewBag.ParentDepartments.ToString(),
+            ViewBag.ChildDepartments.ToString()
+        },
+        Icons = new List<string> {
+            "ri-building-line",
+            "ri-close-circle-line",
+            "ri-folder-line",
+            "ri-folder-open-line"
+        },
+        ColorThemes = new List<string> { "primary", "danger", "success", "info" },
+        CardType = CardType.IconLeftCard,
+        Subtitles = new List<string> {
+            "Active departments",
+            "Deactivated departments",
+            "Top-level departments",
+            "Sub-departments"
+        },
+        TrendPercentages = new List<string> {
+            ViewBag.RecentDepartments.ToString(),
+            "",
+            "",
+            ""
+        },
+        TrendDirections = new List<TrendDirection> {
+            ViewBag.RecentDepartments > 0 ? TrendDirection.Up : TrendDirection.Neutral,
+            TrendDirection.Neutral,
+            TrendDirection.Neutral,
+            TrendDirection.Neutral
+        }
+    };
+
+    // Call extension to build stat cards
+    var statCards = statConfig.BuildStatsRow();
+
+    // Calculate row number starting point
+    int startingNumber = ((ViewBag.CurrentPage - 1) * ViewBag.PageSize) + 1;
+
+    // Build DataTable configuration
+    var tableConfig = new DataTableConfig
+    {
+        TableId = "departmentsTable",
+        Columns = new List<string> {
+            "#",
+            "Department Code",
+            "Department Name",
+            "Tenant",
+            "Parent Department",
+            "Users",
+            "Status",
+            "Created",
+            "Actions"
+        },
+        EnableSearch = true,
+        SearchBox = new SearchBoxConfig
+        {
+            ParameterName = "search",
+            PlaceholderText = "Search departments...",
+            CurrentValue = ViewBag.CurrentSearch,
+            ActionUrl = Url.Action("Index", "Departments") ?? "/Departments"
+        },
+        FilterDropdowns = new List<FilterDropdownConfig>
+        {
+            new FilterDropdownConfig
+            {
+                Label = "Tenant",
+                Options = new List<FilterOption>
+                {
+                    new FilterOption
+                    {
+                        Text = "All Tenants",
+                        Value = "",
+                        Url = Url.Action("Index", "Departments", new { search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus }) ?? "/Departments",
+                        IsActive = ViewBag.CurrentTenantId == null
+                    }
+                }.Concat(
+                    ((List<FormReporting.Models.Entities.Organizational.Tenant>)ViewBag.Tenants).Select(t => new FilterOption
+                    {
+                        Text = t.TenantName,
+                        Value = t.TenantId.ToString(),
+                        Url = Url.Action("Index", "Departments", new { search = ViewBag.CurrentSearch, tenantId = t.TenantId, status = ViewBag.CurrentStatus }) ?? "/Departments",
+                        IsActive = ViewBag.CurrentTenantId == t.TenantId
+                    })
+                ).ToList()
+            },
+            new FilterDropdownConfig
+            {
+                Label = "Status",
+                Options = new List<FilterOption>
+                {
+                    new FilterOption
+                    {
+                        Text = "All Status",
+                        Value = "",
+                        Url = Url.Action("Index", "Departments", new { search = ViewBag.CurrentSearch, tenantId = ViewBag.CurrentTenantId }) ?? "/Departments",
+                        IsActive = string.IsNullOrEmpty(ViewBag.CurrentStatus)
+                    },
+                    new FilterOption
+                    {
+                        Text = "Active",
+                        Value = "active",
+                        Url = Url.Action("Index", "Departments", new { search = ViewBag.CurrentSearch, tenantId = ViewBag.CurrentTenantId, status = "active" }) ?? "/Departments",
+                        IsActive = ViewBag.CurrentStatus == "active"
+                    },
+                    new FilterOption
+                    {
+                        Text = "Inactive",
+                        Value = "inactive",
+                        Url = Url.Action("Index", "Departments", new { search = ViewBag.CurrentSearch, tenantId = ViewBag.CurrentTenantId, status = "inactive" }) ?? "/Departments",
+                        IsActive = ViewBag.CurrentStatus == "inactive"
+                    }
+                }
+            }
+        },
+        CreateButtonText = "Add New Department",
+        CreateButtonUrl = Url.Action("Create", "Departments") ?? "/Departments/Create",
+        ShowPagination = true,
+        CurrentPage = ViewBag.CurrentPage,
+        TotalPages = ViewBag.TotalPages,
+        TotalRecords = ViewBag.TotalItems,
+        PageSize = ViewBag.PageSize
+    };
+
+    // Build table
+    var table = tableConfig.BuildDataTable();
+
+    // Helper function to build row actions for each department
+    RowActionsViewModel BuildRowActions(int departmentId)
+    {
+        var config = new RowActionsConfig
+        {
+            DisplayStyle = RowActionDisplayStyle.Dropdown,
+            DropdownText = "",
+            DropdownIconClass = "ri-more-fill",
+            ButtonSize = "sm",
+            UseSoftButtons = true,
+            Actions = new List<RowActionConfig>
+            {
+                new RowActionConfig
+                {
+                    Text = "View Details",
+                    IconClass = "ri-eye-line",
+                    ColorClass = "primary",
+                    UrlTemplate = Url.Action("Details", "Departments", new { id = departmentId }) ?? $"/Departments/Details/{departmentId}"
+                },
+                new RowActionConfig
+                {
+                    Text = "Edit",
+                    IconClass = "ri-pencil-line",
+                    ColorClass = "success",
+                    UrlTemplate = Url.Action("Edit", "Departments", new { id = departmentId }) ?? $"/Departments/Edit/{departmentId}"
+                },
+                new RowActionConfig
+                {
+                    Text = "Delete",
+                    IconClass = "ri-delete-bin-line",
+                    ColorClass = "danger",
+                    RequiresConfirmation = true,
+                    ConfirmationMessage = "Are you sure you want to delete this department?"
+                }
+            }
+        };
+
+        return new RowActionsViewModel
+        {
+            DisplayStyle = config.DisplayStyle,
+            DropdownText = config.DropdownText,
+            DropdownIconClass = config.DropdownIconClass,
+            ButtonSizeClass = $"btn-{config.ButtonSize}",
+            UseSoftButtons = config.UseSoftButtons,
+            RowId = departmentId.ToString(),
+            Actions = config.Actions.Select(a => new RowActionViewModel
+            {
+                Text = a.Text,
+                IconClass = a.IconClass,
+                ColorClass = a.ColorClass,
+                Url = a.UrlTemplate,
+                RequiresConfirmation = a.RequiresConfirmation,
+                ConfirmationMessage = a.ConfirmationMessage,
+                IconOnly = a.IconOnly,
+                IsVisible = true
+            }).ToList()
+        };
+    }
+}
+
+
+
+@* Stat Cards Row *@
+<div class="row">
+    @foreach (var card in statCards)
+    {
+        <partial name="~/Views/Shared/Components/StatisticCards/_IconLeftCard.cshtml" model="card" />
+    }
+</div>
+
+@* Main Content *@
+<div class="row mt-3">
+    <div class="col-xl-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center flex-wrap w-100 gap-2">
+                    @* Left Side: Search and Filters *@
+                    <div class="d-flex gap-2 flex-wrap align-items-center">
+                        @* Search Box using partial component *@
+                        @if (table.SearchBox != null)
+                        {
+                            <partial name="~/Views/Shared/Components/DataTable/_SearchBox.cshtml" model="table.SearchBox" />
+                            @if (!string.IsNullOrEmpty(table.SearchBox.CurrentValue))
+                            {
+                                <a href="@table.SearchBox.ActionUrl" class="btn btn-soft-secondary" title="Clear search">
+                                    <i class="ri-refresh-line"></i>
+                                </a>
+                            }
+                        }
+
+                        @* Filter Dropdowns using partial component *@
+                        @if (table.FilterDropdowns != null && table.FilterDropdowns.Any())
+                        {
+                            foreach (var filterDropdown in table.FilterDropdowns)
+                            {
+                                <partial name="~/Views/Shared/Components/DataTable/_FilterDropdown.cshtml" model="filterDropdown" />
+                            }
+                        }
+                    </div>
+
+                    @* Right Side: Action Buttons *@
+                    <div class="d-flex gap-2">
+                        @* View Hierarchy Button *@
+                        <a href="@Url.Action("Hierarchy", "Departments")" class="btn btn-soft-info">
+                            <i class="ri-organization-chart me-1"></i>View Hierarchy
+                        </a>
+
+                        @* Create Button *@
+                        @if (!string.IsNullOrEmpty(table.CreateButtonText) && !string.IsNullOrEmpty(table.CreateButtonUrl))
+                        {
+                            <a href="@table.CreateButtonUrl" class="btn btn-primary">
+                                <i class="ri-add-line me-1"></i>@table.CreateButtonText
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="@table.TableClasses" id="@table.TableId" style="width: 100%;">
+                        <thead class="bg-light">
+                            <tr>
+                                @foreach (var column in table.Columns)
+                                {
+                                    <th scope="col" style="min-width: 50px; padding: 12px; white-space: nowrap;">@column</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @for (int i = 0; i < Model.Count; i++)
+                            {
+                                var item = Model[i];
+                                var rowNumber = startingNumber + i;
+                                <tr>
+                                    <td class="text-center">
+                                        <span class="text-muted fw-medium">@rowNumber</span>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-primary-subtle text-primary">@item.DepartmentCode</span>
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            @if (item.ParentDepartmentId != null)
+                                            {
+                                                <i class="ri-corner-down-right-line text-muted me-2"></i>
+                                            }
+                                            <div class="fw-medium">@item.DepartmentName</div>
+                                        </div>
+                                        @if (!string.IsNullOrEmpty(item.Description))
+                                        {
+                                            <small class="text-muted d-block">@item.Description</small>
+                                        }
+                                    </td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="ri-building-line text-muted me-2"></i>
+                                            <span class="text-muted">@item.Tenant.TenantName</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        @if (item.ParentDepartment != null)
+                                        {
+                                            <div class="d-flex align-items-center">
+                                                <i class="ri-folder-line text-muted me-1"></i>
+                                                <span class="text-muted">@item.ParentDepartment.DepartmentName</span>
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-success-subtle text-success">
+                                                <i class="ri-folder-line me-1"></i>Root
+                                            </span>
+                                        }
+                                    </td>
+                                    <td class="text-center">
+                                        @if (item.Users != null && item.Users.Any())
+                                        {
+                                            <span class="badge bg-info-subtle text-info">
+                                                <i class="ri-user-line me-1"></i>@item.Users.Count
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">—</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (item.IsActive)
+                                        {
+                                            <span class="badge bg-success-subtle text-success">
+                                                <i class="ri-checkbox-circle-line me-1"></i>Active
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-danger-subtle text-danger">
+                                                <i class="ri-close-circle-line me-1"></i>Inactive
+                                            </span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="text-muted">@item.CreatedDate.ToString("dd MMM, yyyy")</span>
+                                    </td>
+                                    <td>
+                                        @{
+                                            var rowActions = BuildRowActions(item.DepartmentId);
+                                        }
+                                        <partial name="~/Views/Shared/Components/RowActions/_RowActionsDropdown.cshtml" model="rowActions" />
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            @* Pagination Footer *@
+            @if (table.ShowPagination && table.TotalPages > 1)
+            {
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                        <div>
+                            <span class="text-muted">
+                                Showing page @table.CurrentPage of @table.TotalPages
+                                (@table.TotalRecords total items)
+                            </span>
+                        </div>
+                        <nav aria-label="Page navigation">
+                            <ul class="pagination mb-0">
+                                @{
+                                    string BuildPageUrl(int pageNumber)
+                                    {
+                                        return Url.Action("Index", "Departments", new
+                                        {
+                                            page = pageNumber,
+                                            search = ViewBag.CurrentSearch,
+                                            tenantId = ViewBag.CurrentTenantId,
+                                            status = ViewBag.CurrentStatus
+                                        }) ?? $"/Departments?page={pageNumber}";
+                                    }
+                                }
+
+                                @* Previous Button *@
+                                <li class="page-item @(table.CurrentPage == 1 ? "disabled" : "")">
+                                    <a class="page-link" href="@(table.CurrentPage > 1 ? BuildPageUrl(table.CurrentPage - 1) : "#")" aria-label="Previous">
+                                        <i class="ri-arrow-left-s-line"></i>
+                                    </a>
+                                </li>
+
+                                @* Page Numbers *@
+                                @{
+                                    int startPage = Math.Max(1, table.CurrentPage - 2);
+                                    int endPage = Math.Min(table.TotalPages, table.CurrentPage + 2);
+
+                                    // Show first page
+                                    if (startPage > 1)
+                                    {
+                                        <li class="page-item">
+                                            <a class="page-link" href="@BuildPageUrl(1)">1</a>
+                                        </li>
+                                        if (startPage > 2)
+                                        {
+                                            <li class="page-item disabled">
+                                                <span class="page-link">...</span>
+                                            </li>
+                                        }
+                                    }
+
+                                    // Show page numbers
+                                    for (int i = startPage; i <= endPage; i++)
+                                    {
+                                        <li class="page-item @(i == table.CurrentPage ? "active" : "")">
+                                            <a class="page-link" href="@BuildPageUrl(i)">@i</a>
+                                        </li>
+                                    }
+
+                                    // Show last page
+                                    if (endPage < table.TotalPages)
+                                    {
+                                        if (endPage < table.TotalPages - 1)
+                                        {
+                                            <li class="page-item disabled">
+                                                <span class="page-link">...</span>
+                                            </li>
+                                        }
+                                        <li class="page-item">
+                                            <a class="page-link" href="@BuildPageUrl(table.TotalPages)">@table.TotalPages</a>
+                                        </li>
+                                    }
+                                }
+
+                                @* Next Button *@
+                                <li class="page-item @(table.CurrentPage >= table.TotalPages ? "disabled" : "")">
+                                    <a class="page-link" href="@(table.CurrentPage < table.TotalPages ? BuildPageUrl(table.CurrentPage + 1) : "#")" aria-label="Next">
+                                        <i class="ri-arrow-right-s-line"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Handle delete confirmation
+        document.addEventListener('DOMContentLoaded', function () {
+            const deleteButtons = document.querySelectorAll('[data-requires-confirmation="true"]');
+            deleteButtons.forEach(button => {
+                button.addEventListener('click', function (e) {
+                    const message = this.getAttribute('data-confirmation-message');
+                    if (!confirm(message)) {
+                        e.preventDefault();
+                    }
+                });
+            });
+        });
+    </script>
+}

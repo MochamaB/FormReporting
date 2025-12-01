@@ -22,6 +22,21 @@ namespace FormReporting.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("FormItemOptionTemplateFormItemOptionTemplateCategory", b =>
+                {
+                    b.Property<int>("FormItemOptionTemplateCategoryCategoryId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TemplatesTemplateId")
+                        .HasColumnType("int");
+
+                    b.HasKey("FormItemOptionTemplateCategoryCategoryId", "TemplatesTemplateId");
+
+                    b.HasIndex("TemplatesTemplateId");
+
+                    b.ToTable("FormItemOptionTemplateCategoryMappings", (string)null);
+                });
+
             modelBuilder.Entity("FormReporting.Models.Entities.Audit.AuditLog", b =>
                 {
                     b.Property<long>("AuditId")
@@ -668,6 +683,12 @@ namespace FormReporting.Data.Migrations
                     b.Property<int?>("ParentOptionId")
                         .HasColumnType("int");
 
+                    b.Property<decimal?>("ScoreValue")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal?>("ScoreWeight")
+                        .HasColumnType("decimal(10,2)");
+
                     b.HasKey("OptionId");
 
                     b.HasIndex("ParentOptionId")
@@ -681,6 +702,191 @@ namespace FormReporting.Data.Migrations
                         .HasDatabaseName("IX_ItemOptions_Item");
 
                     b.ToTable("FormItemOptions");
+                });
+
+            modelBuilder.Entity("FormReporting.Models.Entities.Forms.FormItemOptionTemplate", b =>
+                {
+                    b.Property<int>("TemplateId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TemplateId"));
+
+                    b.Property<string>("ApplicableFieldTypes")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Category")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("HasScoring")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsSystemTemplate")
+                        .HasColumnType("bit");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("RecommendedFor")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("ScoringType")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("SubCategory")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("TemplateCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("TemplateName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int?>("TenantId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("UsageCount")
+                        .HasColumnType("int");
+
+                    b.HasKey("TemplateId");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("DisplayOrder")
+                        .HasDatabaseName("IX_FormItemOptionTemplates_DisplayOrder");
+
+                    b.HasIndex("ModifiedBy");
+
+                    b.HasIndex("TemplateCode")
+                        .IsUnique()
+                        .HasDatabaseName("IX_FormItemOptionTemplates_TemplateCode");
+
+                    b.HasIndex("Category", "IsActive")
+                        .HasDatabaseName("IX_FormItemOptionTemplates_Category_IsActive");
+
+                    b.HasIndex("TenantId", "IsActive")
+                        .HasDatabaseName("IX_FormItemOptionTemplates_Tenant_IsActive");
+
+                    b.ToTable("FormItemOptionTemplates", (string)null);
+                });
+
+            modelBuilder.Entity("FormReporting.Models.Entities.Forms.FormItemOptionTemplateCategory", b =>
+                {
+                    b.Property<int>("CategoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("CategoryId"));
+
+                    b.Property<string>("CategoryName")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("IconClass")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.HasKey("CategoryId");
+
+                    b.HasIndex("CategoryName")
+                        .IsUnique()
+                        .HasDatabaseName("IX_FormItemOptionTemplateCategories_CategoryName");
+
+                    b.HasIndex("DisplayOrder")
+                        .HasDatabaseName("IX_FormItemOptionTemplateCategories_DisplayOrder");
+
+                    b.ToTable("FormItemOptionTemplateCategories", (string)null);
+                });
+
+            modelBuilder.Entity("FormReporting.Models.Entities.Forms.FormItemOptionTemplateItem", b =>
+                {
+                    b.Property<int>("TemplateItemId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TemplateItemId"));
+
+                    b.Property<string>("ColorHint")
+                        .HasMaxLength(7)
+                        .HasColumnType("nvarchar(7)");
+
+                    b.Property<int>("DisplayOrder")
+                        .HasColumnType("int");
+
+                    b.Property<string>("IconClass")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsDefault")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("OptionLabel")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("OptionValue")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<decimal?>("ScoreValue")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<decimal?>("ScoreWeight")
+                        .HasColumnType("decimal(10,2)");
+
+                    b.Property<int>("TemplateId")
+                        .HasColumnType("int");
+
+                    b.HasKey("TemplateItemId");
+
+                    b.HasIndex("TemplateId", "DisplayOrder")
+                        .IsUnique()
+                        .HasDatabaseName("IX_FormItemOptionTemplateItems_Template_Order");
+
+                    b.ToTable("FormItemOptionTemplateItems", (string)null);
                 });
 
             modelBuilder.Entity("FormReporting.Models.Entities.Forms.FormItemValidation", b =>
@@ -5722,6 +5928,21 @@ namespace FormReporting.Data.Migrations
                     b.ToTable("TicketComments");
                 });
 
+            modelBuilder.Entity("FormItemOptionTemplateFormItemOptionTemplateCategory", b =>
+                {
+                    b.HasOne("FormReporting.Models.Entities.Forms.FormItemOptionTemplateCategory", null)
+                        .WithMany()
+                        .HasForeignKey("FormItemOptionTemplateCategoryCategoryId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("FormReporting.Models.Entities.Forms.FormItemOptionTemplate", null)
+                        .WithMany()
+                        .HasForeignKey("TemplatesTemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("FormReporting.Models.Entities.Audit.AuditLog", b =>
                 {
                     b.HasOne("FormReporting.Models.Entities.Identity.User", "Changer")
@@ -5893,6 +6114,41 @@ namespace FormReporting.Data.Migrations
                     b.Navigation("Item");
 
                     b.Navigation("ParentOption");
+                });
+
+            modelBuilder.Entity("FormReporting.Models.Entities.Forms.FormItemOptionTemplate", b =>
+                {
+                    b.HasOne("FormReporting.Models.Entities.Identity.User", "Creator")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("FormReporting.Models.Entities.Identity.User", "Modifier")
+                        .WithMany()
+                        .HasForeignKey("ModifiedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("FormReporting.Models.Entities.Organizational.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Creator");
+
+                    b.Navigation("Modifier");
+
+                    b.Navigation("Tenant");
+                });
+
+            modelBuilder.Entity("FormReporting.Models.Entities.Forms.FormItemOptionTemplateItem", b =>
+                {
+                    b.HasOne("FormReporting.Models.Entities.Forms.FormItemOptionTemplate", "Template")
+                        .WithMany("Items")
+                        .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Template");
                 });
 
             modelBuilder.Entity("FormReporting.Models.Entities.Forms.FormItemValidation", b =>
@@ -7378,6 +7634,11 @@ namespace FormReporting.Data.Migrations
             modelBuilder.Entity("FormReporting.Models.Entities.Forms.FormItemOption", b =>
                 {
                     b.Navigation("ChildOptions");
+                });
+
+            modelBuilder.Entity("FormReporting.Models.Entities.Forms.FormItemOptionTemplate", b =>
+                {
+                    b.Navigation("Items");
                 });
 
             modelBuilder.Entity("FormReporting.Models.Entities.Forms.FormTemplate", b =>

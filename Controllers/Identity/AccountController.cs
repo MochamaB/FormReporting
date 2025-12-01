@@ -30,14 +30,19 @@ namespace FormReporting.Controllers.Identity
         [AllowAnonymous]
         public IActionResult Login(string? returnUrl = null)
         {
-            // If already authenticated, redirect to dashboard
+            // If already authenticated, redirect to appropriate location
             if (User.Identity?.IsAuthenticated == true)
             {
-                return RedirectToAction("Index", "Dashboard");
+                return RedirectToLocal(returnUrl);
             }
 
-            ViewData["ReturnUrl"] = returnUrl;
-            return View();
+            // Create model with returnUrl for form preservation
+            var model = new LoginViewModel
+            {
+                ReturnUrl = returnUrl
+            };
+
+            return View(model);
         }
 
         /// <summary>
@@ -46,7 +51,7 @@ namespace FormReporting.Controllers.Identity
         [HttpPost("Login")]
         [AllowAnonymous]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Login(LoginViewModel model, string? returnUrl = null)
+        public async Task<IActionResult> Login(LoginViewModel model)
         {
             if (!ModelState.IsValid)
             {
@@ -93,7 +98,7 @@ namespace FormReporting.Controllers.Identity
 
                     _logger.LogInformation("User logged in: {UserName}", model.UserName);
 
-                    return RedirectToLocal(returnUrl);
+                    return RedirectToLocal(model.ReturnUrl);
                 }
                 else if (result.IsLockedOut)
                 {
@@ -172,17 +177,40 @@ namespace FormReporting.Controllers.Identity
 
         /// <summary>
         /// Redirect to local URL or default to dashboard
+        /// Implements security checks to prevent open redirect vulnerabilities
         /// </summary>
         private IActionResult RedirectToLocal(string? returnUrl)
         {
-            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+            // Security: Only redirect to local URLs to prevent open redirect attacks
+            // Examples of blocked URLs: https://evil.com, //evil.com, http://external.com
+            // Examples of allowed URLs: /Dashboard, /Forms/FormBuilder/3, /Organizational/Departments
+            
+            if (!string.IsNullOrEmpty(returnUrl))
             {
-                return Redirect(returnUrl);
+                // Check 1: Must be a local URL (prevents external redirects)
+                if (Url.IsLocalUrl(returnUrl))
+                {
+                    // Check 2: Additional security - ensure it doesn't start with double slash
+                    // This prevents protocol-relative URLs like "//evil.com"
+                    if (!returnUrl.StartsWith("//"))
+                    {
+                        _logger.LogInformation("Redirecting to return URL: {ReturnUrl}", returnUrl);
+                        return Redirect(returnUrl);
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Blocked protocol-relative return URL: {ReturnUrl}", returnUrl);
+                    }
+                }
+                else
+                {
+                    _logger.LogWarning("Blocked external return URL: {ReturnUrl}", returnUrl);
+                }
             }
-            else
-            {
-                return RedirectToAction("Index", "Dashboard");
-            }
+
+            // Default: Redirect to dashboard if no valid returnUrl
+            _logger.LogInformation("Redirecting to default dashboard (no valid return URL)");
+            return RedirectToAction("Index", "Dashboard");
         }
 
         /// <summary>

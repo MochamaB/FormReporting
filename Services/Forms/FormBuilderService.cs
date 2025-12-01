@@ -1,6 +1,7 @@
 using FormReporting.Data;
 using FormReporting.Models.ViewModels.Forms;
 using FormReporting.Models.Common;
+using FormReporting.Models.Entities.Forms;
 using Microsoft.EntityFrameworkCore;
 
 namespace FormReporting.Services.Forms
@@ -95,6 +96,9 @@ namespace FormReporting.Services.Forms
                 })
                 .ToList() ?? new List<FieldOptionDto>();
 
+            // Load configuration values from key-value store
+            var configs = item.Configurations?.ToDictionary(c => c.ConfigKey, c => c.ConfigValue) ?? new Dictionary<string, string?>();
+
             return new FieldDto
             {
                 ItemId = item.ItemId,
@@ -113,7 +117,19 @@ namespace FormReporting.Services.Forms
                 ConditionalLogic = item.ConditionalLogic,
                 ValidationCount = item.Validations?.Count ?? 0,
                 OptionCount = item.Options?.Count ?? 0,
-                Options = optionsDto  // Include full option details
+                Options = optionsDto,  // Include full option details
+
+                // Field-specific configurations (from key-value store)
+                MinValue = configs.ContainsKey("minValue") && decimal.TryParse(configs["minValue"], out var minVal) ? minVal : null,
+                MaxValue = configs.ContainsKey("maxValue") && decimal.TryParse(configs["maxValue"], out var maxVal) ? maxVal : null,
+                Step = configs.ContainsKey("step") && decimal.TryParse(configs["step"], out var stepVal) ? stepVal : null,
+                DecimalPlaces = configs.ContainsKey("decimalPlaces") && int.TryParse(configs["decimalPlaces"], out var decPlaces) ? decPlaces : null,
+                AllowNegative = configs.ContainsKey("allowNegative") && bool.TryParse(configs["allowNegative"], out var allowNeg) ? allowNeg : null,
+                MinLength = configs.ContainsKey("minLength") && int.TryParse(configs["minLength"], out var minLen) ? minLen : null,
+                MaxLength = configs.ContainsKey("maxLength") && int.TryParse(configs["maxLength"], out var maxLen) ? maxLen : null,
+                InputMask = configs.ContainsKey("inputMask") ? configs["inputMask"] : null,
+                TextTransform = configs.ContainsKey("textTransform") ? configs["textTransform"] : null,
+                AutoTrim = configs.ContainsKey("autoTrim") && bool.TryParse(configs["autoTrim"], out var autoTrim) ? autoTrim : null
             };
         }
 
@@ -454,9 +470,9 @@ namespace FormReporting.Services.Forms
                     }
 
                     // Duplicate options
-                    foreach (var originalOption in originalItem.Options ?? new List<Models.Entities.Forms.FormItemOption>())
+                    foreach (var originalOption in originalItem.Options ?? new List<FormItemOption>())
                     {
-                        var newOption = new Models.Entities.Forms.FormItemOption
+                        var newOption = new FormItemOption
                         {
                             ItemId = newItem.ItemId,
                             OptionLabel = originalOption.OptionLabel,
@@ -627,6 +643,7 @@ namespace FormReporting.Services.Forms
             var field = await _context.FormTemplateItems
                 .Include(i => i.Validations)
                 .Include(i => i.Options)
+                .Include(i => i.Configurations)
                 .FirstOrDefaultAsync(i => i.ItemId == fieldId);
 
             if (field == null)
@@ -643,12 +660,13 @@ namespace FormReporting.Services.Forms
             try
             {
                 var field = await _context.FormTemplateItems
+                    .Include(i => i.Configurations)
                     .FirstOrDefaultAsync(i => i.ItemId == fieldId);
 
                 if (field == null)
                     return false;
 
-                // Update properties
+                // Update basic properties
                 field.ItemName = dto.ItemName;
                 field.ItemDescription = dto.ItemDescription;
                 field.IsRequired = dto.IsRequired;
@@ -657,6 +675,18 @@ namespace FormReporting.Services.Forms
                 field.PrefixText = dto.PrefixText;
                 field.SuffixText = dto.SuffixText;
                 field.DefaultValue = dto.DefaultValue;
+
+                // Update field-specific configurations
+                await UpdateOrCreateConfigAsync(fieldId, "minValue", dto.MinValue?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "maxValue", dto.MaxValue?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "step", dto.Step?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "decimalPlaces", dto.DecimalPlaces?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "allowNegative", dto.AllowNegative?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "minLength", dto.MinLength?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "maxLength", dto.MaxLength?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "inputMask", dto.InputMask);
+                await UpdateOrCreateConfigAsync(fieldId, "textTransform", dto.TextTransform);
+                await UpdateOrCreateConfigAsync(fieldId, "autoTrim", dto.AutoTrim?.ToString());
 
                 await _context.SaveChangesAsync();
                 return true;
@@ -901,6 +931,255 @@ namespace FormReporting.Services.Forms
             }
         }
 
+        /// <summary>
+        /// Move a field to a different section (cross-section drag)
+        /// Updates the field's SectionId
+        /// </summary>
+        public async Task<bool> MoveFieldToSectionAsync(int fieldId, int targetSectionId)
+        {
+            try
+            {
+                // Verify field exists
+                var field = await _context.FormTemplateItems.FindAsync(fieldId);
+                if (field == null)
+                    return false;
+
+                // Verify target section exists
+                var targetSection = await _context.FormTemplateSections.FindAsync(targetSectionId);
+                if (targetSection == null)
+                    return false;
+
+                // Update field's section
+                field.SectionId = targetSectionId;
+                await _context.SaveChangesAsync();
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error moving field to section: {ex.Message}");
+                return false;
+            }
+        }
+
+        // ========================================================================
+        // OPTIONS MANAGEMENT
+        // ========================================================================
+
+        /// <summary>
+        /// Add a new option to a field
+        /// </summary>
+        public async Task<FieldOptionDto?> AddOptionAsync(int fieldId, FieldOptionDto dto)
+        {
+            try
+            {
+                // Verify field exists and requires options
+                var field = await _context.FormTemplateItems
+                    .Include(f => f.Options)
+                    .FirstOrDefaultAsync(f => f.ItemId == fieldId);
+
+                if (field == null)
+                    return null;
+
+                if (!RequiresOptions(field.DataType ?? "Text"))
+                    return null;
+
+                // Auto-generate value from label if empty
+                var optionValue = string.IsNullOrWhiteSpace(dto.OptionValue)
+                    ? GenerateUniqueOptionValue(dto.OptionLabel, fieldId)
+                    : dto.OptionValue.Trim();
+
+                // Validate unique value
+                if (await _context.FormItemOptions.AnyAsync(o => o.ItemId == fieldId && o.OptionValue == optionValue))
+                {
+                    // Try appending counter
+                    optionValue = GenerateUniqueOptionValue(optionValue, fieldId);
+                }
+
+                // Get max display order
+                var maxOrder = await _context.FormItemOptions
+                    .Where(o => o.ItemId == fieldId)
+                    .MaxAsync(o => (int?)o.DisplayOrder) ?? 0;
+
+                // Create new option
+                var newOption = new FormItemOption
+                {
+                    ItemId = fieldId,
+                    OptionLabel = dto.OptionLabel.Trim(),
+                    OptionValue = optionValue,
+                    DisplayOrder = maxOrder + 1,
+                    IsDefault = dto.IsDefault,
+                    IsActive = dto.IsActive
+                };
+
+                _context.FormItemOptions.Add(newOption);
+                await _context.SaveChangesAsync();
+
+                // Return DTO
+                return new FieldOptionDto
+                {
+                    OptionId = newOption.OptionId,
+                    OptionLabel = newOption.OptionLabel,
+                    OptionValue = newOption.OptionValue,
+                    DisplayOrder = newOption.DisplayOrder,
+                    IsDefault = newOption.IsDefault,
+                    IsActive = newOption.IsActive
+                };
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error adding option: {ex.Message}");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Update an existing option
+        /// </summary>
+        public async Task<bool> UpdateOptionAsync(int optionId, FieldOptionDto dto)
+        {
+            try
+            {
+                var option = await _context.FormItemOptions
+                    .Include(o => o.Item)
+                    .FirstOrDefaultAsync(o => o.OptionId == optionId);
+
+                if (option == null)
+                    return false;
+
+                // Validate unique value (excluding current option)
+                var duplicateValue = await _context.FormItemOptions
+                    .AnyAsync(o => o.ItemId == option.ItemId &&
+                                   o.OptionId != optionId &&
+                                   o.OptionValue == dto.OptionValue.Trim());
+
+                if (duplicateValue)
+                    throw new InvalidOperationException("Option value must be unique within the field");
+
+                // Update option
+                option.OptionLabel = dto.OptionLabel.Trim();
+                option.OptionValue = dto.OptionValue.Trim();
+                option.IsDefault = dto.IsDefault;
+                option.IsActive = dto.IsActive;
+
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error updating option: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Delete an option (enforces minimum 2 options rule)
+        /// </summary>
+        public async Task<bool> DeleteOptionAsync(int optionId)
+        {
+            try
+            {
+                var option = await _context.FormItemOptions
+                    .Include(o => o.Item)
+                    .FirstOrDefaultAsync(o => o.OptionId == optionId);
+
+                if (option == null)
+                    return false;
+
+                // Count options for this field
+                var optionCount = await _context.FormItemOptions
+                    .CountAsync(o => o.ItemId == option.ItemId);
+
+                // Enforce minimum 2 options
+                if (optionCount <= 2)
+                {
+                    throw new InvalidOperationException("Cannot delete option. Selection fields require at least 2 options.");
+                }
+
+                _context.FormItemOptions.Remove(option);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error deleting option: {ex.Message}");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Reorder options within a field
+        /// </summary>
+        public async Task<bool> ReorderOptionsAsync(int fieldId, List<ReorderOptionDto> updates)
+        {
+            try
+            {
+                foreach (var update in updates)
+                {
+                    var option = await _context.FormItemOptions
+                        .FirstOrDefaultAsync(o => o.OptionId == update.OptionId && o.ItemId == fieldId);
+
+                    if (option != null)
+                    {
+                        option.DisplayOrder = update.DisplayOrder;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error reordering options: {ex.Message}");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Set an option as default
+        /// </summary>
+        public async Task<bool> SetDefaultOptionAsync(int optionId, int fieldId)
+        {
+            try
+            {
+                var field = await _context.FormTemplateItems
+                    .Include(f => f.Options)
+                    .FirstOrDefaultAsync(f => f.ItemId == fieldId);
+
+                if (field == null)
+                    return false;
+
+                // Determine if single or multi-select
+                var isSingleSelect = field.DataType == "Dropdown" || field.DataType == "Radio";
+
+                if (isSingleSelect)
+                {
+                    // Single-select: Unset all other defaults
+                    foreach (var opt in field.Options)
+                    {
+                        opt.IsDefault = (opt.OptionId == optionId);
+                    }
+                }
+                else
+                {
+                    // Multi-select: Toggle this option's default
+                    var option = field.Options.FirstOrDefault(o => o.OptionId == optionId);
+                    if (option != null)
+                    {
+                        option.IsDefault = !option.IsDefault;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error setting default option: {ex.Message}");
+                return false;
+            }
+        }
+
         // ========================================================================
         // HELPER METHODS - Option Management
         // ========================================================================
@@ -947,6 +1226,306 @@ namespace FormReporting.Services.Forms
             await _context.SaveChangesAsync();
 
             Console.WriteLine($"Created {count} default options for field {fieldId}");
+        }
+
+        /// <summary>
+        /// Generate a unique option value from a label
+        /// Converts to lowercase, replaces spaces/special chars with underscores
+        /// Appends counter if value already exists
+        /// </summary>
+        /// <param name="label">Option label to generate value from</param>
+        /// <param name="fieldId">Field ID to check uniqueness within</param>
+        /// <returns>Unique option value</returns>
+        private string GenerateUniqueOptionValue(string label, int fieldId)
+        {
+            // Convert label to value format
+            var baseValue = label
+                .ToLower()
+                .Trim()
+                .Replace(" ", "_")
+                .Replace("-", "_")
+                .Trim('_');
+
+            // If empty after conversion, use generic
+            if (string.IsNullOrWhiteSpace(baseValue))
+                baseValue = "option";
+
+            // Check if base value is unique
+            var existing = _context.FormItemOptions
+                .Where(o => o.ItemId == fieldId && o.OptionValue.StartsWith(baseValue))
+                .Select(o => o.OptionValue)
+                .ToList();
+
+            if (!existing.Contains(baseValue))
+                return baseValue;
+
+            // Append counter for uniqueness
+            int counter = 1;
+            while (existing.Contains($"{baseValue}_{counter}"))
+                counter++;
+
+            return $"{baseValue}_{counter}";
+        }
+
+        // ========================================================================
+        // VALIDATION MANAGEMENT
+        // ========================================================================
+
+        /// <summary>
+        /// Add a validation rule to a field
+        /// </summary>
+        public async Task<ValidationRuleDto?> AddValidationAsync(int fieldId, CreateValidationDto dto)
+        {
+            try
+            {
+                // Verify field exists
+                var field = await _context.FormTemplateItems.FindAsync(fieldId);
+                if (field == null)
+                {
+                    throw new InvalidOperationException($"Field with ID {fieldId} not found");
+                }
+
+                // Get max validation order
+                var maxOrder = await _context.FormItemValidations
+                    .Where(v => v.ItemId == fieldId)
+                    .MaxAsync(v => (int?)v.ValidationOrder) ?? 0;
+
+                // Create new validation
+                var newValidation = new FormItemValidation
+                {
+                    ItemId = fieldId,
+                    ValidationType = dto.ValidationType,
+                    MinValue = dto.MinValue,
+                    MaxValue = dto.MaxValue,
+                    MinLength = dto.MinLength,
+                    MaxLength = dto.MaxLength,
+                    RegexPattern = dto.RegexPattern,
+                    CustomExpression = dto.CustomExpression,
+                    ErrorMessage = string.IsNullOrWhiteSpace(dto.ErrorMessage)
+                        ? GetDefaultErrorMessage(dto.ValidationType)
+                        : dto.ErrorMessage,
+                    Severity = dto.Severity,
+                    ValidationOrder = maxOrder + 1,
+                    IsActive = true,
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                _context.FormItemValidations.Add(newValidation);
+                await _context.SaveChangesAsync();
+
+                // Map to DTO
+                return new ValidationRuleDto
+                {
+                    ValidationId = newValidation.ItemValidationId,
+                    ValidationType = newValidation.ValidationType,
+                    MinValue = newValidation.MinValue,
+                    MaxValue = newValidation.MaxValue,
+                    MinLength = newValidation.MinLength,
+                    MaxLength = newValidation.MaxLength,
+                    RegexPattern = newValidation.RegexPattern,
+                    CustomExpression = newValidation.CustomExpression,
+                    ErrorMessage = newValidation.ErrorMessage,
+                    Severity = newValidation.Severity,
+                    ValidationOrder = newValidation.ValidationOrder,
+                    IsActive = newValidation.IsActive
+                };
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to add validation: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Update an existing validation rule
+        /// </summary>
+        public async Task<bool> UpdateValidationAsync(int validationId, UpdateValidationDto dto)
+        {
+            try
+            {
+                var validation = await _context.FormItemValidations.FindAsync(validationId);
+                if (validation == null)
+                {
+                    throw new InvalidOperationException($"Validation with ID {validationId} not found");
+                }
+
+                // Update properties
+                validation.ValidationType = dto.ValidationType;
+                validation.MinValue = dto.MinValue;
+                validation.MaxValue = dto.MaxValue;
+                validation.MinLength = dto.MinLength;
+                validation.MaxLength = dto.MaxLength;
+                validation.RegexPattern = dto.RegexPattern;
+                validation.CustomExpression = dto.CustomExpression;
+                validation.ErrorMessage = dto.ErrorMessage;
+                validation.Severity = dto.Severity;
+                validation.IsActive = dto.IsActive;
+
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to update validation: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Delete a validation rule
+        /// </summary>
+        public async Task<bool> DeleteValidationAsync(int validationId)
+        {
+            try
+            {
+                var validation = await _context.FormItemValidations.FindAsync(validationId);
+                if (validation == null)
+                {
+                    throw new InvalidOperationException($"Validation with ID {validationId} not found");
+                }
+
+                _context.FormItemValidations.Remove(validation);
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to delete validation: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Reorder validation rules within a field
+        /// </summary>
+        public async Task<bool> ReorderValidationsAsync(int fieldId, List<ReorderValidationDto> updates)
+        {
+            try
+            {
+                // Verify field exists
+                var field = await _context.FormTemplateItems.FindAsync(fieldId);
+                if (field == null)
+                {
+                    throw new InvalidOperationException($"Field with ID {fieldId} not found");
+                }
+
+                // Update each validation's order
+                foreach (var update in updates)
+                {
+                    var validation = await _context.FormItemValidations.FindAsync(update.ValidationId);
+                    if (validation != null && validation.ItemId == fieldId)
+                    {
+                        validation.ValidationOrder = update.ValidationOrder;
+                    }
+                }
+
+                await _context.SaveChangesAsync();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to reorder validations: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Get all validation rules for a field
+        /// </summary>
+        public async Task<List<ValidationRuleDto>> GetValidationsForFieldAsync(int fieldId)
+        {
+            try
+            {
+                var validations = await _context.FormItemValidations
+                    .Where(v => v.ItemId == fieldId && v.IsActive)
+                    .OrderBy(v => v.ValidationOrder)
+                    .ToListAsync();
+
+                return validations.Select(v => new ValidationRuleDto
+                {
+                    ValidationId = v.ItemValidationId,
+                    ValidationType = v.ValidationType,
+                    MinValue = v.MinValue,
+                    MaxValue = v.MaxValue,
+                    MinLength = v.MinLength,
+                    MaxLength = v.MaxLength,
+                    RegexPattern = v.RegexPattern,
+                    CustomExpression = v.CustomExpression,
+                    ErrorMessage = v.ErrorMessage,
+                    Severity = v.Severity,
+                    ValidationOrder = v.ValidationOrder,
+                    IsActive = v.IsActive
+                }).ToList();
+            }
+            catch (Exception ex)
+            {
+                throw new InvalidOperationException($"Failed to get validations: {ex.Message}", ex);
+            }
+        }
+
+        /// <summary>
+        /// Get default error message for validation type
+        /// </summary>
+        private string GetDefaultErrorMessage(string validationType)
+        {
+            return validationType switch
+            {
+                "Required" => "This field is required.",
+                "Email" => "Please enter a valid email address.",
+                "Phone" => "Please enter a valid phone number.",
+                "URL" => "Please enter a valid URL.",
+                "MinLength" => "Input is too short.",
+                "MaxLength" => "Input is too long.",
+                "MinValue" => "Value is too low.",
+                "MaxValue" => "Value is too high.",
+                "Range" => "Value is out of range.",
+                "Pattern" => "Input does not match the required pattern.",
+                "Integer" => "Please enter a whole number.",
+                "Decimal" => "Please enter a valid decimal number.",
+                "Number" => "Please enter a valid number.",
+                "Date" => "Please enter a valid date.",
+                _ => "Invalid input."
+            };
+        }
+
+        // ========================================================================
+        // FIELD CONFIGURATION MANAGEMENT (Helper Methods)
+        // ========================================================================
+
+        /// <summary>
+        /// Update or create a configuration entry for a field
+        /// If value is null/empty, deletes the configuration entry
+        /// </summary>
+        private async Task UpdateOrCreateConfigAsync(int fieldId, string configKey, string? configValue)
+        {
+            // Find existing configuration
+            var existing = await _context.FormItemConfigurations
+                .FirstOrDefaultAsync(c => c.ItemId == fieldId && c.ConfigKey == configKey);
+
+            if (string.IsNullOrWhiteSpace(configValue))
+            {
+                // Delete if value is null/empty
+                if (existing != null)
+                {
+                    _context.FormItemConfigurations.Remove(existing);
+                }
+            }
+            else
+            {
+                if (existing != null)
+                {
+                    // Update existing
+                    existing.ConfigValue = configValue;
+                }
+                else
+                {
+                    // Create new
+                    var newConfig = new FormItemConfiguration
+                    {
+                        ItemId = fieldId,
+                        ConfigKey = configKey,
+                        ConfigValue = configValue
+                    };
+                    _context.FormItemConfigurations.Add(newConfig);
+                }
+            }
         }
     }
 }
