@@ -93,7 +93,8 @@ namespace FormReporting.Extensions
         // ========== Helper Methods ==========
 
         /// <summary>
-        /// Get step configurations with metadata - Complete 7-step wizard
+        /// Get step configurations with metadata - Simplified 3-step wizard
+        /// Note: Assignments, Workflow, Metrics, Reports are configured AFTER publish
         /// </summary>
         private static List<FormBuilderStepConfig> GetStepConfigurations(FormBuilderProgressConfig config)
         {
@@ -101,6 +102,7 @@ namespace FormReporting.Extensions
                 ? $"/Forms/FormTemplates/Edit/{config.TemplateId}"
                 : "/Forms/FormTemplates/Create";
 
+            // Order: Setup → Build → Publish
             return new List<FormBuilderStepConfig>
             {
                 new FormBuilderStepConfig
@@ -127,52 +129,8 @@ namespace FormReporting.Extensions
                 },
                 new FormBuilderStepConfig
                 {
-                    Step = FormBuilderStep.MetricMapping,
-                    StepNumber = "3",
-                    Title = "Metric Mapping",
-                    Description = "Map fields to KPI metrics",
-                    Icon = "ri-line-chart-line",
-                    Status = config.StepStatuses[FormBuilderStep.MetricMapping],
-                    NavigateUrl = config.TemplateId.HasValue ? $"/Forms/FormTemplates/MetricMapping/{config.TemplateId}" : null,
-                    IsNavigable = config.TemplateId.HasValue
-                },
-                new FormBuilderStepConfig
-                {
-                    Step = FormBuilderStep.ApprovalWorkflow,
-                    StepNumber = "4",
-                    Title = "Approval Workflow",
-                    Description = "Define approval levels",
-                    Icon = "ri-shield-check-line",
-                    Status = config.StepStatuses[FormBuilderStep.ApprovalWorkflow],
-                    NavigateUrl = config.TemplateId.HasValue ? $"/Forms/FormTemplates/ApprovalWorkflow/{config.TemplateId}" : null,
-                    IsNavigable = config.TemplateId.HasValue
-                },
-                new FormBuilderStepConfig
-                {
-                    Step = FormBuilderStep.FormAssignments,
-                    StepNumber = "5",
-                    Title = "Form Assignments",
-                    Description = "Assign to users & tenants",
-                    Icon = "ri-user-add-line",
-                    Status = config.StepStatuses[FormBuilderStep.FormAssignments],
-                    NavigateUrl = config.TemplateId.HasValue ? $"/Forms/FormTemplates/Assignments/{config.TemplateId}" : null,
-                    IsNavigable = config.TemplateId.HasValue
-                },
-                new FormBuilderStepConfig
-                {
-                    Step = FormBuilderStep.ReportConfiguration,
-                    StepNumber = "6",
-                    Title = "Report Configuration",
-                    Description = "Configure dashboards & reports",
-                    Icon = "ri-dashboard-line",
-                    Status = config.StepStatuses[FormBuilderStep.ReportConfiguration],
-                    NavigateUrl = config.TemplateId.HasValue ? $"/Forms/FormTemplates/Reports/{config.TemplateId}" : null,
-                    IsNavigable = config.TemplateId.HasValue
-                },
-                new FormBuilderStepConfig
-                {
                     Step = FormBuilderStep.ReviewPublish,
-                    StepNumber = "7",
+                    StepNumber = "3",
                     Title = "Review & Publish",
                     Description = "Validate and publish template",
                     Icon = "ri-checkbox-circle-line",

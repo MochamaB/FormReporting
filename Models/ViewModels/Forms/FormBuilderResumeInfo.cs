@@ -45,15 +45,12 @@ namespace FormReporting.Models.ViewModels.Forms
         
         /// <summary>
         /// User-friendly step name for display
+        /// Order: Setup → Build → Publish
         /// </summary>
         public string CurrentStepName => CurrentStep switch
         {
             FormBuilderStep.TemplateSetup => "Template Setup",
             FormBuilderStep.FormBuilder => "Form Builder",
-            FormBuilderStep.MetricMapping => "Metric Mapping",
-            FormBuilderStep.ApprovalWorkflow => "Approval Workflow",
-            FormBuilderStep.FormAssignments => "Form Assignments",
-            FormBuilderStep.ReportConfiguration => "Report Configuration",
             FormBuilderStep.ReviewPublish => "Review & Publish",
             _ => "Unknown"
         };

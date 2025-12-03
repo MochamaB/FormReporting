@@ -158,6 +158,8 @@ namespace FormReporting.Services.Forms
         /// <summary>
         /// Analyze template progress and determine current step for resume functionality
         /// Uses existing data to intelligently detect which step user should resume from
+        /// Simplified 3-step wizard: Setup → Build → Publish
+        /// Note: Assignments, Workflow, Metrics, Reports are configured AFTER publish
         /// </summary>
         public FormBuilderResumeInfo AnalyzeTemplateProgress(FormTemplate template)
         {
@@ -193,67 +195,19 @@ namespace FormReporting.Services.Forms
                 StepStatus.Active;
 
             // ═══════════════════════════════════════════════════════════
-            // STEP 3: METRIC MAPPING (Optional)
+            // STEP 3: REVIEW & PUBLISH
             // ═══════════════════════════════════════════════════════════
-            // Check if any items have metric mappings
-            bool hasMetrics = template.Items.Any(i => i.MetricMappings != null && i.MetricMappings.Any());
-            bool step3Complete = hasMetrics;
+            bool step3Complete = template.PublishStatus == "Published";
 
-            completedSteps[FormBuilderStep.MetricMapping] = step3Complete;
-            stepStatuses[FormBuilderStep.MetricMapping] =
+            completedSteps[FormBuilderStep.ReviewPublish] = step3Complete;
+            stepStatuses[FormBuilderStep.ReviewPublish] =
                 !step2Complete ? StepStatus.Pending :
                 step3Complete ? StepStatus.Completed :
-                StepStatus.Pending; // Optional step
-
-            // ═══════════════════════════════════════════════════════════
-            // STEP 4: APPROVAL WORKFLOW (Conditional)
-            // ═══════════════════════════════════════════════════════════
-            bool step4Complete =
-                !template.RequiresApproval || // If approval not required, skip
-                (template.RequiresApproval && template.WorkflowId.HasValue);
-
-            completedSteps[FormBuilderStep.ApprovalWorkflow] = step4Complete;
-            stepStatuses[FormBuilderStep.ApprovalWorkflow] =
-                !step2Complete ? StepStatus.Pending :
-                step4Complete ? StepStatus.Completed :
                 StepStatus.Active;
 
             // ═══════════════════════════════════════════════════════════
-            // STEP 5: FORM ASSIGNMENTS (Required)
-            // ═══════════════════════════════════════════════════════════
-            bool step5Complete = template.Assignments.Any();
-
-            completedSteps[FormBuilderStep.FormAssignments] = step5Complete;
-            stepStatuses[FormBuilderStep.FormAssignments] =
-                !step4Complete ? StepStatus.Pending :
-                step5Complete ? StepStatus.Completed :
-                StepStatus.Active;
-
-            // ═══════════════════════════════════════════════════════════
-            // STEP 6: REPORT CONFIGURATION (Optional)
-            // ═══════════════════════════════════════════════════════════
-            // TODO: Check if report configs exist when implemented
-            bool step6Complete = true; // Consider complete for now (optional)
-
-            completedSteps[FormBuilderStep.ReportConfiguration] = step6Complete;
-            stepStatuses[FormBuilderStep.ReportConfiguration] =
-                !step5Complete ? StepStatus.Pending :
-                step6Complete ? StepStatus.Completed :
-                StepStatus.Pending;
-
-            // ═══════════════════════════════════════════════════════════
-            // STEP 7: REVIEW & PUBLISH
-            // ═══════════════════════════════════════════════════════════
-            bool step7Complete = template.PublishStatus == "Published";
-
-            completedSteps[FormBuilderStep.ReviewPublish] = step7Complete;
-            stepStatuses[FormBuilderStep.ReviewPublish] =
-                !step6Complete ? StepStatus.Pending :
-                step7Complete ? StepStatus.Completed :
-                StepStatus.Active;
-
-            // ═══════════════════════════════════════════════════════════
-            // DETERMINE CURRENT STEP (First incomplete required step)
+            // DETERMINE CURRENT STEP (First incomplete step)
+            // Order: Setup → Build → Publish
             // ═══════════════════════════════════════════════════════════
             FormBuilderStep currentStep = FormBuilderStep.TemplateSetup;
 
@@ -261,13 +215,6 @@ namespace FormReporting.Services.Forms
                 currentStep = FormBuilderStep.TemplateSetup;
             else if (!step2Complete)
                 currentStep = FormBuilderStep.FormBuilder;
-            else if (!step3Complete)
-                // Always go to MetricMapping after FormBuilder (optional but should be visited)
-                currentStep = FormBuilderStep.MetricMapping;
-            else if (!step4Complete && template.RequiresApproval)
-                currentStep = FormBuilderStep.ApprovalWorkflow;
-            else if (!step5Complete)
-                currentStep = FormBuilderStep.FormAssignments;
             else
                 currentStep = FormBuilderStep.ReviewPublish;
 
@@ -275,7 +222,7 @@ namespace FormReporting.Services.Forms
             // CALCULATE COMPLETION PERCENTAGE
             // ═══════════════════════════════════════════════════════════
             int completedCount = completedSteps.Count(kvp => kvp.Value);
-            int completionPercentage = (completedCount * 100) / 7;
+            int completionPercentage = (completedCount * 100) / 3;
 
             return new FormBuilderResumeInfo
             {

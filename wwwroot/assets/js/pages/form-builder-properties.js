@@ -663,6 +663,72 @@ const FormBuilderProperties = {
         // - Update background color
         // - Update padding classes
         // - Show/hide section number badge
+    },
+
+    /**
+     * Update canvas preview without full page reload
+     * Fetches rendered field card HTML and replaces it in the DOM
+     */
+    updateCanvasPreview: async function() {
+        if (!this.currentFieldId) return;
+
+        try {
+            console.log(`[FormBuilderProperties] Updating canvas preview for field ${this.currentFieldId}`);
+
+            // Fetch rendered field card HTML from server
+            const response = await fetch(`/api/formbuilder/fields/${this.currentFieldId}/render`);
+
+            if (!response.ok) {
+                console.error('Failed to render field card');
+                return;
+            }
+
+            const result = await response.json();
+
+            if (result.success && result.html) {
+                const fieldCard = document.getElementById(`field-${this.currentFieldId}`);
+
+                if (fieldCard) {
+                    // Store selection state
+                    const wasSelected = fieldCard.classList.contains('selected-element');
+                    const wasExpanded = document.getElementById(`field-body-${this.currentFieldId}`)?.style.display !== 'none';
+
+                    // Create temporary container to parse HTML
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = result.html;
+                    const newFieldCard = tempDiv.firstElementChild;
+
+                    // Restore selection state
+                    if (wasSelected) {
+                        newFieldCard.classList.add('selected-element');
+
+                        // Restore parent section selection indicator
+                        const parentSection = fieldCard.closest('.builder-section');
+                        if (parentSection) {
+                            parentSection.classList.add('section-has-selected-field');
+                        }
+                    }
+
+                    // Restore expansion state if field was expanded
+                    if (wasExpanded) {
+                        const newFieldBody = newFieldCard.querySelector(`#field-body-${this.currentFieldId}`);
+                        if (newFieldBody) {
+                            newFieldBody.style.display = 'block';
+                        }
+                    }
+
+                    // Replace the field card in DOM
+                    fieldCard.replaceWith(newFieldCard);
+
+                    console.log('[FormBuilderProperties] Canvas preview updated successfully');
+                } else {
+                    console.warn(`Field card not found in canvas for field ${this.currentFieldId}`);
+                }
+            }
+        } catch (error) {
+            console.error('Error updating canvas preview:', error);
+            // Don't show error to user - this is a background operation
+        }
     }
 };
 
@@ -887,7 +953,7 @@ const FormBuilderOptions = {
                 }, 100);
                 
                 // Update canvas preview without full page reload
-                this.updateCanvasPreview();
+                FormBuilderProperties.updateCanvasPreview();
                 
                 console.log('Option added successfully:', result.data);
             } else {
@@ -969,7 +1035,7 @@ const FormBuilderOptions = {
                 }, 1000);
                 
                 // Update canvas preview without full page reload
-                this.updateCanvasPreview();
+                FormBuilderProperties.updateCanvasPreview();
                 
                 console.log('Option updated successfully:', option);
             } else {
@@ -1016,7 +1082,7 @@ const FormBuilderOptions = {
                 this.initializeSortable();
                 
                 // Update canvas preview without full page reload
-                this.updateCanvasPreview();
+                FormBuilderProperties.updateCanvasPreview();
                 
                 console.log('Option deleted successfully');
             } else {
@@ -1071,7 +1137,7 @@ const FormBuilderOptions = {
                 }
                 
                 // Update canvas preview without full page reload
-                this.updateCanvasPreview();
+                FormBuilderProperties.updateCanvasPreview();
                 
                 console.log('Default option updated');
             } else {
@@ -1161,7 +1227,7 @@ const FormBuilderOptions = {
                 });
                 
                 // Update canvas preview without full page reload
-                this.updateCanvasPreview();
+                FormBuilderProperties.updateCanvasPreview();
                 
                 console.log('Options reordered successfully');
             } else {
@@ -1232,46 +1298,6 @@ const FormBuilderOptions = {
         
         // Destroy sortable
         this.destroySortable();
-    },
-
-    /**
-     * Update canvas preview without full page reload
-     * Fetches updated field data and re-renders the field card
-     */
-    updateCanvasPreview: async function() {
-        if (!this.currentFieldId) return;
-        
-        try {
-            // Fetch updated field data
-            const response = await fetch(`/api/formbuilder/fields/${this.currentFieldId}`);
-            
-            if (!response.ok) {
-                console.error('Failed to fetch updated field data');
-                return;
-            }
-            
-            const result = await response.json();
-            
-            if (result.success && result.field) {
-                // Find the field card in the canvas
-                const fieldCard = document.getElementById(`field-${this.currentFieldId}`);
-                
-                if (fieldCard) {
-                    // For now, just log that we would update the preview
-                    // Full implementation would require re-rendering the field preview partial
-                    console.log('Canvas preview would update here with:', result.field.options);
-                    
-                    // Update option count in properties panel
-                    const optionCountEl = document.getElementById('prop_optionCount');
-                    if (optionCountEl) {
-                        optionCountEl.textContent = result.field.optionCount || 0;
-                    }
-                }
-            }
-        } catch (error) {
-            console.error('Error updating canvas preview:', error);
-            // Don't show error to user - this is a background operation
-        }
     },
 
     /**
@@ -2327,7 +2353,7 @@ const FormBuilderValidation = {
                 this.updateValidationCount();
                 
                 // Update canvas preview
-                this.updateCanvasPreview();
+                FormBuilderProperties.updateCanvasPreview();
                 
                 console.log('Validation added successfully');
             } else {
@@ -2377,7 +2403,7 @@ const FormBuilderValidation = {
                 this.updateValidationCount();
                 
                 // Update canvas preview
-                this.updateCanvasPreview();
+                FormBuilderProperties.updateCanvasPreview();
                 
                 console.log('Validation deleted successfully');
             } else {

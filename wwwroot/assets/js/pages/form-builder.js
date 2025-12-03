@@ -130,12 +130,13 @@ function saveFormBuilderProgress() {
 }
 
 /**
- * Continue to Next Stage (Metric Mapping)
+ * Continue to Next Stage (Review & Publish)
  * Validates form completeness using database state and navigates to next step
+ * Step Order: Setup → Build → Publish (3-step wizard)
  */
 async function continueToNextStage() {
     // Show loading state
-    const btn = document.getElementById('continueToMetricsBtn');
+    const btn = document.getElementById('continueToNextBtn');
     const originalHtml = btn.innerHTML;
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Validating...';
@@ -177,13 +178,13 @@ async function continueToNextStage() {
                    <p class="text-muted mb-0">✓ ${validation.sectionsCount} section(s) with ${validation.fieldsCount} field(s)</p>
                    <p class="text-muted">✓ Progress: ${validation.completionPercentage}%</p>`,
             showCancelButton: true,
-            confirmButtonText: 'Continue to Metric Mapping',
+            confirmButtonText: 'Continue to Review & Publish',
             cancelButtonText: 'Stay Here'
         });
 
         if (result.isConfirmed) {
-            // Navigate to metric mapping (uses conventional routing)
-            window.location.href = `/FormTemplates/MetricMapping/${FormBuilder.templateId}`;
+            // Navigate to Review & Publish (Step 3)
+            window.location.href = `/Forms/FormTemplates/ReviewPublish/${FormBuilder.templateId}`;
         }
     } catch (error) {
         // Restore button state on error

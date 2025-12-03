@@ -60,9 +60,9 @@ const MetricMapping = {
             self.onTabChange(targetTab);
         });
         
-        // Continue to next step
-        $('#btnContinueToWorkflow').on('click', () => {
-            window.location.href = `/Forms/FormTemplates/ApprovalWorkflow?id=${this.templateId}`;
+        // Continue to next step (Report Configuration - Step 6)
+        $('#btnContinueToReports').on('click', () => {
+            window.location.href = `/Forms/FormTemplates/ReportConfiguration/${this.templateId}`;
         });
     },
     

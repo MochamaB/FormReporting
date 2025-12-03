@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using FormReporting.Data;
 using FormReporting.Services.Forms;
 using FormReporting.Models.ViewModels.Forms;
+using FormReporting.Extensions;
 
 namespace FormReporting.Controllers.API
 {
@@ -11,7 +12,7 @@ namespace FormReporting.Controllers.API
     /// </summary>
     [ApiController]
     [Route("api/formbuilder")]
-    public class FormBuilderApiController : ControllerBase
+    public class FormBuilderApiController : Controller
     {
         private readonly ApplicationDbContext _context;
         private readonly IFormBuilderService _formBuilderService;
@@ -614,6 +615,36 @@ namespace FormReporting.Controllers.API
             catch (Exception ex)
             {
                 return StatusCode(500, new { success = false, message = "Error applying template", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Render field card HTML for canvas update (without page reload)
+        /// GET /api/formbuilder/fields/{fieldId}/render
+        /// </summary>
+        [HttpGet("fields/{fieldId}/render")]
+        public async Task<IActionResult> RenderFieldCard(int fieldId)
+        {
+            try
+            {
+                var field = await _formBuilderService.GetFieldByIdAsync(fieldId);
+
+                if (field == null)
+                {
+                    return NotFound(new { success = false, message = "Field not found" });
+                }
+
+                // Render the field preview partial view to HTML string
+                var html = await this.RenderViewAsync(
+                    "~/Views/Forms/FormTemplates/Partials/FormBuilder/Components/_BuilderFieldPreview.cshtml",
+                    field
+                );
+
+                return Ok(new { success = true, html });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Error rendering field", error = ex.Message });
             }
         }
 

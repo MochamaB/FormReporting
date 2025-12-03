@@ -294,14 +294,11 @@ namespace FormReporting.Controllers.Forms
             ViewData["Progress"] = progress;
 
             // Route to appropriate step view based on current step
+            // Order: Setup → Build → Publish (3-step wizard)
             return resumeInfo.CurrentStep switch
             {
                 FormBuilderStep.TemplateSetup => await ResumeTemplateSetup(template),
                 FormBuilderStep.FormBuilder => RedirectToAction("FormBuilder", new { id }),
-                FormBuilderStep.MetricMapping => RedirectToAction("MetricMapping", new { id }),
-                FormBuilderStep.ApprovalWorkflow => RedirectToAction("ApprovalWorkflow", new { id }),
-                FormBuilderStep.FormAssignments => RedirectToAction("Assignments", new { id }),
-                FormBuilderStep.ReportConfiguration => RedirectToAction("ReportConfiguration", new { id }),
                 FormBuilderStep.ReviewPublish => RedirectToAction("ReviewPublish", new { id }),
                 _ => await ResumeTemplateSetup(template)
             };
@@ -410,7 +407,9 @@ namespace FormReporting.Controllers.Forms
         }
 
         /// <summary>
-        /// STEP 3: Metric Mapping - Map form fields to KPI metrics
+        /// Metric Mapping - Map form fields to KPI metrics
+        /// Note: This is a POST-PUBLISH configuration, not part of the 3-step wizard
+        /// Accessed from Template Details page after template is published
         /// </summary>
         [HttpGet]
         public async Task<IActionResult> MetricMapping(int id)
@@ -424,31 +423,13 @@ namespace FormReporting.Controllers.Forms
                 return RedirectToAction(nameof(Index));
             }
 
-            // Only drafts can be edited
-            if (template.PublishStatus != "Draft")
-            {
-                TempData["ErrorMessage"] = "Cannot edit published templates. Create a new version to make changes.";
-                return RedirectToAction(nameof(Index));
-            }
+            // Store template info in ViewData for the configuration page
+            ViewData["TemplateId"] = template.TemplateId;
+            ViewData["TemplateName"] = template.TemplateName;
+            ViewData["TemplateVersion"] = $"v{template.Version}";
+            ViewData["PublishStatus"] = template.PublishStatus;
 
-            // Build progress tracker for Step 3
-            var progress = new FormBuilderProgressConfig
-            {
-                BuilderId = $"template-{template.TemplateId}",
-                TemplateId = template.TemplateId,
-                TemplateName = template.TemplateName,
-                TemplateVersion = $"v{template.Version}",
-                PublishStatus = template.PublishStatus,
-                CurrentStep = FormBuilderStep.MetricMapping,
-                ShowSaveDraft = true,
-                ExitUrl = Url.Action("Index", "FormTemplates") ?? "/Forms/FormTemplates"
-            }
-            .AtStep(FormBuilderStep.MetricMapping)
-            .BuildProgress();
-
-            ViewData["Progress"] = progress;
-
-            // Pass template to view (placeholder - will build proper ViewModel later)
+            // Pass template to view
             return View("~/Views/Forms/FormTemplates/MetricMapping.cshtml", template);
         }
 
