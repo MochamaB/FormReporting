@@ -176,33 +176,94 @@
     <!-- Options Manager (for Dropdown, Radio, Checkbox, MultiSelect) -->
     <div id="field-options-manager" style="display: none;">
         <div class="mb-2">
-            <div class="d-flex align-items-center justify-content-between mb-2">
-                <div class="d-flex align-items-center">
-                    <i class="ri-list-check fs-5 text-primary me-2"></i>
-                    <h6 class="mb-0">Field Options</h6>
-                </div>
-                <button type="button" class="btn btn-success btn-sm" onclick="FormBuilderOptions.addOption()">
-                    <i class="ri-add-line"></i> Add Option
-                </button>
+            <div class="d-flex align-items-center mb-2">
+                <i class="ri-list-check fs-5 text-primary me-2"></i>
+                <h6 class="mb-0">Field Options</h6>
             </div>
-            <small class="text-muted">Drag to reorder • Minimum 2 required</small>
+           
         </div>
 
-        <!-- Options Table -->
-        <div class="table-responsive mb-3">
-            <table class="table table-sm table-borderless align-middle mb-0" style="font-size: 0.875rem;">
-                <thead style="background-color: #f3f6f9;">
-                    <tr>
-                        <th style="width: 30px;"></th>
-                        <th style="width: 40%;">Value</th>
-                        <th style="width: 40%;">Text</th>
-                        <th style="width: 30px;" class="text-end">Default</th>
-                    </tr>
-                </thead>
-                <tbody id="options-list">
-                    <!-- Dynamic option items will be inserted here -->
-                </tbody>
-            </table>
+        <!-- Template Selector Card -->
+<div class="card border mb-3" style="background-color: #f8f9fa;border-left:3px solid var(--vz-secondary;">
+    <div class="card-body p-3">
+
+        <!-- Label + Tooltip Icon -->
+        <div class="d-flex align-items-center gap-1 mb-2">
+            <label class="form-check-label mb-0">Option Template</label>
+
+            <i class="ri-question-line text-muted"
+               data-bs-toggle="tooltip"
+               title="Select a template to instantly apply pre-defined options"
+               style="cursor: help; font-size: 1.1rem;"></i>
+        </div>
+
+        <!-- Template Select with Loading Spinner -->
+        <div class="d-flex align-items-center gap-2">
+            <select class="form-select" id="template-selector">
+                <option value="">-- Select Template --</option>
+            </select>
+
+            <!-- Loading Spinner -->
+            <div id="template-loading" class="spinner-border spinner-border-sm text-primary"
+                 style="display: none;" role="status">
+                <span class="visually-hidden">Applying...</span>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+        <!-- Options Table Container -->
+        <div id="options-table-container">
+            <!-- Action Buttons (matching EditableTableContent) -->
+            <div class="mb-3 d-flex gap-2 justify-content-end">
+                <button type="button"
+                        class="btn btn-primary"
+                        id="add-option-btn"
+                        onclick="FormBuilderTemplateOptions.addOption()">
+                    <i class="ri-add-line me-1"></i>Add Option
+                </button>
+            </div>
+
+            <!-- Table (matching EditableTableContent structure) -->
+            <div class="table-responsive">
+                <table class="table table-sm" id="field-options-table" data-editable-table>
+                    <thead class="table-light">
+                        <tr class="border-bottom">
+                            <th class="border-bottom text-center" style="width: 30px;">
+                                <i class="ri-draggable text-muted"></i>
+                            </th>
+                            <th class="border-bottom text-center" style="width: 40px;">#</th>
+                            <th class="border-bottom">
+                                Value <span class="text-danger">*</span>
+                            </th>
+                            <th class="border-bottom">
+                                Label <span class="text-danger">*</span>
+                            </th>
+                            <th class="border-bottom text-center" style="width: 100px;">Score</th>
+                            <th class="border-bottom text-center" style="width: 80px;">Default</th>
+                            <th class="border-bottom text-center" style="width: 100px;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="options-list">
+                        <!-- Dynamic option items will be inserted here by JavaScript -->
+                        <tr id="options-empty-state" class="border-bottom">
+                            <td colspan="7" class="text-center text-muted py-4">
+                                <i class="ri-inbox-line d-block mb-2" style="font-size: 2rem; opacity: 0.5;"></i>
+                                <p class="mb-0">No options available</p>
+                                <small>Add an option or apply a template above</small>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="alert alert-info mt-3 mb-0" style="font-size: 0.85rem;">
+            <i class="ri-information-line me-1"></i>
+            <strong>Tip:</strong> Use templates for common option sets (Yes/No, Ratings, etc.)
+            or add custom options manually. Drag to reorder • Minimum 2 required
         </div>
     </div>
 

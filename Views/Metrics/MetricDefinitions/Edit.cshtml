@@ -1,0 +1,168 @@
+@using FormReporting.Extensions
+@using FormReporting.Models.ViewModels.Components
+@model FormReporting.Models.ViewModels.Metrics.CreateMetricDefinitionDto
+
+@{
+    ViewData["Title"] = "Edit Metric Definition";
+    var metricId = ViewBag.MetricId;
+    
+    // Configure vertical tabs (matching Roles Edit pattern)
+    var tabsConfig = new TabsConfig
+    {
+        TabsId = "metricDefinitionTabs",
+        Layout = TabsLayout.Vertical,
+        Style = TabsStyle.Pills,
+        ColorTheme = "primary",
+        WrapInCard = false,
+            Tabs = new List<TabConfig>
+            {
+                new TabConfig
+                {
+                    TabId = "basic-info",
+                    Title = "Basic Information",
+                    Icon = "ri-information-line",
+                    Description = "Core details",
+                    ContentPartialPath = "~/Views/Metrics/MetricDefinitions/_BasicInfo.cshtml",
+                    IsActive = true
+                },
+                new TabConfig
+                {
+                    TabId = "data-config",
+                    Title = "Data Configuration",
+                    Icon = "ri-settings-3-line",
+                    Description = "Collection setup",
+                    ContentPartialPath = "~/Views/Metrics/MetricDefinitions/_DataConfiguration.cshtml"
+                },
+                new TabConfig
+                {
+                    TabId = "kpi-thresholds",
+                    Title = "KPI & Thresholds",
+                    Icon = "ri-line-chart-line",
+                    Description = "Performance tracking",
+                    ContentPartialPath = "~/Views/Metrics/MetricDefinitions/_KpiThresholds.cshtml"
+                },
+                new TabConfig
+                {
+                    TabId = "advanced",
+                    Title = "Advanced Settings",
+                    Icon = "ri-shield-check-line",
+                    Description = "Compliance rules",
+                    ContentPartialPath = "~/Views/Metrics/MetricDefinitions/_AdvancedSettings.cshtml"
+                }
+            }
+        };
+
+        var tabs = tabsConfig.BuildTabs();
+        ViewData["TabsViewModel"] = tabs;
+        ViewData["ParentModel"] = Model;
+    }
+}
+
+<!-- Page Header -->
+<div class="row mb-3">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-0">Edit Metric Definition</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="/">Home</a></li>
+                    <li class="breadcrumb-item"><a href="/Metrics/MetricDefinitions">Metrics</a></li>
+                    <li class="breadcrumb-item active">Edit</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Display validation errors -->
+@if (!ViewData.ModelState.IsValid)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <h5 class="alert-heading"><i class="ri-error-warning-line me-2"></i>Validation Errors</h5>
+        <ul class="mb-0">
+            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+            {
+                <li>@error.ErrorMessage</li>
+            }
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+
+<!-- Main Card Container -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Edit" asp-route-id="@metricId" method="post" id="metricDefinitionForm">
+                    @Html.AntiForgeryToken()
+
+                    <!-- Render Vertical Tabs -->
+                    <partial name="~/Views/Shared/Components/Tabs/_VerticalTabs.cshtml" />
+
+                    <!-- Form Actions -->
+                    <div class="row mt-4 pt-3 border-top">
+                        <div class="col-12">
+                            <div class="d-flex gap-2 justify-content-end">
+                                <a href="@Url.Action("Index", "MetricDefinitions")" class="btn btn-light">
+                                    <i class="ri-close-line me-1"></i>Cancel
+                                </a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="ri-save-line me-1"></i>Update Metric
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function() {
+            // Show/hide threshold fields based on IsKPI checkbox
+            $('#IsKPI').on('change', function() {
+                $('.threshold-fields').toggle(this.checked);
+            });
+
+            // Trigger on page load
+            $('#IsKPI').trigger('change');
+
+            // JSON validation for ComplianceRule
+            $('#ComplianceRule').on('blur', function() {
+                var value = $(this).val().trim();
+                if (value) {
+                    try {
+                        JSON.parse(value);
+                        $(this).removeClass('is-invalid').addClass('is-valid');
+                        $('#ComplianceRule-error').remove();
+                    } catch (e) {
+                        $(this).removeClass('is-valid').addClass('is-invalid');
+                        if (!$('#ComplianceRule-error').length) {
+                            $(this).after('<span id="ComplianceRule-error" class="text-danger small">Invalid JSON format</span>');
+                        }
+                    }
+                } else {
+                    $(this).removeClass('is-invalid is-valid');
+                    $('#ComplianceRule-error').remove();
+                }
+            });
+
+            // Form validation
+            $('#metricDefinitionForm').on('submit', function(e) {
+                if (!$(this).valid()) {
+                    e.preventDefault();
+                    // Find first tab with validation errors and activate it
+                    var firstErrorTab = $('.tab-pane').has('.input-validation-error, .is-invalid').first();
+                    if (firstErrorTab.length) {
+                        var tabId = firstErrorTab.attr('id');
+                        $('a[href="#' + tabId + '"]').tab('show');
+                    }
+                }
+            });
+        });
+    </script>
+}

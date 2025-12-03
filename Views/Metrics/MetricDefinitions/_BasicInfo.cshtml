@@ -1,0 +1,65 @@
+@model FormReporting.Models.ViewModels.Metrics.CreateMetricDefinitionDto
+
+<div class="row">
+    <div class="col-12">
+        <div class="mb-3">
+            <label asp-for="MetricCode" class="form-label">
+                Metric Code <span class="text-danger">*</span>
+            </label>
+            <input asp-for="MetricCode" class="form-control" placeholder="e.g., HARDWARE_COUNT" maxlength="50" />
+            <span asp-validation-for="MetricCode" class="text-danger"></span>
+            <small class="text-muted">Unique identifier for this metric. Auto-generated from name if left empty.</small>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="mb-3">
+            <label asp-for="MetricName" class="form-label">
+                Metric Name <span class="text-danger">*</span>
+            </label>
+            <input asp-for="MetricName" class="form-control" placeholder="e.g., Total Hardware Assets" maxlength="200" />
+            <span asp-validation-for="MetricName" class="text-danger"></span>
+            <small class="text-muted">Descriptive name for this metric.</small>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="mb-3">
+            <label asp-for="Category" class="form-label">Category</label>
+            <select asp-for="Category" class="form-select">
+                <option value="">-- Select Category --</option>
+                <option value="Hardware">Hardware</option>
+                <option value="Software">Software</option>
+                <option value="Network">Network</option>
+                <option value="Security">Security</option>
+                <option value="Compliance">Compliance</option>
+                <option value="Infrastructure">Infrastructure</option>
+                <option value="Performance">Performance</option>
+                <option value="Availability">Availability</option>
+                <option value="Capacity">Capacity</option>
+            </select>
+            <span asp-validation-for="Category" class="text-danger"></span>
+            <small class="text-muted">Group this metric into a category for easier filtering.</small>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="mb-3">
+            <label asp-for="Description" class="form-label">Description</label>
+            <textarea asp-for="Description" class="form-control" rows="4" placeholder="Describe what this metric measures and how it's used..." maxlength="500"></textarea>
+            <span asp-validation-for="Description" class="text-danger"></span>
+            <small class="text-muted">Optional detailed description of this metric.</small>
+        </div>
+    </div>
+</div>
+
+<div class="alert alert-info border-0" role="alert">
+    <i class="ri-information-line me-2"></i>
+    <strong>Tip:</strong> Choose a clear, descriptive name that makes it easy to identify this metric in reports and dashboards.
+</div>

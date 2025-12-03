@@ -1,0 +1,381 @@
+using FormReporting.Data;
+using FormReporting.Models.ViewModels.Metrics;
+using FormReporting.Models.ViewModels.Components;
+using FormReporting.Extensions;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+
+namespace FormReporting.Controllers.Metrics
+{
+    [Route("Metrics/[controller]")]
+    public class MetricDefinitionsController : Controller
+    {
+        private readonly ApplicationDbContext _context;
+
+        public MetricDefinitionsController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+
+        /// <summary>
+        /// Display the metric definitions index page with statistics and datatable
+        /// </summary>
+        [HttpGet("")]
+        [HttpGet("Index")]
+        public async Task<IActionResult> Index(string? search, string? category, string? sourceType, int? page)
+        {
+            // 1. BUILD QUERY with filters
+            var query = _context.MetricDefinitions.AsQueryable();
+
+            // 2. APPLY SEARCH FILTER
+            if (!string.IsNullOrEmpty(search))
+            {
+                query = query.Where(m =>
+                    m.MetricName.Contains(search) ||
+                    m.MetricCode.Contains(search) ||
+                    (m.Description != null && m.Description.Contains(search)));
+            }
+
+            // 3. APPLY CATEGORY FILTER
+            if (!string.IsNullOrEmpty(category))
+            {
+                query = query.Where(m => m.Category == category);
+            }
+
+            // 4. APPLY SOURCE TYPE FILTER
+            if (!string.IsNullOrEmpty(sourceType))
+            {
+                query = query.Where(m => m.SourceType == sourceType);
+            }
+
+            // 5. CALCULATE STATISTICS (for stat cards)
+            var allMetrics = await _context.MetricDefinitions.ToListAsync();
+            var totalMetrics = allMetrics.Count;
+            var kpiMetrics = allMetrics.Count(m => m.IsKPI);
+            var activeMetrics = allMetrics.Count(m => m.IsActive);
+            var userInputMetrics = allMetrics.Count(m => m.SourceType == "UserInput");
+
+            // Get unique categories and source types for filter dropdowns
+            var categories = await _context.MetricDefinitions
+                .Where(m => !string.IsNullOrEmpty(m.Category))
+                .Select(m => m.Category!)
+                .Distinct()
+                .OrderBy(c => c)
+                .ToListAsync();
+
+            var sourceTypes = await _context.MetricDefinitions
+                .Select(m => m.SourceType)
+                .Distinct()
+                .OrderBy(s => s)
+                .ToListAsync();
+
+            // 6. PAGINATION
+            var pageSize = 15;
+            var totalRecords = await query.CountAsync();
+            var currentPage = page ?? 1;
+            var totalPages = (int)Math.Ceiling(totalRecords / (double)pageSize);
+            var skip = (currentPage - 1) * pageSize;
+
+            // 7. GET PAGINATED DATA
+            var metrics = await query
+                .OrderBy(m => m.Category)
+                .ThenBy(m => m.MetricName)
+                .Skip(skip)
+                .Take(pageSize)
+                .ToListAsync();
+
+            // 8. BUILD VIEW MODEL
+            var viewModel = new MetricDefinitionsIndexViewModel
+            {
+                Metrics = metrics.Select(m => new MetricDefinitionItemViewModel
+                {
+                    MetricId = m.MetricId,
+                    MetricCode = m.MetricCode,
+                    MetricName = m.MetricName,
+                    Category = m.Category ?? "Uncategorized",
+                    Description = m.Description,
+                    SourceType = m.SourceType,
+                    DataType = m.DataType,
+                    Unit = m.Unit,
+                    IsKPI = m.IsKPI,
+                    IsActive = m.IsActive,
+                    ThresholdGreen = m.ThresholdGreen,
+                    ThresholdYellow = m.ThresholdYellow,
+                    ThresholdRed = m.ThresholdRed,
+                    CreatedDate = m.CreatedDate
+                }),
+                TotalMetrics = totalMetrics,
+                KpiMetrics = kpiMetrics,
+                ActiveMetrics = activeMetrics,
+                UserInputMetrics = userInputMetrics,
+                Categories = categories,
+                SourceTypes = sourceTypes
+            };
+
+            // 9. PASS PAGINATION DATA TO VIEW
+            ViewBag.CurrentPage = currentPage;
+            ViewBag.TotalPages = totalPages;
+            ViewBag.TotalRecords = totalRecords;
+            ViewBag.PageSize = pageSize;
+            ViewBag.CurrentSearch = search;
+            ViewBag.CurrentCategory = category;
+            ViewBag.CurrentSourceType = sourceType;
+
+            return View("~/Views/Metrics/MetricDefinitions/Index.cshtml", viewModel);
+        }
+
+        /// <summary>
+        /// Build wizard configuration for metric definition
+        /// </summary>
+        private WizardViewModel BuildMetricWizard()
+        {
+            var wizardConfig = new WizardConfig
+            {
+                FormId = "metricDefinitionWizard",
+                Layout = WizardLayout.Vertical,
+                Steps = new List<WizardStep>
+                {
+                    // STEP 1: Basic Information
+                    new WizardStep
+                    {
+                        StepId = "basic-info",
+                        StepNumber = 1,
+                        Title = "Basic Information",
+                        Description = "Core details",
+                        Instructions = "Enter metric code, name, category, and description",
+                        Icon = "ri-information-line",
+                        State = WizardStepState.Active,
+                        ContentPartialPath = "~/Views/Metrics/MetricDefinitions/_BasicInfo.cshtml",
+                        ShowPrevious = false,
+                        ShowNext = true,
+                        NextButtonText = "Next: Data Configuration"
+                    },
+
+                    // STEP 2: Data Configuration
+                    new WizardStep
+                    {
+                        StepId = "data-config",
+                        StepNumber = 2,
+                        Title = "Data Configuration",
+                        Description = "Collection setup",
+                        Instructions = "Configure how this metric's data is collected and stored",
+                        Icon = "ri-settings-3-line",
+                        State = WizardStepState.Pending,
+                        ContentPartialPath = "~/Views/Metrics/MetricDefinitions/_DataConfiguration.cshtml",
+                        ShowPrevious = true,
+                        ShowNext = true,
+                        NextButtonText = "Next: KPI & Thresholds"
+                    },
+
+                    // STEP 3: KPI & Thresholds
+                    new WizardStep
+                    {
+                        StepId = "kpi-thresholds",
+                        StepNumber = 3,
+                        Title = "KPI & Thresholds",
+                        Description = "Performance tracking",
+                        Instructions = "Set performance thresholds and mark as KPI if needed",
+                        Icon = "ri-line-chart-line",
+                        State = WizardStepState.Pending,
+                        ContentPartialPath = "~/Views/Metrics/MetricDefinitions/_KpiThresholds.cshtml",
+                        ShowPrevious = true,
+                        ShowNext = true,
+                        NextButtonText = "Next: Advanced Settings"
+                    },
+
+                    // STEP 4: Advanced Settings
+                    new WizardStep
+                    {
+                        StepId = "advanced",
+                        StepNumber = 4,
+                        Title = "Advanced Settings",
+                        Description = "Compliance rules",
+                        Instructions = "Configure compliance rules and expected values (optional)",
+                        Icon = "ri-shield-check-line",
+                        State = WizardStepState.Pending,
+                        ContentPartialPath = "~/Views/Metrics/MetricDefinitions/_AdvancedSettings.cshtml",
+                        ShowPrevious = true,
+                        ShowNext = false,
+                        CustomButtonHtml = "<button type='submit' class='btn btn-primary'><i class='ri-save-line me-1'></i>Create Metric</button>"
+                    }
+                }
+            };
+
+            return wizardConfig.BuildWizard();
+        }
+
+        /// <summary>
+        /// Display the create metric definition form with wizard
+        /// </summary>
+        [HttpGet("Create")]
+        public IActionResult Create()
+        {
+            var model = new CreateMetricDefinitionDto
+            {
+                // Set defaults
+                SourceType = "UserInput",
+                DataType = "Integer",
+                IsKPI = false
+            };
+
+            var wizard = BuildMetricWizard();
+            ViewData["Wizard"] = wizard;
+
+            return View("~/Views/Metrics/MetricDefinitions/Create.cshtml", model);
+        }
+
+        /// <summary>
+        /// Handle metric definition creation
+        /// </summary>
+        [HttpPost("Create")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Create(CreateMetricDefinitionDto model)
+        {
+            if (!ModelState.IsValid)
+            {
+                // Rebuild wizard for error display
+                var wizard = BuildMetricWizard();
+                ViewData["Wizard"] = wizard;
+                return View("~/Views/Metrics/MetricDefinitions/Create.cshtml", model);
+            }
+
+            // Check for duplicate metric code
+            var exists = await _context.MetricDefinitions
+                .AnyAsync(m => m.MetricCode == model.MetricCode);
+
+            if (exists)
+            {
+                ModelState.AddModelError("MetricCode", "A metric with this code already exists.");
+                
+                // Rebuild wizard for error display
+                var wizard = BuildMetricWizard();
+                ViewData["Wizard"] = wizard;
+                return View("~/Views/Metrics/MetricDefinitions/Create.cshtml", model);
+            }
+
+            // Create new metric definition
+            var metric = new Models.Entities.Metrics.MetricDefinition
+            {
+                MetricCode = model.MetricCode,
+                MetricName = model.MetricName,
+                Category = model.Category,
+                Description = model.Description,
+                SourceType = model.SourceType,
+                DataType = model.DataType,
+                Unit = model.Unit,
+                AggregationType = model.AggregationType,
+                IsKPI = model.IsKPI,
+                ThresholdGreen = model.ThresholdGreen,
+                ThresholdYellow = model.ThresholdYellow,
+                ThresholdRed = model.ThresholdRed,
+                ExpectedValue = model.ExpectedValue,
+                ComplianceRule = model.ComplianceRule,
+                IsActive = true,
+                CreatedDate = DateTime.UtcNow
+            };
+
+            _context.MetricDefinitions.Add(metric);
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = $"Metric '{metric.MetricName}' created successfully.";
+            return RedirectToAction(nameof(Index));
+        }
+
+        /// <summary>
+        /// Display the edit metric definition form
+        /// </summary>
+        [HttpGet("Edit/{id}")]
+        public async Task<IActionResult> Edit(int id)
+        {
+            var metric = await _context.MetricDefinitions.FindAsync(id);
+
+            if (metric == null)
+            {
+                TempData["ErrorMessage"] = "Metric definition not found.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Map to DTO (we'll use the full entity for editing)
+            var model = new CreateMetricDefinitionDto
+            {
+                MetricCode = metric.MetricCode,
+                MetricName = metric.MetricName,
+                Category = metric.Category,
+                Description = metric.Description,
+                SourceType = metric.SourceType,
+                DataType = metric.DataType,
+                Unit = metric.Unit,
+                AggregationType = metric.AggregationType,
+                IsKPI = metric.IsKPI,
+                ThresholdGreen = metric.ThresholdGreen,
+                ThresholdYellow = metric.ThresholdYellow,
+                ThresholdRed = metric.ThresholdRed,
+                ExpectedValue = metric.ExpectedValue,
+                ComplianceRule = metric.ComplianceRule,
+                IsActive = metric.IsActive
+            };
+
+            ViewBag.MetricId = id;
+            ViewBag.IsEdit = true;
+
+            return View("~/Views/Metrics/MetricDefinitions/Edit.cshtml", model);
+        }
+
+        /// <summary>
+        /// Handle metric definition update
+        /// </summary>
+        [HttpPost("Edit/{id}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Edit(int id, CreateMetricDefinitionDto model)
+        {
+            if (!ModelState.IsValid)
+            {
+                ViewBag.MetricId = id;
+                ViewBag.IsEdit = true;
+                return View("~/Views/Metrics/MetricDefinitions/Edit.cshtml", model);
+            }
+
+            var metric = await _context.MetricDefinitions.FindAsync(id);
+
+            if (metric == null)
+            {
+                TempData["ErrorMessage"] = "Metric definition not found.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Check for duplicate metric code (excluding current metric)
+            var duplicateExists = await _context.MetricDefinitions
+                .AnyAsync(m => m.MetricCode == model.MetricCode && m.MetricId != id);
+
+            if (duplicateExists)
+            {
+                ModelState.AddModelError("MetricCode", "A metric with this code already exists.");
+                ViewBag.MetricId = id;
+                ViewBag.IsEdit = true;
+                return View("~/Views/Metrics/MetricDefinitions/Edit.cshtml", model);
+            }
+
+            // Update metric
+            metric.MetricCode = model.MetricCode;
+            metric.MetricName = model.MetricName;
+            metric.Category = model.Category;
+            metric.Description = model.Description;
+            metric.SourceType = model.SourceType;
+            metric.DataType = model.DataType;
+            metric.Unit = model.Unit;
+            metric.AggregationType = model.AggregationType;
+            metric.IsKPI = model.IsKPI;
+            metric.ThresholdGreen = model.ThresholdGreen;
+            metric.ThresholdYellow = model.ThresholdYellow;
+            metric.ThresholdRed = model.ThresholdRed;
+            metric.ExpectedValue = model.ExpectedValue;
+            metric.ComplianceRule = model.ComplianceRule;
+            metric.IsActive = model.IsActive;
+
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = $"Metric '{metric.MetricName}' updated successfully.";
+            return RedirectToAction(nameof(Index));
+        }
+    }
+}

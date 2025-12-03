@@ -15,13 +15,16 @@ namespace FormReporting.Controllers.API
     {
         private readonly ApplicationDbContext _context;
         private readonly IFormBuilderService _formBuilderService;
+        private readonly IFormItemOptionTemplateService _optionTemplateService;
 
         public FormBuilderApiController(
             ApplicationDbContext context,
-            IFormBuilderService formBuilderService)
+            IFormBuilderService formBuilderService,
+            IFormItemOptionTemplateService optionTemplateService)
         {
             _context = context;
             _formBuilderService = formBuilderService;
+            _optionTemplateService = optionTemplateService;
         }
 
         /// <summary>
@@ -526,6 +529,91 @@ namespace FormReporting.Controllers.API
             catch (Exception ex)
             {
                 return StatusCode(500, new { success = false, message = $"Error setting default option: {ex.Message}" });
+            }
+        }
+
+        // ========================================================================
+        // OPTION TEMPLATES ENDPOINTS
+        // ========================================================================
+
+        /// <summary>
+        /// Get all active option templates (no field type filter - templates work for all option-based fields)
+        /// GET /api/formbuilder/option-templates
+        /// </summary>
+        [HttpGet("option-templates")]
+        public async Task<IActionResult> GetOptionTemplates()
+        {
+            try
+            {
+                // Get all active templates - they work for any option-based field (Radio, Dropdown, Checkbox, MultiSelect)
+                var templates = await _optionTemplateService.GetActiveTemplatesAsync();
+
+                var templateDtos = templates.Select(t => new
+                {
+                    t.TemplateId,
+                    t.TemplateName,
+                    t.TemplateCode,
+                    t.Category,
+                    t.SubCategory,
+                    t.Description,
+                    t.HasScoring,
+                    t.ScoringType,
+                    ItemCount = t.Items.Count,
+                    Items = t.Items.Select(i => new
+                    {
+                        i.OptionValue,
+                        i.OptionLabel,
+                        i.DisplayOrder,
+                        i.ScoreValue,
+                        i.ScoreWeight,
+                        i.ColorHint,
+                        i.IconClass,
+                        i.IsDefault
+                    }).OrderBy(i => i.DisplayOrder).ToList()
+                }).ToList();
+
+                return Ok(new { success = true, templates = templateDtos });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Error fetching templates", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Apply option template to field (replaces existing options)
+        /// POST /api/formbuilder/fields/{fieldId}/apply-template/{templateId}
+        /// </summary>
+        [HttpPost("fields/{fieldId}/apply-template/{templateId}")]
+        public async Task<IActionResult> ApplyOptionTemplate(int fieldId, int templateId)
+        {
+            try
+            {
+                var result = await _formBuilderService.ApplyOptionTemplateAsync(fieldId, templateId);
+
+                if (result == null)
+                {
+                    return NotFound(new { success = false, message = "Field not found or field type doesn't support options" });
+                }
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Template applied successfully",
+                    field = result
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+            catch (ArgumentException ex)
+            {
+                return NotFound(new { success = false, message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Error applying template", error = ex.Message });
             }
         }
 

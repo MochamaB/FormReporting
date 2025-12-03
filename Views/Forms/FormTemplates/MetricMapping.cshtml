@@ -7,116 +7,427 @@
     var progress = ViewData["Progress"] as FormBuilderProgressViewModel;
 }
 
+@* Anti-forgery token for AJAX requests *@
+@Html.AntiForgeryToken()
+
+<!-- Form Builder CSS -->
+
 <!-- ============================================================================ -->
 <!-- PROGRESS TRACKER - Same component used by all wizard steps -->
 <!-- ============================================================================ -->
 <partial name="~/Views/Shared/Components/FormBuilder/_FormBuilderProgress.cshtml" model="progress" />
 
 <!-- ============================================================================ -->
-<!-- METRIC MAPPING HEADER -->
+<!-- METRIC MAPPING: TWO-COLUMN LAYOUT -->
 <!-- ============================================================================ -->
-<div class="card">
-    <div class="card-header">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <h4 class="card-title mb-1">
-                    <i class="ri-line-chart-line text-primary me-2"></i>
-                    Metric Mapping
-                </h4>
-                <p class="text-muted mb-0">Map form fields to KPI metrics for automated reporting</p>
-            </div>
-            <div class="d-flex gap-2">
-                <!-- Back to Form Builder -->
-                <a href="@Url.Action("FormBuilder", "FormTemplates", new { id = Model.TemplateId })"
-                   class="btn btn-soft-secondary btn-sm">
-                    <i class="ri-arrow-left-line me-1"></i>
-                    Back to Form Builder
-                </a>
-                
-                <!-- Save Progress -->
-                <button type="button" class="btn btn-soft-primary btn-sm" disabled>
-                    <i class="ri-save-line me-1"></i>
-                    Save Progress
-                </button>
-                
-                <!-- Continue to Workflow -->
-                <button type="button" class="btn btn-success btn-sm" disabled>
-                    Continue to Approval Workflow
-                    <i class="ri-arrow-right-line ms-1"></i>
-                </button>
-                
-                <!-- Exit Builder -->
-                @if (progress?.ShowExit == true)
-                {
-                    <a href="@progress.ExitUrl" 
-                       class="btn btn-danger btn-sm">
-                        <i class="ri-close-line me-1"></i>Exit Builder
+<!-- Navigation Header -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <a href="@Url.Action("FormBuilder", "FormTemplates", new { id = Model.TemplateId })" 
+                       class="btn btn-soft-secondary">
+                        <i class="ri-arrow-left-line me-1"></i>Back to Form Builder
                     </a>
-                }
-            </div>
-        </div>
-    </div>
-    
-    <div class="card-body">
-        <!-- ============================================================================ -->
-        <!-- PLACEHOLDER CONTENT -->
-        <!-- ============================================================================ -->
-        <div class="text-center py-5">
-            <div class="mb-4">
-                <i class="ri-line-chart-line display-1 text-primary"></i>
-            </div>
-            <h3 class="mb-3">Metric Mapping - Coming Soon</h3>
-            <p class="text-muted mb-4">
-                This stage will allow you to map form fields to KPI metrics for automated reporting and analytics.
-            </p>
-            
-            <!-- Template Info Card -->
-            <div class="row justify-content-center mt-5">
-                <div class="col-md-6">
-                    <div class="card border">
-                        <div class="card-body">
-                            <h5 class="card-title mb-3">Template Information</h5>
-                            <table class="table table-borderless mb-0">
-                                <tbody>
-                                    <tr>
-                                        <td class="text-muted text-start">Template Name:</td>
-                                        <td class="text-end fw-semibold">@Model.TemplateName</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-muted text-start">Template Code:</td>
-                                        <td class="text-end fw-semibold">@Model.TemplateCode</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-muted text-start">Version:</td>
-                                        <td class="text-end fw-semibold">v@Model.Version</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-muted text-start">Status:</td>
-                                        <td class="text-end">
-                                            <span class="badge bg-soft-warning text-warning">@Model.PublishStatus</span>
-                                        </td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-muted text-start">Sections:</td>
-                                        <td class="text-end fw-semibold">@Model.Sections.Count</td>
-                                    </tr>
-                                    <tr>
-                                        <td class="text-muted text-start">Fields:</td>
-                                        <td class="text-end fw-semibold">@Model.Items.Count</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
+                    
+                    <div class="text-center">
+                        <p class="text-muted mb-0">Step 3 of 7 - Metric Mapping</p>
                     </div>
+                    
+                    <button type="button" class="btn btn-success" id="btnContinueToWorkflow">
+                        Continue to Approval Workflow
+                        <i class="ri-arrow-right-line ms-1"></i>
+                    </button>
                 </div>
-            </div>
-            
-            <!-- Info Alert -->
-            <div class="alert alert-info mt-4" role="alert">
-                <i class="ri-information-line me-2"></i>
-                <strong>Note:</strong> This is a placeholder view. Metric mapping functionality will be implemented in a future update.
-                For now, you can skip this step and continue to the next stage.
             </div>
         </div>
     </div>
 </div>
+<div class="row">
+    <!-- LEFT PANEL: Field Tree (40%) -->
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 class="card-title mb-0">
+                            <i class="ri-list-check text-primary me-2"></i>
+                            Form Fields
+                        </h4>
+                        <small class="text-muted">Click a field to configure its metric mapping</small>
+                    </div>
+                    <div class="btn-group">
+                        <button type="button" class="btn btn-sm btn-soft-primary" id="btnExpandAll" title="Expand All">
+                            <i class="ri-arrow-down-s-line"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-soft-secondary" id="btnCollapseAll" title="Collapse All">
+                            <i class="ri-arrow-up-s-line"></i>
+                        </button>
+                        <button type="button" class="btn btn-sm btn-soft-info" id="btnRefreshFields" title="Refresh">
+                            <i class="ri-refresh-line"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                <!-- Loading State -->
+                <div id="fieldsLoading" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="text-muted mt-3">Loading form fields...</p>
+                </div>
+
+                <!-- Field Tree (populated via AJAX) -->
+                <div id="fieldTreeContainer" class="list-group list-group-flush" style="display: none;"></div>
+
+                <!-- Empty State -->
+                <div id="fieldsEmptyState" class="text-center py-5" style="display: none;">
+                    <i class="ri-inbox-line text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-3">No fields found in this template</p>
+                    <a href="@Url.Action("FormBuilder", "FormTemplates", new { id = Model.TemplateId })" 
+                       class="btn btn-sm btn-primary">
+                        <i class="ri-add-line me-1"></i>Add Fields
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mapping Statistics Card -->
+        <div class="card mt-3">
+            <div class="card-body">
+                <h6 class="card-title mb-3">Mapping Statistics</h6>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Total Fields:</span>
+                    <span class="fw-semibold" id="statTotalFields">0</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Mapped Fields:</span>
+                    <span class="fw-semibold text-success" id="statMappedFields">0</span>
+                </div>
+                <div class="d-flex justify-content-between">
+                    <span class="text-muted">Unmapped Fields:</span>
+                    <span class="fw-semibold text-warning" id="statUnmappedFields">0</span>
+                </div>
+                <div class="progress mt-3" style="height: 8px;">
+                    <div id="mappingProgress" class="progress-bar bg-success" role="progressbar" 
+                         style="width: 0%" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT PANEL: Two-Tab Configuration (60%) -->
+    <div class="col-lg-7">
+        <div class="card sticky-properties-panel">
+            <div class="card-header">
+                <h4 class="card-title mb-0">
+                    <i class="ri-settings-3-line text-primary me-2"></i>
+                    Field Configuration
+                </h4>
+            </div>
+            
+            <!-- No Selection Message (Default State) -->
+            <div id="noSelectionMessage" class="alert alert-info m-3">
+                <i class="ri-information-line fs-20 mb-3"></i>
+                <h5 class="alert-heading">No Field Selected</h5>
+                <p class="mb-0">Select a field from the left panel to configure its scoring and metric mapping.</p>
+            </div>
+
+            <!-- Loading State -->
+            <div id="mappingLoading" class="text-center py-5" style="display: none;">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="text-muted mt-3">Loading configuration...</p>
+            </div>
+
+            <!-- Tabbed Interface (Hidden until field selected) -->
+            <div id="tabbedConfigContainer" style="display: none;">
+                <!-- Nav Tabs -->
+                <ul class="nav nav-tabs nav-tabs-custom nav-justified" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" id="scoring-tab-link" data-bs-toggle="tab" href="#scoring-tab" role="tab">
+                            <i class="ri-bar-chart-line me-2"></i>
+                            <span class="d-none d-sm-inline">Scoring Configuration</span>
+                            <span class="d-inline d-sm-none">Scoring</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" id="mapping-tab-link" data-bs-toggle="tab" href="#mapping-tab" role="tab">
+                            <i class="ri-link me-2"></i>
+                            <span class="d-none d-sm-inline">Metric Mapping</span>
+                            <span class="d-inline d-sm-none">Mapping</span>
+                            <span class="badge bg-success ms-2" id="mapping-tab-badge" style="display: none;">Ready</span>
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Tab Content -->
+                <div class="tab-content properties-panel-body p-3">
+                    <!-- TAB 1: Scoring Configuration -->
+                    <div class="tab-pane fade show active" id="scoring-tab" role="tabpanel">
+                        <div id="scoringConfigContent">
+                            <!-- Dynamic content loaded via JS -->
+                        </div>
+                    </div>
+
+                    <!-- TAB 2: Metric Mapping -->
+                    <div class="tab-pane fade" id="mapping-tab" role="tabpanel">
+                        <div id="metricMappingContent">
+                            <!-- Dynamic content loaded via JS -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Card Footer with Actions -->
+                <div class="card-footer border-top">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <button type="button" class="btn btn-light" id="btnCancelConfiguration">
+                            <i class="ri-close-line me-1"></i>Cancel
+                        </button>
+                        
+                        <!-- Dynamic action buttons based on active tab -->
+                        <div id="scoringActions" style="display: none;">
+                            <button type="button" class="btn btn-primary" id="btnSaveScoring">
+                                <i class="ri-save-line me-1"></i>Save & Continue
+                            </button>
+                        </div>
+                        
+                        <div id="mappingActions" style="display: none;">
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-soft-secondary" id="btnBackToScoring">
+                                    <i class="ri-arrow-left-line me-1"></i>Back
+                                </button>
+                                <button type="button" class="btn btn-soft-info" id="btnTestMapping">
+                                    <i class="ri-flask-line me-1"></i>Test
+                                </button>
+                                <button type="button" class="btn btn-success" id="btnSaveMapping">
+                                    <i class="ri-save-line me-1"></i>Create Mapping
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Hidden Template ID -->
+<input type="hidden" id="templateId" value="@Model.TemplateId" />
+<input type="hidden" id="templateName" value="@Model.TemplateName" />
+
+@section Styles {
+    <style>
+        /* Field Tree Styling (Similar to Menu Management) */
+        .nested-section {
+            font-weight: 600;
+            background-color: #f8f9fa !important;
+            border-left-width: 4px !important;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+        }
+
+        .nested-section:hover {
+            background-color: #e9ecef !important;
+        }
+
+        .nested-section.collapsed .section-icon {
+            transform: rotate(-90deg);
+        }
+
+        .section-icon {
+            transition: transform 0.2s ease;
+        }
+
+        .field-item {
+            transition: all 0.2s ease;
+            border-left: 2px solid transparent;
+            cursor: pointer;
+            padding-left: 2rem;
+        }
+
+        .field-item:hover {
+            background-color: #f0f7ff;
+            border-left-color: #0d6efd;
+        }
+
+        .field-item.selected {
+            background-color: #e7f3ff;
+            border-left-color: #0d6efd;
+            font-weight: 600;
+        }
+
+        .field-item.mapped {
+            border-left-color: #28a745;
+        }
+
+        .field-item.unmapped {
+            border-left-color: #ffc107;
+        }
+
+        /* Status Icons */
+        .status-icon {
+            width: 20px;
+            height: 20px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.5rem;
+        }
+
+        /* Sticky Properties Panel */
+        .sticky-properties-panel {
+            position: sticky;
+            top: 20px;
+            max-height: calc(100vh - 40px);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .properties-panel-body {
+            overflow-y: auto;
+            flex: 1;
+            max-height: calc(100vh - 250px);
+        }
+
+        /* Custom scrollbar for properties panel */
+        .properties-panel-body::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .properties-panel-body::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+
+        .properties-panel-body::-webkit-scrollbar-thumb {
+            background: #888;
+            border-radius: 4px;
+        }
+
+        .properties-panel-body::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        /* Section Fields Container */
+        .section-fields {
+            display: none;
+        }
+
+        .section-fields.show {
+            display: block;
+        }
+
+        /* Mapping Type Badge */
+        .mapping-type-badge {
+            font-size: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            margin-left: 0.5rem;
+        }
+
+        /* Field Data Type Icons */
+        .field-datatype {
+            font-size: 0.75rem;
+            color: #6c757d;
+            margin-left: 0.5rem;
+        }
+
+        /* Tab Customizations */
+        .nav-tabs-custom {
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .nav-tabs-custom .nav-link {
+            border: none;
+            color: #6c757d;
+            font-weight: 500;
+            padding: 1rem 1.5rem;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s ease;
+        }
+
+        .nav-tabs-custom .nav-link:hover {
+            border-bottom-color: #0d6efd;
+            color: #0d6efd;
+        }
+
+        .nav-tabs-custom .nav-link.active {
+            color: #0d6efd;
+            border-bottom-color: #0d6efd;
+            background-color: transparent;
+        }
+
+        .nav-tabs-custom .nav-link .badge {
+            animation: pulse 2s infinite;
+        }
+
+        @@keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Option Score Table */
+        .option-score-table {
+            font-size: 0.9rem;
+        }
+
+        .option-score-table input {
+            max-width: 100px;
+        }
+
+        /* Info Cards */
+        .info-card {
+            background: #f8f9fa;
+            border-left: 3px solid #0d6efd;
+            padding: 1rem;
+            border-radius: 0.25rem;
+        }
+
+        .info-card.success {
+            border-left-color: #28a745;
+            background: #d4edda;
+        }
+
+        .info-card.warning {
+            border-left-color: #ffc107;
+            background: #fff3cd;
+        }
+
+        /* Metric Selection Card */
+        .metric-card {
+            border: 1px solid #dee2e6;
+            border-radius: 0.25rem;
+            padding: 0.75rem;
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .metric-card:hover {
+            border-color: #0d6efd;
+            background-color: #f0f7ff;
+        }
+
+        .metric-card.selected {
+            border-color: #0d6efd;
+            background-color: #e7f3ff;
+            box-shadow: 0 2px 4px rgba(13, 110, 253, 0.1);
+        }
+
+        .metric-card input[type="radio"] {
+            width: 18px;
+            height: 18px;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script src="~/js/pages/metric-mapping.js"></script>
+}

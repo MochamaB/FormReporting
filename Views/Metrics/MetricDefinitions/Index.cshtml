@@ -1,0 +1,317 @@
+@using FormReporting.Extensions
+@using FormReporting.Models.ViewModels.Components
+@model FormReporting.Models.ViewModels.Metrics.MetricDefinitionsIndexViewModel
+
+@{
+    ViewData["Title"] = "Metric Definitions";
+
+    // ═══════════════════════════════════════════════════════════
+    // SECTION 1: STATISTIC CARDS CONFIGURATION
+    // ═══════════════════════════════════════════════════════════
+
+    var statConfig = new StatsRowConfig
+    {
+        Titles = new List<string>
+        {
+            "Total Metrics",
+            "KPI Metrics",
+            "Active Metrics",
+            "User Input"
+        },
+        Values = new List<string>
+        {
+            Model.TotalMetrics.ToString(),
+            Model.KpiMetrics.ToString(),
+            Model.ActiveMetrics.ToString(),
+            Model.UserInputMetrics.ToString()
+        },
+        Icons = new List<string>
+        {
+            "ri-dashboard-line",
+            "ri-star-line",
+            "ri-checkbox-circle-line",
+            "ri-user-line"
+        },
+        ColorThemes = new List<string>
+        {
+            "primary",
+            "warning",
+            "success",
+            "info"
+        },
+        CardType = CardType.IconLeftCard,
+        Subtitles = new List<string>
+        {
+            "All metric definitions",
+            "Key performance indicators",
+            "Currently active",
+            "Manual data entry"
+        }
+    };
+
+    // Transform config into renderable cards
+    var statCards = statConfig.BuildStatsRow();
+
+    // ═══════════════════════════════════════════════════════════
+    // SECTION 2: DATATABLE CONFIGURATION
+    // ═══════════════════════════════════════════════════════════
+
+    var tableConfig = new DataTableConfig
+    {
+        TableId = "metricsTable",
+        Columns = new List<string>
+        {
+            "#",
+            "Metric Code",
+            "Metric Name",
+            "Category",
+            "Source Type",
+            "Data Type",
+            "Type",
+            "Thresholds",
+            "Status",
+            "Actions"
+        },
+        EnableSearch = true,
+        SearchBox = new SearchBoxConfig
+        {
+            ParameterName = "search",
+            PlaceholderText = "Search metrics...",
+            CurrentValue = ViewBag.CurrentSearch,
+            ActionUrl = Url.Action("Index", "MetricDefinitions") ?? "/Metrics/MetricDefinitions"
+        },
+        FilterDropdowns = new List<FilterDropdownConfig>
+        {
+            new FilterDropdownConfig
+            {
+                Label = "Category",
+                Options = new List<FilterOption>
+                {
+                    new FilterOption
+                    {
+                        Text = "All Categories",
+                        Value = "",
+                        Url = Url.Action("Index", "MetricDefinitions", new { search = ViewBag.CurrentSearch, sourceType = ViewBag.CurrentSourceType }),
+                        IsActive = string.IsNullOrEmpty(ViewBag.CurrentCategory)
+                    }
+                }
+                .Concat(Model.Categories.Select(cat => new FilterOption
+                {
+                    Text = cat,
+                    Value = cat,
+                    Url = Url.Action("Index", "MetricDefinitions", new { search = ViewBag.CurrentSearch, category = cat, sourceType = ViewBag.CurrentSourceType }),
+                    IsActive = ViewBag.CurrentCategory == cat
+                }))
+                .ToList()
+            },
+            new FilterDropdownConfig
+            {
+                Label = "Source Type",
+                Options = new List<FilterOption>
+                {
+                    new FilterOption
+                    {
+                        Text = "All Sources",
+                        Value = "",
+                        Url = Url.Action("Index", "MetricDefinitions", new { search = ViewBag.CurrentSearch, category = ViewBag.CurrentCategory }),
+                        IsActive = string.IsNullOrEmpty(ViewBag.CurrentSourceType)
+                    }
+                }
+                .Concat(Model.SourceTypes.Select(st => new FilterOption
+                {
+                    Text = st,
+                    Value = st,
+                    Url = Url.Action("Index", "MetricDefinitions", new { search = ViewBag.CurrentSearch, category = ViewBag.CurrentCategory, sourceType = st }),
+                    IsActive = ViewBag.CurrentSourceType == st
+                }))
+                .ToList()
+            }
+        },
+        CreateButtonText = "Create Metric",
+        CreateButtonUrl = Url.Action("Create", "MetricDefinitions") ?? "/Metrics/MetricDefinitions/Create",
+        ShowPagination = true,
+        CurrentPage = ViewBag.CurrentPage,
+        TotalPages = ViewBag.TotalPages,
+        TotalRecords = ViewBag.TotalRecords,
+        PageSize = ViewBag.PageSize
+    };
+
+    // Transform config into renderable table
+    var table = tableConfig.BuildDataTable();
+
+    // Calculate row number starting point for pagination
+    int startingNumber = ((ViewBag.CurrentPage - 1) * ViewBag.PageSize) + 1;
+}
+
+
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- SECTION 3: RENDER STATISTIC CARDS -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<div class="row">
+    @foreach (var card in statCards)
+    {
+        <partial name="~/Views/Shared/Components/StatisticCards/_IconLeftCard.cshtml" model="card" />
+    }
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- SECTION 4: RENDER DATATABLE -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<div class="row mt-3">
+    <div class="col-xl-12">
+        <div class="card">
+            <!-- Card Header: Search, Filters, Create Button -->
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center flex-wrap w-100 gap-2">
+                    <!-- Left: Search and Filters -->
+                    <div class="d-flex gap-2 flex-wrap align-items-center">
+                        @if (table.SearchBox != null)
+                        {
+                            <partial name="~/Views/Shared/Components/DataTable/_SearchBox.cshtml" model="table.SearchBox" />
+                        }
+
+                        @if (table.FilterDropdowns != null && table.FilterDropdowns.Any())
+                        {
+                            foreach (var filterDropdown in table.FilterDropdowns)
+                            {
+                                <partial name="~/Views/Shared/Components/DataTable/_FilterDropdown.cshtml" model="filterDropdown" />
+                            }
+                        }
+                    </div>
+
+                    <!-- Right: Create Button -->
+                    <div class="d-flex gap-2">
+                        @if (!string.IsNullOrEmpty(table.CreateButtonText))
+                        {
+                            <a href="@table.CreateButtonUrl" class="btn btn-primary">
+                                <i class="ri-add-line me-1"></i>@table.CreateButtonText
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card Body: Table -->
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="@table.TableClasses" id="@table.TableId">
+                        <thead class="bg-light">
+                            <tr>
+                                @foreach (var column in table.Columns)
+                                {
+                                    <th>@column</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Metrics.Any())
+                            {
+                                @for (int i = 0; i < Model.Metrics.Count(); i++)
+                                {
+                                    var metric = Model.Metrics.ElementAt(i);
+                                    var rowNumber = startingNumber + i;
+                                    <tr>
+                                        <td>@rowNumber</td>
+                                        <td><code class="text-primary">@metric.MetricCode</code></td>
+                                        <td>
+                                            <div class="d-flex flex-column">
+                                                <span class="fw-medium">@metric.MetricName</span>
+                                                @if (!string.IsNullOrEmpty(metric.Description))
+                                                {
+                                                    <small class="text-muted">@metric.Description</small>
+                                                }
+                                            </div>
+                                        </td>
+                                        <td>@Html.Raw(metric.CategoryBadge)</td>
+                                        <td>@Html.Raw(metric.SourceTypeBadge)</td>
+                                        <td>
+                                            @Html.Raw(metric.DataTypeBadge)
+                                            @if (!string.IsNullOrEmpty(metric.Unit))
+                                            {
+                                                <br><small class="text-muted">(@metric.Unit)</small>
+                                            }
+                                        </td>
+                                        <td>@Html.Raw(metric.KpiBadge)</td>
+                                        <td>@Html.Raw(metric.ThresholdDisplay)</td>
+                                        <td>@Html.Raw(metric.StatusBadge)</td>
+                                        <td>
+                                            @{
+                                                var rowActionsConfig = new RowActionsConfig()
+                                                    .WithViewAction($"/Metrics/MetricDefinitions/Details/{{id}}")
+                                                    .WithEditAction($"/Metrics/MetricDefinitions/Edit/{{id}}")
+                                                    .WithDeleteAction($"/Metrics/MetricDefinitions/Delete/{{id}}");
+
+                                                var rowActionsViewModel = rowActionsConfig.BuildRowActions(metric.MetricId);
+                                            }
+                                            <partial name="~/Views/Shared/Components/RowActions/_RowActions.cshtml" model="rowActionsViewModel" />
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="10" class="text-center py-4">
+                                        <div class="text-muted">
+                                            <i class="ri-information-line fs-2"></i>
+                                            <p class="mt-2">No metrics found</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Card Footer: Pagination -->
+            @if (table.ShowPagination && table.TotalPages > 1)
+            {
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-muted">
+                            Showing @((ViewBag.CurrentPage - 1) * ViewBag.PageSize + 1) to @Math.Min(ViewBag.CurrentPage * ViewBag.PageSize, ViewBag.TotalRecords) of @ViewBag.TotalRecords entries
+                        </div>
+                        <nav>
+                            <ul class="pagination mb-0">
+                                <!-- Previous Button -->
+                                <li class="page-item @(ViewBag.CurrentPage == 1 ? "disabled" : "")">
+                                    <a class="page-link" href="@Url.Action("Index", new { page = ViewBag.CurrentPage - 1, search = ViewBag.CurrentSearch, category = ViewBag.CurrentCategory, sourceType = ViewBag.CurrentSourceType })">
+                                        <i class="ri-arrow-left-s-line"></i>
+                                    </a>
+                                </li>
+
+                                <!-- Page Numbers -->
+                                @for (int p = Math.Max(1, ViewBag.CurrentPage - 2); p <= Math.Min(ViewBag.TotalPages, ViewBag.CurrentPage + 2); p++)
+                                {
+                                    <li class="page-item @(p == ViewBag.CurrentPage ? "active" : "")">
+                                        <a class="page-link" href="@Url.Action("Index", new { page = p, search = ViewBag.CurrentSearch, category = ViewBag.CurrentCategory, sourceType = ViewBag.CurrentSourceType })">
+                                            @p
+                                        </a>
+                                    </li>
+                                }
+
+                                <!-- Next Button -->
+                                <li class="page-item @(ViewBag.CurrentPage == ViewBag.TotalPages ? "disabled" : "")">
+                                    <a class="page-link" href="@Url.Action("Index", new { page = ViewBag.CurrentPage + 1, search = ViewBag.CurrentSearch, category = ViewBag.CurrentCategory, sourceType = ViewBag.CurrentSourceType })">
+                                        <i class="ri-arrow-right-s-line"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Optional: Add any custom JavaScript for the page
+        console.log('Metric Definitions Index loaded');
+    </script>
+}

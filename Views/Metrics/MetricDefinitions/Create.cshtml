@@ -1,0 +1,140 @@
+@model FormReporting.Models.ViewModels.Metrics.CreateMetricDefinitionDto
+@using FormReporting.Extensions
+
+@{
+    ViewData["Title"] = "Create Metric Definition";
+    var wizard = ViewData["Wizard"] as FormReporting.Models.ViewModels.Components.WizardViewModel;
+    ViewData["WizardViewModel"] = wizard;
+    ViewData["ParentModel"] = Model;
+}
+
+<!-- Wizard Form -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <form asp-action="Create" asp-controller="MetricDefinitions" method="post" id="metricDefinitionWizard">
+                    @Html.AntiForgeryToken()
+
+                    <!-- Validation Summary -->
+                    @if (!ViewData.ModelState.IsValid)
+                    {
+                        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                            <i class="ri-error-warning-line me-2"></i>
+                            <strong>Please fix the following errors:</strong>
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            <div asp-validation-summary="ModelOnly" class="mt-2 mb-0"></div>
+                        </div>
+                    }
+
+                    @if (wizard != null)
+                    {
+                        <partial name="~/Views/Shared/Components/Wizards/_VerticalWizard.cshtml" />
+                    }
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        $(document).ready(function() {
+            // ═══════════════════════════════════════════════════════════
+            // WIZARD NAVIGATION
+            // ═══════════════════════════════════════════════════════════
+
+            // Next button handler
+            $(document).on('click', '.nexttab', function() {
+                var nextTab = $(this).data('nexttab');
+                if (nextTab) {
+                    // Trigger tab change
+                    $('#' + nextTab).tab('show');
+                }
+            });
+
+            // Previous button handler
+            $(document).on('click', '.previestab', function() {
+                var prevTab = $(this).data('previous');
+                if (prevTab) {
+                    $('#' + prevTab).tab('show');
+                }
+            });
+
+            // ═══════════════════════════════════════════════════════════
+            // STEP 1: BASIC INFORMATION
+            // ═══════════════════════════════════════════════════════════
+
+            // Auto-generate MetricCode from MetricName
+            $('#MetricName').on('blur', function() {
+                if (!$('#MetricCode').val()) {
+                    var code = $(this).val()
+                        .toUpperCase()
+                        .replace(/[^A-Z0-9]/g, '_')
+                        .substring(0, 50);
+                    $('#MetricCode').val(code);
+                }
+            });
+
+            // ═══════════════════════════════════════════════════════════
+            // STEP 3: KPI & THRESHOLDS
+            // ═══════════════════════════════════════════════════════════
+
+            // Show/hide threshold fields based on IsKPI checkbox
+            $('#IsKPI').on('change', function() {
+                $('.threshold-fields').toggle(this.checked);
+            });
+
+            // Trigger on page load
+            $('#IsKPI').trigger('change');
+
+            // ═══════════════════════════════════════════════════════════
+            // STEP 4: ADVANCED SETTINGS
+            // ═══════════════════════════════════════════════════════════
+
+            // JSON validation for ComplianceRule
+            $('#ComplianceRule').on('blur', function() {
+                var value = $(this).val().trim();
+                if (value) {
+                    try {
+                        JSON.parse(value);
+                        $(this).removeClass('is-invalid').addClass('is-valid');
+                        $('#ComplianceRule-error').remove();
+                    } catch (e) {
+                        $(this).removeClass('is-valid').addClass('is-invalid');
+                        if (!$('#ComplianceRule-error').length) {
+                            $(this).after('<span id="ComplianceRule-error" class="text-danger small">Invalid JSON format</span>');
+                        }
+                    }
+                } else {
+                    $(this).removeClass('is-invalid is-valid');
+                    $('#ComplianceRule-error').remove();
+                }
+            });
+
+            // ═══════════════════════════════════════════════════════════
+            // FORM SUBMISSION VALIDATION
+            // ═══════════════════════════════════════════════════════════
+
+            $('#metricDefinitionWizard').on('submit', function(e) {
+                if (!$(this).valid()) {
+                    e.preventDefault();
+                    
+                    // Find first step with validation errors
+                    var firstErrorStep = $('.tab-pane').has('.input-validation-error, .is-invalid').first();
+                    if (firstErrorStep.length) {
+                        var stepId = firstErrorStep.attr('id');
+                        var stepTab = $('#' + stepId + '-tab');
+                        if (stepTab.length) {
+                            stepTab.tab('show');
+                        }
+                    }
+                    
+                    alert('Please fix validation errors before submitting.');
+                    return false;
+                }
+            });
+        });
+    </script>
+}

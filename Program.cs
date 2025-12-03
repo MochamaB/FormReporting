@@ -51,6 +51,11 @@ builder.Services.AddScoped<IFormTemplateService, FormTemplateService>();
 builder.Services.AddScoped<IFormBuilderService, FormBuilderService>();
 builder.Services.AddScoped<IFormItemOptionTemplateService, FormItemOptionTemplateService>();
 
+// Metrics services
+builder.Services.AddScoped<FormReporting.Services.Metrics.IMetricDefinitionService, FormReporting.Services.Metrics.MetricDefinitionService>();
+builder.Services.AddScoped<FormReporting.Services.Metrics.IMetricMappingService, FormReporting.Services.Metrics.MetricMappingService>();
+builder.Services.AddScoped<FormReporting.Services.Metrics.IMetricPopulationService, FormReporting.Services.Metrics.MetricPopulationService>();
+
 // Identity services
 builder.Services.AddScoped<IScopeService, ScopeService>();
 builder.Services.AddScoped<IUserService, UserService>();
@@ -97,6 +102,9 @@ using (var scope = app.Services.CreateScope())
         
         // 6. Seed Form Builder data
         // FormItemOptionTemplateSeeder.SeedOptionTemplates(context);
+
+        // 7. Seed Metric Definitions (no dependencies)
+       // MetricDefinitionSeeder.SeedMetricDefinitions(context);
         
     }
     catch (Exception ex)

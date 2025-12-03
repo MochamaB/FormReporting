@@ -1,16 +1,23 @@
-Failed to load resource: the server responded with a status of 404 ()Understand this error
-remixiconca45.woff2:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
-remixiconca45.woff:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
-remixiconca45.ttf:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
+https://localhost:7220/assets/images/svg/select-item.svg 404 (Not Found)Understand this error
+remixicon.css:1  GET https://localhost:7220/assets/css/fonts/remixiconca45.woff2?t=1760071648894 net::ERR_ABORTED 404 (Not Found)Understand this error
+remixicon.css:1  GET https://localhost:7220/assets/css/fonts/remixiconca45.woff?t=1760071648894 net::ERR_ABORTED 404 (Not Found)Understand this error
+remixicon.css:1  GET https://localhost:7220/assets/css/fonts/remixiconca45.ttf?t=1760071648894 net::ERR_ABORTED 404 (Not Found)Understand this error
 plugins.js:1 A parser-blocking, cross site (i.e. different eTLD+1) script, https://cdn.jsdelivr.net/npm/toastify-js, is invoked via document.write. The network request for this script MAY be blocked by the browser in this or a future page load due to poor network connectivity. If blocked in this page load, it will be confirmed in a subsequent console message. See https://www.chromestatus.com/feature/5718547946799104 for more details.
 (anonymous) @ plugins.js:1Understand this warning
 plugins.js:1 A parser-blocking, cross site (i.e. different eTLD+1) script, https://cdn.jsdelivr.net/npm/toastify-js, is invoked via document.write. The network request for this script MAY be blocked by the browser in this or a future page load due to poor network connectivity. If blocked in this page load, it will be confirmed in a subsequent console message. See https://www.chromestatus.com/feature/5718547946799104 for more details.
 (anonymous) @ plugins.js:1Understand this warning
-flatpickr.min.js:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
-choices.min.js:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
+plugins.js:1  GET https://localhost:7220/FormTemplates/FormBuilder/assets/libs/choices.js/public/assets/scripts/choices.min.js net::ERR_ABORTED 404 (Not Found)
+(anonymous) @ plugins.js:1Understand this error
+plugins.js:1  GET https://localhost:7220/FormTemplates/FormBuilder/assets/libs/flatpickr/flatpickr.min.js net::ERR_ABORTED 404 (Not Found)
+(anonymous) @ plugins.js:1Understand this error
 app.js:1 Uncaught TypeError: Cannot read properties of null (reading 'addEventListener')
     at app.js:1:53090
-    at app.js:1:58254Understand this error
+    at app.js:1:58254
+(anonymous) @ app.js:1
+(anonymous) @ app.js:1Understand this error
+form-builder-options.js:1 Uncaught SyntaxError: Identifier 'FormBuilderOptions' has already been declared (at form-builder-options.js:1:1)
+    at form-builder-options.js:1:1
+(anonymous) @ form-builder-options.js:1Understand this error
 form-builder.js:23 Form Builder initialized for template: 3
 form-builder-layout.js:14 FormBuilder Layout initialized
 form-builder-dragdrop.js:68 Toolbox drag-drop initialized
@@ -19,27 +26,49 @@ form-builder-dragdrop.js:370 Field palette drag-drop initialized for 7 categorie
 form-builder-dragdrop.js:495 Field drop zones initialized for 2 sections
 form-builder-dragdrop.js:27 FormBuilder Drag & Drop initialized
 form-builder-fields.js:15 FormBuilderFields initialized
-BlockingPageContent.js:2  action SET_STORAGE_DATA @ 00:08:13.293
-BlockingPageContent.js:2  prev state Object
-BlockingPageContent.js:2  action     Object
-BlockingPageContent.js:2  next state Object
-NotificationContent.js:2  action SET_LOCALE @ 00:08:13.333
-NotificationContent.js:2  prev state Object
-NotificationContent.js:2  action     Object
-NotificationContent.js:2  next state Object
-NotificationContent.js:2  action SET_STORAGE_DATA @ 00:08:13.379
-NotificationContent.js:2  prev state Object
-NotificationContent.js:2  action     Object
-NotificationContent.js:2  next state Object
-app.js:1 Uncaught TypeError: Cannot read properties of null (reading 'classList')
-    at HTMLBodyElement.<anonymous> (app.js:1:49189)Understand this error
+BlockingPageContent.js:2  action SET_STORAGE_DATA @ 19:02:45.001
+BlockingPageContent.js:2  prev state {blocking: false}
+BlockingPageContent.js:2  action     {type: 'SET_STORAGE_DATA', urls: {…}, online: true, eula: true, welcome: true, …}
+BlockingPageContent.js:2  next state {blocking: false}
+NotificationContent.js:2  action SET_LOCALE @ 19:02:45.335
+NotificationContent.js:2  prev state {notification: false, locale: '', mode: '', os: '', browser: '', …}
+NotificationContent.js:2  action     {type: 'SET_LOCALE', locale: 'en'}
+NotificationContent.js:2  next state {notification: false, locale: 'en', mode: '', os: '', browser: '', …}
+NotificationContent.js:2  action SET_STORAGE_DATA @ 19:02:45.391
+NotificationContent.js:2  prev state {notification: false, locale: 'en', mode: '', os: '', browser: '', …}
+NotificationContent.js:2  action     {type: 'SET_STORAGE_DATA', urls: {…}, online: true, eula: true, welcome: true, …}
+NotificationContent.js:2  next state {notification: false, locale: 'en', mode: 'Promoter', os: 'win', browser: 'chrome', …}
+form-builder-properties.js:1366 Field 8 selected
+form-builder-properties.js:707 [FormBuilderProperties] Checking for FormBuilderOptions module... false
+form-builder-properties.js:713 [FormBuilderProperties] FormBuilderOptions module NOT FOUND! Using old rendering.
+loadOptions @ form-builder-properties.js:713
+loadFieldProperties @ form-builder-properties.js:377
+await in loadFieldProperties
+selectField @ form-builder-properties.js:1369
+onclick @ 3:2045Understand this error
+form-builder-properties.js:714 [FormBuilderProperties] Make sure form-builder-options.js is loaded.
+loadOptions @ form-builder-properties.js:714
+loadFieldProperties @ form-builder-properties.js:377
+await in loadFieldProperties
+selectField @ form-builder-properties.js:1369
+onclick @ 3:2045Understand this error
+form-builder-properties.js:755 Rendered 3 options
+form-builder-properties.js:1111 Sortable initialized for options
+form-builder-properties.js:723 [FormBuilderProperties] Loaded 3 options for field 8
+form-builder-properties.js:1479 🔍 Loading validations for field: {itemId: 8, sectionId: 1, itemCode: 'SEC1_004', itemName: 'Local Area Network (LAN)', itemDescription: null, …}
+form-builder-properties.js:1493 ✅ Field type detected: "Checkbox"
+form-builder-properties.js:1594 📊 Field Type Display Updated: Checkbox
+form-builder-properties.js:2522 📝 Loading field configuration: {itemId: 8, sectionId: 1, itemCode: 'SEC1_004', itemName: 'Local Area Network (LAN)', itemDescription: null, …}
+form-builder-properties.js:2536 ✅ Configuration loaded for Checkbox field
+form-builder-properties.js:385 Field properties loaded: {itemId: 8, sectionId: 1, itemCode: 'SEC1_004', itemName: 'Local Area Network (LAN)', itemDescription: null, …}
+form-builder-properties.js:1619 🔍 VALIDATION FILTER DEBUG: {fieldType: 'Checkbox', applicableTypes: Array(1), allCheckboxCount: 15, checkboxTypes: Array(15)}
+form-builder-properties.js:1653 ✅ Filtered checkboxes: {visible: 1, hidden: 14, visibleTypes: Array(1)}
+form-builder-properties.js:1679 Group basic: VISIBLE
+form-builder-properties.js:1679 Group text-length: HIDDEN
+form-builder-properties.js:1679 Group numeric: HIDDEN
+form-builder-properties.js:1679 Group datetime: HIDDEN
+form-builder-properties.js:1679 Group advanced: HIDDEN
 TISProUrlManualScannerLib.js:1 mouseenter href = https://localhost:7220/FormTemplates/FormBuilder/3#prop-configuration
-TISProUrlManualScannerLib.js:1 mouseenter href = https://localhost:7220/FormTemplates/FormBuilder/3#prop-validation
 app.js:1 Uncaught TypeError: Cannot read properties of null (reading 'classList')
-    at HTMLBodyElement.<anonymous> (app.js:1:49189)Understand this error
-:7220/Forms/FormTemplates/ValidateStageCompletion?id=3&currentStage=2:1  Failed to load resource: the server responded with a status of 404 ()Understand this error
-form-builder.js:73 Validation error: SyntaxError: Unexpected end of JSON input
-validateStageCompletion @ form-builder.js:73Understand this error
-app.js:1 Uncaught TypeError: Cannot read properties of null (reading 'classList')
-    at HTMLBodyElement.<anonymous> (app.js:1:49189)Understand this error
-TISProUrlManualScannerLib.js:1 mouseenter href = https://localhost:7220/FormTemplates/FormBuilder/3#prop-advanced
+    at HTMLBodyElement.<anonymous> (app.js:1:49189)
+(anonymous) @ app.js:1Understand this error

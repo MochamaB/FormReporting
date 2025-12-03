@@ -1,0 +1,99 @@
+@model FormReporting.Models.ViewModels.Metrics.CreateMetricDefinitionDto
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="SourceType" class="form-label">
+                Source Type <span class="text-danger">*</span>
+            </label>
+            <select asp-for="SourceType" class="form-select">
+                <option value="UserInput">User Input</option>
+                <option value="SystemCalculated">System Calculated</option>
+                <option value="ExternalSystem">External System</option>
+                <option value="ComplianceTracking">Compliance Tracking</option>
+                <option value="AutomatedCheck">Automated Check</option>
+            </select>
+            <span asp-validation-for="SourceType" class="text-danger"></span>
+            <small class="text-muted">How this metric's data is collected.</small>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="DataType" class="form-label">
+                Data Type <span class="text-danger">*</span>
+            </label>
+            <select asp-for="DataType" class="form-select">
+                <option value="Integer">Integer</option>
+                <option value="Decimal">Decimal</option>
+                <option value="Percentage">Percentage</option>
+                <option value="Boolean">Boolean</option>
+                <option value="Text">Text</option>
+                <option value="Duration">Duration</option>
+                <option value="Date">Date</option>
+                <option value="DateTime">Date & Time</option>
+            </select>
+            <span asp-validation-for="DataType" class="text-danger"></span>
+            <small class="text-muted">The type of data this metric stores.</small>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="Unit" class="form-label">Unit</label>
+            <input asp-for="Unit" class="form-control" placeholder="e.g., GB, %, count, days" maxlength="50" />
+            <span asp-validation-for="Unit" class="text-danger"></span>
+            <small class="text-muted">Unit of measurement (e.g., GB, %, count).</small>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="AggregationType" class="form-label">Aggregation Type</label>
+            <select asp-for="AggregationType" class="form-select">
+                <option value="">-- None --</option>
+                <option value="SUM">Sum</option>
+                <option value="AVG">Average</option>
+                <option value="MAX">Maximum</option>
+                <option value="MIN">Minimum</option>
+                <option value="LAST_VALUE">Last Value</option>
+                <option value="COUNT">Count</option>
+            </select>
+            <span asp-validation-for="AggregationType" class="text-danger"></span>
+            <small class="text-muted">How to aggregate multiple values for reporting.</small>
+        </div>
+    </div>
+</div>
+
+<!-- Source Type Descriptions -->
+<div class="card bg-light border-0 mt-3">
+    <div class="card-body">
+        <h6 class="card-title mb-2"><i class="ri-information-line me-1"></i>Source Type Descriptions</h6>
+        <ul class="mb-0 small">
+            <li><strong>User Input:</strong> Manually entered by users through forms</li>
+            <li><strong>System Calculated:</strong> Automatically calculated from form responses</li>
+            <li><strong>External System:</strong> Imported from external APIs or systems</li>
+            <li><strong>Compliance Tracking:</strong> Binary compliance checks (Pass/Fail)</li>
+            <li><strong>Automated Check:</strong> Background jobs that verify system status</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Data Type Descriptions -->
+<div class="card bg-light border-0 mt-2">
+    <div class="card-body">
+        <h6 class="card-title mb-2"><i class="ri-information-line me-1"></i>Data Type Descriptions</h6>
+        <ul class="mb-0 small">
+            <li><strong>Integer:</strong> Whole numbers (e.g., 5, 100, 1000)</li>
+            <li><strong>Decimal:</strong> Numbers with decimal points (e.g., 3.14, 99.95)</li>
+            <li><strong>Percentage:</strong> Percentage values (e.g., 85%, 99.5%)</li>
+            <li><strong>Boolean:</strong> True/False or Yes/No values</li>
+            <li><strong>Text:</strong> Free-form text descriptions</li>
+            <li><strong>Duration:</strong> Time periods (e.g., 2 hours, 30 minutes)</li>
+            <li><strong>Date:</strong> Date only (e.g., 2025-01-15)</li>
+            <li><strong>DateTime:</strong> Date and time (e.g., 2025-01-15 14:30:00)</li>
+        </ul>
+    </div>
+</div>

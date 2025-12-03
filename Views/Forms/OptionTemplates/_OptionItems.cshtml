@@ -28,13 +28,23 @@
         {
             new EditableTableColumn
             {
+                PropertyName = "DisplayOrder",
+                Header = "Order",
+                ColumnType = EditableColumnType.Number,
+                Width = "",
+                Min = 0,
+                DisplayOrder = 1,
+                Placeholder = "0"
+            },
+            new EditableTableColumn
+            {
                 PropertyName = "OptionLabel",
                 Header = "Option Label",
                 ColumnType = EditableColumnType.Text,
                 IsRequired = true,
                 Placeholder = "e.g., Very Satisfied",
                 Width = "",
-                DisplayOrder = 1
+                DisplayOrder = 2
             },
             new EditableTableColumn
             {
@@ -44,18 +54,9 @@
                 IsRequired = true,
                 Placeholder = "e.g., very_satisfied",
                 Width = "",
-                DisplayOrder = 2
+                DisplayOrder = 3
             },
-            new EditableTableColumn
-            {
-                PropertyName = "DisplayOrder",
-                Header = "Order",
-                ColumnType = EditableColumnType.Number,
-                Width = "",
-                Min = 0,
-                DisplayOrder = 3,
-                Placeholder = "0"
-            },
+            
             new EditableTableColumn
             {
                 PropertyName = "ScoreValue",

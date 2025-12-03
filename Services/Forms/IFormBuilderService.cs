@@ -195,6 +195,19 @@ namespace FormReporting.Services.Forms
         /// <returns>True if successful</returns>
         Task<bool> SetDefaultOptionAsync(int optionId, int fieldId);
 
+        /// <summary>
+        /// Apply an option template to a field (replaces existing options)
+        /// Validates that field type supports options
+        /// Clears existing options and creates new ones from template
+        /// Increments template usage count
+        /// </summary>
+        /// <param name="fieldId">Field ID to apply template to</param>
+        /// <param name="templateId">Template ID to apply</param>
+        /// <returns>Updated field DTO with new options, or null if field not found</returns>
+        /// <exception cref="InvalidOperationException">If field type doesn't support options</exception>
+        /// <exception cref="ArgumentException">If template not found</exception>
+        Task<FieldDto?> ApplyOptionTemplateAsync(int fieldId, int templateId);
+
         // ========================================================================
         // VALIDATION MANAGEMENT
         // ========================================================================

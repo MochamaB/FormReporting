@@ -66,6 +66,7 @@ const FormBuilder = {
      */
     validateStageCompletion: async function(templateId, currentStage) {
         try {
+            // Note: ValidateStageCompletion uses attribute routing, not conventional routing
             const response = await fetch(`/Forms/FormTemplates/ValidateStageCompletion?id=${templateId}&currentStage=${currentStage}`);
             const result = await response.json();
             return result;
@@ -76,6 +77,38 @@ const FormBuilder = {
                 isValid: false,
                 message: 'Error validating template. Please try again.'
             };
+        }
+    },
+
+    /**
+     * Reload a specific field's data (for options management)
+     * @param {number} fieldId - Field ID to reload
+     * @returns {Promise} Promise that resolves when field is reloaded
+     */
+    reloadField: async function(fieldId) {
+        try {
+            console.log(`Reloading field ${fieldId}`);
+            const response = await fetch(`/api/formbuilder/fields/${fieldId}`);
+            if (!response.ok) throw new Error('Failed to load field');
+
+            const result = await response.json();
+            const fieldData = result.field;
+
+            // Reload field in properties panel if it's the currently selected field
+            if (FormBuilderProperties && FormBuilderProperties.currentFieldId === fieldId) {
+                FormBuilderProperties.loadOptions(fieldData);
+            }
+
+            // Update field preview in canvas
+            if (FormBuilderProperties && FormBuilderProperties.updateCanvasPreview) {
+                await FormBuilderProperties.updateCanvasPreview();
+            }
+
+            console.log(`Field ${fieldId} reloaded successfully`);
+            return fieldData;
+        } catch (error) {
+            console.error('Error reloading field:', error);
+            throw error;
         }
     }
 };
@@ -149,8 +182,8 @@ async function continueToNextStage() {
         });
 
         if (result.isConfirmed) {
-            // Navigate to metric mapping
-            window.location.href = `/Forms/FormTemplates/MetricMapping/${FormBuilder.templateId}`;
+            // Navigate to metric mapping (uses conventional routing)
+            window.location.href = `/FormTemplates/MetricMapping/${FormBuilder.templateId}`;
         }
     } catch (error) {
         // Restore button state on error

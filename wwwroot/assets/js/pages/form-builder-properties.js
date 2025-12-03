@@ -702,17 +702,25 @@ const FormBuilderOptions = {
         
         // Store options
         this.currentOptions = fieldData.options || [];
-        
-        // Render options list
-        this.renderOptionsList(this.currentOptions);
-        
-        // Initialize sortable
-        this.initializeSortable();
-        
+
+        // Initialize FormBuilderTemplateOptions module (new template-based options manager)
+        console.log('[FormBuilderProperties] Checking for FormBuilderTemplateOptions module...', !!window.FormBuilderTemplateOptions);
+
+        if (window.FormBuilderTemplateOptions && typeof window.FormBuilderTemplateOptions.init === 'function') {
+            console.log('[FormBuilderProperties] Using NEW FormBuilderTemplateOptions module');
+            window.FormBuilderTemplateOptions.init(fieldData.itemId, fieldData.dataTypeName, this.currentOptions);
+        } else {
+            console.error('[FormBuilderProperties] FormBuilderTemplateOptions module NOT FOUND! Using old rendering.');
+            console.error('[FormBuilderProperties] Make sure form-builder-options.js is loaded.');
+            // Fallback to old options rendering if FormBuilderTemplateOptions not available
+            this.renderOptionsList(this.currentOptions);
+            this.initializeSortable();
+        }
+
         // Show options manager
         this.showOptionsManager();
-        
-        console.log(`Loaded ${this.currentOptions.length} options for field ${this.currentFieldId}`);
+
+        console.log(`[FormBuilderProperties] Loaded ${this.currentOptions.length} options for field ${this.currentFieldId}`);
     },
 
     /**

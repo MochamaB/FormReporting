@@ -1180,6 +1180,93 @@ namespace FormReporting.Services.Forms
             }
         }
 
+        /// <summary>
+        /// Apply an option template to a field (replaces existing options)
+        /// </summary>
+        public async Task<FieldDto?> ApplyOptionTemplateAsync(int fieldId, int templateId)
+        {
+            try
+            {
+                Console.WriteLine($"Applying template {templateId} to field {fieldId}");
+
+                // Load field with options
+                var field = await _context.FormTemplateItems
+                    .Include(i => i.Options)
+                    .Include(i => i.Validations)
+                    .Include(i => i.Configurations)
+                    .FirstOrDefaultAsync(i => i.ItemId == fieldId);
+
+                if (field == null)
+                {
+                    Console.WriteLine($"Field {fieldId} not found");
+                    return null;
+                }
+
+                // Validate field type supports options
+                if (!RequiresOptions(field.DataType ?? "Text"))
+                {
+                    throw new InvalidOperationException($"Field type '{field.DataType}' does not support options");
+                }
+
+                // Load template with items
+                var template = await _context.FormItemOptionTemplates
+                    .Include(t => t.Items.OrderBy(i => i.DisplayOrder))
+                    .FirstOrDefaultAsync(t => t.TemplateId == templateId);
+
+                if (template == null)
+                {
+                    throw new ArgumentException($"Template with ID {templateId} not found");
+                }
+
+                Console.WriteLine($"Found template '{template.TemplateName}' with {template.Items.Count} items");
+
+                // Clear existing options
+                if (field.Options.Any())
+                {
+                    Console.WriteLine($"Removing {field.Options.Count} existing options");
+                    _context.FormItemOptions.RemoveRange(field.Options);
+                    await _context.SaveChangesAsync();
+                }
+
+                // Create new options from template
+                var newOptions = new List<Models.Entities.Forms.FormItemOption>();
+                foreach (var templateItem in template.Items.OrderBy(i => i.DisplayOrder))
+                {
+                    newOptions.Add(new Models.Entities.Forms.FormItemOption
+                    {
+                        ItemId = fieldId,
+                        OptionValue = templateItem.OptionValue,
+                        OptionLabel = templateItem.OptionLabel,
+                        DisplayOrder = templateItem.DisplayOrder,
+                        ScoreValue = templateItem.ScoreValue,
+                        ScoreWeight = templateItem.ScoreWeight,
+                        IsDefault = templateItem.IsDefault,
+                        IsActive = true
+                    });
+                }
+
+                Console.WriteLine($"Creating {newOptions.Count} new options from template");
+                _context.FormItemOptions.AddRange(newOptions);
+
+                // Increment template usage count
+                template.UsageCount++;
+                Console.WriteLine($"Incremented template usage count to {template.UsageCount}");
+
+                await _context.SaveChangesAsync();
+
+                // Reload field with new options
+                var updatedField = await GetFieldByIdAsync(fieldId);
+                Console.WriteLine($"Template applied successfully. Field now has {updatedField?.Options.Count} options");
+
+                return updatedField;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error applying template: {ex.Message}");
+                throw;
+            }
+        }
+
         // ========================================================================
         // HELPER METHODS - Option Management
         // ========================================================================
