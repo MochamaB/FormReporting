@@ -52,7 +52,7 @@
             
             <!-- Add Section button -->
             <button type="button"
-                    class="btn btn-primary btn-sm"
+                    class="btn btn-primary "
                     onclick="addSection()">
                 <i class="ri-add-line me-1"></i>
                 Add Section
@@ -68,7 +68,7 @@
 
             <!-- Save Progress -->
             <button type="button" 
-                    class="btn btn-soft-primary btn-sm" 
+                    class="btn btn-soft-primary" 
                     id="saveProgressBtn"
                     onclick="saveFormBuilderProgress()">
                 <i class="ri-save-line me-1"></i>
@@ -78,7 +78,7 @@
             @if (progress?.ShowExit == true)
             {
                 <a href="@progress.ExitUrl" 
-                   class="btn btn-danger btn-sm" 
+                   class="btn btn-danger" 
                    id="exitBtn">
                     <i class="ri-close-line me-1"></i>Exit Builder
                 </a>
@@ -86,7 +86,7 @@
 
             <!-- Continue to Review & Publish (Step 3) -->
             <button type="button" 
-                    class="btn btn-success btn-sm" 
+                    class="btn btn-success" 
                     id="continueToNextBtn"
                     onclick="continueToNextStage()">
                 Continue to Review & Publish
@@ -154,6 +154,7 @@
 <partial name="~/Views/Forms/FormTemplates/Partials/FormBuilder/Components/_DeleteSectionModal.cshtml" />
 <partial name="~/Views/Forms/FormTemplates/Partials/FormBuilder/Components/_DuplicateSectionModal.cshtml" />
 <partial name="~/Views/Forms/FormTemplates/Partials/FormBuilder/Components/_AddFieldModal.cshtml" />
+<partial name="~/Views/Forms/FormTemplates/Partials/FormBuilder/Components/_DeleteFieldModal.cshtml" />
 <partial name="~/Views/Forms/FormTemplates/Partials/FormBuilder/Components/_ErrorModal.cshtml" />
 
 <!-- ============================================================================ -->
@@ -170,7 +171,7 @@
     <script src="~/assets/js/pages/form-builder-layout.js"></script>
     <script src="~/assets/js/pages/form-builder-sections.js"></script>
     <script src="~/assets/js/pages/form-builder-dragdrop.js"></script>
-    <script src="~/assets/js/pages/form-builder-fields.js"></script>
+    <script src="~/assets/js/pages/form-builder-fields.js?v=2.1"></script>
     <script src="~/assets/js/pages/form-builder-properties.js?v=3.2"></script>
     <script src="~/assets/js/pages/form-builder-options.js?v=2.1"></script>
     <script src="~/assets/js/pages/form-builder-summary.js"></script>
@@ -180,5 +181,59 @@
     <script>
         // Set template ID for FormBuilder modules
         const TEMPLATE_ID = @Model.TemplateId;
+
+        // Auto-select field after add/reload (from URL parameter)
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const fieldToSelect = urlParams.get('selectField');
+
+            if (fieldToSelect) {
+                console.log(`[AutoSelect] Attempting to auto-select field ${fieldToSelect} from URL parameter`);
+
+                // Retry logic to ensure field card exists before selecting
+                let attempts = 0;
+                const maxAttempts = 10;
+                const retryInterval = 200; // Check every 200ms
+
+                const trySelectField = function() {
+                    attempts++;
+                    console.log(`[AutoSelect] Attempt ${attempts}/${maxAttempts}`);
+
+                    // Check if field card exists in DOM
+                    const fieldCard = document.getElementById(`field-${fieldToSelect}`);
+                    if (fieldCard) {
+                        console.log(`[AutoSelect] Field card found, attempting selection`);
+
+                        // Check if selectField function exists
+                        if (typeof selectField === 'function') {
+                            try {
+                                selectField(parseInt(fieldToSelect));
+
+                                // Clean up URL (remove query parameter)
+                                const cleanUrl = window.location.pathname;
+                                window.history.replaceState({}, '', cleanUrl);
+                                console.log(`[AutoSelect] ✅ Field ${fieldToSelect} auto-selected and URL cleaned`);
+                            } catch (error) {
+                                console.error('[AutoSelect] Error calling selectField:', error);
+                            }
+                        } else {
+                            console.error('[AutoSelect] selectField function not found');
+                        }
+                    } else if (attempts < maxAttempts) {
+                        // Field not found yet, retry
+                        console.log(`[AutoSelect] Field card not found yet, retrying...`);
+                        setTimeout(trySelectField, retryInterval);
+                    } else {
+                        console.error(`[AutoSelect] ❌ Failed to find field ${fieldToSelect} after ${maxAttempts} attempts`);
+                        // Clean up URL even on failure
+                        const cleanUrl = window.location.pathname;
+                        window.history.replaceState({}, '', cleanUrl);
+                    }
+                };
+
+                // Start trying after a small initial delay
+                setTimeout(trySelectField, 300);
+            }
+        });
     </script>
 }

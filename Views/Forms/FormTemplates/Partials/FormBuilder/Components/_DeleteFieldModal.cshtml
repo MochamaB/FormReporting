@@ -1,0 +1,53 @@
+@*
+    Delete Field Confirmation Modal
+    Confirms user wants to delete a field before proceeding
+*@
+
+<!-- Delete Field Modal -->
+<div class="modal fade" id="deleteFieldModal" tabindex="-1" aria-labelledby="deleteFieldModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger bg-gradient">
+                <h5 class="modal-title text-white" id="deleteFieldModalLabel">
+                    <i class="ri-delete-bin-line me-2"></i>Delete Field
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="text-center py-3">
+                    <div class="mb-3">
+                        <i class="ri-error-warning-line text-danger" style="font-size: 4rem;"></i>
+                    </div>
+                    <h5 class="mb-3">Are you sure you want to delete this field?</h5>
+                    <p class="text-muted mb-2">
+                        <strong id="deleteFieldName" class="text-dark"></strong>
+                    </p>
+                    <p class="text-muted mb-0">
+                        <small>
+                            This will permanently delete the field and all its data.
+                            <br>
+                            <strong class="text-danger">This action cannot be undone.</strong>
+                        </small>
+                    </p>
+                </div>
+
+                <!-- Options Count Warning -->
+                <div id="deleteWarningOptions" class="alert alert-warning d-none mt-3" role="alert">
+                    <i class="ri-alert-line me-1"></i>
+                    <strong>Warning:</strong> This field contains <span id="deleteOptionCount">0</span> option(s) that will also be deleted.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">
+                    <i class="ri-close-line me-1"></i>Cancel
+                </button>
+                <button type="button"
+                        class="btn btn-danger"
+                        id="confirmDeleteFieldBtn"
+                        onclick="confirmDeleteField()">
+                    <i class="ri-delete-bin-line me-1"></i>Delete Field
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

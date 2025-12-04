@@ -7,6 +7,8 @@
 const FormBuilderFields = {
     pendingFieldType: null,
     pendingSectionId: null,
+    pendingDeleteFieldId: null,
+    pendingDeleteFieldData: null,
 
     /**
      * Initialize field management
@@ -216,8 +218,8 @@ const FormBuilderFields = {
                     modal.hide();
                 }
 
-                // Reload the form builder to show new field (no success alert)
-                await this.reloadFormBuilder(sectionId);
+                // Reload the form builder to show new field and auto-select it
+                await this.reloadFormBuilder(sectionId, result.field?.itemId);
             } else {
                 // Show error modal with server message
                 this.showErrorModal(
@@ -253,8 +255,10 @@ const FormBuilderFields = {
 
     /**
      * Reload form builder section to show new field
+     * @param {number} sectionId - Section ID (optional, not used currently)
+     * @param {number} newFieldId - New field ID to auto-select after reload
      */
-    reloadFormBuilder: async function(sectionId) {
+    reloadFormBuilder: async function(sectionId, newFieldId) {
         try {
             // Get template ID from page
             const templateId = document.querySelector('[data-template-id]')?.dataset.templateId;
@@ -266,9 +270,14 @@ const FormBuilderFields = {
                 return;
             }
 
-            // Reload the entire form builder view
-            console.log('Reloading form builder for template:', templateId);
-            window.location.reload();
+            // Reload with field ID in URL to auto-select after page loads
+            if (newFieldId) {
+                console.log(`Reloading form builder and will auto-select field ${newFieldId}`);
+                window.location.href = `${window.location.pathname}?selectField=${newFieldId}`;
+            } else {
+                console.log('Reloading form builder');
+                window.location.reload();
+            }
         } catch (error) {
             console.error('Error reloading form builder:', error);
             // Fallback: reload entire page
@@ -370,11 +379,63 @@ const FormBuilderFields = {
      * Delete field
      * @param {number} fieldId - Field ID to delete
      */
-    deleteField: async function(fieldId) {
+    /**
+     * Show delete field confirmation modal
+     * @param {number} fieldId - Field ID to delete
+     */
+    showDeleteFieldModal: function(fieldId) {
+        // Get field card to extract field info
+        const fieldCard = document.getElementById(`field-${fieldId}`);
+        if (!fieldCard) {
+            console.error('Field card not found');
+            return;
+        }
+
+        // Get field name from the card (if available)
+        const fieldName = fieldCard.querySelector('.field-preview-content label')?.textContent || `Field #${fieldId}`;
+
+        // Store field ID for confirmation
+        this.pendingDeleteFieldId = fieldId;
+        this.pendingDeleteFieldData = { fieldName };
+
+        // Update modal content
+        document.getElementById('deleteFieldName').textContent = fieldName;
+
+        // Check if field has options
+        const optionCount = fieldCard.querySelector('[data-field-type]')?.dataset.optionCount || 0;
+        const warningOptions = document.getElementById('deleteWarningOptions');
+        const optionCountSpan = document.getElementById('deleteOptionCount');
+
+        if (optionCount > 0) {
+            optionCountSpan.textContent = optionCount;
+            warningOptions.classList.remove('d-none');
+        } else {
+            warningOptions.classList.add('d-none');
+        }
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('deleteFieldModal'));
+        modal.show();
+
+        console.log(`Delete field modal shown for field ${fieldId}`);
+    },
+
+    /**
+     * Confirm and execute field deletion
+     */
+    confirmDeleteField: async function() {
+        if (!this.pendingDeleteFieldId) {
+            console.error('No field ID to delete');
+            return;
+        }
+
+        const fieldId = this.pendingDeleteFieldId;
+
         try {
-            // Show confirmation
-            if (!confirm('Are you sure you want to delete this field? This action cannot be undone.')) {
-                return;
+            // Hide modal
+            const modal = bootstrap.Modal.getInstance(document.getElementById('deleteFieldModal'));
+            if (modal) {
+                modal.hide();
             }
 
             console.log('Deleting field:', fieldId);
@@ -394,9 +455,35 @@ const FormBuilderFields = {
             const result = await response.json();
 
             if (result.success) {
-                // Success - reload to show updated form
+                // Success - remove field from DOM without page reload
                 console.log('Field deleted successfully');
-                window.location.reload();
+
+                // Find and remove the field card from canvas
+                const fieldCard = document.getElementById(`field-${fieldId}`);
+                if (fieldCard) {
+                    fieldCard.remove();
+                    console.log(`Field card ${fieldId} removed from DOM`);
+                }
+
+                // Clear properties panel if this field was selected
+                if (window.FormBuilderProperties && FormBuilderProperties.currentFieldId === fieldId) {
+                    // Hide properties panel or show empty state
+                    const propertiesPanel = document.getElementById('properties-content');
+                    if (propertiesPanel) {
+                        propertiesPanel.innerHTML = '<div class="text-center text-muted py-5"><i class="ri-file-list-line" style="font-size: 3rem; opacity: 0.3;"></i><p class="mt-3">Select a section or field to view properties</p></div>';
+                    }
+                    FormBuilderProperties.currentFieldId = null;
+                    console.log('Properties panel cleared');
+                }
+
+                // Remove selection from all elements
+                document.querySelectorAll('.selected-element').forEach(el => {
+                    el.classList.remove('selected-element');
+                });
+
+                // Reset pending delete data
+                this.pendingDeleteFieldId = null;
+                this.pendingDeleteFieldData = null;
             } else {
                 this.showErrorModal(
                     'Failed to Delete Field',
@@ -573,10 +660,17 @@ window.editField = function(fieldId) {
 };
 
 /**
- * Global function to delete field
+ * Global function to delete field (shows confirmation modal)
  */
 window.deleteField = function(fieldId) {
-    FormBuilderFields.deleteField(fieldId);
+    FormBuilderFields.showDeleteFieldModal(fieldId);
+};
+
+/**
+ * Global function to confirm field deletion (called from modal)
+ */
+window.confirmDeleteField = function() {
+    FormBuilderFields.confirmDeleteField();
 };
 
 /**
