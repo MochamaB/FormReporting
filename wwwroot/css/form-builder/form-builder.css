@@ -370,26 +370,83 @@
     padding: 1rem;
 }
 
-/* Section drag ghost - grey background with section hover border (not dashed) */
-.sortable-ghost {
-    opacity: 0.8;
-    background: rgba(64, 81, 137, 0.03) !important;  /* Same as section hover */
-    border: 2px solid rgba(64, 81, 137, 0.15) !important;  /* Solid, not dashed */
+/* ============================================================================
+   DRAG & DROP VISUAL FEEDBACK - Consolidated Styles
+   ============================================================================ */
+
+/* --- SECTION DRAG GHOST --- */
+/* Section drop position indicator - horizontal line between sections */
+.sortable-ghost-section {
+    opacity: 1 !important;
+    height: 6px !important;
+    min-height: 6px !important;
+    max-height: 6px !important;
+    background: var(--vz-primary) !important;
+    border: none !important;
+    border-radius: 3px !important;
+    margin: 1rem 0 !important;
+    padding: 0 !important;
+    box-shadow: 0 0 12px rgba(64, 81, 137, 0.5) !important;
+    overflow: hidden !important;
 }
 
-/* Field drag ghost - thin horizontal line indicator showing drop position */
+/* Hide all content inside section ghost to show only the line */
+.sortable-ghost-section * {
+    display: none !important;
+}
+
+/* Section being dragged - visible with clear borders */
+.sortable-drag-section {
+    opacity: 0.9 !important;
+    background: #ffffff !important;
+    border: 2px solid var(--vz-primary) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2) !important;
+    cursor: grabbing !important;
+    transform: rotate(0.5deg);
+}
+
+/* Section chosen (about to be dragged) */
+.sortable-chosen-section {
+    cursor: grabbing !important;
+}
+
+/* --- FIELD DRAG GHOST (being dragged) --- */
+/* The field card being dragged - visible with clear styling */
+.builder-field-card.sortable-drag {
+    opacity: 0.85 !important;
+    background: #ffffff !important;
+    border: 2px solid var(--vz-primary) !important;
+    border-radius: 8px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2) !important;
+    cursor: grabbing !important;
+    transform: rotate(1deg);
+}
+
+/* --- FIELD DROP LINE INDICATOR --- */
+/* Default: Same section reorder - Secondary color */
 .sortable-ghost-field {
-    opacity: 0.6 !important;
-    height: 3px !important;
-    min-height: 3px !important;
-    max-height: 3px !important;
+    opacity: 1 !important;
+    height: 5px !important;
+    min-height: 5px !important;
+    max-height: 5px !important;
     background: var(--vz-secondary) !important;
     border: none !important;
-    border-radius: 0 !important;
+    border-radius: 3px !important;
     padding: 0 !important;
-    margin: 0.5rem 0 !important;
-    box-shadow: 0 0 0 1px var(--vz-secondary) !important;
+    margin: 0.75rem 0 !important;
+    box-shadow: 0 0 8px rgba(108, 117, 125, 0.5) !important;
     overflow: hidden !important;
+    transition: all 0.15s ease !important;
+}
+
+/* Cross-section move - Primary color (applied via JS class) */
+.sortable-ghost-field.cross-section-drop {
+    background: var(--vz-primary) !important;
+    box-shadow: 0 0 12px rgba(64, 81, 137, 0.6) !important;
+    height: 6px !important;
+    min-height: 6px !important;
+    max-height: 6px !important;
 }
 
 /* Hide all content inside ghost element to ensure only the line shows */
@@ -397,29 +454,47 @@
     display: none !important;
 }
 
-/* Fields container drop zone indicator when dragging NEW field from palette */
+/* --- CONTAINER DROP ZONE INDICATORS --- */
+/* Fields container when dragging NEW field from palette */
 .fields-container.drag-over-new-field {
     background: rgba(10, 179, 156, 0.08) !important;
     border: 2px solid #0ab39c !important;
     border-style: solid !important;
     min-height: 100px;
+    border-radius: 6px;
 }
 
-/* Fields container drop zone indicator when REORDERING existing fields */
+/* Fields container when REORDERING within same section */
 .fields-container.drag-over-reorder {
-    background: rgba(64, 81, 137, 0.02) !important;
-    border: 1px dashed rgba(64, 81, 137, 0.3) !important;
-    border-style: dashed !important;
+    background: rgba(108, 117, 125, 0.04) !important;
+    border: 2px dashed rgba(108, 117, 125, 0.4) !important;
+    border-radius: 6px;
 }
 
+/* Fields container when moving field from DIFFERENT section */
+.fields-container.drag-over-cross-section {
+    background: rgba(64, 81, 137, 0.06) !important;
+    border: 2px solid var(--vz-primary) !important;
+    border-radius: 6px;
+}
+
+/* --- DRAG STATES --- */
 .sortable-drag {
     opacity: 0.9;
-    cursor: move;
+    cursor: grabbing !important;
+}
+
+.sortable-chosen {
+    cursor: grabbing !important;
 }
 
 /* Make drag handle more visible */
 .drag-handle {
-    cursor: move !important;
+    cursor: grab !important;
+}
+
+.drag-handle:active {
+    cursor: grabbing !important;
 }
 
 .builder-section:hover .drag-handle {
@@ -612,6 +687,23 @@
     opacity: 1;
 }
 
+/* --- COLLAPSED FOOTER --- */
+/* Footer shown only when field is collapsed - displays field name */
+.field-collapsed-footer {
+    border-top: none !important;
+    background: transparent;
+    padding: 0.5rem 1rem;
+    margin-top: -0.5rem;
+}
+
+.field-collapsed-footer span {
+    color: var(--vz-body-color);
+    font-size: 0.95rem;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    white-space: normal;
+}
+
 /* Field preview content - disabled appearance */
 .field-preview-content {
     position: relative;
@@ -660,7 +752,7 @@
 
 /* Option item container */
 .option-item {
-    background: #f8f9fa;
+    background: #ffffff;
     border: 1px solid #e9ecef;
     border-radius: 0.25rem;
     padding: 0.5rem;
@@ -669,7 +761,7 @@
 }
 
 .option-item:hover {
-    background: #fff;
+    background: #f8f9fa;
     border-color: #d1d5db;
     box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
 }
@@ -677,8 +769,8 @@
 /* Drag handle */
 .option-drag-handle {
     cursor: move;
-    color: #adb5bd;
-    font-size: 1.1rem;
+    color: #565757;
+    font-size: 1.2rem;
 }
 
 .option-drag-handle:hover {
@@ -690,16 +782,7 @@
     font-size: 0.875rem;
 }
 
-/* Sortable ghost (drag preview) */
-.sortable-ghost {
-    opacity: 0.5;
-    background: #e9ecef !important;
-}
-
-/* Sortable drag (element being dragged) */
-.sortable-drag {
-    opacity: 0.8;
-}
+/* Note: Main sortable-ghost styles are defined in the DRAG & DROP section above */
 
 /* ============================================================================
    OPTIONS TABLE STYLING - Compact design
@@ -1090,20 +1173,7 @@
     color: #495057;
 }
 
-/* Drag-Drop Visual Feedback */
-.sortable-ghost {
-    opacity: 0.4;
-    background-color: #e3f2fd !important;
-}
-
-.sortable-chosen {
-    background-color: #fff3cd !important;
-}
-
-.sortable-drag {
-    opacity: 0.8;
-    box-shadow: 0 0.25rem 0.75rem rgba(0, 0, 0, 0.2);
-}
+/* Note: Main drag-drop styles are defined in the DRAG & DROP section above */
 
 /* ============================================================================
    RIGHT COLUMN: DETAILS PANEL

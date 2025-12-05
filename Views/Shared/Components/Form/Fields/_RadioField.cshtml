@@ -5,7 +5,11 @@
 *@
 
 <div class="mb-3 col-md-@Model.ColumnWidth">
-    <label class="form-label">
+    <label class="form-label" style="word-wrap: break-word; overflow-wrap: break-word;">
+        @if (Model.ShowFieldNumber)
+        {
+            <span class="text-primary me-2">@Model.DisplayOrder.</span>
+        }
         @Model.FieldName
         @if (Model.IsRequired)
         {
@@ -16,16 +20,19 @@
     @if (Model.Options != null && Model.Options.Any())
     {
         var currentValueStr = Model.CurrentValue?.ToString() ?? string.Empty;
+        var hasCurrentValue = !string.IsNullOrEmpty(currentValueStr);
         <div class="radio-group" data-field-id="@Model.FieldId">
             @foreach (var option in Model.Options)
             {
+                // Use CurrentValue if set, otherwise fall back to IsSelected (default from database)
+                var isChecked = hasCurrentValue ? option.Value == currentValueStr : option.IsSelected;
                 <div class="form-check">
                     <input type="radio"
                            class="form-check-input"
                            id="@(Model.InputId)_@option.Value"
                            name="@Model.InputName"
                            value="@option.Value"
-                           @(option.Value == currentValueStr ? "checked" : "")
+                           @(isChecked ? "checked" : "")
                            @(Model.IsRequired ? "required" : "")
                            @(Model.IsDisabled ? "disabled" : "")
                            @if (!string.IsNullOrEmpty(Model.ValidationDataAttribute))

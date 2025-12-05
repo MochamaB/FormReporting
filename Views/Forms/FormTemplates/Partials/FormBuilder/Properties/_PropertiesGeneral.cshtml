@@ -125,18 +125,8 @@
     </div>
 
     <form id="fieldGeneralForm">
-        <!-- Field Code (Read-only) -->
-        <div class="mb-3">
-            <label for="prop_fieldCode" class="form-label fw-semibold">
-                Field Code
-            </label>
-            <input type="text"
-                   class="form-control"
-                   id="prop_fieldCode"
-                   readonly
-                   disabled>
-            <small class="text-muted">Auto-generated unique identifier</small>
-        </div>
+        <!-- Hidden field to store field type for conditional logic -->
+        <input type="hidden" id="prop_fieldType" value="">
 
         <!-- Field Name -->
         <div class="mb-3">
@@ -151,21 +141,8 @@
             <div class="invalid-feedback">Field name is required</div>
         </div>
 
-        <!-- Field Type (Read-only - changed via inline dropdown in canvas) -->
-        <div class="mb-3">
-            <label for="prop_fieldType" class="form-label fw-semibold">
-                Field Type
-            </label>
-            <input type="text"
-                   class="form-control"
-                   id="prop_fieldType"
-                   readonly
-                   disabled>
-            <small class="text-muted">Change type using the dropdown in the canvas</small>
-        </div>
-
-        <!-- Placeholder Text -->
-        <div class="mb-3">
+        <!-- Placeholder Text (Hidden for Radio/Checkbox) -->
+        <div class="mb-3" id="prop_placeholderText_container">
             <label for="prop_placeholderText" class="form-label fw-semibold">
                 Placeholder Text
             </label>
@@ -188,8 +165,8 @@
             <small class="text-muted">Displayed below the field to help users</small>
         </div>
 
-        <!-- Default Value -->
-        <div class="mb-3">
+        <!-- Default Value (Hidden for option-based fields) -->
+        <div class="mb-3" id="prop_defaultValue_container">
             <label for="prop_defaultValue" class="form-label fw-semibold">
                 Default Value
             </label>
@@ -198,19 +175,6 @@
                    id="prop_defaultValue"
                    placeholder="Optional default value">
             <small class="text-muted">Pre-filled value when form loads</small>
-        </div>
-
-        <!-- Display Order (Read-only) -->
-        <div class="mb-3">
-            <label for="prop_fieldDisplayOrder" class="form-label fw-semibold">
-                Display Order
-            </label>
-            <input type="number"
-                   class="form-control"
-                   id="prop_fieldDisplayOrder"
-                   readonly
-                   disabled>
-            <small class="text-muted">Managed by drag-drop reordering</small>
         </div>
 
         <!-- Required Field -->
@@ -224,27 +188,6 @@
                 </label>
             </div>
             <small class="text-muted ms-4">Users must fill this field before submitting</small>
-        </div>
-
-        <!-- Field Statistics (Read-only info) -->
-        <div class="mb-3">
-            <div class="card bg-light border-0">
-                <div class="card-body p-3">
-                    <div class="row g-2">
-                        <div class="col-6">
-                            <small class="text-muted d-block">Validations</small>
-                            <strong id="prop_validationCount">0</strong>
-                        </div>
-                        <div class="col-6">
-                            <small class="text-muted d-block">Options</small>
-                            <strong id="prop_optionCount">0</strong>
-                        </div>
-                    </div>
-                    <small class="text-muted d-block mt-2">
-                        Configure in Validation and Configuration tabs
-                    </small>
-                </div>
-            </div>
         </div>
 
         <!-- Save Button -->

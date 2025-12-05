@@ -434,6 +434,271 @@ namespace FormReporting.Controllers.Forms
         }
 
         /// <summary>
+        /// STEP 3: Review & Publish - Final validation and publish template
+        /// </summary>
+        [HttpGet]
+        public async Task<IActionResult> ReviewPublish(int id)
+        {
+            // Load template with all related data
+            var template = await _context.FormTemplates
+                .Include(t => t.Category)
+                .Include(t => t.Sections)
+                    .ThenInclude(s => s.Items)
+                .Include(t => t.Items)
+                .Include(t => t.Creator)
+                .FirstOrDefaultAsync(t => t.TemplateId == id);
+
+            if (template == null)
+            {
+                TempData["ErrorMessage"] = "Template not found.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Only drafts can be edited
+            if (template.PublishStatus != "Draft")
+            {
+                TempData["ErrorMessage"] = "This template is already published.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Build ViewModel
+            var viewModel = BuildReviewPublishViewModel(template);
+
+            // Build progress tracker for Step 3
+            var progress = new FormBuilderProgressConfig
+            {
+                BuilderId = $"template-{template.TemplateId}",
+                TemplateId = template.TemplateId,
+                TemplateName = template.TemplateName,
+                TemplateVersion = $"v{template.Version}",
+                PublishStatus = template.PublishStatus,
+                CurrentStep = FormBuilderStep.ReviewPublish,
+                ShowSaveDraft = false,
+                ExitUrl = Url.Action("Index", "FormTemplates") ?? "/Forms/FormTemplates"
+            }
+            .AtStep(FormBuilderStep.ReviewPublish)
+            .BuildProgress();
+
+            ViewData["Progress"] = progress;
+
+            return View("~/Views/Forms/FormTemplates/ReviewPublish.cshtml", viewModel);
+        }
+
+        /// <summary>
+        /// POST: Publish the template
+        /// </summary>
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> PublishTemplate(int id)
+        {
+            var template = await _context.FormTemplates
+                .Include(t => t.Sections)
+                    .ThenInclude(s => s.Items)
+                .FirstOrDefaultAsync(t => t.TemplateId == id);
+
+            if (template == null)
+            {
+                TempData["ErrorMessage"] = "Template not found.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            if (template.PublishStatus != "Draft")
+            {
+                TempData["ErrorMessage"] = "This template is already published.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Validate before publishing
+            var validationResult = ValidateTemplateForPublish(template);
+            if (!validationResult.CanPublish)
+            {
+                TempData["ErrorMessage"] = "Template validation failed. Please fix all errors before publishing.";
+                return RedirectToAction(nameof(ReviewPublish), new { id });
+            }
+
+            // Update template status
+            template.PublishStatus = "Published";
+            template.PublishedDate = DateTime.UtcNow;
+            template.ModifiedDate = DateTime.UtcNow;
+
+            // Get current user ID from claims
+            var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (int.TryParse(userIdClaim, out int userId))
+            {
+                template.ModifiedBy = userId;
+            }
+
+            await _context.SaveChangesAsync();
+
+            TempData["SuccessMessage"] = $"Template '{template.TemplateName}' has been published successfully!";
+            return RedirectToAction(nameof(Index));
+        }
+
+        /// <summary>
+        /// Build ReviewPublishViewModel from template
+        /// </summary>
+        private ReviewPublishViewModel BuildReviewPublishViewModel(Models.Entities.Forms.FormTemplate template)
+        {
+            var viewModel = new ReviewPublishViewModel
+            {
+                TemplateId = template.TemplateId,
+                TemplateName = template.TemplateName,
+                TemplateCode = template.TemplateCode,
+                CategoryName = template.Category?.CategoryName,
+                TemplateType = template.TemplateType,
+                Version = template.Version,
+                Description = template.Description,
+                CreatedByName = template.Creator?.FullName ?? "Unknown",
+                CreatedDate = template.CreatedDate,
+                ModifiedDate = template.ModifiedDate,
+                PublishStatus = template.PublishStatus,
+                SectionCount = template.Sections?.Count ?? 0,
+                FieldCount = template.Items?.Count ?? 0,
+                RequiredFieldCount = template.Items?.Count(i => i.IsRequired) ?? 0
+            };
+
+            // Build field type summary
+            if (template.Items != null && template.Items.Any())
+            {
+                viewModel.FieldTypeSummary = template.Items
+                    .GroupBy(i => i.DataType ?? "Unknown")
+                    .ToDictionary(g => g.Key, g => g.Count());
+            }
+
+            // Build section summaries
+            if (template.Sections != null)
+            {
+                viewModel.Sections = template.Sections
+                    .OrderBy(s => s.DisplayOrder)
+                    .Select(s => new SectionSummary
+                    {
+                        SectionId = s.SectionId,
+                        SectionName = s.SectionName,
+                        FieldCount = s.Items?.Count ?? 0,
+                        RequiredFieldCount = s.Items?.Count(i => i.IsRequired) ?? 0,
+                        DisplayOrder = s.DisplayOrder
+                    })
+                    .ToList();
+            }
+
+            // Build validation checklist
+            viewModel.ValidationChecklist = BuildValidationChecklist(template);
+
+            return viewModel;
+        }
+
+        /// <summary>
+        /// Build validation checklist for template
+        /// </summary>
+        private List<ValidationItem> BuildValidationChecklist(Models.Entities.Forms.FormTemplate template)
+        {
+            var checklist = new List<ValidationItem>();
+
+            // Check 1: Basic Info Complete
+            bool hasBasicInfo = !string.IsNullOrEmpty(template.TemplateName) &&
+                               !string.IsNullOrEmpty(template.TemplateCode) &&
+                               template.CategoryId > 0 &&
+                               !string.IsNullOrEmpty(template.TemplateType);
+            checklist.Add(new ValidationItem
+            {
+                CheckName = "Basic Information",
+                Description = "Template name, code, category, and type are required",
+                IsPassed = hasBasicInfo,
+                FailureMessage = hasBasicInfo ? null : "Please complete all required template information"
+            });
+
+            // Check 2: Has Sections
+            bool hasSections = template.Sections != null && template.Sections.Any();
+            checklist.Add(new ValidationItem
+            {
+                CheckName = "Has Sections",
+                Description = "At least one section is required",
+                IsPassed = hasSections,
+                FailureMessage = hasSections ? null : "Add at least one section to the form"
+            });
+
+            // Check 3: Has Fields
+            bool hasFields = template.Items != null && template.Items.Any();
+            checklist.Add(new ValidationItem
+            {
+                CheckName = "Has Fields",
+                Description = "At least one field is required",
+                IsPassed = hasFields,
+                FailureMessage = hasFields ? null : "Add at least one field to the form"
+            });
+
+            // Check 4: All Sections Have Fields
+            bool allSectionsHaveFields = true;
+            string? emptySections = null;
+            if (template.Sections != null && template.Sections.Any())
+            {
+                var emptySecList = template.Sections
+                    .Where(s => s.Items == null || !s.Items.Any())
+                    .Select(s => s.SectionName)
+                    .ToList();
+                allSectionsHaveFields = !emptySecList.Any();
+                if (!allSectionsHaveFields)
+                {
+                    emptySections = string.Join(", ", emptySecList);
+                }
+            }
+            checklist.Add(new ValidationItem
+            {
+                CheckName = "All Sections Have Fields",
+                Description = "Every section must contain at least one field",
+                IsPassed = allSectionsHaveFields,
+                FailureMessage = allSectionsHaveFields ? null : $"Empty sections: {emptySections}"
+            });
+
+            // Check 5: Has Description (Warning)
+            bool hasDescription = !string.IsNullOrEmpty(template.Description);
+            checklist.Add(new ValidationItem
+            {
+                CheckName = "Has Description",
+                Description = "A description helps users understand the form's purpose",
+                IsPassed = hasDescription,
+                IsWarning = true,
+                FailureMessage = hasDescription ? null : "Consider adding a description"
+            });
+
+            // Check 6: Has Required Fields (Warning)
+            bool hasRequiredFields = template.Items?.Any(i => i.IsRequired) ?? false;
+            checklist.Add(new ValidationItem
+            {
+                CheckName = "Has Required Fields",
+                Description = "Forms typically have at least one required field",
+                IsPassed = hasRequiredFields,
+                IsWarning = true,
+                FailureMessage = hasRequiredFields ? null : "All fields are optional"
+            });
+
+            return checklist;
+        }
+
+        /// <summary>
+        /// Validate template can be published
+        /// </summary>
+        private (bool CanPublish, List<string> Errors) ValidateTemplateForPublish(Models.Entities.Forms.FormTemplate template)
+        {
+            var errors = new List<string>();
+
+            if (string.IsNullOrEmpty(template.TemplateName))
+                errors.Add("Template name is required");
+            if (string.IsNullOrEmpty(template.TemplateCode))
+                errors.Add("Template code is required");
+            if (template.CategoryId <= 0)
+                errors.Add("Category is required");
+            if (string.IsNullOrEmpty(template.TemplateType))
+                errors.Add("Template type is required");
+            if (template.Sections == null || !template.Sections.Any())
+                errors.Add("At least one section is required");
+            if (template.Sections?.All(s => s.Items == null || !s.Items.Any()) == true)
+                errors.Add("At least one field is required");
+
+            return (errors.Count == 0, errors);
+        }
+
+        /// <summary>
         /// AJAX: Validate template progress before advancing to next stage
         /// Uses direct database counts for reliable validation
         /// </summary>

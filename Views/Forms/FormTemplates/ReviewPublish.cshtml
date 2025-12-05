@@ -1,0 +1,283 @@
+@model FormReporting.Models.ViewModels.Forms.ReviewPublishViewModel
+@{
+    ViewData["Title"] = "Review & Publish";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var progress = ViewData["Progress"] as FormReporting.Models.ViewModels.Components.FormBuilderProgressViewModel;
+}
+
+<!-- Progress Tracker -->
+@if (progress != null)
+{
+    <partial name="~/Views/Shared/Components/FormBuilder/_FormBuilderProgress.cshtml" model="progress" />
+}
+
+<div class="row">
+    <!-- Left Column: Validation Checklist -->
+    <div class="col-lg-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-checkbox-multiple-line me-2"></i>Validation Checklist
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Validation Summary -->
+                <div class="d-flex justify-content-between align-items-center mb-3 pb-3 border-bottom">
+                    <div>
+                        <span class="badge bg-success me-1">@Model.PassedCount Passed</span>
+                        @if (Model.FailedCount > 0)
+                        {
+                            <span class="badge bg-danger me-1">@Model.FailedCount Failed</span>
+                        }
+                        @if (Model.WarningCount > 0)
+                        {
+                            <span class="badge bg-warning me-1">@Model.WarningCount Warnings</span>
+                        }
+                    </div>
+                    @if (Model.CanPublish)
+                    {
+                        <span class="badge bg-success-subtle text-success">
+                            <i class="ri-check-line me-1"></i>Ready to Publish
+                        </span>
+                    }
+                    else
+                    {
+                        <span class="badge bg-danger-subtle text-danger">
+                            <i class="ri-close-line me-1"></i>Fix Errors First
+                        </span>
+                    }
+                </div>
+
+                <!-- Validation Items -->
+                <div class="vstack gap-2">
+                    @foreach (var item in Model.ValidationChecklist)
+                    {
+                        <div class="d-flex align-items-start gap-2 p-2 rounded @(item.IsPassed ? "bg-success-subtle" : (item.IsWarning ? "bg-warning-subtle" : "bg-danger-subtle"))">
+                            <i class="@item.StatusIcon text-@item.StatusColor fs-16 mt-1"></i>
+                            <div class="flex-grow-1">
+                                <div class="fw-medium">@item.CheckName</div>
+                                <small class="text-muted">@item.Description</small>
+                                @if (!item.IsPassed && !string.IsNullOrEmpty(item.FailureMessage))
+                                {
+                                    <div class="mt-1">
+                                        <small class="text-@item.StatusColor">
+                                            <i class="ri-arrow-right-s-line"></i>@item.FailureMessage
+                                        </small>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Right Column: Template Summary & Structure -->
+    <div class="col-lg-8">
+        <!-- Template Summary Card -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-file-list-3-line me-2"></i>Template Summary
+                </h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table table-borderless table-sm mb-0">
+                            <tbody>
+                                <tr>
+                                    <td class="text-muted" style="width: 140px;">Template Name</td>
+                                    <td class="fw-medium">@Model.TemplateName</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Template Code</td>
+                                    <td><code>@Model.TemplateCode</code></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Category</td>
+                                    <td>@(Model.CategoryName ?? "Not Set")</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Type</td>
+                                    <td>
+                                        <span class="badge bg-info-subtle text-info">@(Model.TemplateType ?? "Not Set")</span>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="col-md-6">
+                        <table class="table table-borderless table-sm mb-0">
+                            <tbody>
+                                <tr>
+                                    <td class="text-muted" style="width: 140px;">Version</td>
+                                    <td><span class="badge bg-secondary">v@Model.Version</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Status</td>
+                                    <td><span class="badge bg-warning">@Model.PublishStatus</span></td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Created By</td>
+                                    <td>@Model.CreatedByName</td>
+                                </tr>
+                                <tr>
+                                    <td class="text-muted">Last Modified</td>
+                                    <td>@Model.ModifiedDate.ToString("MMM dd, yyyy HH:mm")</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(Model.Description))
+                {
+                    <div class="mt-3 pt-3 border-top">
+                        <label class="text-muted mb-1">Description</label>
+                        <p class="mb-0">@Model.Description</p>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Form Structure Summary Card -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">
+                    <i class="ri-layout-grid-line me-2"></i>Form Structure
+                </h5>
+            </div>
+            <div class="card-body">
+                <!-- Stats Row -->
+                <div class="row g-3 mb-4">
+                    <div class="col-md-3 col-6">
+                        <div class="p-3 bg-primary-subtle rounded text-center">
+                            <h3 class="mb-1 text-primary">@Model.SectionCount</h3>
+                            <span class="text-muted">Sections</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="p-3 bg-info-subtle rounded text-center">
+                            <h3 class="mb-1 text-info">@Model.FieldCount</h3>
+                            <span class="text-muted">Total Fields</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="p-3 bg-danger-subtle rounded text-center">
+                            <h3 class="mb-1 text-danger">@Model.RequiredFieldCount</h3>
+                            <span class="text-muted">Required</span>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-6">
+                        <div class="p-3 bg-secondary-subtle rounded text-center">
+                            <h3 class="mb-1 text-secondary">@Model.OptionalFieldCount</h3>
+                            <span class="text-muted">Optional</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Field Types -->
+                @if (Model.FieldTypeSummary.Any())
+                {
+                    <div class="mb-4">
+                        <label class="text-muted mb-2">Field Types</label>
+                        <div class="d-flex flex-wrap gap-2">
+                            @foreach (var fieldType in Model.FieldTypeSummary)
+                            {
+                                <span class="badge bg-light text-dark border">
+                                    @fieldType.Key <span class="badge bg-secondary ms-1">@fieldType.Value</span>
+                                </span>
+                            }
+                        </div>
+                    </div>
+                }
+
+                <!-- Sections List -->
+                @if (Model.Sections.Any())
+                {
+                    <div>
+                        <label class="text-muted mb-2">Sections</label>
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 50px;">#</th>
+                                        <th>Section Name</th>
+                                        <th class="text-center" style="width: 100px;">Fields</th>
+                                        <th class="text-center" style="width: 100px;">Required</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var formsection in Model.Sections)
+                                    {
+                                        <tr>
+                                            <td class="text-muted">@formsection.DisplayOrder</td>
+                                            <td>@formsection.SectionName</td>
+                                            <td class="text-center">
+                                                <span class="badge bg-info-subtle text-info">@formsection.FieldCount</span>
+                                            </td>
+                                            <td class="text-center">
+                                                @if (formsection.RequiredFieldCount > 0)
+                                                {
+                                                    <span class="badge bg-danger-subtle text-danger">@formsection.RequiredFieldCount</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-muted">-</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <a href="@Url.Action("FormBuilder", "FormTemplates", new { id = Model.TemplateId })" 
+                       class="btn btn-soft-secondary">
+                        <i class="ri-arrow-left-line me-1"></i>Back to Form Builder
+                    </a>
+
+                    <div class="d-flex gap-2">
+                        <a href="@Url.Action("Index", "FormTemplates")" class="btn btn-light">
+                            <i class="ri-close-line me-1"></i>Cancel
+                        </a>
+                        
+                        <form asp-action="PublishTemplate" asp-route-id="@Model.TemplateId" method="post" class="d-inline" id="publishForm">
+                            @Html.AntiForgeryToken()
+                            <button type="button" 
+                                    class="btn btn-success @(Model.CanPublish ? "" : "disabled")"
+                                    @(Model.CanPublish ? "" : "disabled")
+                                    onclick="confirmPublish();">
+                                <i class="ri-rocket-line me-1"></i>Publish Template
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    function confirmPublish() {
+        AppModal.publish({
+            title: 'Publish Template',
+            message: 'Are you sure you want to publish <strong>@Model.TemplateName</strong>?',
+            details: 'Once published, the template will be available for submissions and cannot be edited. You can create a new version if changes are needed.',
+            onConfirm: function() {
+                document.getElementById('publishForm').submit();
+            }
+        });
+    }
+</script>
+}

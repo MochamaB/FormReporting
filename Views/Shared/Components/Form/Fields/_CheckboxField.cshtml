@@ -5,7 +5,11 @@
 *@
 
 <div class="mb-3 col-md-@Model.ColumnWidth">
-    <label class="form-label">
+    <label class="form-label" style="word-wrap: break-word; overflow-wrap: break-word;">
+        @if (Model.ShowFieldNumber)
+        {
+            <span class="text-primary me-2">@Model.DisplayOrder.</span>
+        }
         @Model.FieldName
         @if (Model.IsRequired)
         {
@@ -16,12 +20,15 @@
     @if (Model.Options != null && Model.Options.Any())
     {
         @* Multiple checkboxes *@
+        var currentValueStr = Model.CurrentValue?.ToString() ?? string.Empty;
+        var hasCurrentValue = !string.IsNullOrEmpty(currentValueStr);
+        var currentValues = hasCurrentValue ? currentValueStr.Split(',') : Array.Empty<string>();
+        
         <div class="checkbox-group" data-field-id="@Model.FieldId">
             @foreach (var option in Model.Options)
             {
-                var currentValueStr = Model.CurrentValue?.ToString() ?? string.Empty;
-                var isChecked = !string.IsNullOrEmpty(currentValueStr) &&
-                               currentValueStr.Split(',').Contains(option.Value);
+                // Use CurrentValue if set, otherwise fall back to IsSelected (default from database)
+                var isChecked = hasCurrentValue ? currentValues.Contains(option.Value) : option.IsSelected;
 
                 <div class="form-check">
                     <input type="checkbox"

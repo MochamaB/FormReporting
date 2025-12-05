@@ -1,0 +1,312 @@
+@*
+    Centralized Reusable Modal Component
+    
+    Usage:
+    - Include this partial in your layout or page
+    - Call AppModal.confirm(), AppModal.delete(), AppModal.info(), etc. from JavaScript
+    
+    Modal Types:
+    - confirm: Blue primary button, for confirmations
+    - delete: Red danger button, for destructive actions
+    - warning: Yellow warning button, for warnings
+    - info: Blue info display, informational only
+    - success: Green success display, success messages
+    - error: Red error display, error messages
+*@
+
+<!-- Centralized App Modal -->
+<div class="modal fade" id="appModal" tabindex="-1" aria-labelledby="appModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header" id="appModalHeader">
+                <h5 class="modal-title" id="appModalLabel">
+                    <i class="me-2" id="appModalIcon"></i>
+                    <span id="appModalTitle">Modal Title</span>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p id="appModalMessage" class="mb-0"></p>
+                <div id="appModalDetails" class="mt-3" style="display: none;">
+                    <small class="text-muted" id="appModalDetailsText"></small>
+                </div>
+            </div>
+            <div class="modal-footer" id="appModalFooter">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal" id="appModalCancelBtn">
+                    Cancel
+                </button>
+                <button type="button" class="btn btn-primary" id="appModalConfirmBtn">
+                    Confirm
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+/**
+ * Centralized Modal System
+ * Provides a consistent modal experience across the application
+ */
+const AppModal = {
+    modal: null,
+    bsModal: null,
+    currentCallback: null,
+
+    /**
+     * Initialize the modal system
+     */
+    init: function() {
+        this.modal = document.getElementById('appModal');
+        if (this.modal) {
+            this.bsModal = new bootstrap.Modal(this.modal);
+            
+            // Setup confirm button click handler
+            document.getElementById('appModalConfirmBtn').addEventListener('click', () => {
+                if (this.currentCallback) {
+                    this.currentCallback();
+                }
+                this.hide();
+            });
+
+            // Reset on hide
+            this.modal.addEventListener('hidden.bs.modal', () => {
+                this.currentCallback = null;
+            });
+        }
+    },
+
+    /**
+     * Show the modal with configuration
+     */
+    show: function(config) {
+        if (!this.bsModal) this.init();
+
+        const defaults = {
+            type: 'info',           // confirm, delete, warning, info, success, error
+            title: 'Information',
+            message: '',
+            details: null,
+            confirmText: 'OK',
+            cancelText: 'Cancel',
+            showCancel: true,
+            onConfirm: null
+        };
+
+        const options = { ...defaults, ...config };
+        
+        // Store callback
+        this.currentCallback = options.onConfirm;
+
+        // Set content
+        document.getElementById('appModalTitle').textContent = options.title;
+        document.getElementById('appModalMessage').innerHTML = options.message;
+        
+        // Set details if provided
+        const detailsEl = document.getElementById('appModalDetails');
+        const detailsTextEl = document.getElementById('appModalDetailsText');
+        if (options.details) {
+            detailsTextEl.textContent = options.details;
+            detailsEl.style.display = 'block';
+        } else {
+            detailsEl.style.display = 'none';
+        }
+
+        // Set button text
+        document.getElementById('appModalConfirmBtn').textContent = options.confirmText;
+        document.getElementById('appModalCancelBtn').textContent = options.cancelText;
+
+        // Show/hide cancel button
+        document.getElementById('appModalCancelBtn').style.display = options.showCancel ? 'inline-block' : 'none';
+
+        // Apply type-specific styling
+        this.applyType(options.type);
+
+        // Show modal
+        this.bsModal.show();
+    },
+
+    /**
+     * Apply type-specific styling
+     */
+    applyType: function(type) {
+        const header = document.getElementById('appModalHeader');
+        const icon = document.getElementById('appModalIcon');
+        const confirmBtn = document.getElementById('appModalConfirmBtn');
+
+        // Reset classes
+        header.className = 'modal-header';
+        confirmBtn.className = 'btn';
+
+        switch (type) {
+            case 'confirm':
+                header.classList.add('bg-primary-subtle');
+                icon.className = 'ri-question-line me-2 text-primary';
+                confirmBtn.classList.add('btn-primary');
+                break;
+
+            case 'delete':
+                header.classList.add('bg-danger-subtle');
+                icon.className = 'ri-delete-bin-line me-2 text-danger';
+                confirmBtn.classList.add('btn-danger');
+                break;
+
+            case 'warning':
+                header.classList.add('bg-warning-subtle');
+                icon.className = 'ri-alert-line me-2 text-warning';
+                confirmBtn.classList.add('btn-warning');
+                break;
+
+            case 'info':
+                header.classList.add('bg-info-subtle');
+                icon.className = 'ri-information-line me-2 text-info';
+                confirmBtn.classList.add('btn-info');
+                break;
+
+            case 'success':
+                header.classList.add('bg-success-subtle');
+                icon.className = 'ri-checkbox-circle-line me-2 text-success';
+                confirmBtn.classList.add('btn-success');
+                break;
+
+            case 'error':
+                header.classList.add('bg-danger-subtle');
+                icon.className = 'ri-error-warning-line me-2 text-danger';
+                confirmBtn.classList.add('btn-danger');
+                break;
+
+            default:
+                header.classList.add('bg-secondary-subtle');
+                icon.className = 'ri-information-line me-2';
+                confirmBtn.classList.add('btn-secondary');
+        }
+    },
+
+    /**
+     * Hide the modal
+     */
+    hide: function() {
+        if (this.bsModal) {
+            this.bsModal.hide();
+        }
+    },
+
+    // ═══════════════════════════════════════════════════════════
+    // CONVENIENCE METHODS
+    // ═══════════════════════════════════════════════════════════
+
+    /**
+     * Show confirmation modal
+     */
+    confirm: function(options) {
+        this.show({
+            type: 'confirm',
+            title: options.title || 'Confirm Action',
+            message: options.message || 'Are you sure you want to proceed?',
+            details: options.details,
+            confirmText: options.confirmText || 'Confirm',
+            cancelText: options.cancelText || 'Cancel',
+            showCancel: true,
+            onConfirm: options.onConfirm
+        });
+    },
+
+    /**
+     * Show delete confirmation modal
+     */
+    delete: function(options) {
+        this.show({
+            type: 'delete',
+            title: options.title || 'Confirm Delete',
+            message: options.message || 'Are you sure you want to delete this item?',
+            details: options.details || 'This action cannot be undone.',
+            confirmText: options.confirmText || 'Delete',
+            cancelText: options.cancelText || 'Cancel',
+            showCancel: true,
+            onConfirm: options.onConfirm
+        });
+    },
+
+    /**
+     * Show warning modal
+     */
+    warning: function(options) {
+        this.show({
+            type: 'warning',
+            title: options.title || 'Warning',
+            message: options.message || 'Please review before proceeding.',
+            details: options.details,
+            confirmText: options.confirmText || 'Proceed',
+            cancelText: options.cancelText || 'Cancel',
+            showCancel: options.showCancel !== false,
+            onConfirm: options.onConfirm
+        });
+    },
+
+    /**
+     * Show info modal (no cancel button by default)
+     */
+    info: function(options) {
+        this.show({
+            type: 'info',
+            title: options.title || 'Information',
+            message: options.message || '',
+            details: options.details,
+            confirmText: options.confirmText || 'OK',
+            showCancel: false,
+            onConfirm: options.onConfirm
+        });
+    },
+
+    /**
+     * Show success modal (no cancel button by default)
+     */
+    success: function(options) {
+        this.show({
+            type: 'success',
+            title: options.title || 'Success',
+            message: options.message || 'Operation completed successfully.',
+            details: options.details,
+            confirmText: options.confirmText || 'OK',
+            showCancel: false,
+            onConfirm: options.onConfirm
+        });
+    },
+
+    /**
+     * Show error modal (no cancel button by default)
+     */
+    error: function(options) {
+        this.show({
+            type: 'error',
+            title: options.title || 'Error',
+            message: options.message || 'An error occurred.',
+            details: options.details,
+            confirmText: options.confirmText || 'OK',
+            showCancel: false,
+            onConfirm: options.onConfirm
+        });
+    },
+
+    /**
+     * Show publish confirmation modal
+     */
+    publish: function(options) {
+        this.show({
+            type: 'confirm',
+            title: options.title || 'Publish Template',
+            message: options.message || 'Are you sure you want to publish this template?',
+            details: options.details || 'Once published, the template will be available for submissions.',
+            confirmText: options.confirmText || 'Publish',
+            cancelText: options.cancelText || 'Cancel',
+            showCancel: true,
+            onConfirm: options.onConfirm
+        });
+    }
+};
+
+// Initialize on DOM ready
+document.addEventListener('DOMContentLoaded', function() {
+    AppModal.init();
+});
+</script>

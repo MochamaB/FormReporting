@@ -212,14 +212,43 @@ const FormBuilderFields = {
             }
 
             if (result.success) {
-                // Success! Close modal and reload
+                // Success! Close modal and add field dynamically
                 const modal = bootstrap.Modal.getInstance(document.getElementById('addFieldModal'));
                 if (modal) {
                     modal.hide();
                 }
 
-                // Reload the form builder to show new field and auto-select it
-                await this.reloadFormBuilder(sectionId, result.field?.itemId);
+                // Add field to canvas without page reload
+                const newFieldId = result.field?.itemId;
+                console.log(`[AddField] Adding new field ${newFieldId} to section ${sectionId}`);
+
+                // Find the section's fields container
+                const sectionContainer = document.querySelector(`.fields-container[data-section-id="${sectionId}"]`);
+
+                if (!sectionContainer) {
+                    console.error(`[AddField] Section container not found for section ${sectionId}`);
+                    // Fallback to reload if container not found
+                    await this.reloadFormBuilder(sectionId, newFieldId);
+                    return;
+                }
+
+                try {
+                    // Render and insert the new field card
+                    const newFieldCard = await FormBuilder.renderAndInsertField(newFieldId, 'append', sectionContainer);
+                    console.log(`[AddField] ✅ Field ${newFieldId} added to DOM`);
+
+                    // Select the new field immediately
+                    if (typeof selectField === 'function') {
+                        selectField(newFieldId);
+                        console.log(`[AddField] ✅ Field ${newFieldId} selected`);
+                    } else {
+                        console.warn(`[AddField] selectField function not available`);
+                    }
+                } catch (error) {
+                    console.error(`[AddField] Error rendering field:`, error);
+                    // Fallback to reload on error
+                    await this.reloadFormBuilder(sectionId, newFieldId);
+                }
             } else {
                 // Show error modal with server message
                 this.showErrorModal(
@@ -292,6 +321,7 @@ const FormBuilderFields = {
     toggleFieldCollapse: function(fieldId) {
         const fieldCard = document.getElementById(`field-${fieldId}`);
         const fieldBody = document.getElementById(`field-body-${fieldId}`);
+        const fieldFooter = document.getElementById(`field-footer-${fieldId}`);
         const collapseIcon = document.getElementById(`field-collapse-icon-${fieldId}`);
 
         if (fieldBody && collapseIcon) {
@@ -299,14 +329,17 @@ const FormBuilderFields = {
             const isSelected = fieldCard && fieldCard.classList.contains('selected-element');
             
             if (fieldBody.style.display === 'none') {
-                // Always allow expanding
+                // Expanding - show body, hide footer
                 fieldBody.style.display = 'block';
+                if (fieldFooter) fieldFooter.style.display = 'none';
                 collapseIcon.classList.remove('ri-add-line');
                 collapseIcon.classList.add('ri-subtract-line');
             } else {
                 // Only allow collapsing if field is NOT selected
                 if (!isSelected) {
+                    // Collapsing - hide body, show footer
                     fieldBody.style.display = 'none';
+                    if (fieldFooter) fieldFooter.style.display = 'block';
                     collapseIcon.classList.remove('ri-subtract-line');
                     collapseIcon.classList.add('ri-add-line');
                 } else {
@@ -347,9 +380,25 @@ const FormBuilderFields = {
             const result = await response.json();
 
             if (result.success) {
-                // Success - reload to show updated field
-                console.log('Field type updated successfully');
-                window.location.reload();
+                // Success - replace field card in DOM with updated version
+                console.log(`[ChangeFieldType] Field ${fieldId} type changed to ${newType}`);
+
+                try {
+                    // Render and replace the field card
+                    const newFieldCard = await FormBuilder.renderAndInsertField(fieldId, 'replace');
+                    console.log(`[ChangeFieldType] ✅ Field ${fieldId} updated in DOM`);
+
+                    // Keep field selected (renderAndInsertField preserves selection)
+                    // Reload properties panel to show updated configuration options
+                    if (typeof selectField === 'function') {
+                        selectField(fieldId);
+                        console.log(`[ChangeFieldType] ✅ Field ${fieldId} re-selected with new properties`);
+                    }
+                } catch (error) {
+                    console.error(`[ChangeFieldType] Error rendering field:`, error);
+                    // Fallback to reload on error
+                    window.location.reload();
+                }
             } else {
                 this.showErrorModal(
                     'Failed to Change Field Type',
@@ -466,14 +515,23 @@ const FormBuilderFields = {
                 }
 
                 // Clear properties panel if this field was selected
-                if (window.FormBuilderProperties && FormBuilderProperties.currentFieldId === fieldId) {
-                    // Hide properties panel or show empty state
-                    const propertiesPanel = document.getElementById('properties-content');
-                    if (propertiesPanel) {
-                        propertiesPanel.innerHTML = '<div class="text-center text-muted py-5"><i class="ri-file-list-line" style="font-size: 3rem; opacity: 0.3;"></i><p class="mt-3">Select a section or field to view properties</p></div>';
+                if (window.FormBuilderProperties) {
+                    // Check if the deleted field is currently selected (use == for type coercion)
+                    const isFieldSelected = FormBuilderProperties.currentElementType === 'field' && 
+                                           FormBuilderProperties.currentElementId == fieldId;
+                    
+                    console.log('[FormBuilderFields] Checking if field was selected:', {
+                        currentType: FormBuilderProperties.currentElementType,
+                        currentId: FormBuilderProperties.currentElementId,
+                        deletedId: fieldId,
+                        isSelected: isFieldSelected
+                    });
+                    
+                    if (isFieldSelected) {
+                        // Use the proper showEmptyState method to clear the panel
+                        FormBuilderProperties.showEmptyState();
+                        console.log('[FormBuilderFields] Properties panel cleared after field deletion');
                     }
-                    FormBuilderProperties.currentFieldId = null;
-                    console.log('Properties panel cleared');
                 }
 
                 // Remove selection from all elements
@@ -524,9 +582,34 @@ const FormBuilderFields = {
             const result = await response.json();
 
             if (result.success) {
-                // Success - reload to show duplicated field
-                console.log('Field duplicated successfully');
-                window.location.reload();
+                // Success - insert duplicated field after original
+                const newFieldId = result.field?.itemId;
+                console.log(`[DuplicateField] Field ${fieldId} duplicated as ${newFieldId}`);
+
+                // Find the original field card
+                const originalFieldCard = document.getElementById(`field-${fieldId}`);
+
+                if (!originalFieldCard) {
+                    console.error(`[DuplicateField] Original field card not found, falling back to reload`);
+                    window.location.reload();
+                    return;
+                }
+
+                try {
+                    // Render and insert the duplicated field after the original
+                    const newFieldCard = await FormBuilder.renderAndInsertField(newFieldId, 'insertAfter', originalFieldCard);
+                    console.log(`[DuplicateField] ✅ Field ${newFieldId} inserted after ${fieldId}`);
+
+                    // Select the duplicated field immediately
+                    if (typeof selectField === 'function') {
+                        selectField(newFieldId);
+                        console.log(`[DuplicateField] ✅ Field ${newFieldId} selected`);
+                    }
+                } catch (error) {
+                    console.error(`[DuplicateField] Error rendering field:`, error);
+                    // Fallback to reload on error
+                    window.location.reload();
+                }
             } else {
                 this.showErrorModal(
                     'Failed to Duplicate Field',

@@ -493,6 +493,16 @@ namespace FormReporting.Models.ViewModels.Components
         public bool IsDisabled { get; set; }
         public string? CssClass { get; set; }
         public int ColumnWidth { get; set; } = 12;
+        
+        /// <summary>
+        /// Display order within section (used for numbering in form builder)
+        /// </summary>
+        public int DisplayOrder { get; set; }
+        
+        /// <summary>
+        /// Whether to show field number prefix in label (for form builder preview)
+        /// </summary>
+        public bool ShowFieldNumber { get; set; } = false;
 
         // Generated properties for HTML rendering
         public string InputName { get; set; } = string.Empty; // Form POST name

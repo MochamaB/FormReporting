@@ -90,8 +90,9 @@ const FormBuilderDragDrop = {
             animation: 150,
             handle: '.drag-handle',           // Only drag by handle on existing sections
             draggable: '.builder-section',    // Only .builder-section elements can be dragged/reordered
-            ghostClass: 'sortable-ghost',
-            dragClass: 'sortable-drag',
+            ghostClass: 'sortable-ghost-section',  // Custom ghost class for section drop line
+            chosenClass: 'sortable-chosen-section',
+            dragClass: 'sortable-drag-section',
             fallbackTolerance: 3,              // Better handling for nested sortables
 
             // CRITICAL: Filter out nested elements that should NOT be drop zones
@@ -166,15 +167,15 @@ const FormBuilderDragDrop = {
     },
 
     /**
-     * Update field display order after drag-drop reordering
-     * Sends new order to backend API
+     * Update field display order after drag-drop reordering within same section
+     * Sends new order to backend API - NO PAGE RELOAD
      * @param {number} sectionId - Section ID containing the fields
      */
     updateFieldOrder: async function(sectionId) {
         const container = document.querySelector(`.fields-container[data-section-id="${sectionId}"]`);
 
         if (!container) {
-            console.error(`Fields container not found for section ${sectionId}`);
+            console.error(`[DragDrop] Fields container not found for section ${sectionId}`);
             return;
         }
 
@@ -192,7 +193,7 @@ const FormBuilderDragDrop = {
         });
 
         if (updates.length === 0) {
-            console.warn('No fields to reorder');
+            console.warn('[DragDrop] No fields to reorder');
             return;
         }
 
@@ -208,24 +209,24 @@ const FormBuilderDragDrop = {
             const result = await response.json();
 
             if (result.success) {
-                console.log('Field order updated successfully');
-                // Optional: Show toast notification
-                // You can add SweetAlert2 toast here if desired
+                console.log('[DragDrop] ✅ Field order updated successfully');
+                this.showNotification('Field order updated', 'success');
             } else {
-                console.error('Failed to update field order:', result.message);
-                // Reload to restore correct order
-                window.location.reload();
+                console.error('[DragDrop] Failed to update field order:', result.message);
+                this.showNotification('Failed to update field order', 'error');
+                // Don't reload - the DOM order is still correct visually
             }
         } catch (error) {
-            console.error('Error updating field order:', error);
-            // Reload to restore correct order on error
-            window.location.reload();
+            console.error('[DragDrop] Error updating field order:', error);
+            this.showNotification('Error updating field order', 'error');
+            // Don't reload - the DOM order is still correct visually
         }
     },
 
     /**
      * Move a field from one section to another
      * Updates the field's section and reorders fields in both sections
+     * NO PAGE RELOAD - updates DOM dynamically
      * @param {number} fieldId - Field ID being moved
      * @param {number} targetSectionId - New section ID
      * @param {HTMLElement} sourceContainer - Source fields-container
@@ -234,10 +235,33 @@ const FormBuilderDragDrop = {
     moveFieldToSection: async function(fieldId, targetSectionId, sourceContainer, targetContainer) {
         const sourceSectionId = parseInt(sourceContainer.dataset.sectionId);
 
-        console.log(`Moving field ${fieldId} from section ${sourceSectionId} to section ${targetSectionId}`);
+        console.log(`[DragDrop] Moving field ${fieldId} from section ${sourceSectionId} to section ${targetSectionId}`);
 
         try {
-            // First, update the field's section and get new orders for target section
+            // STEP 1: First, update the field's section ID in the database
+            // This must happen BEFORE reordering so the field belongs to the correct section
+            const moveResponse = await fetch(`/api/formbuilder/fields/${fieldId}/section`, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    sectionId: targetSectionId
+                })
+            });
+
+            if (!moveResponse.ok) {
+                const errorData = await moveResponse.json().catch(() => ({}));
+                console.error('[DragDrop] Failed to update field section:', errorData.message);
+                this.showNotification('Failed to move field', 'error');
+                // Revert the DOM change by moving field back
+                this.revertFieldMove(fieldId, sourceContainer, targetContainer);
+                return;
+            }
+
+            console.log('[DragDrop] Field section updated in database');
+
+            // STEP 2: Reorder fields in TARGET section (field is now in correct position in DOM)
             const targetFieldCards = targetContainer.querySelectorAll('.builder-field-card');
             const targetUpdates = [];
 
@@ -251,41 +275,24 @@ const FormBuilderDragDrop = {
                 }
             });
 
-            // Update target section field orders (includes the moved field)
-            const targetResponse = await fetch(`/api/formbuilder/sections/${targetSectionId}/fields/reorder`, {
-                method: 'PUT',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(targetUpdates)
-            });
+            if (targetUpdates.length > 0) {
+                const targetResponse = await fetch(`/api/formbuilder/sections/${targetSectionId}/fields/reorder`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(targetUpdates)
+                });
 
-            const targetResult = await targetResponse.json();
+                const targetResult = await targetResponse.json();
 
-            if (!targetResult.success) {
-                console.error('Failed to update target section:', targetResult.message);
-                window.location.reload();
-                return;
+                if (!targetResult.success) {
+                    console.error('[DragDrop] Failed to reorder target section:', targetResult.message);
+                    // Don't revert - field is already moved, just log the error
+                }
             }
 
-            // Now update field's section ID in the database
-            const moveResponse = await fetch(`/api/formbuilder/fields/${fieldId}/section`, {
-                method: 'PATCH',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    sectionId: targetSectionId
-                })
-            });
-
-            if (!moveResponse.ok) {
-                console.error('Failed to update field section');
-                window.location.reload();
-                return;
-            }
-
-            // Update source section field orders (remaining fields)
+            // STEP 3: Reorder fields in SOURCE section (remaining fields)
             const sourceFieldCards = sourceContainer.querySelectorAll('.builder-field-card');
 
             if (sourceFieldCards.length > 0) {
@@ -311,19 +318,108 @@ const FormBuilderDragDrop = {
                 const sourceResult = await sourceResponse.json();
 
                 if (!sourceResult.success) {
-                    console.error('Failed to update source section:', sourceResult.message);
-                    window.location.reload();
-                    return;
+                    console.error('[DragDrop] Failed to reorder source section:', sourceResult.message);
+                    // Don't revert - field is already moved, just log the error
                 }
             }
 
-            console.log('Field moved successfully');
-            // Reload to refresh field counts and empty states
-            window.location.reload();
+            // STEP 4: Update UI without page reload
+            this.updateFieldCountBadges(sourceSectionId, targetSectionId);
+            this.updateEmptyStates(sourceContainer, targetContainer);
+
+            console.log('[DragDrop] ✅ Field moved successfully (no reload)');
+            this.showNotification('Field moved successfully', 'success');
 
         } catch (error) {
-            console.error('Error moving field:', error);
-            window.location.reload();
+            console.error('[DragDrop] Error moving field:', error);
+            this.showNotification('Error moving field', 'error');
+            // Revert the DOM change
+            this.revertFieldMove(fieldId, sourceContainer, targetContainer);
+        }
+    },
+
+    /**
+     * Revert a field move by moving it back to the source container
+     * Called when API calls fail
+     */
+    revertFieldMove: function(fieldId, sourceContainer, targetContainer) {
+        const fieldCard = targetContainer.querySelector(`.builder-field-card[data-field-id="${fieldId}"]`);
+        if (fieldCard) {
+            // Move field back to source container at the end
+            sourceContainer.appendChild(fieldCard);
+            console.log('[DragDrop] Field move reverted');
+        }
+    },
+
+    /**
+     * Update field count badges in section headers
+     */
+    updateFieldCountBadges: function(sourceSectionId, targetSectionId) {
+        // Update source section badge
+        const sourceSection = document.querySelector(`.builder-section[data-section-id="${sourceSectionId}"]`);
+        if (sourceSection) {
+            const sourceContainer = sourceSection.querySelector('.fields-container');
+            const sourceCount = sourceContainer ? sourceContainer.querySelectorAll('.builder-field-card').length : 0;
+            const sourceBadge = sourceSection.querySelector('.field-count-badge');
+            if (sourceBadge) {
+                sourceBadge.textContent = `${sourceCount} field${sourceCount !== 1 ? 's' : ''}`;
+            }
+        }
+
+        // Update target section badge
+        const targetSection = document.querySelector(`.builder-section[data-section-id="${targetSectionId}"]`);
+        if (targetSection) {
+            const targetContainer = targetSection.querySelector('.fields-container');
+            const targetCount = targetContainer ? targetContainer.querySelectorAll('.builder-field-card').length : 0;
+            const targetBadge = targetSection.querySelector('.field-count-badge');
+            if (targetBadge) {
+                targetBadge.textContent = `${targetCount} field${targetCount !== 1 ? 's' : ''}`;
+            }
+        }
+    },
+
+    /**
+     * Update empty state messages in containers
+     */
+    updateEmptyStates: function(sourceContainer, targetContainer) {
+        // Remove empty state from target if it exists (field was added)
+        const targetEmptyMessage = targetContainer.querySelector('.empty-fields-message');
+        if (targetEmptyMessage) {
+            targetEmptyMessage.remove();
+        }
+
+        // Add empty state to source if it's now empty
+        const sourceFieldCount = sourceContainer.querySelectorAll('.builder-field-card').length;
+        if (sourceFieldCount === 0) {
+            const existingEmpty = sourceContainer.querySelector('.empty-fields-message');
+            if (!existingEmpty) {
+                const emptyMessage = document.createElement('div');
+                emptyMessage.className = 'empty-fields-message text-center text-muted py-4';
+                emptyMessage.innerHTML = `
+                    <i class="ri-drag-drop-line d-block mb-2" style="font-size: 2rem; opacity: 0.5;"></i>
+                    <p class="mb-0">No fields yet</p>
+                    <small>Drag fields here or click Add Field</small>
+                `;
+                sourceContainer.appendChild(emptyMessage);
+            }
+        }
+    },
+
+    /**
+     * Show notification toast
+     */
+    showNotification: function(message, type = 'info') {
+        if (window.Toastify) {
+            Toastify({
+                text: message,
+                duration: 3000,
+                gravity: 'top',
+                position: 'right',
+                backgroundColor: type === 'success' ? '#10b981' : type === 'error' ? '#ef4444' : '#3b82f6',
+                stopOnFocus: true
+            }).showToast();
+        } else {
+            console.log(`[Notification] ${type}: ${message}`);
         }
     },
 
@@ -401,22 +497,35 @@ const FormBuilderDragDrop = {
                 onMove: (evt) => {
                     // Highlight drop zone when hovering with different styles based on source
                     if (evt.to && evt.to.classList.contains('fields-container')) {
+                        const isCrossSection = evt.from !== evt.to && 
+                                               evt.from.classList.contains('fields-container') &&
+                                               evt.dragged.classList.contains('builder-field-card');
+                        
                         // Differentiate between new field (from palette) vs reordering existing field
                         if (evt.dragged.classList.contains('draggable-field')) {
                             // Dragging NEW field from palette - full container highlight
                             evt.to.classList.add('drag-over-new-field');
-                            evt.to.classList.remove('drag-over-reorder');
+                            evt.to.classList.remove('drag-over-reorder', 'drag-over-cross-section');
+                        } else if (isCrossSection) {
+                            // Moving field to DIFFERENT section - primary color
+                            evt.to.classList.add('drag-over-cross-section');
+                            evt.to.classList.remove('drag-over-new-field', 'drag-over-reorder');
+                            // Add cross-section class to ghost for primary color line
+                            const ghost = evt.to.querySelector('.sortable-ghost-field');
+                            if (ghost) ghost.classList.add('cross-section-drop');
                         } else if (evt.dragged.classList.contains('builder-field-card')) {
-                            // Reordering EXISTING field - subtle highlight
+                            // Reordering within SAME section - secondary color
                             evt.to.classList.add('drag-over-reorder');
-                            evt.to.classList.remove('drag-over-new-field');
+                            evt.to.classList.remove('drag-over-new-field', 'drag-over-cross-section');
+                            // Remove cross-section class from ghost
+                            const ghost = evt.to.querySelector('.sortable-ghost-field');
+                            if (ghost) ghost.classList.remove('cross-section-drop');
                         }
                     }
 
                     // Remove highlight from previous container
                     if (evt.from && evt.from !== evt.to && evt.from.classList.contains('fields-container')) {
-                        evt.from.classList.remove('drag-over-new-field');
-                        evt.from.classList.remove('drag-over-reorder');
+                        evt.from.classList.remove('drag-over-new-field', 'drag-over-reorder', 'drag-over-cross-section');
                     }
 
                     // Accept if it's a draggable field from palette or existing builder field card
@@ -427,8 +536,7 @@ const FormBuilderDragDrop = {
                 // Called when field is dropped into this section from another location
                 onAdd: (evt) => {
                     // Remove drag-over classes
-                    container.classList.remove('drag-over-new-field');
-                    container.classList.remove('drag-over-reorder');
+                    container.classList.remove('drag-over-new-field', 'drag-over-reorder', 'drag-over-cross-section');
 
                     // Check if this is a NEW field from palette or EXISTING field from another section
                     const isExistingField = evt.item.classList.contains('builder-field-card');
@@ -468,8 +576,7 @@ const FormBuilderDragDrop = {
                 // Called when existing field is reordered within same section
                 onUpdate: (_evt) => {
                     // Remove drag-over classes
-                    container.classList.remove('drag-over-new-field');
-                    container.classList.remove('drag-over-reorder');
+                    container.classList.remove('drag-over-new-field', 'drag-over-reorder', 'drag-over-cross-section');
 
                     console.log(`Field reordered in section ${sectionId}`);
                     // Save the new order to database
@@ -480,8 +587,11 @@ const FormBuilderDragDrop = {
                 onEnd: (_evt) => {
                     // Remove all drag-over classes from all fields-containers
                     document.querySelectorAll('.fields-container').forEach(fc => {
-                        fc.classList.remove('drag-over-new-field');
-                        fc.classList.remove('drag-over-reorder');
+                        fc.classList.remove('drag-over-new-field', 'drag-over-reorder', 'drag-over-cross-section');
+                    });
+                    // Remove cross-section class from any ghost elements
+                    document.querySelectorAll('.sortable-ghost-field').forEach(ghost => {
+                        ghost.classList.remove('cross-section-drop');
                     });
                 }
             });

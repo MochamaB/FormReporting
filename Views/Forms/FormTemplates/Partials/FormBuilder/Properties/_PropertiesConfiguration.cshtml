@@ -216,47 +216,24 @@
 
         <!-- Options Table Container -->
         <div id="options-table-container">
-            <!-- Action Buttons (matching EditableTableContent) -->
+            <!-- Action Buttons -->
             <div class="mb-3 d-flex gap-2 justify-content-end">
                 <button type="button"
                         class="btn btn-primary"
                         id="add-option-btn"
-                        onclick="FormBuilderTemplateOptions.addOption()">
+                        onclick="addOption()">
                     <i class="ri-add-line me-1"></i>Add Option
                 </button>
             </div>
 
-            <!-- Table (matching EditableTableContent structure) -->
-            <div class="table-responsive">
-                <table class="table table-sm" id="field-options-table" data-editable-table>
-                    <thead class="table-light">
-                        <tr class="border-bottom">
-                            <th class="border-bottom text-center" style="width: 30px;">
-                                <i class="ri-draggable text-muted"></i>
-                            </th>
-                            <th class="border-bottom text-center" style="width: 40px;">#</th>
-                            <th class="border-bottom">
-                                Value <span class="text-danger">*</span>
-                            </th>
-                            <th class="border-bottom">
-                                Label <span class="text-danger">*</span>
-                            </th>
-                            <th class="border-bottom text-center" style="width: 100px;">Score</th>
-                            <th class="border-bottom text-center" style="width: 80px;">Default</th>
-                            <th class="border-bottom text-center" style="width: 100px;">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody id="options-list">
-                        <!-- Dynamic option items will be inserted here by JavaScript -->
-                        <tr id="options-empty-state" class="border-bottom">
-                            <td colspan="7" class="text-center text-muted py-4">
-                                <i class="ri-inbox-line d-block mb-2" style="font-size: 2rem; opacity: 0.5;"></i>
-                                <p class="mb-0">No options available</p>
-                                <small>Add an option or apply a template above</small>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+            <!-- Options Table - Rendered from server via partial view (_OptionsTable.cshtml) -->
+            <!-- This container is populated by AJAX call to /api/formbuilder/fields/{fieldId}/options/render -->
+            <div id="options-table-wrapper">
+                <!-- Loading placeholder - will be replaced when field is selected -->
+                <div class="text-center text-muted py-4">
+                    <i class="ri-loader-4-line ri-spin d-block mb-2" style="font-size: 1.5rem; opacity: 0.5;"></i>
+                    <small>Select a field to view options</small>
+                </div>
             </div>
         </div>
 

@@ -13,7 +13,11 @@
 }
 
 <div class="mb-3 col-md-@Model.ColumnWidth">
-    <label for="@Model.InputId" class="form-label">
+    <label for="@Model.InputId" class="form-label" style="word-wrap: break-word; overflow-wrap: break-word;">
+        @if (Model.ShowFieldNumber)
+        {
+            <span class="text-primary me-2">@Model.DisplayOrder.</span>
+        }
         @Model.FieldName
         @if (Model.IsRequired)
         {

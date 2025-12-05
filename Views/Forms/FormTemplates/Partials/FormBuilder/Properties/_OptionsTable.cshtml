@@ -1,0 +1,166 @@
+@model IEnumerable<FormReporting.Models.Entities.Forms.FormItemOption>
+
+@*
+    OPTIONS TABLE - Complete table for field options management
+    Used in Configuration tab - includes headers and all option rows
+    Styled to match _EditableTableContent.cshtml with inline styles for reliable rendering
+*@
+
+@{
+    var optionCount = Model?.Count() ?? 0;
+    
+    // Common inline styles
+    var cellStyle = "border-left: none; border-right: none; border-top: none; padding: 0.5rem 0.25rem; vertical-align: middle;";
+    var inputStyle = "border: 1px solid transparent; background-color: transparent; box-shadow: none; transition: all 0.2s ease;";
+}
+
+<div class="table-responsive">
+    <table class="table table-sm" id="field-options-table" data-editable-table style="table-layout: auto; width: 100%;">
+        <thead class="table-light">
+            <tr>
+                <th style="@cellStyle width: 36px; min-width: 36px; max-width: 50px;" class="text-center">
+                    <i class="ri-draggable text-muted"></i>
+                </th>
+                <th style="@cellStyle width: 40px; min-width: 36px; max-width: 50px;" class="text-center">#</th>
+                <th style="@cellStyle min-width: 120px;">
+                    Value <span class="text-danger">*</span>
+                </th>
+                <th style="@cellStyle min-width: 120px;">
+                    Label <span class="text-danger">*</span>
+                </th>
+                <th style="@cellStyle width: 80px; min-width: 70px; max-width: 100px;" class="text-center">Score</th>
+                <th style="@cellStyle width: 70px; min-width: 60px; max-width: 80px;" class="text-center">Default</th>
+                <th style="@cellStyle width: 60px; min-width: 50px; max-width: 70px;" class="text-center">Actions</th>
+            </tr>
+        </thead>
+        <tbody id="options-list">
+            @if (Model == null || !Model.Any())
+            {
+                <!-- Empty State -->
+                <tr id="options-empty-state">
+                    <td colspan="7" class="text-center text-muted py-4" style="border: none;">
+                        <i class="ri-inbox-line d-block mb-2" style="font-size: 2rem; opacity: 0.5;"></i>
+                        <p class="mb-0">No options available</p>
+                        <small>Add an option or apply a template above</small>
+                    </td>
+                </tr>
+            }
+            else
+            {
+                var index = 0;
+                @foreach (var option in Model.OrderBy(o => o.DisplayOrder))
+                {
+                    index++;
+                    var isLastRow = index == optionCount;
+                    var rowBorderStyle = isLastRow ? "border-bottom: 2px solid #c6c6c6;" : "border-bottom: 1px solid #dee2e6;";
+                    
+                    <tr class="option-item"
+                        data-option-id="@option.OptionId"
+                        data-display-order="@option.DisplayOrder"
+                        data-index="@index"
+                        style="@rowBorderStyle transition: background-color 0.2s ease;">
+
+                        <!-- Drag Handle -->
+                        <td style="@cellStyle width: 36px;" class="text-center">
+                            <span class="option-drag-handle" style="cursor: move; color: #6c757d;" title="Drag to reorder">
+                                <i class="ri-draggable" style="font-size: 1.1rem;"></i>
+                            </span>
+                        </td>
+
+                        <!-- Row Number -->
+                        <td style="@cellStyle width: 40px; color: #878a99; font-size: 0.875rem;" class="text-center">@index</td>
+
+                        <!-- Option Value -->
+                        <td style="@cellStyle min-width: 120px;" data-column="OptionValue">
+                            <input type="text"
+                                   class="form-control form-control-sm option-value-input"
+                                   style="@inputStyle min-width: 100px;"
+                                   value="@option.OptionValue"
+                                   placeholder="value"
+                                   data-option-id="@option.OptionId"
+                                   data-auto-generated="true"
+                                   onblur="updateOptionValue(@option.OptionId)">
+                        </td>
+
+                        <!-- Option Label -->
+                        <td style="@cellStyle min-width: 120px;" data-column="OptionLabel">
+                            <input type="text"
+                                   class="form-control form-control-sm option-label-input"
+                                   style="@inputStyle min-width: 100px;"
+                                   value="@option.OptionLabel"
+                                   placeholder="Label"
+                                   data-option-id="@option.OptionId"
+                                   onblur="updateOptionLabel(@option.OptionId)"
+                                   oninput="autoGenerateValue(@option.OptionId)">
+                        </td>
+
+                        <!-- Score -->
+                        <td style="@cellStyle width: 80px;" class="text-center" data-column="ScoreValue">
+                            <input type="number"
+                                   class="form-control form-control-sm text-center"
+                                   style="@inputStyle width: 60px; margin: 0 auto;"
+                                   value="@(option.ScoreValue ?? 0)"
+                                   placeholder="0"
+                                   step="0.01"
+                                   data-option-id="@option.OptionId"
+                                   onblur="updateOptionScore(@option.OptionId)">
+                        </td>
+
+                        <!-- Default Checkbox -->
+                        <td style="@cellStyle width: 70px;" class="text-center" data-column="IsDefault">
+                            <input type="checkbox"
+                                   class="form-check-input option-default-checkbox"
+                                   style="width: 1.25rem; height: 1.25rem; cursor: pointer; margin: 0 auto; display: block;"
+                                   id="default_@option.OptionId"
+                                   @(option.IsDefault ? "checked" : "")
+                                   onchange="toggleOptionDefault(@option.OptionId)"
+                                   title="Set as default">
+                        </td>
+
+                        <!-- Actions -->
+                        <td style="@cellStyle width: 60px;" class="text-center">
+                            <button type="button"
+                                    class="btn btn-sm btn-ghost-danger remove-row-btn p-1"
+                                    style="opacity: 0.7;"
+                                    onclick="deleteOptionConfirm(@option.OptionId)"
+                                    title="Delete"
+                                    @(optionCount <= 2 ? "disabled" : "")>
+                                <i class="ri-delete-bin-line"></i>
+                            </button>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>
+
+<!-- Minimal CSS for hover/focus states (can't be done with inline styles) -->
+<style>
+    #field-options-table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    #field-options-table tbody tr:hover .option-drag-handle {
+        color: #495057 !important;
+    }
+    
+    #field-options-table tbody tr:hover .remove-row-btn {
+        opacity: 1 !important;
+    }
+    
+    #field-options-table input.form-control:hover {
+        background-color: #f8f9fa !important;
+    }
+    
+    #field-options-table input.form-control:focus {
+        border-color: #ced4da !important;
+        background-color: #ffffff !important;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.1) !important;
+    }
+    
+    #field-options-table .remove-row-btn:disabled {
+        opacity: 0.3 !important;
+        cursor: not-allowed;
+    }
+</style>

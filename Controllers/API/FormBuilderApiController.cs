@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using FormReporting.Data;
 using FormReporting.Services.Forms;
 using FormReporting.Models.ViewModels.Forms;
@@ -645,6 +646,36 @@ namespace FormReporting.Controllers.API
             catch (Exception ex)
             {
                 return StatusCode(500, new { success = false, message = "Error rendering field", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Render options table HTML for properties panel update (without page reload)
+        /// GET /api/formbuilder/fields/{fieldId}/options/render
+        /// </summary>
+        [HttpGet("fields/{fieldId}/options/render")]
+        public async Task<IActionResult> RenderOptionsTable(int fieldId)
+        {
+            try
+            {
+                // Query FormItemOption entities directly from database
+                // The partial view expects IEnumerable<FormItemOption>, not DTOs
+                var options = await _context.FormItemOptions
+                    .Where(o => o.ItemId == fieldId)
+                    .OrderBy(o => o.DisplayOrder)
+                    .ToListAsync();
+
+                // Render the options table partial view to HTML string
+                var html = await this.RenderViewAsync(
+                    "~/Views/Forms/FormTemplates/Partials/FormBuilder/Properties/_OptionsTable.cshtml",
+                    options
+                );
+
+                return Ok(new { success = true, html, optionCount = options.Count });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Error rendering options table", error = ex.Message });
             }
         }
 

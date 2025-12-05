@@ -12,7 +12,7 @@ var FormBuilderTemplateOptions = (function() {
     /**
      * Initialize options manager for a field
      */
-    function init(fieldId, fieldType, existingOptions) {
+    async function init(fieldId, fieldType, existingOptions) {
         console.log(`[FormBuilderTemplateOptions] Initializing for field ${fieldId}, type ${fieldType}`);
         currentFieldId = fieldId;
 
@@ -26,8 +26,13 @@ var FormBuilderTemplateOptions = (function() {
         // Load templates for this field type
         loadTemplates(fieldType);
 
-        // Render options table
-        renderOptionsTable(existingOptions || []);
+        // Render options table from server (preferred) or fallback to client-side
+        try {
+            await renderOptionsTableFromServer();
+        } catch (error) {
+            console.warn('[FormBuilderTemplateOptions] Server render failed, using client-side fallback');
+            renderOptionsTable(existingOptions || []);
+        }
 
         // Attach event listeners (only once)
         if (!selector || !selector.hasAttribute('data-initialized')) {
@@ -189,13 +194,11 @@ var FormBuilderTemplateOptions = (function() {
             const result = await response.json();
             console.log('[FormBuilderTemplateOptions] Template applied successfully:', result);
 
-            // Update options table with new data
-            renderOptionsTable(result.field.options);
+            // Re-render options table from server (partial view)
+            await renderOptionsTableFromServer();
 
-            // Update canvas preview without page reload
-            if (window.FormBuilder && window.FormBuilder.reloadField) {
-                await window.FormBuilder.reloadField(currentFieldId);
-            }
+            // Update canvas field preview without page reload
+            await updateCanvasFieldPreview();
 
             // Show success notification
             showNotification(
@@ -218,7 +221,51 @@ var FormBuilderTemplateOptions = (function() {
     }
 
     /**
-     * Render options table
+     * Render options table from server (fetches partial view HTML)
+     * This is the preferred method - uses server-rendered Razor partial
+     */
+    async function renderOptionsTableFromServer() {
+        if (!currentFieldId) {
+            console.error('[FormBuilderTemplateOptions] No field ID set for rendering');
+            return;
+        }
+
+        try {
+            console.log(`[FormBuilderTemplateOptions] Fetching rendered options table for field ${currentFieldId}`);
+
+            const response = await fetch(`/api/formbuilder/fields/${currentFieldId}/options/render`);
+
+            if (!response.ok) {
+                throw new Error(`Failed to fetch options table: ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            if (result.success && result.html) {
+                // Find the wrapper container and replace its contents
+                const wrapper = document.getElementById('options-table-wrapper');
+
+                if (wrapper) {
+                    wrapper.innerHTML = result.html;
+                    
+                    // Re-initialize sortable after rendering
+                    initializeSortable();
+                    
+                    console.log(`[FormBuilderTemplateOptions] ✅ Rendered ${result.optionCount} options from server`);
+                } else {
+                    console.error('[FormBuilderTemplateOptions] options-table-wrapper not found');
+                }
+            }
+        } catch (error) {
+            console.error('[FormBuilderTemplateOptions] Error rendering options table from server:', error);
+            // Fallback to client-side rendering if server fails
+            showNotification('Failed to load options table', 'error');
+        }
+    }
+
+    /**
+     * Render options table (client-side fallback)
+     * Used when server rendering is not available
      */
     function renderOptionsTable(options) {
         const tbody = document.getElementById('options-list');
@@ -227,7 +274,7 @@ var FormBuilderTemplateOptions = (function() {
             return;
         }
 
-        console.log(`[FormBuilderTemplateOptions] Rendering ${options.length} options`);
+        console.log(`[FormBuilderTemplateOptions] Rendering ${options.length} options (client-side)`);
 
         if (options.length === 0) {
             tbody.innerHTML = `
@@ -375,12 +422,19 @@ var FormBuilderTemplateOptions = (function() {
 
     /**
      * Add new custom option
+     * After adding, re-renders options table from server and updates canvas preview
      */
     async function addOption() {
-        if (!currentFieldId) return;
+        if (!currentFieldId) {
+            console.error('[FormBuilderTemplateOptions] No field selected');
+            showNotification('Please select a field first', 'error');
+            return;
+        }
 
         try {
             const optionCount = document.querySelectorAll('#options-list tr[data-option-id]').length;
+            console.log(`[FormBuilderTemplateOptions] Adding option to field ${currentFieldId}`);
+
             const response = await fetch(`/api/formbuilder/fields/${currentFieldId}/options`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -393,50 +447,196 @@ var FormBuilderTemplateOptions = (function() {
             if (!response.ok) throw new Error('Failed to add option');
 
             const result = await response.json();
-            console.log('Option added:', result);
+            console.log('[FormBuilderTemplateOptions] Option added:', result);
 
-            // Reload field to get updated options
-            if (window.FormBuilder && window.FormBuilder.reloadField) {
-                await window.FormBuilder.reloadField(currentFieldId);
-            }
+            // Re-render options table from server (partial view)
+            await renderOptionsTableFromServer();
+
+            // Update canvas field preview without page reload
+            await updateCanvasFieldPreview();
 
             showNotification('Option added successfully', 'success');
         } catch (error) {
-            console.error('Error adding option:', error);
+            console.error('[FormBuilderTemplateOptions] Error adding option:', error);
             showNotification('Failed to add option', 'error');
         }
     }
 
     /**
-     * Update option property
+     * Update canvas field preview without page reload
+     * Fetches rendered field card HTML and replaces it in the DOM
      */
-    async function updateOption(optionId, property, value) {
-        const payload = {};
-        if (property === 'value') payload.optionValue = value;
-        if (property === 'label') payload.optionLabel = value;
-        if (property === 'score') payload.scoreValue = value ? parseFloat(value) : null;
+    async function updateCanvasFieldPreview() {
+        if (!currentFieldId) {
+            console.warn('[FormBuilderTemplateOptions] updateCanvasFieldPreview: No currentFieldId set');
+            return;
+        }
 
         try {
+            console.log(`[FormBuilderTemplateOptions] Updating canvas preview for field ${currentFieldId}`);
+
+            const apiUrl = `/api/formbuilder/fields/${currentFieldId}/render`;
+            console.log(`[FormBuilderTemplateOptions] Fetching from: ${apiUrl}`);
+
+            const response = await fetch(apiUrl);
+
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error(`[FormBuilderTemplateOptions] Failed to render field card: ${response.status}`, errorText);
+                return;
+            }
+
+            const result = await response.json();
+            console.log('[FormBuilderTemplateOptions] Render API response:', result);
+
+            if (result.success && result.html) {
+                // Try multiple selectors to find the field card
+                let fieldCard = document.getElementById(`field-${currentFieldId}`);
+                
+                if (!fieldCard) {
+                    // Try alternative selector
+                    fieldCard = document.querySelector(`[data-field-id="${currentFieldId}"]`);
+                }
+                
+                if (!fieldCard) {
+                    // Try finding by class and data attribute
+                    fieldCard = document.querySelector(`.builder-field-card[data-field-id="${currentFieldId}"]`);
+                }
+
+                console.log(`[FormBuilderTemplateOptions] Field card found:`, !!fieldCard, fieldCard?.id);
+
+                if (fieldCard) {
+                    // Store selection state
+                    const wasSelected = fieldCard.classList.contains('selected-element');
+                    const fieldBody = document.getElementById(`field-body-${currentFieldId}`);
+                    const wasExpanded = fieldBody ? fieldBody.style.display !== 'none' : true;
+
+                    console.log(`[FormBuilderTemplateOptions] State - selected: ${wasSelected}, expanded: ${wasExpanded}`);
+
+                    // Create temporary container to parse HTML
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = result.html.trim();
+                    const newFieldCard = tempDiv.firstElementChild;
+
+                    if (!newFieldCard) {
+                        console.error('[FormBuilderTemplateOptions] Failed to parse new field card HTML');
+                        return;
+                    }
+
+                    // Restore selection state
+                    if (wasSelected) {
+                        newFieldCard.classList.add('selected-element');
+
+                        // Restore parent section selection indicator
+                        const parentSection = fieldCard.closest('.builder-section');
+                        if (parentSection) {
+                            parentSection.classList.add('section-has-selected-field');
+                        }
+                    }
+
+                    // Restore expansion state
+                    if (wasExpanded) {
+                        const newFieldBody = newFieldCard.querySelector(`#field-body-${currentFieldId}`);
+                        if (newFieldBody) {
+                            newFieldBody.style.display = 'block';
+                        }
+                    }
+
+                    // Replace the field card in DOM
+                    fieldCard.replaceWith(newFieldCard);
+
+                    console.log('[FormBuilderTemplateOptions] ✅ Canvas preview updated successfully');
+                } else {
+                    console.warn(`[FormBuilderTemplateOptions] Field card not found in DOM for field ${currentFieldId}`);
+                    console.warn('[FormBuilderTemplateOptions] Available field cards:', 
+                        Array.from(document.querySelectorAll('.builder-field-card')).map(el => el.id || el.dataset.fieldId)
+                    );
+                }
+            } else {
+                console.error('[FormBuilderTemplateOptions] Invalid response from render API:', result);
+            }
+        } catch (error) {
+            console.error('[FormBuilderTemplateOptions] Error updating canvas preview:', error);
+        }
+    }
+
+    /**
+     * Update option property
+     * Sends complete option data to the API (required by FieldOptionDto)
+     */
+    async function updateOption(optionId, property, value) {
+        // Get the table row for this option
+        const row = document.querySelector(`tr[data-option-id="${optionId}"]`);
+        if (!row) {
+            console.error(`[FormBuilderTemplateOptions] Option row not found: ${optionId}`);
+            showNotification('Option not found', 'error');
+            return;
+        }
+
+        // Get all current values from the row inputs
+        const labelInput = row.querySelector('.option-label-input');
+        const valueInput = row.querySelector('.option-value-input');
+        const scoreInput = row.querySelector('input[type="number"]');
+        const defaultCheckbox = row.querySelector('.option-default-checkbox');
+
+        // Build complete payload with all current values
+        const payload = {
+            optionId: optionId,
+            optionLabel: labelInput?.value || '',
+            optionValue: valueInput?.value || '',
+            displayOrder: parseInt(row.dataset.displayOrder) || parseInt(row.dataset.index) || 1,
+            isDefault: defaultCheckbox?.checked || false,
+            isActive: true
+        };
+
+        // Override with the new value for the changed property
+        if (property === 'value') payload.optionValue = value;
+        if (property === 'label') payload.optionLabel = value;
+        // Note: score is handled separately as it's not part of FieldOptionDto
+
+        // Validate required fields
+        if (!payload.optionLabel.trim()) {
+            showNotification('Option label is required', 'error');
+            return;
+        }
+        if (!payload.optionValue.trim()) {
+            showNotification('Option value is required', 'error');
+            return;
+        }
+
+        try {
+            console.log(`[FormBuilderTemplateOptions] Updating option ${optionId}:`, payload);
+
             const response = await fetch(`/api/formbuilder/options/${optionId}`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
 
-            if (!response.ok) throw new Error('Failed to update option');
+            if (!response.ok) {
+                const error = await response.json();
+                throw new Error(error.message || 'Failed to update option');
+            }
 
-            console.log(`Option ${optionId} updated: ${property} = ${value}`);
+            console.log(`[FormBuilderTemplateOptions] ✅ Option ${optionId} updated: ${property} = ${value}`);
+
+            // Update canvas preview after successful update
+            await updateCanvasFieldPreview();
+
         } catch (error) {
-            console.error('Error updating option:', error);
-            showNotification('Failed to update option', 'error');
+            console.error('[FormBuilderTemplateOptions] Error updating option:', error);
+            showNotification(error.message || 'Failed to update option', 'error');
         }
     }
 
     /**
      * Set default option
+     * After setting, re-renders options table from server and updates canvas preview
      */
     async function setDefaultOption(optionId, isDefault) {
         try {
+            console.log(`[FormBuilderTemplateOptions] Setting default option ${optionId}`);
+
             const response = await fetch(`/api/formbuilder/options/${optionId}/default?fieldId=${currentFieldId}`, {
                 method: 'PATCH',
                 headers: { 'Content-Type': 'application/json' }
@@ -444,26 +644,68 @@ var FormBuilderTemplateOptions = (function() {
 
             if (!response.ok) throw new Error('Failed to set default option');
 
-            // Reload field to update UI (in case other defaults were cleared for single-select)
-            if (window.FormBuilder && window.FormBuilder.reloadField) {
-                await window.FormBuilder.reloadField(currentFieldId);
-            }
+            // Re-render options table from server (handles single-select clearing other defaults)
+            await renderOptionsTableFromServer();
 
-            console.log(`Option ${optionId} set as default: ${isDefault}`);
+            // Update canvas field preview
+            await updateCanvasFieldPreview();
+
+            console.log(`[FormBuilderTemplateOptions] Option ${optionId} set as default: ${isDefault}`);
         } catch (error) {
-            console.error('Error setting default option:', error);
+            console.error('[FormBuilderTemplateOptions] Error setting default option:', error);
             showNotification('Failed to set default option', 'error');
         }
     }
 
+    // Store pending delete option ID for modal confirmation
+    let pendingDeleteOptionId = null;
+
     /**
-     * Delete option
+     * Show delete option confirmation modal
+     * @param {number} optionId - Option ID to delete
      */
-    async function deleteOption(optionId) {
-        if (!confirm('Delete this option?')) return;
+    function showDeleteOptionModal(optionId) {
+        pendingDeleteOptionId = optionId;
+
+        // Get option details from the table row
+        const row = document.querySelector(`tr[data-option-id="${optionId}"]`);
+        if (row) {
+            const labelInput = row.querySelector('.option-label-input');
+            const valueInput = row.querySelector('.option-value-input');
+            
+            document.getElementById('deleteOptionLabel').textContent = labelInput?.value || '-';
+            document.getElementById('deleteOptionValue').textContent = valueInput?.value || '-';
+        }
+
+        // Show modal
+        const modalElement = document.getElementById('deleteOptionModal');
+        if (modalElement) {
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        } else {
+            // Fallback to confirm if modal not found
+            console.warn('[FormBuilderTemplateOptions] Delete modal not found, using confirm()');
+            if (confirm('Delete this option?')) {
+                executeDeleteOption(optionId);
+            }
+        }
+    }
+
+    /**
+     * Execute the actual delete operation (called after modal confirmation)
+     * @param {number} optionId - Option ID to delete (optional, uses pendingDeleteOptionId if not provided)
+     */
+    async function executeDeleteOption(optionId = null) {
+        const deleteId = optionId || pendingDeleteOptionId;
+        if (!deleteId) {
+            console.error('[FormBuilderTemplateOptions] No option ID to delete');
+            return;
+        }
 
         try {
-            const response = await fetch(`/api/formbuilder/options/${optionId}`, {
+            console.log(`[FormBuilderTemplateOptions] Deleting option ${deleteId}`);
+
+            const response = await fetch(`/api/formbuilder/options/${deleteId}`, {
                 method: 'DELETE'
             });
 
@@ -472,16 +714,55 @@ var FormBuilderTemplateOptions = (function() {
                 throw new Error(error.message || 'Failed to delete option');
             }
 
-            // Reload field to update options list
-            if (window.FormBuilder && window.FormBuilder.reloadField) {
-                await window.FormBuilder.reloadField(currentFieldId);
+            // Hide modal if it's open
+            const modalElement = document.getElementById('deleteOptionModal');
+            if (modalElement) {
+                const modal = bootstrap.Modal.getInstance(modalElement);
+                if (modal) modal.hide();
             }
+
+            // Re-render options table from server
+            await renderOptionsTableFromServer();
+
+            // Update canvas field preview
+            await updateCanvasFieldPreview();
 
             showNotification('Option deleted successfully', 'success');
         } catch (error) {
-            console.error('Error deleting option:', error);
+            console.error('[FormBuilderTemplateOptions] Error deleting option:', error);
             showNotification(error.message || 'Failed to delete option', 'error');
+        } finally {
+            pendingDeleteOptionId = null;
         }
+    }
+
+    /**
+     * Delete option - shows confirmation modal
+     * After deleting, re-renders options table from server and updates canvas preview
+     */
+    function deleteOption(optionId) {
+        showDeleteOptionModal(optionId);
+    }
+
+    /**
+     * Initialize delete modal confirm button handler
+     */
+    function initializeDeleteModal() {
+        const confirmBtn = document.getElementById('confirmDeleteOptionBtn');
+        if (confirmBtn && !confirmBtn.hasAttribute('data-initialized')) {
+            confirmBtn.addEventListener('click', () => {
+                executeDeleteOption();
+            });
+            confirmBtn.setAttribute('data-initialized', 'true');
+            console.log('[FormBuilderTemplateOptions] Delete modal confirm button initialized');
+        }
+    }
+
+    // Initialize delete modal when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initializeDeleteModal);
+    } else {
+        initializeDeleteModal();
     }
 
     /**
@@ -510,7 +791,9 @@ var FormBuilderTemplateOptions = (function() {
         updateOption,
         setDefaultOption,
         deleteOption,
-        reorderOptions
+        reorderOptions,
+        renderOptionsTableFromServer,
+        updateCanvasFieldPreview
     };
 
     console.log('✅ FormBuilderTemplateOptions module loaded successfully!', api);

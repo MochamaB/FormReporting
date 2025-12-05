@@ -28,6 +28,11 @@ const FormBuilder = {
         FormBuilderFields.init();
         FormBuilderProperties.init();
 
+        // Initialize FormBuilderOptions (for delete modal, etc.)
+        if (typeof FormBuilderOptions !== 'undefined') {
+            FormBuilderOptions.init();
+        }
+
         // Setup event listeners
         this.setupEventListeners();
     },
@@ -110,6 +115,91 @@ const FormBuilder = {
             console.error('Error reloading field:', error);
             throw error;
         }
+    },
+
+    /**
+     * Render field HTML from server and insert into DOM (no page reload)
+     * @param {number} fieldId - Field ID to render
+     * @param {string} action - Action: 'append', 'replace', 'insertAfter'
+     * @param {HTMLElement} targetElement - Target element (required for append/insertAfter)
+     * @returns {Promise<HTMLElement>} The inserted field card element
+     */
+    renderAndInsertField: async function(fieldId, action = 'append', targetElement = null) {
+        try {
+            console.log(`[FormBuilder] Rendering field ${fieldId} with action: ${action}`);
+
+            // Fetch rendered HTML from server
+            const response = await fetch(`/api/formbuilder/fields/${fieldId}/render`);
+
+            if (!response.ok) {
+                throw new Error(`Failed to render field: ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            if (!result.success || !result.html) {
+                throw new Error('Invalid render response from server');
+            }
+
+            // Parse HTML string into DOM element
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = result.html;
+            const newFieldCard = tempDiv.firstElementChild;
+
+            if (!newFieldCard) {
+                throw new Error('No field card in rendered HTML');
+            }
+
+            // Insert into DOM based on action
+            switch(action) {
+                case 'append':
+                    // Add new field to end of section
+                    if (!targetElement) {
+                        throw new Error('targetElement required for append action');
+                    }
+                    targetElement.appendChild(newFieldCard);
+                    console.log(`[FormBuilder] Field ${fieldId} appended to section`);
+                    break;
+
+                case 'replace':
+                    // Replace existing field card
+                    const existingCard = document.getElementById(`field-${fieldId}`);
+                    if (existingCard) {
+                        // Preserve selection state
+                        const wasSelected = existingCard.classList.contains('selected-element');
+                        if (wasSelected) {
+                            newFieldCard.classList.add('selected-element');
+                        }
+                        existingCard.replaceWith(newFieldCard);
+                        console.log(`[FormBuilder] Field ${fieldId} replaced in DOM`);
+                    } else {
+                        console.warn(`[FormBuilder] Field ${fieldId} not found for replace, appending instead`);
+                        if (targetElement) {
+                            targetElement.appendChild(newFieldCard);
+                        }
+                    }
+                    break;
+
+                case 'insertAfter':
+                    // Insert after target element (for duplicate)
+                    if (!targetElement) {
+                        throw new Error('targetElement required for insertAfter action');
+                    }
+                    targetElement.after(newFieldCard);
+                    console.log(`[FormBuilder] Field ${fieldId} inserted after target`);
+                    break;
+
+                default:
+                    throw new Error(`Unknown action: ${action}`);
+            }
+
+            console.log(`[FormBuilder] ✅ Field ${fieldId} successfully rendered and inserted`);
+            return newFieldCard;
+
+        } catch (error) {
+            console.error(`[FormBuilder] Error rendering field ${fieldId}:`, error);
+            throw error;
+        }
     }
 };
 
@@ -184,7 +274,7 @@ async function continueToNextStage() {
 
         if (result.isConfirmed) {
             // Navigate to Review & Publish (Step 3)
-            window.location.href = `/Forms/FormTemplates/ReviewPublish/${FormBuilder.templateId}`;
+            window.location.href = `/FormTemplates/ReviewPublish/${FormBuilder.templateId}`;
         }
     } catch (error) {
         // Restore button state on error

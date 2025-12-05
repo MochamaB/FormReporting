@@ -5,7 +5,11 @@
 *@
 
 <div class="mb-3 col-md-@Model.ColumnWidth">
-    <label for="@Model.InputId" class="form-label">
+    <label for="@Model.InputId" class="form-label" style="word-wrap: break-word; overflow-wrap: break-word;">
+        @if (Model.ShowFieldNumber)
+        {
+            <span class="text-primary me-2">@Model.DisplayOrder.</span>
+        }
         @Model.FieldName
         @if (Model.IsRequired)
         {
@@ -31,16 +35,16 @@
         @if (Model.Options != null && Model.Options.Any())
         {
             var currentValueStr = Model.CurrentValue?.ToString() ?? string.Empty;
-            var selectedValues = !string.IsNullOrEmpty(currentValueStr)
-                ? currentValueStr.Split(',')
-                : Array.Empty<string>();
+            var hasCurrentValue = !string.IsNullOrEmpty(currentValueStr);
+            var selectedValues = hasCurrentValue ? currentValueStr.Split(',') : Array.Empty<string>();
 
             foreach (var option in Model.Options)
             {
-                       <option value="@option.Value" selected="@(option.Value == currentValueStr)">
-                            @option.Label
-                        </option>
-
+                // Use CurrentValue if set, otherwise fall back to IsSelected (default from database)
+                var isSelected = hasCurrentValue ? selectedValues.Contains(option.Value) : option.IsSelected;
+                <option value="@option.Value" selected="@isSelected">
+                    @option.Label
+                </option>
             }
         }
     </select>

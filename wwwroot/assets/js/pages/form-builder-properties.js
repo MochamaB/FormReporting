@@ -49,8 +49,18 @@ const FormBuilderProperties = {
         // Reset tab visibility (show all tabs in empty state)
         this.updateTabVisibility(null);
 
+        // Reset field form visibility (show all conditional fields)
+        const placeholderContainer = document.getElementById('prop_placeholderText_container');
+        const defaultValueContainer = document.getElementById('prop_defaultValue_container');
+        if (placeholderContainer) placeholderContainer.style.display = 'block';
+        if (defaultValueContainer) defaultValueContainer.style.display = 'block';
+
+        // Clear current element tracking
         this.currentElementType = null;
         this.currentElementId = null;
+        this.currentFieldData = null;
+        
+        console.log('[FormBuilderProperties] Empty state shown, panel cleared');
     },
 
     /**
@@ -401,14 +411,11 @@ const FormBuilderProperties = {
      * @param {object} data - Field data
      */
     populateFieldForm: function(data) {
-        // Field Code (read-only)
-        document.getElementById('prop_fieldCode').value = data.itemCode || '';
+        // Field Type (hidden, used for conditional logic)
+        document.getElementById('prop_fieldType').value = data.dataTypeName || '';
 
         // Field Name
         document.getElementById('prop_fieldName').value = data.itemName || '';
-
-        // Field Type (read-only, display name)
-        document.getElementById('prop_fieldType').value = data.dataTypeName || '';
 
         // Placeholder Text
         document.getElementById('prop_placeholderText').value = data.placeholderText || '';
@@ -419,15 +426,44 @@ const FormBuilderProperties = {
         // Default Value
         document.getElementById('prop_defaultValue').value = data.defaultValue || '';
 
-        // Display Order (read-only)
-        document.getElementById('prop_fieldDisplayOrder').value = data.displayOrder || '';
-
         // Required checkbox
         document.getElementById('prop_isRequired').checked = data.isRequired || false;
 
-        // Statistics
-        document.getElementById('prop_validationCount').textContent = data.validationCount || 0;
-        document.getElementById('prop_optionCount').textContent = data.optionCount || 0;
+        // Conditionally show/hide fields based on field type
+        this.updateFieldVisibility(data.dataTypeName);
+    },
+
+    /**
+     * Update field visibility based on field type
+     * @param {string} fieldType - The field type name
+     */
+    updateFieldVisibility: function(fieldType) {
+        const placeholderContainer = document.getElementById('prop_placeholderText_container');
+        const defaultValueContainer = document.getElementById('prop_defaultValue_container');
+
+        // Field types that DON'T support placeholder (option-based selection fields)
+        const noPlaceholderTypes = ['Radio', 'Checkbox'];
+        
+        // Field types that DON'T support default value (option-based - use "Set as Default" in options)
+        const noDefaultValueTypes = ['Radio', 'Checkbox', 'Dropdown', 'MultiSelect'];
+
+        // Show/hide Placeholder field
+        if (placeholderContainer) {
+            if (noPlaceholderTypes.includes(fieldType)) {
+                placeholderContainer.style.display = 'none';
+            } else {
+                placeholderContainer.style.display = 'block';
+            }
+        }
+
+        // Show/hide Default Value field
+        if (defaultValueContainer) {
+            if (noDefaultValueTypes.includes(fieldType)) {
+                defaultValueContainer.style.display = 'none';
+            } else {
+                defaultValueContainer.style.display = 'block';
+            }
+        }
     },
 
     /**
@@ -482,10 +518,27 @@ const FormBuilderProperties = {
                 saveBtn.classList.remove('btn-secondary');
                 saveBtn.classList.add('btn-success');
 
-                // Reload the page to refresh the canvas
+                // Update the canvas preview dynamically (no page reload)
+                await this.updateCanvasPreview();
+
+                // Update current field data cache
+                if (this.currentFieldData) {
+                    this.currentFieldData.itemName = fieldName;
+                    this.currentFieldData.placeholderText = placeholderText;
+                    this.currentFieldData.helpText = helpText;
+                    this.currentFieldData.defaultValue = defaultValue;
+                    this.currentFieldData.isRequired = isRequired;
+                }
+
+                // Reset button after a short delay
                 setTimeout(() => {
-                    FormBuilder.reload();
-                }, 500);
+                    saveBtn.disabled = false;
+                    saveBtn.innerHTML = originalBtnHtml;
+                    saveBtn.classList.remove('btn-success');
+                    saveBtn.classList.add('btn-secondary');
+                }, 1500);
+
+                console.log('[FormBuilderProperties] Field properties saved successfully');
             } else {
                 throw new Error(result.message || 'Failed to save field');
             }
@@ -670,13 +723,15 @@ const FormBuilderProperties = {
      * Fetches rendered field card HTML and replaces it in the DOM
      */
     updateCanvasPreview: async function() {
-        if (!this.currentFieldId) return;
+        // Use currentElementId (the field ID we're editing)
+        const fieldId = this.currentElementId;
+        if (!fieldId || this.currentElementType !== 'field') return;
 
         try {
-            console.log(`[FormBuilderProperties] Updating canvas preview for field ${this.currentFieldId}`);
+            console.log(`[FormBuilderProperties] Updating canvas preview for field ${fieldId}`);
 
             // Fetch rendered field card HTML from server
-            const response = await fetch(`/api/formbuilder/fields/${this.currentFieldId}/render`);
+            const response = await fetch(`/api/formbuilder/fields/${fieldId}/render`);
 
             if (!response.ok) {
                 console.error('Failed to render field card');
@@ -686,12 +741,12 @@ const FormBuilderProperties = {
             const result = await response.json();
 
             if (result.success && result.html) {
-                const fieldCard = document.getElementById(`field-${this.currentFieldId}`);
+                const fieldCard = document.getElementById(`field-${fieldId}`);
 
                 if (fieldCard) {
                     // Store selection state
                     const wasSelected = fieldCard.classList.contains('selected-element');
-                    const wasExpanded = document.getElementById(`field-body-${this.currentFieldId}`)?.style.display !== 'none';
+                    const wasExpanded = document.getElementById(`field-body-${fieldId}`)?.style.display !== 'none';
 
                     // Create temporary container to parse HTML
                     const tempDiv = document.createElement('div');
@@ -711,7 +766,7 @@ const FormBuilderProperties = {
 
                     // Restore expansion state if field was expanded
                     if (wasExpanded) {
-                        const newFieldBody = newFieldCard.querySelector(`#field-body-${this.currentFieldId}`);
+                        const newFieldBody = newFieldCard.querySelector(`#field-body-${fieldId}`);
                         if (newFieldBody) {
                             newFieldBody.style.display = 'block';
                         }
@@ -722,7 +777,7 @@ const FormBuilderProperties = {
 
                     console.log('[FormBuilderProperties] Canvas preview updated successfully');
                 } else {
-                    console.warn(`Field card not found in canvas for field ${this.currentFieldId}`);
+                    console.warn(`Field card not found in canvas for field ${fieldId}`);
                 }
             }
         } catch (error) {
@@ -742,12 +797,37 @@ const FormBuilderOptions = {
     currentFieldId: null,
     currentOptions: [],
     sortableInstance: null,
+    pendingDeleteOptionId: null,
 
     /**
      * Initialize options manager
      */
     init: function() {
         console.log('FormBuilderOptions initialized');
+
+        // Initialize delete option modal confirm button
+        this.initializeDeleteModal();
+    },
+
+    /**
+     * Initialize delete option modal event listeners
+     */
+    initializeDeleteModal: function() {
+        const confirmBtn = document.getElementById('confirmDeleteOptionBtn');
+        if (confirmBtn) {
+            confirmBtn.addEventListener('click', () => {
+                if (this.pendingDeleteOptionId) {
+                    this.deleteOption(this.pendingDeleteOptionId);
+
+                    // Hide modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('deleteOptionModal'));
+                    if (modal) modal.hide();
+
+                    // Clear pending delete
+                    this.pendingDeleteOptionId = null;
+                }
+            });
+        }
     },
 
     /**
@@ -790,104 +870,63 @@ const FormBuilderOptions = {
     },
 
     /**
-     * Render options list HTML
-     * @param {Array} options - Array of option objects
+     * Render options table by fetching HTML from server
+     * Uses server-side Razor partial view for consistent styling
+     * Delegates to FormBuilderTemplateOptions if available
      */
-    renderOptionsList: function(options) {
-        const container = document.getElementById('options-list');
-        
-        if (!container) {
-            console.error('Options list container not found');
+    renderOptionsTable: async function() {
+        // Prefer FormBuilderTemplateOptions module if available
+        if (window.FormBuilderTemplateOptions && typeof window.FormBuilderTemplateOptions.renderOptionsTableFromServer === 'function') {
+            console.log('[FormBuilderOptions] Delegating to FormBuilderTemplateOptions.renderOptionsTableFromServer');
+            await window.FormBuilderTemplateOptions.renderOptionsTableFromServer();
             return;
         }
-        
-        // Clear existing options
-        container.innerHTML = '';
-        
-        if (options.length === 0) {
-            container.innerHTML = '<tr><td colspan="5" class="text-center text-muted py-3"><small>No options yet. Click + to add one.</small></td></tr>';
+
+        // Fallback implementation
+        if (!this.currentFieldId) {
+            console.error('[FormBuilderOptions] No field ID set');
             return;
         }
-        
-        // Sort by display order
-        const sortedOptions = [...options].sort((a, b) => a.displayOrder - b.displayOrder);
-        
-        // Render each option
-        sortedOptions.forEach(option => {
-            const optionHtml = this.createOptionItemHtml(option);
-            container.insertAdjacentHTML('beforeend', optionHtml);
-        });
-        
-        console.log(`Rendered ${options.length} options`);
+
+        try {
+            console.log(`[FormBuilderOptions] Fetching rendered options table for field ${this.currentFieldId}`);
+
+            // Fetch rendered HTML from server
+            const response = await fetch(`/api/formbuilder/fields/${this.currentFieldId}/options/render`);
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch options table');
+            }
+
+            const result = await response.json();
+
+            if (result.success && result.html) {
+                // Find the wrapper container and replace its contents
+                const wrapper = document.getElementById('options-table-wrapper');
+
+                if (wrapper) {
+                    wrapper.innerHTML = result.html;
+
+                    // Re-initialize sortable after rendering
+                    this.initializeSortable();
+
+                    console.log(`[FormBuilderOptions] ✅ Rendered ${result.optionCount} options from server`);
+                } else {
+                    console.error('[FormBuilderOptions] options-table-wrapper not found');
+                }
+            }
+        } catch (error) {
+            console.error('[FormBuilderOptions] Error rendering options table:', error);
+        }
     },
 
     /**
-     * Create HTML for a single option item (table row)
-     * @param {object} option - Option data object
-     * @returns {string} HTML string
+     * Legacy function - kept for backwards compatibility
+     * Now calls renderOptionsTable instead
+     * @param {Array} options - Array of option objects (ignored - we fetch from server)
      */
-    createOptionItemHtml: function(option) {
-        return `
-            <tr class="option-item" 
-                data-option-id="${option.optionId}"
-                data-display-order="${option.displayOrder}">
-                
-                <!-- Drag Handle -->
-                <td class="text-center">
-                    <span class="option-drag-handle text-muted" style="cursor: move;" title="Drag to reorder">
-                        <i class="ri-draggable"></i>
-                    </span>
-                </td>
-                
-                <!-- Option Value -->
-                <td>
-                    <input type="text" 
-                           class="form-control form-control-sm option-value-input border-0 bg-transparent" 
-                           value="${this.escapeHtml(option.optionValue)}"
-                           placeholder="value"
-                           data-option-id="${option.optionId}"
-                           data-auto-generated="true"
-                           onblur="updateOptionValue(${option.optionId})"
-                           style="font-weight: 500;">
-                </td>
-                
-                <!-- Option Label (Text) -->
-                <td>
-                    <input type="text" 
-                           class="form-control form-control-sm option-label-input border-0 bg-transparent text-muted" 
-                           value="${this.escapeHtml(option.optionLabel)}"
-                           placeholder="Label"
-                           data-option-id="${option.optionId}"
-                           onblur="updateOptionLabel(${option.optionId})"
-                           oninput="autoGenerateValue(${option.optionId})">
-                </td>
-                
-                
-                
-                <!-- Actions -->
-                <td class="text-end">
-                    <input type="checkbox" 
-                           class="form-check-input option-default-checkbox" 
-                           id="default_${option.optionId}"
-                           ${option.isDefault ? 'checked' : ''}
-                           onchange="toggleOptionDefault(${option.optionId})"
-                           title="Set as default">
-
-                    <button type="button" 
-                            class="btn btn-sm btn-ghost-secondary p-1" 
-                            onclick="focusOptionForEdit(${option.optionId})"
-                            title="Edit">
-                        <i class="ri-pencil-line"></i>
-                    </button>
-                    <button type="button" 
-                            class="btn btn-sm btn-ghost-danger p-1" 
-                            onclick="deleteOptionConfirm(${option.optionId})"
-                            title="Delete">
-                        <i class="ri-delete-bin-line"></i>
-                    </button>
-                </td>
-            </tr>
-        `;
+    renderOptionsList: function(options) {
+        this.renderOptionsTable();
     },
 
     /**
@@ -933,29 +972,29 @@ const FormBuilderOptions = {
             }
             
             const result = await response.json();
-            
-            if (result.success && result.data) {
+
+            if (result.success && result.option) {
                 // Add to local array
-                this.currentOptions.push(result.data);
-                
+                this.currentOptions.push(result.option);
+
                 // Re-render list
                 this.renderOptionsList(this.currentOptions);
-                
+
                 // Re-initialize sortable
                 this.initializeSortable();
-                
+
                 // Focus on new option's value input for immediate editing
                 setTimeout(() => {
-                    const newValueInput = document.querySelector(`input.option-value-input[data-option-id="${result.data.optionId}"]`);
+                    const newValueInput = document.querySelector(`input.option-value-input[data-option-id="${result.option.optionId}"]`);
                     if (newValueInput) {
                         newValueInput.select();
                     }
                 }, 100);
-                
+
                 // Update canvas preview without full page reload
-                FormBuilderProperties.updateCanvasPreview();
-                
-                console.log('Option added successfully:', result.data);
+                await FormBuilderProperties.updateCanvasPreview();
+
+                console.log('Option added successfully:', result.option);
             } else {
                 throw new Error(result.message || 'Failed to add option');
             }
@@ -1368,11 +1407,13 @@ function selectField(fieldId) {
         
         // Ensure field is expanded when selected
         const fieldBody = document.getElementById(`field-body-${fieldId}`);
+        const fieldFooter = document.getElementById(`field-footer-${fieldId}`);
         const collapseIcon = document.getElementById(`field-collapse-icon-${fieldId}`);
         
         if (fieldBody && fieldBody.style.display === 'none') {
-            // Expand the field
+            // Expand the field - show body, hide footer
             fieldBody.style.display = 'block';
+            if (fieldFooter) fieldFooter.style.display = 'none';
             if (collapseIcon) {
                 collapseIcon.classList.remove('ri-add-line');
                 collapseIcon.classList.add('ri-subtract-line');
@@ -1407,19 +1448,45 @@ function saveFieldProperties() {
 // ============================================================================
 
 /**
- * Update option label (called on blur)
- * @param {number} optionId - Option ID
- */
-function updateOptionLabel(optionId) {
-    FormBuilderOptions.updateOption(optionId);
-}
-
-/**
- * Update option value (called on blur)
+ * Update option value (called on blur from _OptionsTable.cshtml)
  * @param {number} optionId - Option ID
  */
 function updateOptionValue(optionId) {
-    FormBuilderOptions.updateOption(optionId);
+    // Get the input values
+    const valueInput = document.querySelector(`input.option-value-input[data-option-id="${optionId}"]`);
+    const labelInput = document.querySelector(`input.option-label-input[data-option-id="${optionId}"]`);
+    
+    if (valueInput && window.FormBuilderTemplateOptions) {
+        FormBuilderTemplateOptions.updateOption(optionId, 'value', valueInput.value);
+    } else if (window.FormBuilderOptions) {
+        FormBuilderOptions.updateOption(optionId);
+    }
+}
+
+/**
+ * Update option label (called on blur from _OptionsTable.cshtml)
+ * @param {number} optionId - Option ID
+ */
+function updateOptionLabel(optionId) {
+    const labelInput = document.querySelector(`input.option-label-input[data-option-id="${optionId}"]`);
+    
+    if (labelInput && window.FormBuilderTemplateOptions) {
+        FormBuilderTemplateOptions.updateOption(optionId, 'label', labelInput.value);
+    } else if (window.FormBuilderOptions) {
+        FormBuilderOptions.updateOption(optionId);
+    }
+}
+
+/**
+ * Update option score (called on blur from _OptionsTable.cshtml)
+ * @param {number} optionId - Option ID
+ */
+function updateOptionScore(optionId) {
+    const scoreInput = document.querySelector(`input[data-option-id="${optionId}"][type="number"]`);
+    
+    if (scoreInput && window.FormBuilderTemplateOptions) {
+        FormBuilderTemplateOptions.updateOption(optionId, 'score', scoreInput.value);
+    }
 }
 
 /**
@@ -1427,24 +1494,65 @@ function updateOptionValue(optionId) {
  * @param {number} optionId - Option ID
  */
 function autoGenerateValue(optionId) {
-    FormBuilderOptions.autoGenerateValueFromLabel(optionId);
+    const labelInput = document.querySelector(`input.option-label-input[data-option-id="${optionId}"]`);
+    const valueInput = document.querySelector(`input.option-value-input[data-option-id="${optionId}"]`);
+    
+    // Only auto-generate if value input has data-auto-generated="true"
+    if (labelInput && valueInput && valueInput.dataset.autoGenerated === 'true') {
+        // Convert label to snake_case value
+        const generatedValue = labelInput.value
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9\s]/g, '')
+            .replace(/\s+/g, '_');
+        
+        valueInput.value = generatedValue;
+    }
 }
 
 /**
- * Toggle option default (called on checkbox change)
+ * Toggle option default (called on checkbox change from _OptionsTable.cshtml)
  * @param {number} optionId - Option ID
  */
 function toggleOptionDefault(optionId) {
-    FormBuilderOptions.setDefaultOption(optionId);
+    if (window.FormBuilderTemplateOptions && typeof window.FormBuilderTemplateOptions.setDefaultOption === 'function') {
+        const checkbox = document.querySelector(`#default_${optionId}`);
+        FormBuilderTemplateOptions.setDefaultOption(optionId, checkbox ? checkbox.checked : false);
+    } else if (window.FormBuilderOptions) {
+        FormBuilderOptions.setDefaultOption(optionId);
+    }
 }
 
 /**
- * Delete option with confirmation (called on button click)
+ * Delete option with confirmation (called on button click from _OptionsTable.cshtml)
  * @param {number} optionId - Option ID
  */
 function deleteOptionConfirm(optionId) {
-    if (confirm('Are you sure you want to delete this option?')) {
-        FormBuilderOptions.deleteOption(optionId);
+    // Use FormBuilderTemplateOptions if available (has its own confirm)
+    if (window.FormBuilderTemplateOptions && typeof window.FormBuilderTemplateOptions.deleteOption === 'function') {
+        FormBuilderTemplateOptions.deleteOption(optionId);
+        return;
+    }
+    
+    // Fallback to FormBuilderOptions with modal
+    if (window.FormBuilderOptions) {
+        const option = FormBuilderOptions.currentOptions.find(o => o.optionId === optionId);
+
+        if (!option) {
+            console.error('Option not found:', optionId);
+            return;
+        }
+
+        // Store pending delete option ID
+        FormBuilderOptions.pendingDeleteOptionId = optionId;
+
+        // Populate modal with option details
+        document.getElementById('deleteOptionLabel').textContent = option.optionLabel || '-';
+        document.getElementById('deleteOptionValue').textContent = option.optionValue || '-';
+
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('deleteOptionModal'));
+        modal.show();
     }
 }
 
@@ -1453,7 +1561,29 @@ function deleteOptionConfirm(optionId) {
  * @param {number} optionId - Option ID
  */
 function focusOptionForEdit(optionId) {
-    FormBuilderOptions.focusOptionForEdit(optionId);
+    // Focus on the label input for editing
+    const labelInput = document.querySelector(`input.option-label-input[data-option-id="${optionId}"]`);
+    if (labelInput) {
+        labelInput.focus();
+        labelInput.select();
+    } else if (window.FormBuilderOptions) {
+        FormBuilderOptions.focusOptionForEdit(optionId);
+    }
+}
+
+/**
+ * Add a new option (called on Add Option button click)
+ * Prefers FormBuilderTemplateOptions module, falls back to FormBuilderOptions
+ */
+function addOption() {
+    if (window.FormBuilderTemplateOptions && typeof window.FormBuilderTemplateOptions.addOption === 'function') {
+        FormBuilderTemplateOptions.addOption();
+    } else if (window.FormBuilderOptions && typeof FormBuilderOptions.addOption === 'function') {
+        FormBuilderOptions.addOption();
+    } else {
+        console.error('[addOption] No options module available');
+        alert('Unable to add option. Please refresh the page.');
+    }
 }
 
 // ============================================================================

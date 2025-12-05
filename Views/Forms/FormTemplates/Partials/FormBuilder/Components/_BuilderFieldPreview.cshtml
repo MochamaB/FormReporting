@@ -35,7 +35,9 @@
         ColumnWidth = 12,
         IsDisabled = true, // Preview mode
         CurrentValue = Model.DefaultValue,
-        Options = fieldOptions  // Use mapped options from database
+        Options = fieldOptions,  // Use mapped options from database
+        DisplayOrder = Model.DisplayOrder,
+        ShowFieldNumber = true  // Show numbering in form builder
     };
 }
 
@@ -264,6 +266,17 @@
                 }
             </div>
         </div>
+    </div>
+
+    <!-- Collapsed Footer (Shows only when field is collapsed) -->
+    <div class="card-footer field-collapsed-footer" id="field-footer-@Model.ItemId" style="display: none;">
+        <span class="fw-medium d-block" style="word-wrap: break-word; overflow-wrap: break-word;">
+            <span class="text-primary me-2">@Model.DisplayOrder.</span>@Model.ItemName
+            @if (Model.IsRequired)
+            {
+                <span class="text-danger ms-1">*</span>
+            }
+        </span>
     </div>
 </div>
 
