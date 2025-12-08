@@ -307,63 +307,100 @@
         </div>
     </div>
 
-    <!-- Field-Specific Configuration (Text Fields) -->
-    <div id="config-text-fields" style="display: none;">
+    <!-- Field-Specific Configuration (Text Fields) - Rendered from partial -->
+    @await Html.PartialAsync("~/Views/Forms/FormTemplates/Partials/FormBuilder/Properties/_TextFieldConfig.cshtml")
+
+    <!-- Field-Specific Configuration (Media Fields) - Rendered from partial -->
+    @await Html.PartialAsync("~/Views/Forms/FormTemplates/Partials/FormBuilder/Properties/_MediaFieldConfig.cshtml")
+
+    <!-- Field-Specific Configuration (Rating/Slider Fields) - Rendered from partial -->
+    @await Html.PartialAsync("~/Views/Forms/FormTemplates/Partials/FormBuilder/Properties/_RatingSliderConfig.cshtml")
+
+    <!-- Field-Specific Configuration (Specialized Fields) - Rendered from partial -->
+    @await Html.PartialAsync("~/Views/Forms/FormTemplates/Partials/FormBuilder/Properties/_SpecializedFieldConfig.cshtml")
+
+    <!-- Field-Specific Configuration (Date/Time Fields) -->
+    <div id="config-datetime-fields" style="display: none;">
         <div class="mb-3">
             <div class="d-flex align-items-center mb-2">
-                <i class="ri-text fs-5 text-primary me-2"></i>
-                <h6 class="mb-0">Text Configuration</h6>
+                <i class="ri-calendar-line fs-5 text-primary me-2"></i>
+                <h6 class="mb-0">Date/Time Configuration</h6>
             </div>
-            <small class="text-muted">Configure text input constraints and formatting</small>
+            <small class="text-muted">Configure date and time constraints</small>
         </div>
 
         <div class="row g-3">
-            <!-- Min Length -->
-            <div class="col-md-6">
-                <label class="form-label">Minimum Length</label>
-                <input type="number" class="form-control" id="config-minLength" min="0"
-                       placeholder="No minimum" onchange="FormBuilderConfiguration.saveConfig('minLength', this.value)">
-                <small class="text-muted">Minimum characters required</small>
+            <!-- Min Date -->
+            <div class="col-md-6" id="config-minDate-group">
+                <label class="form-label">Minimum Date</label>
+                <input type="date" class="form-control" id="config-minDate"
+                       onchange="FormBuilderConfiguration.saveConfig('minDate', this.value)">
+                <small class="text-muted">Earliest allowed date</small>
             </div>
 
-            <!-- Max Length -->
-            <div class="col-md-6">
-                <label class="form-label">Maximum Length</label>
-                <input type="number" class="form-control" id="config-maxLength" min="1"
-                       placeholder="No maximum" onchange="FormBuilderConfiguration.saveConfig('maxLength', this.value)">
-                <small class="text-muted">Maximum characters allowed</small>
+            <!-- Max Date -->
+            <div class="col-md-6" id="config-maxDate-group">
+                <label class="form-label">Maximum Date</label>
+                <input type="date" class="form-control" id="config-maxDate"
+                       onchange="FormBuilderConfiguration.saveConfig('maxDate', this.value)">
+                <small class="text-muted">Latest allowed date</small>
             </div>
 
-            <!-- Input Mask -->
+            <!-- Min Time -->
+            <div class="col-md-6" id="config-minTime-group">
+                <label class="form-label">Minimum Time</label>
+                <input type="time" class="form-control" id="config-minTime"
+                       onchange="FormBuilderConfiguration.saveConfig('minTime', this.value)">
+                <small class="text-muted">Earliest allowed time</small>
+            </div>
+
+            <!-- Max Time -->
+            <div class="col-md-6" id="config-maxTime-group">
+                <label class="form-label">Maximum Time</label>
+                <input type="time" class="form-control" id="config-maxTime"
+                       onchange="FormBuilderConfiguration.saveConfig('maxTime', this.value)">
+                <small class="text-muted">Latest allowed time</small>
+            </div>
+
+            <!-- Quick Options -->
             <div class="col-12">
-                <label class="form-label">Input Mask <span class="badge bg-secondary-subtle text-secondary">Optional</span></label>
-                <input type="text" class="form-control" id="config-inputMask"
-                       placeholder="e.g., (###) ###-####" onchange="FormBuilderConfiguration.saveConfig('inputMask', this.value)">
-                <small class="text-muted">Pattern for formatting input (# = digit, @@ = letter)</small>
+                <label class="form-label small fw-semibold">Quick Options</label>
             </div>
 
-            <!-- Text Transform -->
-            <div class="col-md-6">
-                <label class="form-label">Text Transform</label>
-                <select class="form-select" id="config-textTransform"
-                        onchange="FormBuilderConfiguration.saveConfig('textTransform', this.value)">
-                    <option value="">None</option>
-                    <option value="uppercase">UPPERCASE</option>
-                    <option value="lowercase">lowercase</option>
-                    <option value="capitalize">Capitalize Each Word</option>
-                </select>
-                <small class="text-muted">Automatic text formatting</small>
-            </div>
-
-            <!-- Auto Trim -->
-            <div class="col-md-6 d-flex align-items-end">
+            <!-- Disable Past Dates -->
+            <div class="col-md-6" id="config-disablePastDates-group">
                 <div class="form-check form-switch">
-                    <input class="form-check-input" type="checkbox" id="config-autoTrim" checked
-                           onchange="FormBuilderConfiguration.saveConfig('autoTrim', this.checked)">
-                    <label class="form-check-label" for="config-autoTrim">
-                        Auto-trim Whitespace
+                    <input class="form-check-input" type="checkbox" id="config-disablePastDates"
+                           onchange="FormBuilderConfiguration.handleDateQuickOption('disablePastDates', this.checked)">
+                    <label class="form-check-label" for="config-disablePastDates">
+                        Disable Past Dates
                     </label>
                 </div>
+                <small class="text-muted d-block ms-4">Only allow today and future dates</small>
+            </div>
+
+            <!-- Disable Future Dates -->
+            <div class="col-md-6" id="config-disableFutureDates-group">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="config-disableFutureDates"
+                           onchange="FormBuilderConfiguration.handleDateQuickOption('disableFutureDates', this.checked)">
+                    <label class="form-check-label" for="config-disableFutureDates">
+                        Disable Future Dates
+                    </label>
+                </div>
+                <small class="text-muted d-block ms-4">Only allow today and past dates</small>
+            </div>
+
+            <!-- Default to Today -->
+            <div class="col-12">
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" id="config-defaultToToday"
+                           onchange="FormBuilderConfiguration.saveConfig('defaultToToday', this.checked)">
+                    <label class="form-check-label" for="config-defaultToToday">
+                        Default to Today / Now
+                    </label>
+                </div>
+                <small class="text-muted d-block ms-4">Pre-fill with current date/time when form loads</small>
             </div>
         </div>
     </div>

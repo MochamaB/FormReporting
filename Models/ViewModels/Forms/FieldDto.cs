@@ -136,6 +136,170 @@ namespace FormReporting.Models.ViewModels.Forms
         public bool? AutoTrim { get; set; }
 
         /// <summary>
+        /// Number of visible rows (for TextArea fields)
+        /// Default: 3
+        /// </summary>
+        public int? Rows { get; set; }
+
+        // ========================================================================
+        // DATE/TIME FIELD CONFIGURATION PROPERTIES
+        // ========================================================================
+
+        /// <summary>
+        /// Minimum date allowed (for Date, DateTime fields)
+        /// Format: yyyy-MM-dd
+        /// </summary>
+        public string? MinDate { get; set; }
+
+        /// <summary>
+        /// Maximum date allowed (for Date, DateTime fields)
+        /// Format: yyyy-MM-dd
+        /// </summary>
+        public string? MaxDate { get; set; }
+
+        /// <summary>
+        /// Minimum time allowed (for Time, DateTime fields)
+        /// Format: HH:mm
+        /// </summary>
+        public string? MinTime { get; set; }
+
+        /// <summary>
+        /// Maximum time allowed (for Time, DateTime fields)
+        /// Format: HH:mm
+        /// </summary>
+        public string? MaxTime { get; set; }
+
+        /// <summary>
+        /// Disable past dates (for Date, DateTime fields)
+        /// </summary>
+        public bool? DisablePastDates { get; set; }
+
+        /// <summary>
+        /// Disable future dates (for Date, DateTime fields)
+        /// </summary>
+        public bool? DisableFutureDates { get; set; }
+
+        /// <summary>
+        /// Default to today's date/current time
+        /// </summary>
+        public bool? DefaultToToday { get; set; }
+
+        // ========================================================================
+        // MEDIA FIELD CONFIGURATION PROPERTIES
+        // ========================================================================
+
+        // FileUpload Configuration
+        public string? AllowedFileTypes { get; set; }
+        public int? MaxFileSize { get; set; } // In MB
+        public int? MinFileSize { get; set; } // In KB
+        public int? MaxFiles { get; set; }
+        public bool? AllowMultiple { get; set; }
+        public bool? PreserveFileName { get; set; }
+
+        // Image Configuration
+        public string? AllowedImageTypes { get; set; }
+        public int? ImageQuality { get; set; } // 10-100%
+        public int? MaxWidth { get; set; } // In pixels
+        public int? MaxHeight { get; set; } // In pixels
+        public int? MinWidth { get; set; } // In pixels
+        public int? MinHeight { get; set; } // In pixels
+        public string? AspectRatio { get; set; } // e.g., "16:9", "1:1"
+        public string? ThumbnailSize { get; set; } // e.g., "150x150"
+        public bool? AllowCropping { get; set; }
+        public bool? AutoResize { get; set; }
+
+        // Signature Configuration
+        public int? CanvasWidth { get; set; } // In pixels
+        public int? CanvasHeight { get; set; } // In pixels
+        public string? PenColor { get; set; } // Hex color
+        public int? PenWidth { get; set; } // In pixels
+        public string? BackgroundColor { get; set; } // Hex color
+        public string? OutputFormat { get; set; } // PNG, JPEG, SVG, Base64
+        public bool? ShowClearButton { get; set; }
+        public bool? ShowUndoButton { get; set; }
+        public bool? RequireFullName { get; set; }
+        public bool? ShowDateStamp { get; set; }
+
+        // ========================================================================
+        // RATING FIELD CONFIGURATION
+        // ========================================================================
+        public int? RatingMax { get; set; } // 3, 5, 7, 10
+        public string? RatingIcon { get; set; } // star, heart, thumb, circle, number
+        public string? RatingActiveColor { get; set; } // Hex color
+        public string? RatingInactiveColor { get; set; } // Hex color
+        public string? RatingSize { get; set; } // sm, md, lg, xl
+        public bool? AllowHalfRating { get; set; }
+        public bool? ShowRatingValue { get; set; }
+        public bool? ShowRatingLabels { get; set; }
+        public bool? AllowClearRating { get; set; }
+
+        // ========================================================================
+        // SLIDER FIELD CONFIGURATION
+        // ========================================================================
+        public decimal? SliderMin { get; set; }
+        public decimal? SliderMax { get; set; }
+        public decimal? SliderStep { get; set; }
+        public decimal? SliderDefault { get; set; }
+        public string? SliderUnit { get; set; } // %, kg, km, etc.
+        public string? SliderPrefix { get; set; } // $, £, etc.
+        public string? SliderTrackColor { get; set; } // Hex color
+        public bool? ShowSliderValue { get; set; }
+        public bool? ShowSliderTicks { get; set; }
+        public bool? ShowMinMaxLabels { get; set; }
+        public bool? ShowSliderInput { get; set; }
+
+        // ========================================================================
+        // CURRENCY FIELD CONFIGURATION
+        // ========================================================================
+        public string? CurrencyCode { get; set; } // KES, USD, EUR, etc.
+        public string? CurrencySymbol { get; set; } // KSh, $, €, etc.
+        public string? CurrencyPosition { get; set; } // prefix, suffix
+        public int? CurrencyDecimals { get; set; } // 0, 2, 3, 4
+        public string? ThousandSeparator { get; set; } // , . or space
+        public string? DecimalSeparator { get; set; } // . or ,
+        public decimal? CurrencyMin { get; set; }
+        public decimal? CurrencyMax { get; set; }
+        public bool? AllowNegativeCurrency { get; set; }
+
+        // ========================================================================
+        // PERCENTAGE FIELD CONFIGURATION
+        // ========================================================================
+        public decimal? PercentageMin { get; set; }
+        public decimal? PercentageMax { get; set; }
+        public int? PercentageDecimals { get; set; }
+        public decimal? PercentageStep { get; set; }
+        public bool? ShowPercentSymbol { get; set; }
+        public bool? AllowOverHundred { get; set; }
+        public bool? ShowAsSlider { get; set; }
+        public bool? ShowProgressBar { get; set; }
+
+        // ========================================================================
+        // EMAIL FIELD CONFIGURATION
+        // ========================================================================
+        public bool? AllowMultipleEmails { get; set; }
+        public string? AllowedEmailDomains { get; set; }
+        public string? BlockedEmailDomains { get; set; }
+
+        // ========================================================================
+        // PHONE FIELD CONFIGURATION
+        // ========================================================================
+        public string? DefaultCountryCode { get; set; } // +254, +1, etc.
+        public string? PhoneFormat { get; set; } // international, national, e164
+        public bool? ShowCountrySelector { get; set; }
+        public bool? ValidatePhoneFormat { get; set; }
+
+        // ========================================================================
+        // URL FIELD CONFIGURATION
+        // ========================================================================
+        public bool? AllowHttp { get; set; }
+        public bool? AllowHttps { get; set; }
+        public bool? AllowFtp { get; set; }
+        public string? AllowedProtocols { get; set; }
+        public string? AllowedUrlDomains { get; set; }
+        public bool? RequireHttps { get; set; }
+        public bool? ShowUrlPreview { get; set; }
+
+        /// <summary>
         /// Conditional logic JSON
         /// </summary>
         public string? ConditionalLogic { get; set; }
@@ -195,6 +359,12 @@ namespace FormReporting.Models.ViewModels.Forms
         public string? PlaceholderText { get; set; }
         public string? HelpText { get; set; }
         public string? DefaultValue { get; set; }
+        
+        /// <summary>
+        /// Option template ID to use for selection fields (Dropdown, Radio, Checkbox, MultiSelect)
+        /// If null or 0, default options (Option 1, 2, 3) will be created
+        /// </summary>
+        public int? OptionTemplateId { get; set; }
     }
 
     /// <summary>
@@ -227,7 +397,7 @@ namespace FormReporting.Models.ViewModels.Forms
         public string? SuffixText { get; set; }
         public string? DefaultValue { get; set; }
 
-        // Field-Specific Configuration Properties
+        // Field-Specific Configuration Properties (Number/Text)
         public decimal? MinValue { get; set; }
         public decimal? MaxValue { get; set; }
         public decimal? Step { get; set; }
@@ -238,6 +408,113 @@ namespace FormReporting.Models.ViewModels.Forms
         public string? InputMask { get; set; }
         public string? TextTransform { get; set; }
         public bool? AutoTrim { get; set; }
+        public int? Rows { get; set; }
+
+        // Date/Time Configuration Properties
+        public string? MinDate { get; set; }
+        public string? MaxDate { get; set; }
+        public string? MinTime { get; set; }
+        public string? MaxTime { get; set; }
+        public bool? DisablePastDates { get; set; }
+        public bool? DisableFutureDates { get; set; }
+        public bool? DefaultToToday { get; set; }
+
+        // FileUpload Configuration Properties
+        public string? AllowedFileTypes { get; set; }
+        public int? MaxFileSize { get; set; } // In MB
+        public int? MinFileSize { get; set; } // In KB
+        public int? MaxFiles { get; set; }
+        public bool? AllowMultiple { get; set; }
+        public bool? PreserveFileName { get; set; }
+
+        // Image Configuration Properties
+        public string? AllowedImageTypes { get; set; }
+        public int? ImageQuality { get; set; } // 10-100%
+        public int? MaxWidth { get; set; } // In pixels
+        public int? MaxHeight { get; set; } // In pixels
+        public int? MinWidth { get; set; } // In pixels
+        public int? MinHeight { get; set; } // In pixels
+        public string? AspectRatio { get; set; } // e.g., "16:9", "1:1"
+        public string? ThumbnailSize { get; set; } // e.g., "150x150"
+        public bool? AllowCropping { get; set; }
+        public bool? AutoResize { get; set; }
+
+        // Signature Configuration Properties
+        public int? CanvasWidth { get; set; } // In pixels
+        public int? CanvasHeight { get; set; } // In pixels
+        public string? PenColor { get; set; } // Hex color
+        public int? PenWidth { get; set; } // In pixels
+        public string? BackgroundColor { get; set; } // Hex color
+        public string? OutputFormat { get; set; } // PNG, JPEG, SVG, Base64
+        public bool? ShowClearButton { get; set; }
+        public bool? ShowUndoButton { get; set; }
+        public bool? RequireFullName { get; set; }
+        public bool? ShowDateStamp { get; set; }
+
+        // Rating Configuration Properties
+        public int? RatingMax { get; set; }
+        public string? RatingIcon { get; set; }
+        public string? RatingActiveColor { get; set; }
+        public string? RatingInactiveColor { get; set; }
+        public string? RatingSize { get; set; }
+        public bool? AllowHalfRating { get; set; }
+        public bool? ShowRatingValue { get; set; }
+        public bool? ShowRatingLabels { get; set; }
+        public bool? AllowClearRating { get; set; }
+
+        // Slider Configuration Properties
+        public decimal? SliderMin { get; set; }
+        public decimal? SliderMax { get; set; }
+        public decimal? SliderStep { get; set; }
+        public decimal? SliderDefault { get; set; }
+        public string? SliderUnit { get; set; }
+        public string? SliderPrefix { get; set; }
+        public string? SliderTrackColor { get; set; }
+        public bool? ShowSliderValue { get; set; }
+        public bool? ShowSliderTicks { get; set; }
+        public bool? ShowMinMaxLabels { get; set; }
+        public bool? ShowSliderInput { get; set; }
+
+        // Currency Configuration Properties
+        public string? CurrencyCode { get; set; }
+        public string? CurrencySymbol { get; set; }
+        public string? CurrencyPosition { get; set; }
+        public int? CurrencyDecimals { get; set; }
+        public string? ThousandSeparator { get; set; }
+        public string? DecimalSeparator { get; set; }
+        public decimal? CurrencyMin { get; set; }
+        public decimal? CurrencyMax { get; set; }
+        public bool? AllowNegativeCurrency { get; set; }
+
+        // Percentage Configuration Properties
+        public decimal? PercentageMin { get; set; }
+        public decimal? PercentageMax { get; set; }
+        public int? PercentageDecimals { get; set; }
+        public decimal? PercentageStep { get; set; }
+        public bool? ShowPercentSymbol { get; set; }
+        public bool? AllowOverHundred { get; set; }
+        public bool? ShowAsSlider { get; set; }
+        public bool? ShowProgressBar { get; set; }
+
+        // Email Configuration Properties
+        public bool? AllowMultipleEmails { get; set; }
+        public string? AllowedEmailDomains { get; set; }
+        public string? BlockedEmailDomains { get; set; }
+
+        // Phone Configuration Properties
+        public string? DefaultCountryCode { get; set; }
+        public string? PhoneFormat { get; set; }
+        public bool? ShowCountrySelector { get; set; }
+        public bool? ValidatePhoneFormat { get; set; }
+
+        // URL Configuration Properties
+        public bool? AllowHttp { get; set; }
+        public bool? AllowHttps { get; set; }
+        public bool? AllowFtp { get; set; }
+        public string? AllowedProtocols { get; set; }
+        public string? AllowedUrlDomains { get; set; }
+        public bool? RequireHttps { get; set; }
+        public bool? ShowUrlPreview { get; set; }
     }
 
     /// <summary>

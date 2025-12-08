@@ -94,6 +94,20 @@
                         </div>
                     </div>
 
+                    <!-- Option Template Selector (Only for selection fields) -->
+                    <div class="mb-3" id="optionTemplateContainer" style="display: none;">
+                        <label for="optionTemplateId" class="form-label">
+                            <strong>Initial Options</strong>
+                        </label>
+                        <select class="form-select" id="optionTemplateId" name="optionTemplateId">
+                            <option value="0" selected>Default Options (Option 1, 2, 3)</option>
+                            <!-- Options will be loaded dynamically -->
+                        </select>
+                        <div class="form-text">
+                            <i class="ri-list-check me-1"></i>
+                            Select a predefined option set or use default options. You can customize options later in the Options tab.
+                        </div>
+                    </div>
                  
                 </form>
             </div>
@@ -143,6 +157,26 @@
             form.classList.remove('was-validated');
             document.getElementById('itemNameCount').textContent = '0';
             document.getElementById('itemDescriptionCount').textContent = '0';
+        }
+        // Reset button state
+        const btnAddField = document.getElementById('btnAddField');
+        if (btnAddField) {
+            btnAddField.disabled = false;
+            btnAddField.innerHTML = '<i class="ri-add-circle-line me-1"></i>Add Field';
+        }
+        // Hide option template selector and reset
+        const optionContainer = document.getElementById('optionTemplateContainer');
+        const optionSelector = document.getElementById('optionTemplateId');
+        if (optionContainer) optionContainer.style.display = 'none';
+        if (optionSelector) optionSelector.innerHTML = '<option value="0" selected>Default Options (Option 1, 2, 3)</option>';
+    });
+
+    // Also reset button when modal is shown (in case it was left in loading state)
+    document.getElementById('addFieldModal')?.addEventListener('show.bs.modal', function() {
+        const btnAddField = document.getElementById('btnAddField');
+        if (btnAddField) {
+            btnAddField.disabled = false;
+            btnAddField.innerHTML = '<i class="ri-add-circle-line me-1"></i>Add Field';
         }
     });
 </script>

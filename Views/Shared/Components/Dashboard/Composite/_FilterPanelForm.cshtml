@@ -1,0 +1,117 @@
+@model FilterPanelConfig
+
+<form method="@Model.Method" action="@Model.ActionUrl">
+    <div class="row g-3">
+        @foreach (var filter in Model.Filters)
+        {
+            <div class="@filter.ColumnClass">
+                <label for="filter-@filter.Name" class="form-label">
+                    @filter.Label
+                    @if (filter.Required)
+                    {
+                        <span class="text-danger">*</span>
+                    }
+                </label>
+
+                @switch (filter.Type)
+                {
+                    case FilterInputType.Text:
+                        <input type="text"
+                               class="form-control"
+                               id="filter-@filter.Name"
+                               name="@filter.Name"
+                               value="@filter.Value"
+                               placeholder="@filter.Placeholder"
+                               @(filter.Required ? "required" : "") />
+                        break;
+
+                    case FilterInputType.Select:
+                        <select class="form-select"
+                                id="filter-@filter.Name"
+                                name="@filter.Name"
+                                @(filter.Required ? "required" : "")>
+                            <option value="">-- Select --</option>
+                            @if (filter.Options != null)
+                            {
+                                foreach (var option in filter.Options)
+                                {
+                                    <option value="@option.Value"
+                                            selected="@(option.Selected || option.Value == filter.Value)">
+                                        @option.Text
+                                    </option>
+                                }
+                            }
+                        </select>
+                        break;
+
+                    case FilterInputType.Date:
+                        <input type="date"
+                               class="form-control"
+                               id="filter-@filter.Name"
+                               name="@filter.Name"
+                               value="@filter.Value"
+                               @(filter.Required ? "required" : "") />
+                        break;
+
+                    case FilterInputType.DateRange:
+                        <input type="text"
+                               class="form-control"
+                               id="filter-@filter.Name"
+                               name="@filter.Name"
+                               value="@filter.Value"
+                               placeholder="@(filter.Placeholder ?? "Select date range")"
+                               data-provider="flatpickr"
+                               data-date-format="Y-m-d"
+                               data-range-date="true"
+                               @(filter.Required ? "required" : "") />
+                        break;
+
+                    case FilterInputType.Number:
+                        <input type="number"
+                               class="form-control"
+                               id="filter-@filter.Name"
+                               name="@filter.Name"
+                               value="@filter.Value"
+                               placeholder="@filter.Placeholder"
+                               @(filter.Required ? "required" : "") />
+                        break;
+
+                    case FilterInputType.Checkbox:
+                        <div class="form-check mt-2">
+                            <input class="form-check-input"
+                                   type="checkbox"
+                                   id="filter-@filter.Name"
+                                   name="@filter.Name"
+                                   value="true"
+                                   @(filter.Value == "true" ? "checked" : "") />
+                            <label class="form-check-label" for="filter-@filter.Name">
+                                @filter.Placeholder
+                            </label>
+                        </div>
+                        break;
+                }
+            </div>
+        }
+
+        @if (Model.ShowApplyButton || Model.ShowClearButton)
+        {
+            <div class="col-12">
+                <div class="hstack gap-2">
+                    @if (Model.ShowApplyButton)
+                    {
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ri-search-line align-middle"></i> Apply Filters
+                        </button>
+                    }
+
+                    @if (Model.ShowClearButton)
+                    {
+                        <button type="reset" class="btn btn-soft-secondary">
+                            <i class="ri-close-line align-middle"></i> Clear
+                        </button>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</form>

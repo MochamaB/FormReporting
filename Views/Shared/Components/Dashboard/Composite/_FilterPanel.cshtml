@@ -1,0 +1,41 @@
+@model FilterPanelConfig
+
+@{
+    var collapseId = $"collapse-{Model.Id}";
+}
+
+@if (Model.ShowCard)
+{
+    <div class="card @Model.CardClass">
+        @if (!string.IsNullOrEmpty(Model.Title))
+        {
+            <div class="card-header @(Model.Collapsible ? "d-flex align-items-center" : "")">
+                <h5 class="card-title mb-0 @(Model.Collapsible ? "flex-grow-1" : "")">
+                    @Model.Title
+                </h5>
+
+                @if (Model.Collapsible)
+                {
+                    <button class="btn btn-sm btn-soft-secondary"
+                            type="button"
+                            data-bs-toggle="collapse"
+                            data-bs-target="#@collapseId"
+                            aria-expanded="@(!Model.InitiallyCollapsed ? "true" : "false")"
+                            aria-controls="@collapseId">
+                        <i class="ri-filter-3-line"></i>
+                    </button>
+                }
+            </div>
+        }
+
+        <div class="@(Model.Collapsible ? "collapse" : "") @(!Model.InitiallyCollapsed ? "show" : "")" id="@(Model.Collapsible ? collapseId : "")">
+            <div class="card-body">
+                @await Html.PartialAsync("~/Views/Shared/Components/Dashboard/Composite/_FilterPanelForm.cshtml", Model)
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    @await Html.PartialAsync("~/Views/Shared/Components/Dashboard/Composite/_FilterPanelForm.cshtml", Model)
+}

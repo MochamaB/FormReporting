@@ -20,11 +20,15 @@
     <textarea class="form-control"
               id="@Model.InputId"
               name="@Model.InputName"
-              rows="3"
+              rows="@(Model.Rows ?? 3)"
               placeholder="@Model.PlaceholderText"
               @(Model.IsRequired ? "required" : "")
               @(Model.IsReadOnly ? "readonly" : "")
               @(Model.IsDisabled ? "disabled" : "")
+              @if (Model.MaxLength.HasValue)
+              {
+                  <text>maxlength="@Model.MaxLength"</text>
+              }
               data-field-id="@Model.FieldId"
               @if (!string.IsNullOrEmpty(Model.ValidationDataAttribute))
               {

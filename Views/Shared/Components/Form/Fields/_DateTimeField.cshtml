@@ -17,6 +17,30 @@
         }
     </label>
 
+    @{
+        // For datetime-local, combine date and time for min/max
+        var minDateTime = !string.IsNullOrEmpty(Model.MinDate) ? Model.MinDate : "";
+        var maxDateTime = !string.IsNullOrEmpty(Model.MaxDate) ? Model.MaxDate : "";
+        
+        // Append time if available
+        if (!string.IsNullOrEmpty(minDateTime) && !string.IsNullOrEmpty(Model.MinTime))
+        {
+            minDateTime += "T" + Model.MinTime;
+        }
+        else if (!string.IsNullOrEmpty(minDateTime))
+        {
+            minDateTime += "T00:00";
+        }
+        
+        if (!string.IsNullOrEmpty(maxDateTime) && !string.IsNullOrEmpty(Model.MaxTime))
+        {
+            maxDateTime += "T" + Model.MaxTime;
+        }
+        else if (!string.IsNullOrEmpty(maxDateTime))
+        {
+            maxDateTime += "T23:59";
+        }
+    }
     <input type="datetime-local"
            class="form-control"
            id="@Model.InputId"
@@ -25,6 +49,14 @@
            @(Model.IsRequired ? "required" : "")
            @(Model.IsReadOnly ? "readonly" : "")
            @(Model.IsDisabled ? "disabled" : "")
+           @if (!string.IsNullOrEmpty(minDateTime))
+           {
+               <text>min="@minDateTime"</text>
+           }
+           @if (!string.IsNullOrEmpty(maxDateTime))
+           {
+               <text>max="@maxDateTime"</text>
+           }
            data-field-id="@Model.FieldId"
            @if (!string.IsNullOrEmpty(Model.ValidationDataAttribute))
            {

@@ -10,6 +10,7 @@ namespace FormReporting.Models.ViewModels.Forms
         public int TemplateId { get; set; }
         public string TemplateName { get; set; } = string.Empty;
         public string TemplateCode { get; set; } = string.Empty;
+        public int CategoryId { get; set; }
         public string CategoryName { get; set; } = string.Empty;
         public string TemplateType { get; set; } = string.Empty;
         public string PublishStatus { get; set; } = string.Empty;
@@ -18,6 +19,38 @@ namespace FormReporting.Models.ViewModels.Forms
         public bool IsActive { get; set; }
         public string CreatedBy { get; set; } = string.Empty;
         public DateTime ModifiedDate { get; set; }
+        public string? Description { get; set; }
+
+        // ============================================================================
+        // CONFIGURATION STATUS - Shows what has been configured for this template
+        // ============================================================================
+        
+        /// <summary>Has sections and fields configured in Form Builder</summary>
+        public bool HasFormBuilder { get; set; }
+        
+        /// <summary>Has user/role assignments configured</summary>
+        public bool HasAssignments { get; set; }
+        
+        /// <summary>Has approval workflow configured</summary>
+        public bool HasWorkflow { get; set; }
+        
+        /// <summary>Has metric mappings configured</summary>
+        public bool HasMetrics { get; set; }
+        
+        /// <summary>Number of sections in the form</summary>
+        public int SectionCount { get; set; }
+        
+        /// <summary>Number of fields in the form</summary>
+        public int FieldCount { get; set; }
+
+        /// <summary>
+        /// Configuration completion level (0-4)
+        /// </summary>
+        public int ConfigurationLevel => 
+            (HasFormBuilder ? 1 : 0) + 
+            (HasAssignments ? 1 : 0) + 
+            (HasWorkflow ? 1 : 0) + 
+            (HasMetrics ? 1 : 0);
 
         /// <summary>
         /// Formatted version display (e.g., v1.0, v2.5)

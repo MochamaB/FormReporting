@@ -25,6 +25,14 @@
            @(Model.IsRequired ? "required" : "")
            @(Model.IsReadOnly ? "readonly" : "")
            @(Model.IsDisabled ? "disabled" : "")
+           @if (!string.IsNullOrEmpty(Model.MinDate))
+           {
+               <text>min="@Model.MinDate"</text>
+           }
+           @if (!string.IsNullOrEmpty(Model.MaxDate))
+           {
+               <text>max="@Model.MaxDate"</text>
+           }
            data-field-id="@Model.FieldId"
            @if (!string.IsNullOrEmpty(Model.ValidationDataAttribute))
            {

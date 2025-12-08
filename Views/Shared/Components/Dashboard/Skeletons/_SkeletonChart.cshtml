@@ -1,0 +1,20 @@
+@*
+    Skeleton placeholder for chart card
+    Used during lazy loading
+*@
+
+@{
+    var height = ViewData["Height"]?.ToString() ?? "350px";
+}
+
+<div class="card">
+    <div class="card-header border-0">
+        <!-- Title skeleton -->
+        <div class="skeleton skeleton-text" style="width: 40%; height: 20px;"></div>
+    </div>
+
+    <div class="card-body">
+        <!-- Chart skeleton -->
+        <div class="skeleton skeleton-chart" style="height: @height;"></div>
+    </div>
+</div>

@@ -37,7 +37,15 @@
         CurrentValue = Model.DefaultValue,
         Options = fieldOptions,  // Use mapped options from database
         DisplayOrder = Model.DisplayOrder,
-        ShowFieldNumber = true  // Show numbering in form builder
+        ShowFieldNumber = true,  // Show numbering in form builder
+        // Date/Time configuration
+        MinDate = Model.MinDate,
+        MaxDate = Model.MaxDate,
+        MinTime = Model.MinTime,
+        MaxTime = Model.MaxTime,
+        // Text configuration
+        Rows = Model.Rows,
+        MaxLength = Model.MaxLength
     };
 }
 

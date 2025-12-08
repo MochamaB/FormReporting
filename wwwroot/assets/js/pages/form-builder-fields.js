@@ -9,12 +9,37 @@ const FormBuilderFields = {
     pendingSectionId: null,
     pendingDeleteFieldId: null,
     pendingDeleteFieldData: null,
+    
+    // Cache for option templates (loaded once per page session)
+    _optionTemplatesCache: null,
 
     /**
      * Initialize field management
      */
     init: function() {
+        // Pre-load option templates in background for faster modal opening
+        this.preloadOptionTemplates();
         console.log('FormBuilderFields initialized');
+    },
+    
+    /**
+     * Pre-load option templates in background
+     */
+    preloadOptionTemplates: async function() {
+        if (this._optionTemplatesCache) return; // Already loaded
+        
+        try {
+            const response = await fetch('/api/formbuilder/option-templates/list');
+            if (response.ok) {
+                const result = await response.json();
+                if (result.success && result.templates) {
+                    this._optionTemplatesCache = result.templates;
+                    console.log(`[FormBuilderFields] Pre-loaded ${result.templates.length} option templates`);
+                }
+            }
+        } catch (error) {
+            console.warn('[FormBuilderFields] Failed to pre-load option templates:', error);
+        }
     },
 
     // ========================================================================
@@ -99,11 +124,111 @@ const FormBuilderFields = {
         this.pendingFieldType = fieldType;
         this.pendingSectionId = sectionId;
 
+        // Show/hide option template selector based on field type
+        this.toggleOptionTemplateSelector(fieldType);
+
         console.log('Opening Add Field modal for section:', sectionId, 'type:', fieldType);
 
         // Show modal
         const bsModal = new bootstrap.Modal(modal);
         bsModal.show();
+    },
+
+    /**
+     * Check if field type requires options (selection fields)
+     * @param {string} fieldType - Field type to check
+     * @returns {boolean} True if field type requires options
+     */
+    requiresOptions: function(fieldType) {
+        const selectionTypes = ['Dropdown', 'Radio', 'Checkbox', 'MultiSelect'];
+        return selectionTypes.includes(fieldType);
+    },
+
+    /**
+     * Toggle option template selector visibility and load templates
+     * @param {string} fieldType - Current field type
+     */
+    toggleOptionTemplateSelector: async function(fieldType) {
+        const container = document.getElementById('optionTemplateContainer');
+        const selector = document.getElementById('optionTemplateId');
+        
+        if (!container || !selector) return;
+
+        if (this.requiresOptions(fieldType)) {
+            // Show container and load templates
+            container.style.display = 'block';
+            await this.loadOptionTemplates(fieldType);
+        } else {
+            // Hide container for non-selection fields
+            container.style.display = 'none';
+            // Reset to default
+            selector.innerHTML = '<option value="0" selected>Default Options (Option 1, 2, 3)</option>';
+        }
+    },
+
+    /**
+     * Load option templates for the selector (uses cache for instant loading)
+     * @param {string} fieldType - Field type to filter templates (optional)
+     */
+    loadOptionTemplates: async function(fieldType) {
+        const selector = document.getElementById('optionTemplateId');
+        if (!selector) return;
+
+        // Clear and set default option
+        selector.innerHTML = '<option value="0" selected>Default Options (Option 1, 2, 3)</option>';
+
+        // Use cached templates if available
+        let templates = this._optionTemplatesCache;
+        
+        if (!templates) {
+            // Fetch from lightweight endpoint if not cached
+            try {
+                const response = await fetch('/api/formbuilder/option-templates/list');
+                if (!response.ok) {
+                    console.error('Failed to load option templates');
+                    return;
+                }
+
+                const result = await response.json();
+                if (!result.success || !result.templates) {
+                    console.error('Invalid response from option templates API');
+                    return;
+                }
+                
+                templates = result.templates;
+                this._optionTemplatesCache = templates; // Cache for next time
+            } catch (error) {
+                console.error('Error loading option templates:', error);
+                return;
+            }
+        }
+
+        // Group templates by category
+        const grouped = {};
+        templates.forEach(template => {
+            const category = template.category || 'Custom';
+            if (!grouped[category]) {
+                grouped[category] = [];
+            }
+            grouped[category].push(template);
+        });
+
+        // Add grouped options
+        Object.keys(grouped).sort().forEach(category => {
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = category;
+            
+            grouped[category].forEach(template => {
+                const option = document.createElement('option');
+                option.value = template.templateId;
+                option.textContent = `${template.templateName} (${template.optionCount} options)`;
+                optgroup.appendChild(option);
+            });
+            
+            selector.appendChild(optgroup);
+        });
+
+        console.log(`[AddField] Loaded ${templates.length} option templates from ${this._optionTemplatesCache ? 'cache' : 'API'}`);
     },
 
     /**
@@ -148,6 +273,7 @@ const FormBuilderFields = {
             const itemName = document.getElementById('itemName')?.value?.trim();
             const itemDescription = document.getElementById('itemDescription')?.value?.trim();
             const isRequired = document.getElementById('isRequired')?.checked || false;
+            const optionTemplateId = parseInt(document.getElementById('optionTemplateId')?.value) || 0;
 
             // Validate required fields
             if (!fieldType || !sectionId || !itemName) {
@@ -172,7 +298,8 @@ const FormBuilderFields = {
                 ItemDescription: itemDescription || null,
                 DataType: fieldType,  // Must match C# property: FormFieldType DataType
                 IsRequired: isRequired,
-                DisplayOrder: 0 // Will be auto-calculated by backend
+                DisplayOrder: 0, // Will be auto-calculated by backend
+                OptionTemplateId: optionTemplateId > 0 ? optionTemplateId : null // Option template to use (0 = default options)
             };
 
             console.log('Saving field:', fieldData);
@@ -212,6 +339,12 @@ const FormBuilderFields = {
             }
 
             if (result.success) {
+                // Reset button state immediately before closing modal
+                if (btnSave) {
+                    btnSave.disabled = false;
+                    btnSave.innerHTML = '<i class="ri-add-circle-line me-1"></i>Add Field';
+                }
+
                 // Success! Close modal and add field dynamically
                 const modal = bootstrap.Modal.getInstance(document.getElementById('addFieldModal'));
                 if (modal) {

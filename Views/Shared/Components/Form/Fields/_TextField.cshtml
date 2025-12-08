@@ -34,6 +34,10 @@
                    @(Model.IsRequired ? "required" : "")
                    @(Model.IsReadOnly ? "readonly" : "")
                    @(Model.IsDisabled ? "disabled" : "")
+                   @if (Model.MaxLength.HasValue)
+                   {
+                       <text>maxlength="@Model.MaxLength"</text>
+                   }
                    data-field-id="@Model.FieldId"
                    @if (!string.IsNullOrEmpty(Model.ValidationDataAttribute))
                    {
@@ -61,6 +65,10 @@
                @(Model.IsRequired ? "required" : "")
                @(Model.IsReadOnly ? "readonly" : "")
                @(Model.IsDisabled ? "disabled" : "")
+               @if (Model.MaxLength.HasValue)
+               {
+                   <text>maxlength="@Model.MaxLength"</text>
+               }
                data-field-id="@Model.FieldId"
                @if (!string.IsNullOrEmpty(Model.ValidationDataAttribute))
                {

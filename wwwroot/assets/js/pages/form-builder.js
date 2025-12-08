@@ -200,6 +200,98 @@ const FormBuilder = {
             console.error(`[FormBuilder] Error rendering field ${fieldId}:`, error);
             throw error;
         }
+    },
+
+    /**
+     * Render section HTML from server and insert into DOM (no page reload)
+     * @param {number} sectionId - Section ID to render
+     * @param {string} action - Action: 'append', 'replace', 'insertAfter'
+     * @param {HTMLElement} targetElement - Target element (required for insertAfter)
+     * @returns {Promise<HTMLElement>} The inserted section card element
+     */
+    renderAndInsertSection: async function(sectionId, action = 'append', targetElement = null) {
+        try {
+            console.log(`[FormBuilder] Rendering section ${sectionId} with action: ${action}`);
+
+            // Fetch rendered HTML from server
+            const response = await fetch(`/api/formbuilder/sections/${sectionId}/render`);
+
+            if (!response.ok) {
+                throw new Error(`Failed to render section: ${response.status}`);
+            }
+
+            const result = await response.json();
+
+            if (!result.success || !result.html) {
+                throw new Error('Invalid render response from server');
+            }
+
+            // Parse HTML string into DOM element
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = result.html;
+            const newSectionCard = tempDiv.firstElementChild;
+
+            if (!newSectionCard) {
+                throw new Error('No section card in rendered HTML');
+            }
+
+            // Get sections container
+            const sectionsContainer = document.getElementById('sectionsContainer');
+
+            // Insert into DOM based on action
+            switch(action) {
+                case 'append':
+                    // Add new section to end of container
+                    if (sectionsContainer) {
+                        sectionsContainer.appendChild(newSectionCard);
+                    }
+                    console.log(`[FormBuilder] Section ${sectionId} appended to container`);
+                    break;
+
+                case 'replace':
+                    // Replace existing section card
+                    const existingCard = document.getElementById(`section-${sectionId}`);
+                    if (existingCard) {
+                        const wasSelected = existingCard.classList.contains('selected');
+                        if (wasSelected) {
+                            newSectionCard.classList.add('selected');
+                        }
+                        existingCard.replaceWith(newSectionCard);
+                        console.log(`[FormBuilder] Section ${sectionId} replaced in DOM`);
+                    } else {
+                        console.warn(`[FormBuilder] Section ${sectionId} not found for replace, appending instead`);
+                        if (sectionsContainer) {
+                            sectionsContainer.appendChild(newSectionCard);
+                        }
+                    }
+                    break;
+
+                case 'insertAfter':
+                    // Insert after target element (for duplicate)
+                    if (!targetElement) {
+                        throw new Error('targetElement required for insertAfter action');
+                    }
+                    targetElement.after(newSectionCard);
+                    console.log(`[FormBuilder] Section ${sectionId} inserted after target`);
+                    break;
+
+                default:
+                    throw new Error(`Unknown action: ${action}`);
+            }
+
+            // Reinitialize drag-drop for the new section
+            if (typeof FormBuilderDragDrop !== 'undefined' && FormBuilderDragDrop.initializeSectionDropZone) {
+                FormBuilderDragDrop.initializeSectionDropZone(newSectionCard);
+                console.log(`[FormBuilder] Drag-drop initialized for section ${sectionId}`);
+            }
+
+            console.log(`[FormBuilder] ✅ Section ${sectionId} successfully rendered and inserted`);
+            return newSectionCard;
+
+        } catch (error) {
+            console.error(`[FormBuilder] Error rendering section ${sectionId}:`, error);
+            throw error;
+        }
     }
 };
 

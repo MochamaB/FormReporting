@@ -4,16 +4,49 @@
 @{
     Layout = "~/Views/Shared/_BuilderLayout.cshtml";
     ViewData["Title"] = "Form Builder - " + Model.TemplateName;
+    
+    // Prevent browser caching of this page
+    Context.Response.Headers["Cache-Control"] = "no-cache, no-store, must-revalidate";
+    Context.Response.Headers["Pragma"] = "no-cache";
+    Context.Response.Headers["Expires"] = "0";
+    
     var progress = ViewData["Progress"] as FormBuilderProgressViewModel;
+    
+    // Fallback: Build progress if not provided (prevents disappearing progress bar)
+    if (progress == null && Model != null)
+    {
+        progress = new FormBuilderProgressConfig
+        {
+            BuilderId = $"template-{Model.TemplateId}",
+            TemplateId = Model.TemplateId,
+            TemplateName = Model.TemplateName,
+            TemplateVersion = $"v{Model.Version}",
+            PublishStatus = Model.PublishStatus,
+            CurrentStep = FormBuilderStep.FormBuilder,
+            ShowSaveDraft = true,
+            ExitUrl = Url.Action("Index", "FormTemplates") ?? "/Forms/FormTemplates"
+        }
+        .AtStep(FormBuilderStep.FormBuilder)
+        .BuildProgress();
+    }
 }
 
 <!-- Form Builder CSS -->
-<link href="~/css/form-builder/form-builder.css" rel="stylesheet" />
+<link href="~/css/form-builder/form-builder.css?v=1.1" rel="stylesheet" />
+<link href="~/css/form-builder/canvas-toolbar.css?v=1.0" rel="stylesheet" />
 
 <!-- ============================================================================ -->
 <!-- PROGRESS TRACKER - Same component used by all wizard steps -->
 <!-- ============================================================================ -->
-<partial name="~/Views/Shared/Components/FormBuilder/_FormBuilderProgress.cshtml" model="progress" />
+@if (progress != null)
+{
+    <partial name="~/Views/Shared/Components/FormBuilder/_FormBuilderProgress.cshtml" model="progress" />
+}
+else
+{
+    <!-- Debug: Progress is null even after fallback -->
+    <div class="alert alert-danger m-2">Progress tracker failed to load. <a href="javascript:location.reload()">Reload</a></div>
+}
 
 <!-- ============================================================================ -->
 <!-- TABBED NAVIGATION -->
@@ -125,9 +158,12 @@
                 </div>
                 
                 <!-- CENTER: Canvas -->
-                <div class="design-canvas">
+                <div class="design-canvas" id="designCanvas">
                     <partial name="~/Views/Forms/FormTemplates/Partials/FormBuilder/_CanvasPanel.cshtml" model="Model" />
                 </div>
+                
+                <!-- FLOATING: Canvas Toolbar -->
+                <partial name="~/Views/Forms/FormTemplates/Partials/FormBuilder/Components/_CanvasToolbar.cshtml" />
                 
                 <!-- RIGHT: Properties (Collapsible) -->
                 <div class="design-properties" id="propertiesPanel">
@@ -176,6 +212,7 @@
     <script src="~/assets/js/pages/form-builder-properties.js?v=3.4"></script>
     <script src="~/assets/js/pages/form-builder-options.js?v=2.1"></script>
     <script src="~/assets/js/pages/form-builder-summary.js"></script>
+    <script src="~/assets/js/pages/form-builder-toolbar.js?v=1.0"></script>
     <script src="~/assets/js/pages/form-builder.js?v=1.2"></script>
 
     <!-- Initialize with Template ID -->

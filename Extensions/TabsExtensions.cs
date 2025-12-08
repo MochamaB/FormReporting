@@ -48,6 +48,7 @@ namespace FormReporting.Extensions
                 BadgeClasses = BuildBadgeClasses(tab.BadgeColor),
                 IsActive = tab.IsActive,
                 IsDisabled = tab.IsDisabled,
+                Url = tab.Url,
                 ContentPartialPath = tab.ContentPartialPath,
                 ContentHtml = tab.ContentHtml,
                 DisplayOrder = tab.DisplayOrder,
@@ -62,6 +63,7 @@ namespace FormReporting.Extensions
                 Layout = config.Layout,
                 Style = config.Style,
                 ColorTheme = config.ColorTheme,
+                NavigationMode = config.NavigationMode,
                 Tabs = viewModelTabs,
                 IsJustified = config.IsJustified,
                 WrapInCard = config.WrapInCard,
@@ -180,6 +182,41 @@ namespace FormReporting.Extensions
             config.WrapInCard = true;
             config.CardTitle = title;
             config.CardSubtitle = subtitle;
+            return config;
+        }
+
+        /// <summary>
+        /// Set server-side navigation mode (uses href links instead of tab switching)
+        /// </summary>
+        public static TabsConfig WithServerSideNavigation(this TabsConfig config)
+        {
+            config.NavigationMode = TabsNavigationMode.ServerSide;
+            return config;
+        }
+
+        /// <summary>
+        /// Add a tab with URL for server-side navigation
+        /// </summary>
+        public static TabsConfig WithNavigationTab(this TabsConfig config,
+            string tabId,
+            string title,
+            string url,
+            string? icon = null,
+            string? badge = null,
+            string badgeColor = "secondary",
+            bool isActive = false)
+        {
+            config.Tabs.Add(new TabConfig
+            {
+                TabId = tabId,
+                Title = title,
+                Url = url,
+                Icon = icon,
+                Badge = badge,
+                BadgeColor = badgeColor,
+                IsActive = isActive,
+                DisplayOrder = config.Tabs.Count + 1
+            });
             return config;
         }
 

@@ -67,10 +67,155 @@
         <div class="card-body">
             <div class="row">
                 @* Left Column: Vertical Tabs *@
-                <div class="col-md-3">
+                <div class="col-md-3" style="border-right: 2px solid #e9ecef;">
                     <div class="@tabsModel.NavClasses" id="@tabsModel.TabsId" role="tablist" aria-orientation="vertical">
                         @foreach (var tab in tabsModel.Tabs)
                         {
+                            @if (tabsModel.NavigationMode == TabsNavigationMode.ServerSide)
+                            {
+                                @* Server-side navigation: Use regular href links *@
+                                <a class="@tab.NavLinkClasses mb-2 d-flex align-items-center"
+                                   href="@tab.Url"
+                                   @(tab.IsDisabled ? "tabindex=\"-1\"" : "")>
+                                    @if (!string.IsNullOrEmpty(tab.Icon))
+                                    {
+                                        <i class="@tab.Icon fs-18 me-2"></i>
+                                    }
+                                    <span class="flex-grow-1">
+                                        @tab.Title
+                                        @if (!string.IsNullOrEmpty(tab.Description))
+                                        {
+                                            <small class="text-muted d-block">@tab.Description</small>
+                                        }
+                                    </span>
+                                    @if (!string.IsNullOrEmpty(tab.Badge))
+                                    {
+                                        <span class="@tab.BadgeClasses ms-auto">@tab.Badge</span>
+                                    }
+                                </a>
+                            }
+                            else
+                            {
+                                @* Client-side navigation: Use Bootstrap data-bs-toggle *@
+                                <a class="@tab.NavLinkClasses mb-2 d-flex align-items-center"
+                                   id="@(tab.TabId)-tab"
+                                   data-bs-toggle="pill"
+                                   href="@tab.Href"
+                                   role="tab"
+                                   aria-controls="@tab.TabId"
+                                   aria-selected="@tab.AriaSelected"
+                                   @(tab.IsDisabled ? "tabindex=\"-1\"" : "")>
+                                    @if (!string.IsNullOrEmpty(tab.Icon))
+                                    {
+                                        <i class="@tab.Icon fs-18 me-2"></i>
+                                    }
+                                    <span class="flex-grow-1">
+                                        @tab.Title
+                                        @if (!string.IsNullOrEmpty(tab.Description))
+                                        {
+                                            <small class="text-muted d-block">@tab.Description</small>
+                                        }
+                                    </span>
+                                    @if (!string.IsNullOrEmpty(tab.Badge))
+                                    {
+                                        <span class="@tab.BadgeClasses ms-auto">@tab.Badge</span>
+                                    }
+                                </a>
+                            }
+                        }
+                    </div>
+                </div>
+
+                @* Right Column: Tab Content (only for ClientSide mode) *@
+                @if (tabsModel.NavigationMode == TabsNavigationMode.ClientSide)
+                {
+                    <div class="col-md-9">
+                        <div class="@tabsModel.TabContentClasses mt-4 mt-md-0" id="@(tabsModel.TabsId)Content">
+                            @foreach (var tab in tabsModel.Tabs)
+                            {
+                                <div class="@tab.TabPaneClasses"
+                                     id="@tab.TabId"
+                                     role="tabpanel"
+                                     aria-labelledby="@(tab.TabId)-tab">
+                                    @if (!string.IsNullOrEmpty(tab.ContentPartialPath))
+                                    {
+                                        @* Pass the parent view's model to the partial *@
+                                        var parentModel = ViewData["ParentModel"];
+                                        <partial name="@tab.ContentPartialPath" model="parentModel" />
+                                    }
+                                    else if (!string.IsNullOrEmpty(tab.ContentHtml))
+                                    {
+                                        @Html.Raw(tab.ContentHtml)
+                                    }
+                                    else
+                                    {
+                                        <p class="text-muted">No content provided for this tab.</p>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    @* Server-side mode: Content is provided by the page *@
+                    <div class="col-md-9">
+                        @if (ViewData["ServerSideContentPartial"] != null)
+                        {
+                            @* Render a partial view with the parent model *@
+                            var contentPartialPath = ViewData["ServerSideContentPartial"]?.ToString();
+                            var parentModel = ViewData["ParentModel"];
+                            @await Html.PartialAsync(contentPartialPath, parentModel)
+                        }
+                        else if (ViewData["TabContent"] != null)
+                        {
+                            @Html.Raw(ViewData["TabContent"])
+                        }
+                        else
+                        {
+                            <p class="text-muted">No content provided for server-side navigation.</p>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="@tabsModel.ContainerCssClass">
+        <div class="row">
+            @* Left Column: Vertical Tabs *@
+            <div class="col-md-3">
+                <div class="@tabsModel.NavClasses" id="@tabsModel.TabsId" role="tablist" aria-orientation="vertical">
+                    @foreach (var tab in tabsModel.Tabs)
+                    {
+                        @if (tabsModel.NavigationMode == TabsNavigationMode.ServerSide)
+                        {
+                            @* Server-side navigation: Use regular href links *@
+                            <a class="@tab.NavLinkClasses mb-2 d-flex align-items-center"
+                               href="@tab.Url"
+                               @(tab.IsDisabled ? "tabindex=\"-1\"" : "")>
+                                @if (!string.IsNullOrEmpty(tab.Icon))
+                                {
+                                    <i class="@tab.Icon fs-18 me-2"></i>
+                                }
+                                <span class="flex-grow-1">
+                                    @tab.Title
+                                    @if (!string.IsNullOrEmpty(tab.Description))
+                                    {
+                                        <small class="text-muted d-block">@tab.Description</small>
+                                    }
+                                </span>
+                                @if (!string.IsNullOrEmpty(tab.Badge))
+                                {
+                                    <span class="@tab.BadgeClasses ms-auto">@tab.Badge</span>
+                                }
+                            </a>
+                        }
+                        else
+                        {
+                            @* Client-side navigation: Use Bootstrap data-bs-toggle *@
                             <a class="@tab.NavLinkClasses mb-2 d-flex align-items-center"
                                id="@(tab.TabId)-tab"
                                data-bs-toggle="pill"
@@ -96,10 +241,13 @@
                                 }
                             </a>
                         }
-                    </div>
+                    }
                 </div>
+            </div>
 
-                @* Right Column: Tab Content *@
+            @* Right Column: Tab Content (only for ClientSide mode) *@
+            @if (tabsModel.NavigationMode == TabsNavigationMode.ClientSide)
+            {
                 <div class="col-md-9">
                     <div class="@tabsModel.TabContentClasses mt-4 mt-md-0" id="@(tabsModel.TabsId)Content">
                         @foreach (var tab in tabsModel.Tabs)
@@ -126,74 +274,28 @@
                         }
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-}
-else
-{
-    <div class="@tabsModel.ContainerCssClass">
-        <div class="row">
-            @* Left Column: Vertical Tabs *@
-            <div class="col-md-3">
-                <div class="@tabsModel.NavClasses" id="@tabsModel.TabsId" role="tablist" aria-orientation="vertical">
-                    @foreach (var tab in tabsModel.Tabs)
+            }
+            else
+            {
+                @* Server-side mode: Content is provided by the page *@
+                <div class="col-md-9">
+                    @if (ViewData["ServerSideContentPartial"] != null)
                     {
-                        <a class="@tab.NavLinkClasses mb-2 d-flex align-items-center"
-                           id="@(tab.TabId)-tab"
-                           data-bs-toggle="pill"
-                           href="@tab.Href"
-                           role="tab"
-                           aria-controls="@tab.TabId"
-                           aria-selected="@tab.AriaSelected"
-                           @(tab.IsDisabled ? "tabindex=\"-1\"" : "")>
-                            @if (!string.IsNullOrEmpty(tab.Icon))
-                            {
-                                <i class="@tab.Icon fs-18 me-2"></i>
-                            }
-                            <span class="flex-grow-1">
-                                @tab.Title
-                                @if (!string.IsNullOrEmpty(tab.Description))
-                                {
-                                    <small class="text-muted d-block">@tab.Description</small>
-                                }
-                            </span>
-                            @if (!string.IsNullOrEmpty(tab.Badge))
-                            {
-                                <span class="@tab.BadgeClasses ms-auto">@tab.Badge</span>
-                            }
-                        </a>
+                        @* Render a partial view with the parent model *@
+                        var contentPartialPath = ViewData["ServerSideContentPartial"]?.ToString();
+                        var parentModel = ViewData["ParentModel"];
+                        @await Html.PartialAsync(contentPartialPath, parentModel)
+                    }
+                    else if (ViewData["TabContent"] != null)
+                    {
+                        @Html.Raw(ViewData["TabContent"])
+                    }
+                    else
+                    {
+                        <p class="text-muted">No content provided for server-side navigation.</p>
                     }
                 </div>
-            </div>
-
-            @* Right Column: Tab Content *@
-            <div class="col-md-9">
-                <div class="@tabsModel.TabContentClasses mt-4 mt-md-0" id="@(tabsModel.TabsId)Content">
-                    @foreach (var tab in tabsModel.Tabs)
-                    {
-                        <div class="@tab.TabPaneClasses"
-                             id="@tab.TabId"
-                             role="tabpanel"
-                             aria-labelledby="@(tab.TabId)-tab">
-                            @if (!string.IsNullOrEmpty(tab.ContentPartialPath))
-                            {
-                                @* Pass the parent view's model to the partial *@
-                                var parentModel = ViewData["ParentModel"];
-                                <partial name="@tab.ContentPartialPath" model="parentModel" />
-                            }
-                            else if (!string.IsNullOrEmpty(tab.ContentHtml))
-                            {
-                                @Html.Raw(tab.ContentHtml)
-                            }
-                            else
-                            {
-                                <p class="text-muted">No content provided for this tab.</p>
-                            }
-                        </div>
-                    }
-                </div>
-            </div>
+            }
         </div>
     </div>
 }

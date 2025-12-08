@@ -1,0 +1,47 @@
+@model ChartCardConfig
+
+<div class="card @Model.CardClass">
+    @if (Model.ShowHeader)
+    {
+        <div class="card-header border-0 align-items-center d-flex">
+            <h4 class="card-title mb-0 flex-grow-1">
+                @Model.Title
+                @if (!string.IsNullOrEmpty(Model.Subtitle))
+                {
+                    <small class="text-muted d-block fs-12 mt-1">@Model.Subtitle</small>
+                }
+            </h4>
+
+            @if (Model.HeaderFilter != null)
+            {
+                <div class="flex-shrink-0">
+                    <partial name="~/Views/Shared/Components/Dashboard/Atomic/_Dropdown.cshtml"
+                             model="Model.HeaderFilter" />
+                </div>
+            }
+        </div>
+    }
+
+    <div class="card-body">
+        <div id="chart-@Model.Id"
+             data-chart-type="@Model.ChartType"
+             data-chart-height="@Model.Height"
+             data-chart-series='@Html.Raw(Model.SeriesJson)'
+             data-chart-categories='@Html.Raw(Model.CategoriesJson)'
+             data-chart-colors='@System.Text.Json.JsonSerializer.Serialize(Model.Colors)'
+             data-chart-toolbar="@Model.ShowToolbar.ToString().ToLower()"
+             @if (!string.IsNullOrEmpty(Model.OptionsJson))
+             {
+                 <text>data-chart-options='@Html.Raw(Model.OptionsJson)'</text>
+             }>
+            <!-- Chart will be rendered here by JavaScript -->
+        </div>
+    </div>
+
+    @if (Model.ShowFooter && !string.IsNullOrEmpty(Model.FooterContent))
+    {
+        <div class="card-footer bg-transparent border-top-dashed">
+            @Html.Raw(Model.FooterContent)
+        </div>
+    }
+</div>

@@ -1,0 +1,111 @@
+@model FormReporting.Models.ViewModels.Forms.FormTemplateViewModel
+
+@*
+    Template Card - Single card component for displaying a form template
+    Used in card view of the templates index page
+*@
+
+<div class="card border shadow-none mb-0">
+    <div class="card-body">
+        @* Header: Name + Status *@
+        <div class="d-flex justify-content-between align-items-start mb-3">
+            <div class="flex-grow-1">
+                <h6 class="card-title mb-1">
+                    <a href="@Url.Action("Details", "FormTemplates", new { id = Model.TemplateId })" class="text-body">
+                        @Model.TemplateName
+                    </a>
+                </h6>
+                <code class="text-muted small">@Model.TemplateCode</code>
+            </div>
+            <div>
+                @Html.Raw(Model.StatusBadge)
+            </div>
+        </div>
+
+        @* Category + Type *@
+        <div class="d-flex gap-2 mb-3">
+            <span class="badge bg-secondary-subtle text-secondary">
+                <i class="ri-folder-line me-1"></i>@Model.CategoryName
+            </span>
+            @Html.Raw(Model.TypeBadge)
+        </div>
+
+        @* Configuration Status *@
+        <div class="mb-3">
+            <small class="text-muted d-block mb-2">Configuration</small>
+            <div class="d-flex gap-2 flex-wrap">
+                @* Form Builder *@
+                <span class="config-status-icon @(Model.HasFormBuilder ? "configured" : "not-configured")" 
+                      title="Form Builder: @(Model.HasFormBuilder ? $"{Model.SectionCount} sections, {Model.FieldCount} fields" : "Not configured")">
+                    <i class="ri-layout-3-line"></i>
+                </span>
+                
+                @* Assignments *@
+                <span class="config-status-icon @(Model.HasAssignments ? "configured" : "not-configured")" 
+                      title="Assignments: @(Model.HasAssignments ? "Configured" : "Not configured")">
+                    <i class="ri-user-add-line"></i>
+                </span>
+                
+                @* Workflow *@
+                <span class="config-status-icon @(Model.HasWorkflow ? "configured" : "not-configured")" 
+                      title="Workflow: @(Model.HasWorkflow ? "Configured" : "Not configured")">
+                    <i class="ri-flow-chart"></i>
+                </span>
+                
+                @* Metrics *@
+                <span class="config-status-icon @(Model.HasMetrics ? "configured" : "not-configured")" 
+                      title="Metrics: @(Model.HasMetrics ? "Configured" : "Not configured")">
+                    <i class="ri-bar-chart-2-line"></i>
+                </span>
+            </div>
+        </div>
+
+        @* Footer: Modified + Actions *@
+        <div class="d-flex justify-content-between align-items-center pt-2 border-top">
+            <div>
+                <small class="text-muted">
+                    <i class="ri-time-line me-1"></i>@Model.ModifiedDateFormatted
+                </small>
+            </div>
+            <div class="dropdown">
+                <button class="btn btn-soft-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                    <i class="ri-more-fill"></i>
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    @if (Model.PublishStatus == "Draft")
+                    {
+                        <li>
+                            <a class="dropdown-item" href="@Url.Action("Create", "FormTemplates", new { id = Model.TemplateId })">
+                                <i class="ri-play-line me-2 text-primary"></i>Continue Editing
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="@Url.Action("Preview", "FormTemplates", new { id = Model.TemplateId })">
+                                <i class="ri-eye-line me-2 text-secondary"></i>Preview
+                            </a>
+                        </li>
+                    }
+                    else if (Model.PublishStatus == "Published")
+                    {
+                        <li>
+                            <a class="dropdown-item" href="@Url.Action("Details", "FormTemplates", new { id = Model.TemplateId })">
+                                <i class="ri-eye-line me-2 text-primary"></i>View Details
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item" href="@Url.Action("Edit", "FormTemplates", new { id = Model.TemplateId })">
+                                <i class="ri-git-branch-line me-2 text-warning"></i>Create New Version
+                            </a>
+                        </li>
+                    }
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item" href="@Url.Action("Clone", "FormTemplates", new { id = Model.TemplateId })">
+                            <i class="ri-file-copy-line me-2 text-info"></i>Clone
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,37 @@
+@model FormReporting.Models.ViewModels.Dashboard.Components.Atomic.LabelConfig
+
+@{
+    var classes = Model.GetClasses();
+    var tag = Model.Tag.ToLower();
+}
+
+@switch (tag)
+{
+    case "h1":
+        <h1 class="@classes">@Model.Text</h1>
+        break;
+    case "h2":
+        <h2 class="@classes">@Model.Text</h2>
+        break;
+    case "h3":
+        <h3 class="@classes">@Model.Text</h3>
+        break;
+    case "h4":
+        <h4 class="@classes">@Model.Text</h4>
+        break;
+    case "h5":
+        <h5 class="@classes">@Model.Text</h5>
+        break;
+    case "h6":
+        <h6 class="@classes">@Model.Text</h6>
+        break;
+    case "span":
+        <span class="@classes">@Model.Text</span>
+        break;
+    case "div":
+        <div class="@classes">@Model.Text</div>
+        break;
+    default:
+        <p class="@classes">@Model.Text</p>
+        break;
+}

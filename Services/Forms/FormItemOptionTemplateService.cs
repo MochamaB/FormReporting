@@ -106,7 +106,8 @@ namespace FormReporting.Services.Forms
                     TemplateName = t.TemplateName,
                     TemplateCode = t.TemplateCode,
                     Category = t.Category,
-                    HasScoring = t.HasScoring
+                    HasScoring = t.HasScoring,
+                    OptionCount = t.Items.Count // Count without loading items
                 })
                 .ToListAsync<object>();
         }

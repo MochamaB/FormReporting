@@ -142,6 +142,7 @@ namespace FormReporting.Controllers.Forms
                     TemplateId = t.TemplateId,
                     TemplateName = t.TemplateName,
                     TemplateCode = t.TemplateCode,
+                    CategoryId = t.CategoryId,
                     CategoryName = t.Category.CategoryName,
                     TemplateType = t.TemplateType,
                     PublishStatus = t.PublishStatus,
@@ -149,7 +150,15 @@ namespace FormReporting.Controllers.Forms
                     SubmissionCount = t.Submissions.Count,
                     IsActive = t.IsActive,
                     CreatedBy = t.Creator.FullName ?? "Unknown",
-                    ModifiedDate = t.ModifiedDate
+                    ModifiedDate = t.ModifiedDate,
+                    Description = t.Description,
+                    // Configuration status
+                    SectionCount = t.Sections.Count,
+                    FieldCount = t.Sections.SelectMany(s => s.Items).Count(),
+                    HasFormBuilder = t.Sections.Any(),
+                    HasAssignments = t.Assignments.Any(),
+                    HasWorkflow = t.WorkflowId.HasValue,
+                    HasMetrics = false // TODO: Implement metric mapping check when available
                 })
                 .ToListAsync();
 
@@ -165,13 +174,28 @@ namespace FormReporting.Controllers.Forms
             ViewBag.CurrentType = type;
             ViewBag.CurrentCategory = category;
 
-            // Get categories for filter dropdown (using service)
-            var categories = await _categoryService.GetActiveCategoriesAsync();
-            ViewBag.Categories = categories
-                .Select(c => c.CategoryName)
-                .Distinct()
-                .OrderBy(c => c)
+            // Get categories with template counts for sidebar navigation
+            var categoriesWithCounts = await _context.FormCategories
+                .Where(c => c.IsActive)
+                .Select(c => new {
+                    c.CategoryId,
+                    c.CategoryName,
+                    TemplateCount = c.FormTemplates.Count(t => t.IsActive)
+                })
+                .OrderBy(c => c.CategoryName)
+                .ToListAsync();
+            
+            ViewBag.CategoriesWithCounts = categoriesWithCounts
+                .Select(c => new { c.CategoryId, c.CategoryName, c.TemplateCount })
                 .ToList();
+            
+            // Legacy: Keep simple category list for backwards compatibility
+            ViewBag.Categories = categoriesWithCounts
+                .Select(c => c.CategoryName)
+                .ToList();
+            
+            // Total template count for "All" option
+            ViewBag.AllTemplatesCount = await _context.FormTemplates.CountAsync(t => t.IsActive);
 
             return View("~/Views/Forms/FormTemplates/Index.cshtml", templates);
         }

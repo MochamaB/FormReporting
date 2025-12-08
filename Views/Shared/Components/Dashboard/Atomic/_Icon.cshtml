@@ -1,0 +1,33 @@
+@model FormReporting.Models.ViewModels.Dashboard.Components.Atomic.IconConfig
+
+@if (Model.Show)
+{
+    var backgroundClass = Model.Subtle
+        ? $"bg-{Model.ColorTheme}-subtle"
+        : $"bg-{Model.ColorTheme}";
+
+    var textColorClass = Model.Subtle
+        ? $"text-{Model.ColorTheme}"
+        : "text-white";
+
+    var shapeClass = Model.Shape == IconShape.Circle
+        ? "rounded-circle"
+        : "rounded";
+
+    var avatarSizeClass = $"avatar-{Model.Size}";
+
+    var allClasses = $"{avatarSizeClass} {Model.CssClass}".Trim();
+
+    <div class="@allClasses">
+        <span class="avatar-title @backgroundClass @shapeClass @Model.FontSize">
+            @if (Model.Library == IconLibrary.Feather)
+            {
+                <i data-feather="@Model.IconClass" class="@textColorClass"></i>
+            }
+            else
+            {
+                <i class="@Model.IconClass @textColorClass"></i>
+            }
+        </span>
+    </div>
+}

@@ -1,0 +1,56 @@
+/* ============================================================================
+   FORM TEMPLATES INDEX - Minimal Custom Styles
+   Uses Bootstrap/Velzon admin template classes wherever possible
+   ============================================================================ */
+
+/* Category sidebar - vertical nav pills styling */
+.category-nav .nav-link {
+    border-radius: 0;
+    padding: 0.75rem 1rem;
+    color: var(--vz-body-color);
+    border-left: 3px solid transparent;
+}
+
+.category-nav .nav-link:hover {
+    background-color: var(--vz-light);
+}
+
+.category-nav .nav-link.active {
+    background-color: var(--vz-primary-bg-subtle);
+    color: var(--vz-primary);
+    border-left-color: var(--vz-primary);
+}
+
+/* Configuration status icons */
+.config-status-icon {
+    width: 20px;
+    height: 20px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    font-size: 11px;
+}
+
+.config-status-icon.configured {
+    background-color: var(--vz-success-bg-subtle);
+    color: var(--vz-success);
+}
+
+.config-status-icon.not-configured {
+    background-color: var(--vz-light);
+    color: var(--vz-secondary);
+}
+
+/* Card view grid */
+.template-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 1rem;
+}
+
+/* View toggle buttons */
+.view-toggle .btn.active {
+    background-color: var(--vz-primary);
+    color: #fff;
+}

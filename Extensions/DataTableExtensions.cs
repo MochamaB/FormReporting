@@ -80,6 +80,11 @@ namespace FormReporting.Extensions
             // Build table CSS classes
             viewModel.TableClasses = BuildTableClasses(config);
 
+            // View toggle
+            viewModel.EnableViewToggle = config.EnableViewToggle;
+            viewModel.DefaultView = config.DefaultView;
+            viewModel.CardContent = config.CardContentRenderer;
+
             // Add Actions column to NonSortableColumns if not already there
             if (config.EnableSorting && config.Columns.Any())
             {
@@ -223,6 +228,19 @@ namespace FormReporting.Extensions
             config.EnableStriped = striped;
             config.EnableBordered = bordered;
             config.TableSize = size;
+            return config;
+        }
+
+        /// <summary>
+        /// Fluent API: Enable view toggle (table/card)
+        /// </summary>
+        public static DataTableConfig WithViewToggle(this DataTableConfig config,
+            Func<object?, IHtmlContent> cardContentRenderer,
+            string defaultView = "table")
+        {
+            config.EnableViewToggle = true;
+            config.DefaultView = defaultView;
+            config.CardContentRenderer = cardContentRenderer;
             return config;
         }
 

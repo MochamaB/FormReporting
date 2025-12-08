@@ -120,6 +120,7 @@ namespace FormReporting.Services.Forms
                 Options = optionsDto,  // Include full option details
 
                 // Field-specific configurations (from key-value store)
+                // Number/Text configurations
                 MinValue = configs.ContainsKey("minValue") && decimal.TryParse(configs["minValue"], out var minVal) ? minVal : null,
                 MaxValue = configs.ContainsKey("maxValue") && decimal.TryParse(configs["maxValue"], out var maxVal) ? maxVal : null,
                 Step = configs.ContainsKey("step") && decimal.TryParse(configs["step"], out var stepVal) ? stepVal : null,
@@ -129,7 +130,114 @@ namespace FormReporting.Services.Forms
                 MaxLength = configs.ContainsKey("maxLength") && int.TryParse(configs["maxLength"], out var maxLen) ? maxLen : null,
                 InputMask = configs.ContainsKey("inputMask") ? configs["inputMask"] : null,
                 TextTransform = configs.ContainsKey("textTransform") ? configs["textTransform"] : null,
-                AutoTrim = configs.ContainsKey("autoTrim") && bool.TryParse(configs["autoTrim"], out var autoTrim) ? autoTrim : null
+                AutoTrim = configs.ContainsKey("autoTrim") && bool.TryParse(configs["autoTrim"], out var autoTrim) ? autoTrim : null,
+                Rows = configs.ContainsKey("rows") && int.TryParse(configs["rows"], out var rows) ? rows : null,
+
+                // Date/Time configurations
+                MinDate = configs.ContainsKey("minDate") ? configs["minDate"] : null,
+                MaxDate = configs.ContainsKey("maxDate") ? configs["maxDate"] : null,
+                MinTime = configs.ContainsKey("minTime") ? configs["minTime"] : null,
+                MaxTime = configs.ContainsKey("maxTime") ? configs["maxTime"] : null,
+                DisablePastDates = configs.ContainsKey("disablePastDates") && bool.TryParse(configs["disablePastDates"], out var disablePast) ? disablePast : null,
+                DisableFutureDates = configs.ContainsKey("disableFutureDates") && bool.TryParse(configs["disableFutureDates"], out var disableFuture) ? disableFuture : null,
+                DefaultToToday = configs.ContainsKey("defaultToToday") && bool.TryParse(configs["defaultToToday"], out var defaultToday) ? defaultToday : null,
+
+                // FileUpload configurations
+                AllowedFileTypes = configs.ContainsKey("allowedFileTypes") ? configs["allowedFileTypes"] : null,
+                MaxFileSize = configs.ContainsKey("maxFileSize") && int.TryParse(configs["maxFileSize"], out var maxFileSize) ? maxFileSize : null,
+                MinFileSize = configs.ContainsKey("minFileSize") && int.TryParse(configs["minFileSize"], out var minFileSize) ? minFileSize : null,
+                MaxFiles = configs.ContainsKey("maxFiles") && int.TryParse(configs["maxFiles"], out var maxFiles) ? maxFiles : null,
+                AllowMultiple = configs.ContainsKey("allowMultiple") && bool.TryParse(configs["allowMultiple"], out var allowMultiple) ? allowMultiple : null,
+                PreserveFileName = configs.ContainsKey("preserveFileName") && bool.TryParse(configs["preserveFileName"], out var preserveFileName) ? preserveFileName : null,
+
+                // Image configurations
+                AllowedImageTypes = configs.ContainsKey("allowedImageTypes") ? configs["allowedImageTypes"] : null,
+                ImageQuality = configs.ContainsKey("imageQuality") && int.TryParse(configs["imageQuality"], out var imageQuality) ? imageQuality : null,
+                MaxWidth = configs.ContainsKey("maxWidth") && int.TryParse(configs["maxWidth"], out var maxWidth) ? maxWidth : null,
+                MaxHeight = configs.ContainsKey("maxHeight") && int.TryParse(configs["maxHeight"], out var maxHeight) ? maxHeight : null,
+                MinWidth = configs.ContainsKey("minWidth") && int.TryParse(configs["minWidth"], out var minWidth) ? minWidth : null,
+                MinHeight = configs.ContainsKey("minHeight") && int.TryParse(configs["minHeight"], out var minHeight) ? minHeight : null,
+                AspectRatio = configs.ContainsKey("aspectRatio") ? configs["aspectRatio"] : null,
+                ThumbnailSize = configs.ContainsKey("thumbnailSize") ? configs["thumbnailSize"] : null,
+                AllowCropping = configs.ContainsKey("allowCropping") && bool.TryParse(configs["allowCropping"], out var allowCropping) ? allowCropping : null,
+                AutoResize = configs.ContainsKey("autoResize") && bool.TryParse(configs["autoResize"], out var autoResize) ? autoResize : null,
+
+                // Signature configurations
+                CanvasWidth = configs.ContainsKey("canvasWidth") && int.TryParse(configs["canvasWidth"], out var canvasWidth) ? canvasWidth : null,
+                CanvasHeight = configs.ContainsKey("canvasHeight") && int.TryParse(configs["canvasHeight"], out var canvasHeight) ? canvasHeight : null,
+                PenColor = configs.ContainsKey("penColor") ? configs["penColor"] : null,
+                PenWidth = configs.ContainsKey("penWidth") && int.TryParse(configs["penWidth"], out var penWidth) ? penWidth : null,
+                BackgroundColor = configs.ContainsKey("backgroundColor") ? configs["backgroundColor"] : null,
+                OutputFormat = configs.ContainsKey("outputFormat") ? configs["outputFormat"] : null,
+                ShowClearButton = configs.ContainsKey("showClearButton") && bool.TryParse(configs["showClearButton"], out var showClearButton) ? showClearButton : null,
+                ShowUndoButton = configs.ContainsKey("showUndoButton") && bool.TryParse(configs["showUndoButton"], out var showUndoButton) ? showUndoButton : null,
+                RequireFullName = configs.ContainsKey("requireFullName") && bool.TryParse(configs["requireFullName"], out var requireFullName) ? requireFullName : null,
+                ShowDateStamp = configs.ContainsKey("showDateStamp") && bool.TryParse(configs["showDateStamp"], out var showDateStamp) ? showDateStamp : null,
+
+                // Rating configurations
+                RatingMax = configs.ContainsKey("ratingMax") && int.TryParse(configs["ratingMax"], out var ratingMax) ? ratingMax : null,
+                RatingIcon = configs.ContainsKey("ratingIcon") ? configs["ratingIcon"] : null,
+                RatingActiveColor = configs.ContainsKey("ratingActiveColor") ? configs["ratingActiveColor"] : null,
+                RatingInactiveColor = configs.ContainsKey("ratingInactiveColor") ? configs["ratingInactiveColor"] : null,
+                RatingSize = configs.ContainsKey("ratingSize") ? configs["ratingSize"] : null,
+                AllowHalfRating = configs.ContainsKey("allowHalfRating") && bool.TryParse(configs["allowHalfRating"], out var allowHalfRating) ? allowHalfRating : null,
+                ShowRatingValue = configs.ContainsKey("showRatingValue") && bool.TryParse(configs["showRatingValue"], out var showRatingValue) ? showRatingValue : null,
+                ShowRatingLabels = configs.ContainsKey("showRatingLabels") && bool.TryParse(configs["showRatingLabels"], out var showRatingLabels) ? showRatingLabels : null,
+                AllowClearRating = configs.ContainsKey("allowClearRating") && bool.TryParse(configs["allowClearRating"], out var allowClearRating) ? allowClearRating : null,
+
+                // Slider configurations
+                SliderMin = configs.ContainsKey("sliderMin") && decimal.TryParse(configs["sliderMin"], out var sliderMin) ? sliderMin : null,
+                SliderMax = configs.ContainsKey("sliderMax") && decimal.TryParse(configs["sliderMax"], out var sliderMax) ? sliderMax : null,
+                SliderStep = configs.ContainsKey("sliderStep") && decimal.TryParse(configs["sliderStep"], out var sliderStep) ? sliderStep : null,
+                SliderDefault = configs.ContainsKey("sliderDefault") && decimal.TryParse(configs["sliderDefault"], out var sliderDefault) ? sliderDefault : null,
+                SliderUnit = configs.ContainsKey("sliderUnit") ? configs["sliderUnit"] : null,
+                SliderPrefix = configs.ContainsKey("sliderPrefix") ? configs["sliderPrefix"] : null,
+                SliderTrackColor = configs.ContainsKey("sliderTrackColor") ? configs["sliderTrackColor"] : null,
+                ShowSliderValue = configs.ContainsKey("showSliderValue") && bool.TryParse(configs["showSliderValue"], out var showSliderValue) ? showSliderValue : null,
+                ShowSliderTicks = configs.ContainsKey("showSliderTicks") && bool.TryParse(configs["showSliderTicks"], out var showSliderTicks) ? showSliderTicks : null,
+                ShowMinMaxLabels = configs.ContainsKey("showMinMaxLabels") && bool.TryParse(configs["showMinMaxLabels"], out var showMinMaxLabels) ? showMinMaxLabels : null,
+                ShowSliderInput = configs.ContainsKey("showSliderInput") && bool.TryParse(configs["showSliderInput"], out var showSliderInput) ? showSliderInput : null,
+
+                // Currency configurations
+                CurrencyCode = configs.ContainsKey("currencyCode") ? configs["currencyCode"] : null,
+                CurrencySymbol = configs.ContainsKey("currencySymbol") ? configs["currencySymbol"] : null,
+                CurrencyPosition = configs.ContainsKey("currencyPosition") ? configs["currencyPosition"] : null,
+                CurrencyDecimals = configs.ContainsKey("currencyDecimals") && int.TryParse(configs["currencyDecimals"], out var currencyDecimals) ? currencyDecimals : null,
+                ThousandSeparator = configs.ContainsKey("thousandSeparator") ? configs["thousandSeparator"] : null,
+                DecimalSeparator = configs.ContainsKey("decimalSeparator") ? configs["decimalSeparator"] : null,
+                CurrencyMin = configs.ContainsKey("currencyMin") && decimal.TryParse(configs["currencyMin"], out var currencyMin) ? currencyMin : null,
+                CurrencyMax = configs.ContainsKey("currencyMax") && decimal.TryParse(configs["currencyMax"], out var currencyMax) ? currencyMax : null,
+                AllowNegativeCurrency = configs.ContainsKey("allowNegativeCurrency") && bool.TryParse(configs["allowNegativeCurrency"], out var allowNegativeCurrency) ? allowNegativeCurrency : null,
+
+                // Percentage configurations
+                PercentageMin = configs.ContainsKey("percentageMin") && decimal.TryParse(configs["percentageMin"], out var percentageMin) ? percentageMin : null,
+                PercentageMax = configs.ContainsKey("percentageMax") && decimal.TryParse(configs["percentageMax"], out var percentageMax) ? percentageMax : null,
+                PercentageDecimals = configs.ContainsKey("percentageDecimals") && int.TryParse(configs["percentageDecimals"], out var percentageDecimals) ? percentageDecimals : null,
+                PercentageStep = configs.ContainsKey("percentageStep") && decimal.TryParse(configs["percentageStep"], out var percentageStep) ? percentageStep : null,
+                ShowPercentSymbol = configs.ContainsKey("showPercentSymbol") && bool.TryParse(configs["showPercentSymbol"], out var showPercentSymbol) ? showPercentSymbol : null,
+                AllowOverHundred = configs.ContainsKey("allowOverHundred") && bool.TryParse(configs["allowOverHundred"], out var allowOverHundred) ? allowOverHundred : null,
+                ShowAsSlider = configs.ContainsKey("showAsSlider") && bool.TryParse(configs["showAsSlider"], out var showAsSlider) ? showAsSlider : null,
+                ShowProgressBar = configs.ContainsKey("showProgressBar") && bool.TryParse(configs["showProgressBar"], out var showProgressBar) ? showProgressBar : null,
+
+                // Email configurations
+                AllowMultipleEmails = configs.ContainsKey("allowMultipleEmails") && bool.TryParse(configs["allowMultipleEmails"], out var allowMultipleEmails) ? allowMultipleEmails : null,
+                AllowedEmailDomains = configs.ContainsKey("allowedEmailDomains") ? configs["allowedEmailDomains"] : null,
+                BlockedEmailDomains = configs.ContainsKey("blockedEmailDomains") ? configs["blockedEmailDomains"] : null,
+
+                // Phone configurations
+                DefaultCountryCode = configs.ContainsKey("defaultCountryCode") ? configs["defaultCountryCode"] : null,
+                PhoneFormat = configs.ContainsKey("phoneFormat") ? configs["phoneFormat"] : null,
+                ShowCountrySelector = configs.ContainsKey("showCountrySelector") && bool.TryParse(configs["showCountrySelector"], out var showCountrySelector) ? showCountrySelector : null,
+                ValidatePhoneFormat = configs.ContainsKey("validatePhoneFormat") && bool.TryParse(configs["validatePhoneFormat"], out var validatePhoneFormat) ? validatePhoneFormat : null,
+
+                // URL configurations
+                AllowHttp = configs.ContainsKey("allowHttp") && bool.TryParse(configs["allowHttp"], out var allowHttp) ? allowHttp : null,
+                AllowHttps = configs.ContainsKey("allowHttps") && bool.TryParse(configs["allowHttps"], out var allowHttps) ? allowHttps : null,
+                AllowFtp = configs.ContainsKey("allowFtp") && bool.TryParse(configs["allowFtp"], out var allowFtp) ? allowFtp : null,
+                AllowedProtocols = configs.ContainsKey("allowedProtocols") ? configs["allowedProtocols"] : null,
+                AllowedUrlDomains = configs.ContainsKey("allowedUrlDomains") ? configs["allowedUrlDomains"] : null,
+                RequireHttps = configs.ContainsKey("requireHttps") && bool.TryParse(configs["requireHttps"], out var requireHttps) ? requireHttps : null,
+                ShowUrlPreview = configs.ContainsKey("showUrlPreview") && bool.TryParse(configs["showUrlPreview"], out var showUrlPreview) ? showUrlPreview : null
             };
         }
 
@@ -225,19 +333,28 @@ namespace FormReporting.Services.Forms
 
         /// <summary>
         /// Generate unique field code
+        /// Checks ALL items across the entire template to ensure uniqueness
         /// </summary>
         public async Task<string> GenerateFieldCodeAsync(int sectionId, string? fieldName = null)
         {
             var section = await _context.FormTemplateSections
-                .Include(s => s.Items)
                 .FirstOrDefaultAsync(s => s.SectionId == sectionId);
 
             if (section == null)
                 throw new KeyNotFoundException($"Section {sectionId} not found");
 
-            // Get next sequence number
-            var maxSequence = section.Items.Any() 
-                ? section.Items.Max(i => ExtractSequenceNumber(i.ItemCode))
+            // Build the section prefix (e.g., "SEC3_")
+            var sectionPrefix = $"SEC{section.DisplayOrder}_";
+
+            // Query ALL items in the template with this section prefix to find max sequence
+            // This ensures uniqueness across the entire template, not just within the section
+            var existingCodes = await _context.FormTemplateItems
+                .Where(i => i.TemplateId == section.TemplateId && i.ItemCode.StartsWith(sectionPrefix))
+                .Select(i => i.ItemCode)
+                .ToListAsync();
+
+            var maxSequence = existingCodes.Any()
+                ? existingCodes.Max(code => ExtractSequenceNumber(code))
                 : 0;
 
             var nextSequence = maxSequence + 1;
@@ -597,11 +714,21 @@ namespace FormReporting.Services.Forms
                 await _context.SaveChangesAsync();
                 Console.WriteLine($"Field saved with ID: {newField.ItemId}");
 
-                // Auto-create default options for selection fields
+                // Auto-create options for selection fields
                 if (RequiresOptions(dto.DataType))
                 {
-                    Console.WriteLine($"Field type '{dto.DataType}' requires options - creating 3 defaults...");
-                    await CreateDefaultOptionsAsync(newField.ItemId, 3);
+                    if (dto.OptionTemplateId.HasValue && dto.OptionTemplateId.Value > 0)
+                    {
+                        // Use option template
+                        Console.WriteLine($"Field type '{dto.DataType}' - applying option template {dto.OptionTemplateId.Value}...");
+                        await ApplyOptionTemplateAsync(newField.ItemId, dto.OptionTemplateId.Value);
+                    }
+                    else
+                    {
+                        // Use default options
+                        Console.WriteLine($"Field type '{dto.DataType}' requires options - creating 3 defaults...");
+                        await CreateDefaultOptionsAsync(newField.ItemId, 3);
+                    }
                 }
 
                 // Reload the field with navigation properties to avoid null reference issues
@@ -676,7 +803,7 @@ namespace FormReporting.Services.Forms
                 field.SuffixText = dto.SuffixText;
                 field.DefaultValue = dto.DefaultValue;
 
-                // Update field-specific configurations
+                // Update field-specific configurations (Number/Text)
                 await UpdateOrCreateConfigAsync(fieldId, "minValue", dto.MinValue?.ToString());
                 await UpdateOrCreateConfigAsync(fieldId, "maxValue", dto.MaxValue?.ToString());
                 await UpdateOrCreateConfigAsync(fieldId, "step", dto.Step?.ToString());
@@ -687,6 +814,113 @@ namespace FormReporting.Services.Forms
                 await UpdateOrCreateConfigAsync(fieldId, "inputMask", dto.InputMask);
                 await UpdateOrCreateConfigAsync(fieldId, "textTransform", dto.TextTransform);
                 await UpdateOrCreateConfigAsync(fieldId, "autoTrim", dto.AutoTrim?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "rows", dto.Rows?.ToString());
+
+                // Update Date/Time configurations
+                await UpdateOrCreateConfigAsync(fieldId, "minDate", dto.MinDate);
+                await UpdateOrCreateConfigAsync(fieldId, "maxDate", dto.MaxDate);
+                await UpdateOrCreateConfigAsync(fieldId, "minTime", dto.MinTime);
+                await UpdateOrCreateConfigAsync(fieldId, "maxTime", dto.MaxTime);
+                await UpdateOrCreateConfigAsync(fieldId, "disablePastDates", dto.DisablePastDates?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "disableFutureDates", dto.DisableFutureDates?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "defaultToToday", dto.DefaultToToday?.ToString());
+
+                // Update FileUpload configurations
+                await UpdateOrCreateConfigAsync(fieldId, "allowedFileTypes", dto.AllowedFileTypes);
+                await UpdateOrCreateConfigAsync(fieldId, "maxFileSize", dto.MaxFileSize?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "minFileSize", dto.MinFileSize?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "maxFiles", dto.MaxFiles?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "allowMultiple", dto.AllowMultiple?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "preserveFileName", dto.PreserveFileName?.ToString());
+
+                // Update Image configurations
+                await UpdateOrCreateConfigAsync(fieldId, "allowedImageTypes", dto.AllowedImageTypes);
+                await UpdateOrCreateConfigAsync(fieldId, "imageQuality", dto.ImageQuality?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "maxWidth", dto.MaxWidth?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "maxHeight", dto.MaxHeight?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "minWidth", dto.MinWidth?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "minHeight", dto.MinHeight?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "aspectRatio", dto.AspectRatio);
+                await UpdateOrCreateConfigAsync(fieldId, "thumbnailSize", dto.ThumbnailSize);
+                await UpdateOrCreateConfigAsync(fieldId, "allowCropping", dto.AllowCropping?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "autoResize", dto.AutoResize?.ToString());
+
+                // Update Signature configurations
+                await UpdateOrCreateConfigAsync(fieldId, "canvasWidth", dto.CanvasWidth?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "canvasHeight", dto.CanvasHeight?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "penColor", dto.PenColor);
+                await UpdateOrCreateConfigAsync(fieldId, "penWidth", dto.PenWidth?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "backgroundColor", dto.BackgroundColor);
+                await UpdateOrCreateConfigAsync(fieldId, "outputFormat", dto.OutputFormat);
+                await UpdateOrCreateConfigAsync(fieldId, "showClearButton", dto.ShowClearButton?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "showUndoButton", dto.ShowUndoButton?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "requireFullName", dto.RequireFullName?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "showDateStamp", dto.ShowDateStamp?.ToString());
+
+                // Update Rating configurations
+                await UpdateOrCreateConfigAsync(fieldId, "ratingMax", dto.RatingMax?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "ratingIcon", dto.RatingIcon);
+                await UpdateOrCreateConfigAsync(fieldId, "ratingActiveColor", dto.RatingActiveColor);
+                await UpdateOrCreateConfigAsync(fieldId, "ratingInactiveColor", dto.RatingInactiveColor);
+                await UpdateOrCreateConfigAsync(fieldId, "ratingSize", dto.RatingSize);
+                await UpdateOrCreateConfigAsync(fieldId, "allowHalfRating", dto.AllowHalfRating?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "showRatingValue", dto.ShowRatingValue?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "showRatingLabels", dto.ShowRatingLabels?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "allowClearRating", dto.AllowClearRating?.ToString());
+
+                // Update Slider configurations
+                await UpdateOrCreateConfigAsync(fieldId, "sliderMin", dto.SliderMin?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "sliderMax", dto.SliderMax?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "sliderStep", dto.SliderStep?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "sliderDefault", dto.SliderDefault?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "sliderUnit", dto.SliderUnit);
+                await UpdateOrCreateConfigAsync(fieldId, "sliderPrefix", dto.SliderPrefix);
+                await UpdateOrCreateConfigAsync(fieldId, "sliderTrackColor", dto.SliderTrackColor);
+                await UpdateOrCreateConfigAsync(fieldId, "showSliderValue", dto.ShowSliderValue?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "showSliderTicks", dto.ShowSliderTicks?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "showMinMaxLabels", dto.ShowMinMaxLabels?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "showSliderInput", dto.ShowSliderInput?.ToString());
+
+                // Update Currency configurations
+                await UpdateOrCreateConfigAsync(fieldId, "currencyCode", dto.CurrencyCode);
+                await UpdateOrCreateConfigAsync(fieldId, "currencySymbol", dto.CurrencySymbol);
+                await UpdateOrCreateConfigAsync(fieldId, "currencyPosition", dto.CurrencyPosition);
+                await UpdateOrCreateConfigAsync(fieldId, "currencyDecimals", dto.CurrencyDecimals?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "thousandSeparator", dto.ThousandSeparator);
+                await UpdateOrCreateConfigAsync(fieldId, "decimalSeparator", dto.DecimalSeparator);
+                await UpdateOrCreateConfigAsync(fieldId, "currencyMin", dto.CurrencyMin?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "currencyMax", dto.CurrencyMax?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "allowNegativeCurrency", dto.AllowNegativeCurrency?.ToString());
+
+                // Update Percentage configurations
+                await UpdateOrCreateConfigAsync(fieldId, "percentageMin", dto.PercentageMin?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "percentageMax", dto.PercentageMax?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "percentageDecimals", dto.PercentageDecimals?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "percentageStep", dto.PercentageStep?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "showPercentSymbol", dto.ShowPercentSymbol?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "allowOverHundred", dto.AllowOverHundred?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "showAsSlider", dto.ShowAsSlider?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "showProgressBar", dto.ShowProgressBar?.ToString());
+
+                // Update Email configurations
+                await UpdateOrCreateConfigAsync(fieldId, "allowMultipleEmails", dto.AllowMultipleEmails?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "allowedEmailDomains", dto.AllowedEmailDomains);
+                await UpdateOrCreateConfigAsync(fieldId, "blockedEmailDomains", dto.BlockedEmailDomains);
+
+                // Update Phone configurations
+                await UpdateOrCreateConfigAsync(fieldId, "defaultCountryCode", dto.DefaultCountryCode);
+                await UpdateOrCreateConfigAsync(fieldId, "phoneFormat", dto.PhoneFormat);
+                await UpdateOrCreateConfigAsync(fieldId, "showCountrySelector", dto.ShowCountrySelector?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "validatePhoneFormat", dto.ValidatePhoneFormat?.ToString());
+
+                // Update URL configurations
+                await UpdateOrCreateConfigAsync(fieldId, "allowHttp", dto.AllowHttp?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "allowHttps", dto.AllowHttps?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "allowFtp", dto.AllowFtp?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "allowedProtocols", dto.AllowedProtocols);
+                await UpdateOrCreateConfigAsync(fieldId, "allowedUrlDomains", dto.AllowedUrlDomains);
+                await UpdateOrCreateConfigAsync(fieldId, "requireHttps", dto.RequireHttps?.ToString());
+                await UpdateOrCreateConfigAsync(fieldId, "showUrlPreview", dto.ShowUrlPreview?.ToString());
 
                 await _context.SaveChangesAsync();
                 return true;

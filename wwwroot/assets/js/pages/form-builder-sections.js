@@ -77,15 +77,42 @@ const FormBuilderSections = {
 
             if (result.success) {
                 console.log('Section added:', result.section);
+                const newSectionId = result.section?.sectionId;
+
+                // Reset button state before closing modal
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = originalHtml;
 
                 // Close modal
                 const modal = bootstrap.Modal.getInstance(document.getElementById('addSectionModal'));
                 modal.hide();
 
-                // Reload page to show new section
-                // NOTE: Full page reload reinitializes all drop zones automatically
-                // Future optimization: Update DOM dynamically and call FormBuilderDragDrop.reinitializeDropZones()
-                FormBuilder.reload();
+                // Dynamically add section to canvas without page reload
+                if (newSectionId) {
+                    try {
+                        // Render and insert the new section
+                        const newSectionCard = await FormBuilder.renderAndInsertSection(newSectionId, 'append');
+                        console.log(`[AddSection] ✅ Section ${newSectionId} added to DOM`);
+
+                        // Select the new section
+                        if (typeof selectSection === 'function') {
+                            selectSection(newSectionId);
+                            console.log(`[AddSection] ✅ Section ${newSectionId} selected`);
+                        }
+
+                        // Show success notification
+                        if (typeof FormBuilderDragDrop !== 'undefined' && FormBuilderDragDrop.showNotification) {
+                            FormBuilderDragDrop.showNotification('Section added successfully', 'success');
+                        }
+                    } catch (error) {
+                        console.error('[AddSection] Error rendering section:', error);
+                        // Fallback to reload on error
+                        FormBuilder.reload();
+                    }
+                } else {
+                    // Fallback if no section ID returned
+                    FormBuilder.reload();
+                }
             } else {
                 alert('Error: ' + (result.message || 'Failed to add section'));
                 saveBtn.disabled = false;

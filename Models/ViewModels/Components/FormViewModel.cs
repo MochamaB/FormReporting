@@ -504,6 +504,44 @@ namespace FormReporting.Models.ViewModels.Components
         /// </summary>
         public bool ShowFieldNumber { get; set; } = false;
 
+        // ========================================================================
+        // DATE/TIME FIELD PROPERTIES (for rendering min/max attributes)
+        // ========================================================================
+
+        /// <summary>
+        /// Minimum date allowed (format: yyyy-MM-dd)
+        /// </summary>
+        public string? MinDate { get; set; }
+
+        /// <summary>
+        /// Maximum date allowed (format: yyyy-MM-dd)
+        /// </summary>
+        public string? MaxDate { get; set; }
+
+        /// <summary>
+        /// Minimum time allowed (format: HH:mm)
+        /// </summary>
+        public string? MinTime { get; set; }
+
+        /// <summary>
+        /// Maximum time allowed (format: HH:mm)
+        /// </summary>
+        public string? MaxTime { get; set; }
+
+        // ========================================================================
+        // TEXT FIELD PROPERTIES
+        // ========================================================================
+
+        /// <summary>
+        /// Number of visible rows (for TextArea fields)
+        /// </summary>
+        public int? Rows { get; set; }
+
+        /// <summary>
+        /// Maximum character length
+        /// </summary>
+        public int? MaxLength { get; set; }
+
         // Generated properties for HTML rendering
         public string InputName { get; set; } = string.Empty; // Form POST name
         public string InputId { get; set; } = string.Empty; // HTML id attribute

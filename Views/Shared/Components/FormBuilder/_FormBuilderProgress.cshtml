@@ -20,7 +20,7 @@
         position: -webkit-sticky;
         position: sticky;
         top: 0;
-        z-index: 1; /* Below sidebar (sidebar is typically z-index: 1000+) */
+        z-index: 99; /* Above content but below sidebar/modals */
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 
         /* Extend to edges of container-fluid (offset its padding) */
@@ -29,6 +29,11 @@
         margin-right: -1.5rem;
         margin-top: -1.3rem;
         margin-bottom: 1.2rem;
+        
+        /* Ensure visibility */
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
     }
 
     .progress-step {
@@ -171,6 +176,15 @@
 
 </style>
 
+@if (Model == null || Model.Steps == null || !Model.Steps.Any())
+{
+    <!-- Debug: Progress model is null or empty -->
+    <div class="alert alert-warning m-2 py-2" style="display: none;">
+        <small>Progress tracker: Model or Steps is null</small>
+    </div>
+}
+else
+{
 <div class="form-builder-progress">
     @* Step Indicators *@
     <div class="d-flex">
@@ -216,6 +230,7 @@
     </div>
 
 </div>
+} @* End of else block for null check *@
 
 <!-- Exit Confirmation Modal -->
 <div class="modal fade" id="exitConfirmModal" tabindex="-1" aria-labelledby="exitConfirmModalLabel" aria-hidden="true">

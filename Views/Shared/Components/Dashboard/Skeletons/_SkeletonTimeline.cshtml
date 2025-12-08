@@ -1,0 +1,39 @@
+@*
+    Skeleton placeholder for timeline
+    Used during lazy loading
+*@
+
+@{
+    var items = ViewData["Items"] != null ? (int)ViewData["Items"] : 4;
+}
+
+<div class="card">
+    <div class="card-header">
+        <!-- Title skeleton -->
+        <div class="skeleton skeleton-text" style="width: 40%; height: 20px;"></div>
+    </div>
+
+    <div class="card-body">
+        <ul class="list-unstyled mb-0">
+            @for (var i = 0; i < items; i++)
+            {
+                var isLast = i == items - 1;
+                <li class="@(isLast ? "" : "pb-4")">
+                    <div class="d-flex align-items-start">
+                        <!-- Icon skeleton -->
+                        <div class="flex-shrink-0 me-3">
+                            <div class="skeleton skeleton-avatar skeleton-avatar-xs"></div>
+                        </div>
+
+                        <!-- Content skeleton -->
+                        <div class="flex-grow-1 @(!isLast ? "border-start border-start-dashed ps-3" : "ps-3")">
+                            <div class="skeleton skeleton-text" style="width: 70%; height: 16px; margin-bottom: 8px;"></div>
+                            <div class="skeleton skeleton-text" style="width: 90%; height: 12px; margin-bottom: 8px;"></div>
+                            <div class="skeleton skeleton-text" style="width: 40%; height: 10px;"></div>
+                        </div>
+                    </div>
+                </li>
+            }
+        </ul>
+    </div>
+</div>

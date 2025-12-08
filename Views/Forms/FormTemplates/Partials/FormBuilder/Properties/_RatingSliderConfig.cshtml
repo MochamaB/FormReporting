@@ -1,0 +1,276 @@
+@*
+    Rating & Slider Field Configuration Panel
+    Handles: Rating, Slider field types
+*@
+
+<!-- Rating Configuration -->
+<div id="config-rating-fields" style="display: none;">
+    <div class="mb-3">
+        <div class="d-flex align-items-center mb-2">
+            <i class="ri-star-line fs-5 text-primary me-2"></i>
+            <h6 class="mb-0">Rating Configuration</h6>
+        </div>
+        <small class="text-muted">Configure rating scale and appearance</small>
+    </div>
+
+    <div class="row g-3">
+        <!-- Rating Scale -->
+        <div class="col-md-6">
+            <label class="form-label">Maximum Rating</label>
+            <select class="form-select" id="config-ratingMax"
+                    onchange="FormBuilderConfiguration.saveConfig('ratingMax', this.value)">
+                <option value="3">3 Stars</option>
+                <option value="5" selected>5 Stars</option>
+                <option value="7">7 Stars</option>
+                <option value="10">10 Stars</option>
+            </select>
+            <small class="text-muted">Number of rating options</small>
+        </div>
+
+        <!-- Rating Icon -->
+        <div class="col-md-6">
+            <label class="form-label">Rating Icon</label>
+            <select class="form-select" id="config-ratingIcon"
+                    onchange="FormBuilderConfiguration.saveConfig('ratingIcon', this.value)">
+                <option value="star" selected>⭐ Stars</option>
+                <option value="heart">❤️ Hearts</option>
+                <option value="thumb">👍 Thumbs</option>
+                <option value="circle">● Circles</option>
+                <option value="number">1-N Numbers</option>
+            </select>
+            <small class="text-muted">Visual style for rating</small>
+        </div>
+
+        <!-- Active Color -->
+        <div class="col-md-6">
+            <label class="form-label">Active Color</label>
+            <div class="input-group">
+                <input type="color" class="form-control form-control-color" id="config-ratingActiveColor"
+                       value="#ffc107" onchange="FormBuilderConfiguration.saveConfig('ratingActiveColor', this.value)">
+                <input type="text" class="form-control" id="config-ratingActiveColorText" value="#ffc107"
+                       placeholder="#ffc107" onchange="FormBuilderConfiguration.syncColorInput('ratingActiveColor', this.value)">
+            </div>
+            <small class="text-muted">Color for selected rating</small>
+        </div>
+
+        <!-- Inactive Color -->
+        <div class="col-md-6">
+            <label class="form-label">Inactive Color</label>
+            <div class="input-group">
+                <input type="color" class="form-control form-control-color" id="config-ratingInactiveColor"
+                       value="#e0e0e0" onchange="FormBuilderConfiguration.saveConfig('ratingInactiveColor', this.value)">
+                <input type="text" class="form-control" id="config-ratingInactiveColorText" value="#e0e0e0"
+                       placeholder="#e0e0e0" onchange="FormBuilderConfiguration.syncColorInput('ratingInactiveColor', this.value)">
+            </div>
+            <small class="text-muted">Color for unselected rating</small>
+        </div>
+
+        <!-- Icon Size -->
+        <div class="col-md-6">
+            <label class="form-label">Icon Size</label>
+            <select class="form-select" id="config-ratingSize"
+                    onchange="FormBuilderConfiguration.saveConfig('ratingSize', this.value)">
+                <option value="sm">Small (20px)</option>
+                <option value="md" selected>Medium (28px)</option>
+                <option value="lg">Large (36px)</option>
+                <option value="xl">Extra Large (48px)</option>
+            </select>
+            <small class="text-muted">Size of rating icons</small>
+        </div>
+
+        <!-- Options -->
+        <div class="col-12">
+            <label class="form-label small fw-semibold">Options</label>
+        </div>
+
+        <div class="col-md-6">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="config-allowHalfRating"
+                       onchange="FormBuilderConfiguration.saveConfig('allowHalfRating', this.checked)">
+                <label class="form-check-label" for="config-allowHalfRating">
+                    Allow Half Ratings
+                </label>
+            </div>
+            <small class="text-muted d-block ms-4">Enable 0.5 increments (e.g., 3.5 stars)</small>
+        </div>
+
+        <div class="col-md-6">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="config-showRatingValue"
+                       onchange="FormBuilderConfiguration.saveConfig('showRatingValue', this.checked)">
+                <label class="form-check-label" for="config-showRatingValue">
+                    Show Numeric Value
+                </label>
+            </div>
+            <small class="text-muted d-block ms-4">Display "3/5" next to rating</small>
+        </div>
+
+        <div class="col-md-6">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="config-showRatingLabels"
+                       onchange="FormBuilderConfiguration.saveConfig('showRatingLabels', this.checked)">
+                <label class="form-check-label" for="config-showRatingLabels">
+                    Show Labels
+                </label>
+            </div>
+            <small class="text-muted d-block ms-4">Display "Poor" to "Excellent" labels</small>
+        </div>
+
+        <div class="col-md-6">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="config-allowClearRating"
+                       onchange="FormBuilderConfiguration.saveConfig('allowClearRating', this.checked)">
+                <label class="form-check-label" for="config-allowClearRating">
+                    Allow Clear Rating
+                </label>
+            </div>
+            <small class="text-muted d-block ms-4">Click again to clear selection</small>
+        </div>
+    </div>
+
+    <!-- Rating Preview -->
+    <div class="mt-3 p-3 border rounded bg-light">
+        <label class="form-label small fw-semibold">Preview</label>
+        <div id="rating-preview" class="d-flex gap-1 align-items-center">
+            <i class="ri-star-fill text-warning" style="font-size: 28px;"></i>
+            <i class="ri-star-fill text-warning" style="font-size: 28px;"></i>
+            <i class="ri-star-fill text-warning" style="font-size: 28px;"></i>
+            <i class="ri-star-line text-muted" style="font-size: 28px;"></i>
+            <i class="ri-star-line text-muted" style="font-size: 28px;"></i>
+            <span class="ms-2 text-muted">3/5</span>
+        </div>
+    </div>
+</div>
+
+<!-- Slider Configuration -->
+<div id="config-slider-fields" style="display: none;">
+    <div class="mb-3">
+        <div class="d-flex align-items-center mb-2">
+            <i class="ri-equalizer-line fs-5 text-primary me-2"></i>
+            <h6 class="mb-0">Slider Configuration</h6>
+        </div>
+        <small class="text-muted">Configure slider range and behavior</small>
+    </div>
+
+    <div class="row g-3">
+        <!-- Min Value -->
+        <div class="col-md-6">
+            <label class="form-label">Minimum Value</label>
+            <input type="number" class="form-control" id="config-sliderMin"
+                   placeholder="0" onchange="FormBuilderConfiguration.saveConfig('sliderMin', this.value)">
+            <small class="text-muted">Lowest slider value</small>
+        </div>
+
+        <!-- Max Value -->
+        <div class="col-md-6">
+            <label class="form-label">Maximum Value</label>
+            <input type="number" class="form-control" id="config-sliderMax"
+                   placeholder="100" onchange="FormBuilderConfiguration.saveConfig('sliderMax', this.value)">
+            <small class="text-muted">Highest slider value</small>
+        </div>
+
+        <!-- Step -->
+        <div class="col-md-6">
+            <label class="form-label">Step / Increment</label>
+            <input type="number" class="form-control" id="config-sliderStep" min="0.1" step="any"
+                   placeholder="1" onchange="FormBuilderConfiguration.saveConfig('sliderStep', this.value)">
+            <small class="text-muted">Value increment (e.g., 1, 5, 10)</small>
+        </div>
+
+        <!-- Default Value -->
+        <div class="col-md-6">
+            <label class="form-label">Default Value</label>
+            <input type="number" class="form-control" id="config-sliderDefault"
+                   placeholder="50" onchange="FormBuilderConfiguration.saveConfig('sliderDefault', this.value)">
+            <small class="text-muted">Initial slider position</small>
+        </div>
+
+        <!-- Unit/Suffix -->
+        <div class="col-md-6">
+            <label class="form-label">Unit / Suffix</label>
+            <input type="text" class="form-control" id="config-sliderUnit" maxlength="10"
+                   placeholder="e.g., %, kg, km" onchange="FormBuilderConfiguration.saveConfig('sliderUnit', this.value)">
+            <small class="text-muted">Display unit after value</small>
+        </div>
+
+        <!-- Prefix -->
+        <div class="col-md-6">
+            <label class="form-label">Prefix</label>
+            <input type="text" class="form-control" id="config-sliderPrefix" maxlength="10"
+                   placeholder="e.g., $, £" onchange="FormBuilderConfiguration.saveConfig('sliderPrefix', this.value)">
+            <small class="text-muted">Display prefix before value</small>
+        </div>
+
+        <!-- Track Color -->
+        <div class="col-md-6">
+            <label class="form-label">Track Color</label>
+            <div class="input-group">
+                <input type="color" class="form-control form-control-color" id="config-sliderTrackColor"
+                       value="#405189" onchange="FormBuilderConfiguration.saveConfig('sliderTrackColor', this.value)">
+                <input type="text" class="form-control" id="config-sliderTrackColorText" value="#405189"
+                       placeholder="#405189" onchange="FormBuilderConfiguration.syncColorInput('sliderTrackColor', this.value)">
+            </div>
+            <small class="text-muted">Color of filled track</small>
+        </div>
+
+        <!-- Options -->
+        <div class="col-12">
+            <label class="form-label small fw-semibold">Display Options</label>
+        </div>
+
+        <div class="col-md-6">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="config-showSliderValue" checked
+                       onchange="FormBuilderConfiguration.saveConfig('showSliderValue', this.checked)">
+                <label class="form-check-label" for="config-showSliderValue">
+                    Show Current Value
+                </label>
+            </div>
+            <small class="text-muted d-block ms-4">Display value above slider</small>
+        </div>
+
+        <div class="col-md-6">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="config-showSliderTicks"
+                       onchange="FormBuilderConfiguration.saveConfig('showSliderTicks', this.checked)">
+                <label class="form-check-label" for="config-showSliderTicks">
+                    Show Tick Marks
+                </label>
+            </div>
+            <small class="text-muted d-block ms-4">Display marks along track</small>
+        </div>
+
+        <div class="col-md-6">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="config-showMinMaxLabels" checked
+                       onchange="FormBuilderConfiguration.saveConfig('showMinMaxLabels', this.checked)">
+                <label class="form-check-label" for="config-showMinMaxLabels">
+                    Show Min/Max Labels
+                </label>
+            </div>
+            <small class="text-muted d-block ms-4">Display range labels</small>
+        </div>
+
+        <div class="col-md-6">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="config-showSliderInput"
+                       onchange="FormBuilderConfiguration.saveConfig('showSliderInput', this.checked)">
+                <label class="form-check-label" for="config-showSliderInput">
+                    Show Input Field
+                </label>
+            </div>
+            <small class="text-muted d-block ms-4">Allow typing exact value</small>
+        </div>
+    </div>
+
+    <!-- Slider Preview -->
+    <div class="mt-3 p-3 border rounded bg-light">
+        <label class="form-label small fw-semibold">Preview</label>
+        <div class="d-flex align-items-center gap-2">
+            <span class="text-muted small">0</span>
+            <input type="range" class="form-range flex-grow-1" min="0" max="100" value="50" disabled>
+            <span class="text-muted small">100</span>
+            <span class="badge bg-primary ms-2">50</span>
+        </div>
+    </div>
+</div>

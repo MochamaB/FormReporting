@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" fill="none">
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="80" fill="#f3f6f9" stroke="#e9ebec" stroke-width="2"/>
+  
+  <!-- Cursor/pointer icon -->
+  <path d="M85 60 L85 130 L100 115 L115 140 L125 135 L110 110 L130 110 Z" 
+        fill="#405189" stroke="#405189" stroke-width="2" stroke-linejoin="round"/>
+  
+  <!-- Selection box -->
+  <rect x="55" y="75" width="35" height="35" rx="4" fill="none" stroke="#878a99" stroke-width="2" stroke-dasharray="4 2"/>
+  
+  <!-- Checkmark in box -->
+  <path d="M62 92 L70 100 L82 85" stroke="#0ab39c" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+  
+  <!-- Text lines representing content -->
+  <rect x="60" y="125" width="80" height="6" rx="3" fill="#ced4da"/>
+  <rect x="60" y="138" width="60" height="6" rx="3" fill="#e9ebec"/>
+</svg>

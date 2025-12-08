@@ -144,6 +144,24 @@ namespace FormReporting.Models.ViewModels.Components
         /// Table size: "sm" for compact, null for default
         /// </summary>
         public string? TableSize { get; set; }
+
+        // ========== VIEW TOGGLE (Table/Card) ==========
+
+        /// <summary>
+        /// Enable toggle between table and card views
+        /// </summary>
+        public bool EnableViewToggle { get; set; } = false;
+
+        /// <summary>
+        /// Default view mode: "table" or "card"
+        /// </summary>
+        public string DefaultView { get; set; } = "table";
+
+        /// <summary>
+        /// Function to render card view content
+        /// Signature: Func<object?, IHtmlContent>
+        /// </summary>
+        public Func<object?, IHtmlContent>? CardContentRenderer { get; set; }
     }
 
     /// <summary>
@@ -258,6 +276,11 @@ namespace FormReporting.Models.ViewModels.Components
 
         // Styling
         public string TableClasses { get; set; } = "table table-hover mb-0";
+
+        // View Toggle
+        public bool EnableViewToggle { get; set; } = false;
+        public string DefaultView { get; set; } = "table";
+        public Func<object?, IHtmlContent>? CardContent { get; set; }
     }
 
     /// <summary>

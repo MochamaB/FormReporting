@@ -101,6 +101,36 @@ namespace FormReporting.Controllers.API
         }
 
         /// <summary>
+        /// Render section card HTML for canvas update (without page reload)
+        /// GET /api/formbuilder/sections/{sectionId}/render
+        /// </summary>
+        [HttpGet("sections/{sectionId}/render")]
+        public async Task<IActionResult> RenderSectionCard(int sectionId)
+        {
+            try
+            {
+                var section = await _formBuilderService.GetSectionByIdAsync(sectionId);
+
+                if (section == null)
+                {
+                    return NotFound(new { success = false, message = "Section not found" });
+                }
+
+                // Render the section partial view to HTML string
+                var html = await this.RenderViewAsync(
+                    "~/Views/Forms/FormTemplates/Partials/FormBuilder/Components/_BuilderSection.cshtml",
+                    section
+                );
+
+                return Ok(new { success = true, html, sectionId = section.SectionId });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Error rendering section", error = ex.Message });
+            }
+        }
+
+        /// <summary>
         /// Update section properties
         /// </summary>
         [HttpPut("sections/{sectionId}")]
@@ -221,7 +251,19 @@ namespace FormReporting.Controllers.API
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { success = false, message = $"Error adding field: {ex.Message}" });
+                // Get the innermost exception for detailed error message
+                var innerEx = ex;
+                while (innerEx.InnerException != null)
+                    innerEx = innerEx.InnerException;
+                
+                var errorMessage = $"Error adding field: {ex.Message}";
+                if (innerEx != ex)
+                    errorMessage += $" | Inner: {innerEx.Message}";
+                
+                Console.WriteLine($"[AddField ERROR] {errorMessage}");
+                Console.WriteLine($"[AddField STACK] {ex.StackTrace}");
+                
+                return StatusCode(500, new { success = false, message = errorMessage });
             }
         }
 
@@ -575,6 +617,26 @@ namespace FormReporting.Controllers.API
                 }).ToList();
 
                 return Ok(new { success = true, templates = templateDtos });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = "Error fetching templates", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Get lightweight option templates list for dropdown selectors (faster, no items loaded)
+        /// GET /api/formbuilder/option-templates/list
+        /// </summary>
+        [HttpGet("option-templates/list")]
+        public async Task<IActionResult> GetOptionTemplatesList()
+        {
+            try
+            {
+                // Use lightweight query - no Include for Items
+                var templates = await _optionTemplateService.GetTemplateSelectListAsync();
+
+                return Ok(new { success = true, templates });
             }
             catch (Exception ex)
             {

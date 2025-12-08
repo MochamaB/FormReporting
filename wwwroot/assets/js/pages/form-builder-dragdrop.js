@@ -622,5 +622,108 @@ const FormBuilderDragDrop = {
 
         // Reinitialize all drop zones
         this.initializeFieldDropZones();
+    },
+
+    /**
+     * Initialize drop zone for a single newly added section
+     * Called when a section is dynamically added without page reload
+     * @param {HTMLElement} sectionElement - The new section card element
+     */
+    initializeSectionDropZone: function(sectionElement) {
+        if (!sectionElement) {
+            console.warn('No section element provided for drop zone initialization');
+            return;
+        }
+
+        const container = sectionElement.querySelector('.fields-container');
+        if (!container) {
+            console.warn('No fields-container found in section element');
+            return;
+        }
+
+        const sectionId = container.dataset.sectionId;
+        console.log(`[DragDrop] Initializing drop zone for new section ${sectionId}`);
+
+        const sortableInstance = new Sortable(container, {
+            group: {
+                name: 'fields',
+                pull: true,
+                put: ['fields']
+            },
+            animation: 150,
+            ghostClass: 'sortable-ghost-field',
+            draggable: '.builder-field-card',
+            fallbackTolerance: 3,
+            handle: '.field-drag-handle',
+
+            onMove: (evt) => {
+                if (evt.to && evt.to.classList.contains('fields-container')) {
+                    const isCrossSection = evt.from !== evt.to && 
+                                           evt.from.classList.contains('fields-container') &&
+                                           evt.dragged.classList.contains('builder-field-card');
+                    
+                    if (evt.dragged.classList.contains('draggable-field')) {
+                        evt.to.classList.add('drag-over-new-field');
+                        evt.to.classList.remove('drag-over-reorder', 'drag-over-cross-section');
+                    } else if (isCrossSection) {
+                        evt.to.classList.add('drag-over-cross-section');
+                        evt.to.classList.remove('drag-over-new-field', 'drag-over-reorder');
+                    } else if (evt.dragged.classList.contains('builder-field-card')) {
+                        evt.to.classList.add('drag-over-reorder');
+                        evt.to.classList.remove('drag-over-new-field', 'drag-over-cross-section');
+                    }
+                }
+
+                if (evt.from && evt.from !== evt.to && evt.from.classList.contains('fields-container')) {
+                    evt.from.classList.remove('drag-over-new-field', 'drag-over-reorder', 'drag-over-cross-section');
+                }
+
+                return evt.dragged.classList.contains('draggable-field') ||
+                       evt.dragged.classList.contains('builder-field-card');
+            },
+
+            onAdd: (evt) => {
+                container.classList.remove('drag-over-new-field', 'drag-over-reorder', 'drag-over-cross-section');
+
+                const isExistingField = evt.item.classList.contains('builder-field-card');
+                const fieldId = evt.item.dataset.fieldId;
+
+                if (isExistingField && fieldId) {
+                    console.log(`Field ${fieldId} moved to section ${sectionId}`);
+                    const emptyMessage = container.querySelector('.empty-fields-message');
+                    if (emptyMessage) emptyMessage.remove();
+                    this.moveFieldToSection(parseInt(fieldId), parseInt(sectionId), evt.from, evt.to);
+                } else {
+                    const fieldType = evt.item.dataset.fieldType;
+                    evt.item.remove();
+                    const emptyMessage = container.querySelector('.empty-fields-message');
+                    if (emptyMessage) emptyMessage.remove();
+                    
+                    if (fieldType) {
+                        console.log(`Opening add field modal for type: ${fieldType} in section ${sectionId}`);
+                        FormBuilderFields.openAddFieldModal(fieldType, sectionId);
+                    }
+                }
+            },
+
+            onUpdate: (_evt) => {
+                container.classList.remove('drag-over-new-field', 'drag-over-reorder', 'drag-over-cross-section');
+                console.log(`Field reordered in section ${sectionId}`);
+                this.updateFieldOrder(sectionId);
+            },
+
+            onEnd: (_evt) => {
+                document.querySelectorAll('.fields-container').forEach(fc => {
+                    fc.classList.remove('drag-over-new-field', 'drag-over-reorder', 'drag-over-cross-section');
+                });
+            }
+        });
+
+        this.fieldDropZones.push({
+            sectionId: sectionId,
+            instance: sortableInstance
+        });
+
+        console.log(`[DragDrop] ✅ Drop zone initialized for section ${sectionId}`);
     }
 };

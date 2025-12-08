@@ -1,0 +1,585 @@
+/* ============================================================================
+   CANVAS TOOLBAR - Floating Action Bar (Full Height)
+   ============================================================================ */
+
+/* Make design-grid the positioning context */
+.design-grid {
+    position: relative;
+}
+
+.canvas-toolbar {
+    position: absolute;
+    right: 412px; /* Properties panel width (400px) + small gap (12px) */
+    top: 0;
+    bottom: 0;
+    z-index: 100; /* Above canvas content */
+    
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    
+    background: #f3f3f9;
+    border: none;
+    border-radius: 0px;
+    padding: 1rem 0rem;
+    width: 44px;
+    
+    transition: right 0.3s ease, opacity 0.2s ease;
+}
+
+/* Adjust position when properties panel is collapsed */
+.design-grid.properties-collapsed .canvas-toolbar {
+    right: 12px;
+}
+
+/* ============================================================================
+   TOOLBAR LAYOUT - Section Nav (top, flex-grow) + Bottom Controls (bottom)
+   ============================================================================ */
+
+.toolbar-section-nav {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    min-height: 0; /* Allow shrinking */
+    overflow: visible; /* Allow dropdown to escape */
+}
+
+.toolbar-bottom-controls {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding-top: 8px;
+    border-top: 1px solid #e9ebec;
+    margin-top: auto;
+}
+
+/* ============================================================================
+   TOOLBAR GROUPS
+   ============================================================================ */
+
+.toolbar-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+}
+
+.toolbar-group-label {
+    font-size: 9px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #878a99;
+    margin-bottom: 4px;
+    white-space: nowrap;
+}
+
+.toolbar-divider {
+    width: 44px;
+    height: 1px;
+    background: var(--vz-primary);
+    margin: 6px 0;
+}
+
+/* ============================================================================
+   TOOLBAR BUTTONS
+   ============================================================================ */
+
+.toolbar-btn {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    background: transparent;
+    border: none;
+    border-radius: 0px;
+    color: #495057;
+    cursor: pointer;
+    
+    transition: all 0.15s ease;
+}
+
+.toolbar-btn i {
+    font-size: 22px;
+    line-height: 1;
+}
+
+.toolbar-btn:hover {
+    background: var(--vz-primary-subtle);
+    color: var(--vz-primary);
+}
+
+.toolbar-btn:active {
+    background: var(--vz-primary-subtle);
+    transform: scale(0.95);
+}
+
+.toolbar-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.toolbar-btn:disabled:hover {
+    background: transparent;
+    color: #495057;
+}
+
+/* Active state for toggle buttons */
+.toolbar-btn.active {
+    background: rgba(64, 81, 137, 0.1);
+    color: #405189;
+}
+
+/* ============================================================================
+   SECTION DROPDOWN (Jump to Section)
+   ============================================================================ */
+
+.section-dropdown {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.section-dropdown-toggle {
+    position: relative;
+}
+
+.section-dropdown-toggle::after {
+    display: none; /* Hide default dropdown caret */
+}
+
+.section-dropdown-menu {
+    min-width: 200px;
+    max-height: 300px;
+    overflow-y: auto;
+    padding: 8px 0;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    border: 1px solid #e9ebec;
+    border-radius: 6px;
+    z-index: 1050; /* Above other elements */
+    position: fixed !important; /* Escape overflow clipping */
+}
+
+.section-dropdown-menu .dropdown-header {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #878a99;
+    padding: 6px 12px;
+}
+
+.section-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    font-size: 13px;
+    color: #495057;
+    transition: all 0.15s ease;
+}
+
+.section-dropdown-item:hover {
+    background: #f3f6f9;
+    color: var(--vz-secondary);
+}
+
+.section-dropdown-item.active {
+    background: var(--vz-secondary-subtle);
+    color: var(--vz-secondary);
+    font-weight: 500;
+}
+
+.section-dropdown-number {
+    width: 20px;
+    height: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #e9ebec;
+    color: #495057;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.section-dropdown-item.active .section-dropdown-number {
+    background: #405189;
+    color: #fff;
+}
+
+.section-dropdown-name {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.section-dropdown-empty {
+    padding: 12px;
+    text-align: center;
+}
+
+/* ============================================================================
+   SECTION INDICATORS (Navigation Dots)
+   ============================================================================ */
+
+.section-indicators {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    overflow-y: auto;
+    padding: 4px 0;
+}
+
+/* Custom scrollbar for section indicators */
+.section-indicators::-webkit-scrollbar {
+    width: 3px;
+}
+
+.section-indicators::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.section-indicators::-webkit-scrollbar-thumb {
+    background: #d3d3d3;
+    border-radius: 3px;
+}
+
+/* Section indicator button */
+.section-indicator {
+    width: 32px;
+    height: 24px;
+    padding: 0;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    flex-shrink: 0;
+}
+
+/* The actual dot inside the button */
+.section-indicator .indicator-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #c4c9ce;
+    border: none;
+    transition: all 0.2s ease;
+    display: block;
+}
+
+.section-indicator:hover .indicator-dot {
+    background: var(--vz-primary);
+    transform: scale(1.4);
+}
+
+/* Active/Current section indicator */
+.section-indicator.active .indicator-dot {
+    background: var(--vz-primary);
+    box-shadow: 0 0 0 3px var(--vz-primary-subtle);
+    transform: scale(1.3);
+}
+
+/* Tooltip inside the button */
+.section-indicator .indicator-tooltip {
+    position: absolute;
+    right: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    margin-right: 8px;
+    
+    background: #212529;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 500;
+    padding: 6px 10px;
+    border-radius: 4px;
+    white-space: nowrap;
+    
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.15s ease;
+    pointer-events: none;
+    z-index: 100;
+}
+
+/* Tooltip arrow */
+.section-indicator .indicator-tooltip::after {
+    content: '';
+    position: absolute;
+    left: 100%;
+    top: 50%;
+    transform: translateY(-50%);
+    border: 5px solid transparent;
+    border-left-color: #212529;
+}
+
+.section-indicator:hover .indicator-tooltip {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ============================================================================
+   ZOOM LEVEL DISPLAY
+   ============================================================================ */
+
+.toolbar-zoom-level {
+    font-size: 10px;
+    font-weight: 600;
+    color: #878a99;
+    background: #f3f6f9;
+    padding: 3px 6px;
+    border-radius: 4px;
+    margin-top: 4px;
+    min-width: 36px;
+    text-align: center;
+}
+
+/* ============================================================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================================================ */
+
+/* Hide toolbar on smaller screens where it would overlap */
+@media (max-width: 1200px) {
+    .canvas-toolbar {
+        right: 10px;
+        padding: 6px 4px;
+    }
+    
+    .toolbar-btn {
+        width: 28px;
+        height: 28px;
+    }
+    
+    .toolbar-btn i {
+        font-size: 14px;
+    }
+    
+    .section-indicator {
+        width: 8px;
+        height: 8px;
+    }
+}
+
+@media (max-width: 992px) {
+    .canvas-toolbar {
+        display: none;
+    }
+}
+
+/* ============================================================================
+   CANVAS ZOOM STYLES
+   ============================================================================ */
+
+.design-canvas {
+    transition: transform 0.2s ease;
+    transform-origin: top center;
+}
+
+.design-canvas[data-zoom="75"] {
+    transform: scale(0.75);
+}
+
+.design-canvas[data-zoom="90"] {
+    transform: scale(0.9);
+}
+
+.design-canvas[data-zoom="100"] {
+    transform: scale(1);
+}
+
+.design-canvas[data-zoom="110"] {
+    transform: scale(1.1);
+}
+
+.design-canvas[data-zoom="125"] {
+    transform: scale(1.25);
+}
+
+/* ============================================================================
+   SECTION COLLAPSE/EXPAND ANIMATIONS
+   ============================================================================ */
+
+.builder-section .section-content {
+    transition: max-height 0.3s ease, opacity 0.2s ease, padding 0.3s ease;
+    overflow: hidden;
+}
+
+.builder-section.collapsed .section-content {
+    max-height: 0 !important;
+    opacity: 0;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
+.builder-section.collapsed .section-collapse-icon {
+    transform: rotate(-90deg);
+}
+
+.section-collapse-icon {
+    transition: transform 0.2s ease;
+}
+
+/* ============================================================================
+   PREVIEW MODE OVERLAY
+   ============================================================================ */
+
+.preview-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1050;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.preview-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.preview-container {
+    background: #fff;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 800px;
+    max-height: 90vh;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+}
+
+.preview-overlay.active .preview-container {
+    transform: scale(1);
+}
+
+.preview-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid #e9ecef;
+    background: #f8f9fa;
+}
+
+.preview-header h5 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #495057;
+}
+
+.preview-close {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    border-radius: 6px;
+    color: #6c757d;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.preview-close:hover {
+    background: #e9ecef;
+    color: #212529;
+}
+
+.preview-body {
+    padding: 24px;
+    max-height: calc(90vh - 70px);
+    overflow-y: auto;
+}
+
+/* ============================================================================
+   TOOLBAR BUTTON TOOLTIPS (Native)
+   ============================================================================ */
+
+.toolbar-btn[title] {
+    position: relative;
+}
+
+/* Optional: Custom tooltip styling if needed */
+.toolbar-btn[data-tooltip]::before {
+    content: attr(data-tooltip);
+    position: absolute;
+    right: 40px;
+    top: 50%;
+    transform: translateY(-50%);
+    
+    background: #212529;
+    color: #fff;
+    font-size: 11px;
+    padding: 4px 8px;
+    border-radius: 4px;
+    white-space: nowrap;
+    
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.2s ease;
+    pointer-events: none;
+}
+
+.toolbar-btn[data-tooltip]:hover::before {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* ============================================================================
+   SECTION HIGHLIGHT ANIMATION (when scrolling to section)
+   ============================================================================ */
+
+@keyframes highlight-pulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(64, 81, 137, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 8px rgba(64, 81, 137, 0.1);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(64, 81, 137, 0);
+    }
+}
+
+.builder-section.highlight-pulse {
+    animation: highlight-pulse 1s ease-out;
+}
+
+/* ============================================================================
+   CANVAS WRAPPER ZOOM SUPPORT
+   ============================================================================ */
+
+.canvas-wrapper {
+    transition: transform 0.2s ease;
+    transform-origin: top center;
+}
+
+/* Ensure zoomed content doesn't overflow awkwardly */
+.design-canvas {
+    overflow: auto;
+}

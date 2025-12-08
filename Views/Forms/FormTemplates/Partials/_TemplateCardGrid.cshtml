@@ -1,0 +1,28 @@
+@model List<FormReporting.Models.ViewModels.Forms.FormTemplateViewModel>
+
+@*
+    Template Card Grid - Grid layout for displaying multiple template cards
+    Used as the card view content in the DataTable component
+*@
+
+@if (Model == null || Model.Count == 0)
+{
+    <div class="text-center py-5">
+        <div class="text-muted">
+            <i class="ri-file-list-line" style="font-size: 3rem;"></i>
+            <p class="mt-2 mb-0">No templates found</p>
+            <small>Try adjusting your filters or create a new template</small>
+        </div>
+    </div>
+}
+else
+{
+    <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
+        @foreach (var template in Model)
+        {
+            <div class="col">
+                <partial name="~/Views/Forms/FormTemplates/Partials/_TemplateCard.cshtml" model="template" />
+            </div>
+        }
+    </div>
+}

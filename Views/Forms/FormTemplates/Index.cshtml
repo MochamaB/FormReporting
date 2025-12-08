@@ -1,277 +1,64 @@
 @using FormReporting.Extensions
 @using FormReporting.Models.ViewModels.Components
 @using FormReporting.Models.ViewModels.Forms
+@using Microsoft.AspNetCore.Html
 @model List<FormReporting.Models.ViewModels.Forms.FormTemplateViewModel>
 
 @{
     ViewData["Title"] = "Form Templates Management";
-
-    // ============================================================================
-    // STEP 1: BUILD STAT CARDS CONFIG FROM VIEWBAG DATA
-    // ============================================================================
-    var statConfig = new StatsRowConfig
-    {
-        Titles = new List<string> { 
-            "Total Templates", 
-            "Published", 
-            "Submissions This Month", 
-            "Completion Rate" 
-        },
-        Values = new List<string> {
-            ViewBag.TotalTemplates.ToString(),
-            ViewBag.PublishedTemplates.ToString(),
-            ViewBag.SubmissionsThisMonth.ToString(),
-            ViewBag.CompletionRate.ToString("0.0") + "%"
-        },
-        Icons = new List<string> {
-            "ri-file-list-line",
-            "ri-file-check-line",
-            "ri-file-text-line",
-            "ri-percent-line"
-        },
-        ColorThemes = new List<string> { "primary", "success", "info", "warning" },
-        CardType = CardType.IconLeftCard,
-        Subtitles = new List<string> {
-            "Active templates",
-            "from last month",
-            "vs last month",
-            "Approval rate"
-        },
-        TrendPercentages = new List<string> {
-            "",
-            ViewBag.PublishedGrowth.ToString("0.0"),
-            ViewBag.SubmissionsGrowth.ToString("0.0"),
-            ""
-        },
-        TrendDirections = new List<TrendDirection> {
-            TrendDirection.Neutral,
-            ViewBag.PublishedGrowth >= 0 ? TrendDirection.Up : TrendDirection.Down,
-            ViewBag.SubmissionsGrowth >= 0 ? TrendDirection.Up : TrendDirection.Down,
-            TrendDirection.Neutral
-        }
-    };
     
-    // Call extension to build stat cards
-    var statCards = statConfig.BuildStatsRow();
-
     // Calculate row number starting point
     int startingNumber = ((ViewBag.CurrentPage - 1) * ViewBag.PageSize) + 1;
-
+    
+    // Get categories with counts
+    var categoriesWithCounts = ViewBag.CategoriesWithCounts as IEnumerable<dynamic> ?? new List<dynamic>();
+    int allTemplatesCount = ViewBag.AllTemplatesCount ?? 0;
+    
+    // Current category filter
+    string currentCategory = ViewBag.CurrentCategory ?? "";
+    
     // ============================================================================
-    // STEP 2: BUILD DATATABLE CONFIGURATION
+    // BUILD CATEGORY TABS (Server-Side Navigation)
     // ============================================================================
-    var tableConfig = new DataTableConfig
+    var categoryTabs = new TabsConfig
     {
-        TableId = "templatesTable",
-        Columns = new List<string> {
-            "#",
-            "Template Name",
-            "Code",
-            "Category",
-            "Type",
-            "Status",
-            "Version",
-            "Submissions",
-            "Modified",
-            "Actions"
-        },
-        EnableSearch = true,
-        SearchBox = new SearchBoxConfig
-        {
-            ParameterName = "search",
-            PlaceholderText = "Search templates...",
-            CurrentValue = ViewBag.CurrentSearch,
-            ActionUrl = Url.Action("Index", "FormTemplates") ?? "/FormTemplates"
-        },
-        FilterDropdowns = new List<FilterDropdownConfig>
-        {
-            // Status Filter
-            new FilterDropdownConfig
-            {
-                Label = "Status",
-                Options = new List<FilterOption>
-                {
-                    new FilterOption
-                    {
-                        Text = "All Status",
-                        Value = "",
-                        Url = Url.Action("Index", "FormTemplates", new { 
-                            search = ViewBag.CurrentSearch, 
-                            type = ViewBag.CurrentType, 
-                            category = ViewBag.CurrentCategory 
-                        }) ?? "/FormTemplates",
-                        IsActive = string.IsNullOrEmpty(ViewBag.CurrentStatus)
-                    },
-                    new FilterOption
-                    {
-                        Text = "Draft",
-                        Value = "draft",
-                        Url = Url.Action("Index", "FormTemplates", new { 
-                            search = ViewBag.CurrentSearch, 
-                            status = "draft", 
-                            type = ViewBag.CurrentType, 
-                            category = ViewBag.CurrentCategory 
-                        }) ?? "/FormTemplates",
-                        IsActive = ViewBag.CurrentStatus == "draft"
-                    },
-                    new FilterOption
-                    {
-                        Text = "Published",
-                        Value = "published",
-                        Url = Url.Action("Index", "FormTemplates", new { 
-                            search = ViewBag.CurrentSearch, 
-                            status = "published", 
-                            type = ViewBag.CurrentType, 
-                            category = ViewBag.CurrentCategory 
-                        }) ?? "/FormTemplates",
-                        IsActive = ViewBag.CurrentStatus == "published"
-                    },
-                    new FilterOption
-                    {
-                        Text = "Archived",
-                        Value = "archived",
-                        Url = Url.Action("Index", "FormTemplates", new { 
-                            search = ViewBag.CurrentSearch, 
-                            status = "archived", 
-                            type = ViewBag.CurrentType, 
-                            category = ViewBag.CurrentCategory 
-                        }) ?? "/FormTemplates",
-                        IsActive = ViewBag.CurrentStatus == "archived"
-                    },
-                    new FilterOption
-                    {
-                        Text = "Deprecated",
-                        Value = "deprecated",
-                        Url = Url.Action("Index", "FormTemplates", new { 
-                            search = ViewBag.CurrentSearch, 
-                            status = "deprecated", 
-                            type = ViewBag.CurrentType, 
-                            category = ViewBag.CurrentCategory 
-                        }) ?? "/FormTemplates",
-                        IsActive = ViewBag.CurrentStatus == "deprecated"
-                    }
-                }
-            },
-            // Type Filter
-            new FilterDropdownConfig
-            {
-                Label = "Type",
-                Options = new List<FilterOption>
-                {
-                    new FilterOption
-                    {
-                        Text = "All Types",
-                        Value = "",
-                        Url = Url.Action("Index", "FormTemplates", new { 
-                            search = ViewBag.CurrentSearch, 
-                            status = ViewBag.CurrentStatus, 
-                            category = ViewBag.CurrentCategory 
-                        }) ?? "/FormTemplates",
-                        IsActive = string.IsNullOrEmpty(ViewBag.CurrentType)
-                    },
-                    new FilterOption
-                    {
-                        Text = "Monthly",
-                        Value = "monthly",
-                        Url = Url.Action("Index", "FormTemplates", new { 
-                            search = ViewBag.CurrentSearch, 
-                            status = ViewBag.CurrentStatus, 
-                            type = "monthly", 
-                            category = ViewBag.CurrentCategory 
-                        }) ?? "/FormTemplates",
-                        IsActive = ViewBag.CurrentType == "monthly"
-                    },
-                    new FilterOption
-                    {
-                        Text = "Quarterly",
-                        Value = "quarterly",
-                        Url = Url.Action("Index", "FormTemplates", new { 
-                            search = ViewBag.CurrentSearch, 
-                            status = ViewBag.CurrentStatus, 
-                            type = "quarterly", 
-                            category = ViewBag.CurrentCategory 
-                        }) ?? "/FormTemplates",
-                        IsActive = ViewBag.CurrentType == "quarterly"
-                    },
-                    new FilterOption
-                    {
-                        Text = "Annual",
-                        Value = "annual",
-                        Url = Url.Action("Index", "FormTemplates", new { 
-                            search = ViewBag.CurrentSearch, 
-                            status = ViewBag.CurrentStatus, 
-                            type = "annual", 
-                            category = ViewBag.CurrentCategory 
-                        }) ?? "/FormTemplates",
-                        IsActive = ViewBag.CurrentType == "annual"
-                    },
-                    new FilterOption
-                    {
-                        Text = "On Demand",
-                        Value = "ondemand",
-                        Url = Url.Action("Index", "FormTemplates", new { 
-                            search = ViewBag.CurrentSearch, 
-                            status = ViewBag.CurrentStatus, 
-                            type = "ondemand", 
-                            category = ViewBag.CurrentCategory 
-                        }) ?? "/FormTemplates",
-                        IsActive = ViewBag.CurrentType == "ondemand"
-                    }
-                }
-            }
-        },
-        CreateButtonText = "Create New Template",
-        CreateButtonUrl = Url.Action("Create", "FormTemplates") ?? "/FormTemplates/Create",
-        ShowPagination = true,
-        CurrentPage = ViewBag.CurrentPage,
-        TotalPages = ViewBag.TotalPages,
-        TotalRecords = ViewBag.TotalItems,
-        PageSize = ViewBag.PageSize
+        TabsId = "categoryTabs",
+        Layout = TabsLayout.Vertical,
+        Style = TabsStyle.Pills,
+        WrapInCard = false,
+        NavigationMode = TabsNavigationMode.ServerSide
     };
-
-    // Add Category Filter dynamically from ViewBag
-    if (ViewBag.Categories != null)
+    
+    // Add "All Templates" tab
+    categoryTabs.WithNavigationTab(
+        tabId: "all",
+        title: "All Templates",
+        url: Url.Action("Index", "FormTemplates", new { search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, type = ViewBag.CurrentType }) ?? "/Forms/FormTemplates",
+        icon: "ri-folder-line",
+        badge: allTemplatesCount.ToString(),
+        badgeColor: "light",
+        isActive: string.IsNullOrEmpty(currentCategory)
+    );
+    
+    // Add category tabs dynamically
+    foreach (var cat in categoriesWithCounts)
     {
-        var categoryOptions = new List<FilterOption>
-        {
-            new FilterOption
-            {
-                Text = "All Categories",
-                Value = "",
-                Url = Url.Action("Index", "FormTemplates", new { 
-                    search = ViewBag.CurrentSearch, 
-                    status = ViewBag.CurrentStatus, 
-                    type = ViewBag.CurrentType 
-                }) ?? "/FormTemplates",
-                IsActive = string.IsNullOrEmpty(ViewBag.CurrentCategory)
-            }
-        };
-
-        foreach (var cat in (List<string>)ViewBag.Categories)
-        {
-            categoryOptions.Add(new FilterOption
-            {
-                Text = cat,
-                Value = cat.ToLower(),
-                Url = Url.Action("Index", "FormTemplates", new { 
-                    search = ViewBag.CurrentSearch, 
-                    status = ViewBag.CurrentStatus, 
-                    type = ViewBag.CurrentType, 
-                    category = cat.ToLower() 
-                }) ?? "/FormTemplates",
-                IsActive = ViewBag.CurrentCategory == cat.ToLower()
-            });
-        }
-
-        tableConfig.FilterDropdowns.Add(new FilterDropdownConfig
-        {
-            Label = "Category",
-            Options = categoryOptions
-        });
+        string catName = cat.CategoryName;
+        int catCount = cat.TemplateCount;
+        bool isActive = currentCategory.Equals(catName, StringComparison.OrdinalIgnoreCase);
+        
+        categoryTabs.WithNavigationTab(
+            tabId: catName.ToLower().Replace(" ", "-"),
+            title: catName,
+            url: Url.Action("Index", "FormTemplates", new { search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, type = ViewBag.CurrentType, category = catName.ToLower() }) ?? $"/Forms/FormTemplates?category={catName.ToLower()}",
+            icon: "ri-folder-3-line",
+            badge: catCount.ToString(),
+            badgeColor: "light",
+            isActive: isActive
+        );
     }
-
-    // Build table
-    var table = tableConfig.BuildDataTable();
+    
+    var categoryTabsViewModel = categoryTabs.BuildTabs();
 
     // ============================================================================
     // STEP 3: HELPER FUNCTION FOR ROW ACTIONS (CONDITIONAL BASED ON STATUS)
@@ -443,248 +230,73 @@
     }
 }
 
+@{
+    // Store tabs in ViewData for the component
+    ViewData["TabsViewModel"] = categoryTabsViewModel;
+    
+    // Pass data needed by the content partial
+    ViewData["StartingNumber"] = startingNumber;
+    ViewData["ParentModel"] = Model;
+    
+    // Set the content partial path for server-side navigation
+    ViewData["ServerSideContentPartial"] = "~/Views/Forms/FormTemplates/Partials/_TemplatesContent.cshtml";
+}
+
 <!-- ============================================================================ -->
-<!-- STEP 4: RENDER STAT CARDS ROW -->
+<!-- MAIN LAYOUT: Using Vertical Tabs Component -->
 <!-- ============================================================================ -->
-<div class="row">
-    @foreach (var card in statCards)
-    {
-        <partial name="~/Views/Shared/Components/StatisticCards/_IconLeftCard.cshtml" model="card" />
+@await Html.PartialAsync("~/Views/Shared/Components/Tabs/_VerticalTabs.cshtml", categoryTabsViewModel)
+
+<style>
+    /* Configuration status icons */
+    .config-status-icon {
+        width: 24px;
+        height: 24px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        font-size: 12px;
     }
-</div>
+    .config-status-icon.configured {
+        background-color: rgba(var(--vz-success-rgb), 0.15);
+        color: var(--vz-success);
+    }
+    .config-status-icon.not-configured {
+        background-color: rgba(var(--vz-secondary-rgb), 0.1);
+        color: var(--vz-secondary);
+    }
+</style>
 
-<!-- ============================================================================ -->
-<!-- STEP 5: RENDER DATATABLE WITH INLINE ROW RENDERING -->
-<!-- ============================================================================ -->
-<div class="row mt-3">
-    <div class="col-xl-12">
-        <div class="card">
-            <div class="card-header">
-                <div class="d-flex justify-content-between align-items-center flex-wrap w-100 gap-2">
-                    @* Left Side: Search and Filters *@
-                    <div class="d-flex gap-2 flex-wrap align-items-center">
-                        @* Search Box using partial component *@
-                        @if (table.SearchBox != null)
-                        {
-                            <partial name="~/Views/Shared/Components/DataTable/_SearchBox.cshtml" model="table.SearchBox" />
-                            @if (!string.IsNullOrEmpty(table.SearchBox.CurrentValue))
-                            {
-                                <a href="@table.SearchBox.ActionUrl" class="btn btn-soft-secondary" title="Clear search">
-                                    <i class="ri-refresh-line"></i>
-                                </a>
-                            }
-                        }
-
-                        @* Filter Dropdowns using partial component *@
-                        @if (table.FilterDropdowns != null && table.FilterDropdowns.Any())
-                        {
-                            foreach (var filterDropdown in table.FilterDropdowns)
-                            {
-                                <partial name="~/Views/Shared/Components/DataTable/_FilterDropdown.cshtml" model="filterDropdown" />
-                            }
-                        }
-                    </div>
-
-                    @* Right Side: Create Button *@
-                    <div class="d-flex gap-2">
-                        @if (!string.IsNullOrEmpty(table.CreateButtonText) && !string.IsNullOrEmpty(table.CreateButtonUrl))
-                        {
-                            <a href="@table.CreateButtonUrl" class="btn btn-primary">
-                                <i class="ri-add-line me-1"></i>@table.CreateButtonText
-                            </a>
-                        }
-                    </div>
-                </div>
-            </div>
-
-            <div class="card-body p-0">
-                <div class="table-responsive">
-                    <table class="@table.TableClasses" id="@table.TableId" style="width: 100%;">
-                        <thead class="bg-light">
-                            <tr>
-                                @foreach (var column in table.Columns)
-                                {
-                                    <th scope="col" style="min-width: 50px; padding: 12px; white-space: nowrap;">@column</th>
-                                }
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @if (Model.Count == 0)
-                            {
-                                <tr>
-                                    <td colspan="@table.Columns.Count" class="text-center py-5">
-                                        <div class="text-muted">
-                                            <i class="ri-file-list-line" style="font-size: 3rem;"></i>
-                                            <p class="mt-2 mb-0">No templates found</p>
-                                            @if (!string.IsNullOrEmpty(ViewBag.CurrentSearch) || 
-                                                 !string.IsNullOrEmpty(ViewBag.CurrentStatus) || 
-                                                 !string.IsNullOrEmpty(ViewBag.CurrentType) || 
-                                                 !string.IsNullOrEmpty(ViewBag.CurrentCategory))
-                                            {
-                                                <small>Try adjusting your filters</small>
-                                            }
-                                        </div>
-                                    </td>
-                                </tr>
-                            }
-                            else
-                            {
-                                @for (int i = 0; i < Model.Count; i++)
-                                {
-                                    var item = Model[i];
-                                    var rowNumber = startingNumber + i;
-                                    <tr>
-                                        <td class="text-center">
-                                            <span class="text-muted fw-medium">@rowNumber</span>
-                                        </td>
-                                        <td>
-                                            <div class="fw-medium mb-1">@item.TemplateName</div>
-                                            @* Show progress for drafts *@
-                                            @if (item.PublishStatus == "Draft")
-                                            {
-                                                <div class="mt-2">
-                                                    <div class="d-flex align-items-center gap-2 mb-1">
-                                                        <span class="badge bg-info-subtle text-info">
-                                                            <i class="ri-draft-line"></i> In Progress
-                                                        </span>
-                                                        @* TODO: Add completion percentage from controller *@
-                                                        @* <small class="text-muted">45% Complete</small> *@
-                                                    </div>
-                                                </div>
-                                            }
-                                            @* Show version badge for published *@
-                                            @if (item.PublishStatus == "Published")
-                                            {
-                                                <small class="text-muted">
-                                                    <i class="ri-checkbox-circle-line text-success"></i> 
-                                                    Live Template
-                                                </small>
-                                            }
-                                        </td>
-                                        <td>
-                                            <code class="text-primary">@item.TemplateCode</code>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-secondary-subtle text-secondary">@item.CategoryName</span>
-                                        </td>
-                                        <td>
-                                            @Html.Raw(item.TypeBadge)
-                                        </td>
-                                        <td>
-                                            @Html.Raw(item.StatusBadge)
-                                        </td>
-                                        <td class="text-center">
-                                            <span class="badge bg-light text-dark">@item.VersionFormatted</span>
-                                        </td>
-                                        <td class="text-center">
-                                            <span class="badge bg-info-subtle text-info">@item.SubmissionCount</span>
-                                        </td>
-                                        <td>
-                                            <span class="text-muted">@item.ModifiedDateFormatted</span>
-                                            <br />
-                                            <small class="text-muted">by @item.CreatedBy</small>
-                                        </td>
-                                        <td>
-                                            @{
-                                                var rowActions = BuildRowActions(item);
-                                            }
-                                            <partial name="~/Views/Shared/Components/RowActions/_RowActionsDropdown.cshtml" model="rowActions" />
-                                        </td>
-                                    </tr>
-                                }
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-            @* Pagination Footer *@
-            @if (table.ShowPagination && table.TotalPages > 1)
-            {
-                <div class="card-footer">
-                    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                        <div>
-                            <span class="text-muted">
-                                Showing page @table.CurrentPage of @table.TotalPages
-                                (@table.TotalRecords total items)
-                            </span>
-                        </div>
-                        <nav aria-label="Page navigation">
-                            <ul class="pagination mb-0">
-                                @{
-                                    string BuildPageUrl(int pageNumber)
-                                    {
-                                        return Url.Action("Index", "FormTemplates", new
-                                        {
-                                            page = pageNumber,
-                                            search = ViewBag.CurrentSearch,
-                                            status = ViewBag.CurrentStatus,
-                                            type = ViewBag.CurrentType,
-                                            category = ViewBag.CurrentCategory
-                                        }) ?? $"/FormTemplates?page={pageNumber}";
-                                    }
-                                }
-
-                                @* Previous Button *@
-                                <li class="page-item @(table.CurrentPage == 1 ? "disabled" : "")">
-                                    <a class="page-link" href="@(table.CurrentPage > 1 ? BuildPageUrl(table.CurrentPage - 1) : "#")" aria-label="Previous">
-                                        <i class="ri-arrow-left-s-line"></i>
-                                    </a>
-                                </li>
-
-                                @* Page Numbers *@
-                                @{
-                                    int startPage = Math.Max(1, table.CurrentPage - 2);
-                                    int endPage = Math.Min(table.TotalPages, table.CurrentPage + 2);
-
-                                    // Show first page
-                                    if (startPage > 1)
-                                    {
-                                        <li class="page-item">
-                                            <a class="page-link" href="@BuildPageUrl(1)">1</a>
-                                        </li>
-                                        if (startPage > 2)
-                                        {
-                                            <li class="page-item disabled">
-                                                <span class="page-link">...</span>
-                                            </li>
-                                        }
-                                    }
-
-                                    // Show page numbers
-                                    for (int i = startPage; i <= endPage; i++)
-                                    {
-                                        <li class="page-item @(i == table.CurrentPage ? "active" : "")">
-                                            <a class="page-link" href="@BuildPageUrl(i)">@i</a>
-                                        </li>
-                                    }
-
-                                    // Show last page
-                                    if (endPage < table.TotalPages)
-                                    {
-                                        if (endPage < table.TotalPages - 1)
-                                        {
-                                            <li class="page-item disabled">
-                                                <span class="page-link">...</span>
-                                            </li>
-                                        }
-                                        <li class="page-item">
-                                            <a class="page-link" href="@BuildPageUrl(table.TotalPages)">@table.TotalPages</a>
-                                        </li>
-                                    }
-                                }
-
-                                @* Next Button *@
-                                <li class="page-item @(table.CurrentPage >= table.TotalPages ? "disabled" : "")">
-                                    <a class="page-link" href="@(table.CurrentPage < table.TotalPages ? BuildPageUrl(table.CurrentPage + 1) : "#")" aria-label="Next">
-                                        <i class="ri-arrow-right-s-line"></i>
-                                    </a>
-                                </li>
-                            </ul>
-                        </nav>
-                    </div>
-                </div>
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // View toggle functionality
+            var storageKey = 'templateViewPreference';
+            var savedView = localStorage.getItem(storageKey) || 'table';
+            
+            // Apply saved preference
+            switchView(savedView);
+            
+            // Toggle click handler
+            $('.view-toggle-btn').on('click', function() {
+                var view = $(this).data('view');
+                switchView(view);
+                localStorage.setItem(storageKey, view);
+            });
+            
+            function switchView(view) {
+                $('.view-toggle-btn').removeClass('active');
+                $('.view-toggle-btn[data-view="' + view + '"]').addClass('active');
+                
+                if (view === 'table') {
+                    $('#tableView').show();
+                    $('#cardView').hide();
+                } else {
+                    $('#tableView').hide();
+                    $('#cardView').show();
+                }
             }
-        </div>
-    </div>
-</div>
+        });
+    </script>
+}

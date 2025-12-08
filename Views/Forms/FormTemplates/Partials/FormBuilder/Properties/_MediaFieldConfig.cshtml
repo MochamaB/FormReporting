@@ -1,0 +1,423 @@
+@*
+    Media Field Configuration Panel
+    Handles: FileUpload, Image, Signature field types
+*@
+
+<!-- FileUpload Configuration -->
+<div id="config-fileupload-fields" style="display: none;">
+    <div class="mb-3">
+        <div class="d-flex align-items-center mb-2">
+            <i class="ri-file-upload-line fs-5 text-primary me-2"></i>
+            <h6 class="mb-0">File Upload Configuration</h6>
+        </div>
+        <small class="text-muted">Configure file upload constraints and behavior</small>
+    </div>
+
+    <div class="row g-3">
+        <!-- Allowed File Types -->
+        <div class="col-12">
+            <label class="form-label">Allowed File Types</label>
+            <select class="form-select" id="config-allowedFileTypes" multiple size="4"
+                    onchange="FormBuilderConfiguration.saveMultiSelectConfig('allowedFileTypes', this)">
+                <optgroup label="Documents">
+                    <option value=".pdf">PDF (.pdf)</option>
+                    <option value=".doc,.docx">Word (.doc, .docx)</option>
+                    <option value=".xls,.xlsx">Excel (.xls, .xlsx)</option>
+                    <option value=".ppt,.pptx">PowerPoint (.ppt, .pptx)</option>
+                    <option value=".txt">Text (.txt)</option>
+                    <option value=".csv">CSV (.csv)</option>
+                </optgroup>
+                <optgroup label="Images">
+                    <option value=".jpg,.jpeg">JPEG (.jpg, .jpeg)</option>
+                    <option value=".png">PNG (.png)</option>
+                    <option value=".gif">GIF (.gif)</option>
+                    <option value=".webp">WebP (.webp)</option>
+                </optgroup>
+                <optgroup label="Archives">
+                    <option value=".zip">ZIP (.zip)</option>
+                    <option value=".rar">RAR (.rar)</option>
+                </optgroup>
+            </select>
+            <small class="text-muted">Hold Ctrl/Cmd to select multiple. Leave empty to allow all types.</small>
+        </div>
+
+        <!-- Max File Size -->
+        <div class="col-md-6">
+            <label class="form-label">Maximum File Size</label>
+            <div class="input-group">
+                <input type="number" class="form-control" id="config-maxFileSize" min="1" max="100"
+                       placeholder="10" onchange="FormBuilderConfiguration.saveConfig('maxFileSize', this.value)">
+                <span class="input-group-text">MB</span>
+            </div>
+            <small class="text-muted">Maximum size per file (1-100 MB)</small>
+        </div>
+
+        <!-- Min File Size -->
+        <div class="col-md-6">
+            <label class="form-label">Minimum File Size</label>
+            <div class="input-group">
+                <input type="number" class="form-control" id="config-minFileSize" min="0" max="10"
+                       placeholder="0" onchange="FormBuilderConfiguration.saveConfig('minFileSize', this.value)">
+                <span class="input-group-text">KB</span>
+            </div>
+            <small class="text-muted">Minimum size to prevent empty files</small>
+        </div>
+
+        <!-- Max Files -->
+        <div class="col-md-6">
+            <label class="form-label">Maximum Files</label>
+            <input type="number" class="form-control" id="config-maxFiles" min="1" max="20"
+                   placeholder="1" onchange="FormBuilderConfiguration.saveConfig('maxFiles', this.value)">
+            <small class="text-muted">Max number of files allowed</small>
+        </div>
+
+        <!-- Allow Multiple -->
+        <div class="col-md-6">
+            <label class="form-label d-block">&nbsp;</label>
+            <div class="form-check form-switch mt-2">
+                <input class="form-check-input" type="checkbox" id="config-allowMultiple"
+                       onchange="FormBuilderConfiguration.saveConfig('allowMultiple', this.checked)">
+                <label class="form-check-label" for="config-allowMultiple">
+                    Allow Multiple Files
+                </label>
+            </div>
+        </div>
+
+        <!-- Preserve File Name -->
+        <div class="col-12">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="config-preserveFileName"
+                       onchange="FormBuilderConfiguration.saveConfig('preserveFileName', this.checked)">
+                <label class="form-check-label" for="config-preserveFileName">
+                    Preserve Original Filename
+                </label>
+            </div>
+            <small class="text-muted d-block ms-4">Keep original filename or generate unique name</small>
+        </div>
+    </div>
+
+    <!-- File Upload Tips -->
+    <div class="alert alert-light border mt-3 mb-0" style="font-size: 0.85rem;">
+        <i class="ri-lightbulb-line text-warning me-1"></i>
+        <strong>Tips:</strong> For security, avoid allowing executable files (.exe, .bat). 
+        Consider limiting file size based on your server capacity.
+    </div>
+</div>
+
+<!-- Image Configuration -->
+<div id="config-image-fields" style="display: none;">
+    <div class="mb-3">
+        <div class="d-flex align-items-center mb-2">
+            <i class="ri-image-line fs-5 text-primary me-2"></i>
+            <h6 class="mb-0">Image Configuration</h6>
+        </div>
+        <small class="text-muted">Configure image upload constraints and processing</small>
+    </div>
+
+    <div class="row g-3">
+        <!-- Allowed Image Types -->
+        <div class="col-12">
+            <label class="form-label">Allowed Image Formats</label>
+            <div class="d-flex flex-wrap gap-2">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="config-allowJpeg" value=".jpg,.jpeg"
+                           onchange="FormBuilderConfiguration.updateImageTypes()">
+                    <label class="form-check-label" for="config-allowJpeg">JPEG</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="config-allowPng" value=".png"
+                           onchange="FormBuilderConfiguration.updateImageTypes()">
+                    <label class="form-check-label" for="config-allowPng">PNG</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="config-allowGif" value=".gif"
+                           onchange="FormBuilderConfiguration.updateImageTypes()">
+                    <label class="form-check-label" for="config-allowGif">GIF</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="config-allowWebp" value=".webp"
+                           onchange="FormBuilderConfiguration.updateImageTypes()">
+                    <label class="form-check-label" for="config-allowWebp">WebP</label>
+                </div>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="config-allowSvg" value=".svg"
+                           onchange="FormBuilderConfiguration.updateImageTypes()">
+                    <label class="form-check-label" for="config-allowSvg">SVG</label>
+                </div>
+            </div>
+            <small class="text-muted">Select allowed image formats. Leave all unchecked to allow all.</small>
+        </div>
+
+        <!-- Max File Size -->
+        <div class="col-md-6">
+            <label class="form-label">Maximum File Size</label>
+            <div class="input-group">
+                <input type="number" class="form-control" id="config-imageMaxFileSize" min="1" max="50"
+                       placeholder="5" onchange="FormBuilderConfiguration.saveConfig('maxFileSize', this.value)">
+                <span class="input-group-text">MB</span>
+            </div>
+            <small class="text-muted">Maximum image file size</small>
+        </div>
+
+        <!-- Image Quality -->
+        <div class="col-md-6">
+            <label class="form-label">Compression Quality</label>
+            <div class="input-group">
+                <input type="number" class="form-control" id="config-imageQuality" min="10" max="100"
+                       placeholder="80" onchange="FormBuilderConfiguration.saveConfig('imageQuality', this.value)">
+                <span class="input-group-text">%</span>
+            </div>
+            <small class="text-muted">JPEG compression (10-100%)</small>
+        </div>
+
+        <!-- Dimension Constraints -->
+        <div class="col-12">
+            <label class="form-label small fw-semibold">Dimension Constraints</label>
+        </div>
+
+        <!-- Max Width -->
+        <div class="col-md-6">
+            <label class="form-label">Maximum Width</label>
+            <div class="input-group">
+                <input type="number" class="form-control" id="config-maxWidth" min="100" max="4096"
+                       placeholder="1920" onchange="FormBuilderConfiguration.saveConfig('maxWidth', this.value)">
+                <span class="input-group-text">px</span>
+            </div>
+        </div>
+
+        <!-- Max Height -->
+        <div class="col-md-6">
+            <label class="form-label">Maximum Height</label>
+            <div class="input-group">
+                <input type="number" class="form-control" id="config-maxHeight" min="100" max="4096"
+                       placeholder="1080" onchange="FormBuilderConfiguration.saveConfig('maxHeight', this.value)">
+                <span class="input-group-text">px</span>
+            </div>
+        </div>
+
+        <!-- Min Width -->
+        <div class="col-md-6">
+            <label class="form-label">Minimum Width</label>
+            <div class="input-group">
+                <input type="number" class="form-control" id="config-minWidth" min="1" max="1000"
+                       placeholder="No minimum" onchange="FormBuilderConfiguration.saveConfig('minWidth', this.value)">
+                <span class="input-group-text">px</span>
+            </div>
+        </div>
+
+        <!-- Min Height -->
+        <div class="col-md-6">
+            <label class="form-label">Minimum Height</label>
+            <div class="input-group">
+                <input type="number" class="form-control" id="config-minHeight" min="1" max="1000"
+                       placeholder="No minimum" onchange="FormBuilderConfiguration.saveConfig('minHeight', this.value)">
+                <span class="input-group-text">px</span>
+            </div>
+        </div>
+
+        <!-- Aspect Ratio -->
+        <div class="col-md-6">
+            <label class="form-label">Aspect Ratio</label>
+            <select class="form-select" id="config-aspectRatio"
+                    onchange="FormBuilderConfiguration.saveConfig('aspectRatio', this.value)">
+                <option value="">Any (no restriction)</option>
+                <option value="1:1">1:1 (Square)</option>
+                <option value="4:3">4:3 (Standard)</option>
+                <option value="16:9">16:9 (Widescreen)</option>
+                <option value="3:2">3:2 (Photo)</option>
+                <option value="2:3">2:3 (Portrait)</option>
+            </select>
+            <small class="text-muted">Required aspect ratio</small>
+        </div>
+
+        <!-- Thumbnail Size -->
+        <div class="col-md-6">
+            <label class="form-label">Thumbnail Size</label>
+            <select class="form-select" id="config-thumbnailSize"
+                    onchange="FormBuilderConfiguration.saveConfig('thumbnailSize', this.value)">
+                <option value="">No thumbnail</option>
+                <option value="50x50">50x50 (Icon)</option>
+                <option value="100x100">100x100 (Small)</option>
+                <option value="150x150">150x150 (Medium)</option>
+                <option value="200x200">200x200 (Large)</option>
+            </select>
+            <small class="text-muted">Auto-generate thumbnail</small>
+        </div>
+
+        <!-- Image Options -->
+        <div class="col-12">
+            <label class="form-label small fw-semibold">Image Options</label>
+        </div>
+
+        <div class="col-md-6">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="config-allowCropping"
+                       onchange="FormBuilderConfiguration.saveConfig('allowCropping', this.checked)">
+                <label class="form-check-label" for="config-allowCropping">
+                    Enable Image Cropping
+                </label>
+            </div>
+            <small class="text-muted d-block ms-4">Allow users to crop before upload</small>
+        </div>
+
+        <div class="col-md-6">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="config-autoResize"
+                       onchange="FormBuilderConfiguration.saveConfig('autoResize', this.checked)">
+                <label class="form-check-label" for="config-autoResize">
+                    Auto-Resize to Max Dimensions
+                </label>
+            </div>
+            <small class="text-muted d-block ms-4">Automatically resize oversized images</small>
+        </div>
+    </div>
+</div>
+
+<!-- Signature Configuration -->
+<div id="config-signature-fields" style="display: none;">
+    <div class="mb-3">
+        <div class="d-flex align-items-center mb-2">
+            <i class="ri-edit-line fs-5 text-primary me-2"></i>
+            <h6 class="mb-0">Signature Configuration</h6>
+        </div>
+        <small class="text-muted">Configure signature pad appearance and behavior</small>
+    </div>
+
+    <div class="row g-3">
+        <!-- Canvas Dimensions -->
+        <div class="col-12">
+            <label class="form-label small fw-semibold">Canvas Size</label>
+        </div>
+
+        <!-- Canvas Width -->
+        <div class="col-md-6">
+            <label class="form-label">Width</label>
+            <div class="input-group">
+                <input type="number" class="form-control" id="config-canvasWidth" min="200" max="800"
+                       placeholder="400" onchange="FormBuilderConfiguration.saveConfig('canvasWidth', this.value)">
+                <span class="input-group-text">px</span>
+            </div>
+        </div>
+
+        <!-- Canvas Height -->
+        <div class="col-md-6">
+            <label class="form-label">Height</label>
+            <div class="input-group">
+                <input type="number" class="form-control" id="config-canvasHeight" min="100" max="400"
+                       placeholder="200" onchange="FormBuilderConfiguration.saveConfig('canvasHeight', this.value)">
+                <span class="input-group-text">px</span>
+            </div>
+        </div>
+
+        <!-- Pen Settings -->
+        <div class="col-12">
+            <label class="form-label small fw-semibold">Pen Settings</label>
+        </div>
+
+        <!-- Pen Color -->
+        <div class="col-md-6">
+            <label class="form-label">Pen Color</label>
+            <div class="input-group">
+                <input type="color" class="form-control form-control-color" id="config-penColor"
+                       value="#000000" onchange="FormBuilderConfiguration.saveConfig('penColor', this.value)">
+                <input type="text" class="form-control" id="config-penColorText" value="#000000"
+                       placeholder="#000000" onchange="FormBuilderConfiguration.syncColorInput('penColor', this.value)">
+            </div>
+            <small class="text-muted">Signature stroke color</small>
+        </div>
+
+        <!-- Pen Width -->
+        <div class="col-md-6">
+            <label class="form-label">Pen Width</label>
+            <div class="input-group">
+                <input type="number" class="form-control" id="config-penWidth" min="1" max="10"
+                       placeholder="2" onchange="FormBuilderConfiguration.saveConfig('penWidth', this.value)">
+                <span class="input-group-text">px</span>
+            </div>
+            <small class="text-muted">Stroke thickness (1-10)</small>
+        </div>
+
+        <!-- Background Color -->
+        <div class="col-md-6">
+            <label class="form-label">Background Color</label>
+            <div class="input-group">
+                <input type="color" class="form-control form-control-color" id="config-backgroundColor"
+                       value="#ffffff" onchange="FormBuilderConfiguration.saveConfig('backgroundColor', this.value)">
+                <input type="text" class="form-control" id="config-backgroundColorText" value="#ffffff"
+                       placeholder="#ffffff" onchange="FormBuilderConfiguration.syncColorInput('backgroundColor', this.value)">
+            </div>
+            <small class="text-muted">Canvas background color</small>
+        </div>
+
+        <!-- Output Format -->
+        <div class="col-md-6">
+            <label class="form-label">Output Format</label>
+            <select class="form-select" id="config-outputFormat"
+                    onchange="FormBuilderConfiguration.saveConfig('outputFormat', this.value)">
+                <option value="PNG">PNG (Recommended)</option>
+                <option value="JPEG">JPEG</option>
+                <option value="SVG">SVG (Vector)</option>
+                <option value="Base64">Base64 String</option>
+            </select>
+            <small class="text-muted">How signature is saved</small>
+        </div>
+
+        <!-- Signature Options -->
+        <div class="col-12">
+            <label class="form-label small fw-semibold">Options</label>
+        </div>
+
+        <div class="col-md-6">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="config-showClearButton" checked
+                       onchange="FormBuilderConfiguration.saveConfig('showClearButton', this.checked)">
+                <label class="form-check-label" for="config-showClearButton">
+                    Show Clear Button
+                </label>
+            </div>
+            <small class="text-muted d-block ms-4">Allow clearing the signature</small>
+        </div>
+
+        <div class="col-md-6">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="config-showUndoButton"
+                       onchange="FormBuilderConfiguration.saveConfig('showUndoButton', this.checked)">
+                <label class="form-check-label" for="config-showUndoButton">
+                    Show Undo Button
+                </label>
+            </div>
+            <small class="text-muted d-block ms-4">Allow undoing last stroke</small>
+        </div>
+
+        <div class="col-md-6">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="config-requireFullName"
+                       onchange="FormBuilderConfiguration.saveConfig('requireFullName', this.checked)">
+                <label class="form-check-label" for="config-requireFullName">
+                    Require Typed Name
+                </label>
+            </div>
+            <small class="text-muted d-block ms-4">User must type name with signature</small>
+        </div>
+
+        <div class="col-md-6">
+            <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox" id="config-showDateStamp"
+                       onchange="FormBuilderConfiguration.saveConfig('showDateStamp', this.checked)">
+                <label class="form-check-label" for="config-showDateStamp">
+                    Add Date/Time Stamp
+                </label>
+            </div>
+            <small class="text-muted d-block ms-4">Include timestamp with signature</small>
+        </div>
+    </div>
+
+    <!-- Signature Preview -->
+    <div class="mt-3">
+        <label class="form-label small fw-semibold">Preview</label>
+        <div id="signature-preview" class="border rounded p-2 text-center" 
+             style="background-color: #ffffff; min-height: 100px;">
+            <small class="text-muted">Signature preview will appear here</small>
+        </div>
+    </div>
+</div>

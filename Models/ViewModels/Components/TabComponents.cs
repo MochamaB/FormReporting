@@ -41,6 +41,22 @@ namespace FormReporting.Models.ViewModels.Components
         Pills = 3
     }
 
+    /// <summary>
+    /// Navigation mode for tabs
+    /// </summary>
+    public enum TabsNavigationMode
+    {
+        /// <summary>
+        /// Client-side tab switching using Bootstrap's data-bs-toggle (default)
+        /// </summary>
+        ClientSide = 1,
+
+        /// <summary>
+        /// Server-side navigation using href links (page reload on tab click)
+        /// </summary>
+        ServerSide = 2
+    }
+
     // ============================================================================
     // CONFIGURATION CLASSES (What users create in views)
     // ============================================================================
@@ -66,6 +82,12 @@ namespace FormReporting.Models.ViewModels.Components
         /// Style: Standard, CustomBordered, or Pills
         /// </summary>
         public TabsStyle Style { get; set; } = TabsStyle.CustomBordered;
+
+        /// <summary>
+        /// Navigation mode: ClientSide (default) or ServerSide
+        /// ServerSide uses href links for page navigation instead of tab switching
+        /// </summary>
+        public TabsNavigationMode NavigationMode { get; set; } = TabsNavigationMode.ClientSide;
 
         /// <summary>
         /// Color theme (e.g., "success", "primary", "info", "danger")
@@ -150,6 +172,11 @@ namespace FormReporting.Models.ViewModels.Components
         public bool IsDisabled { get; set; } = false;
 
         /// <summary>
+        /// URL for server-side navigation (used when NavigationMode = ServerSide)
+        /// </summary>
+        public string? Url { get; set; }
+
+        /// <summary>
         /// Path to partial view containing tab content
         /// </summary>
         public string? ContentPartialPath { get; set; }
@@ -195,6 +222,11 @@ namespace FormReporting.Models.ViewModels.Components
         /// Color theme
         /// </summary>
         public string ColorTheme { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Navigation mode
+        /// </summary>
+        public TabsNavigationMode NavigationMode { get; set; } = TabsNavigationMode.ClientSide;
 
         /// <summary>
         /// List of transformed tabs (ViewModel version)
@@ -294,6 +326,11 @@ namespace FormReporting.Models.ViewModels.Components
         /// Is this tab disabled?
         /// </summary>
         public bool IsDisabled { get; set; }
+
+        /// <summary>
+        /// URL for server-side navigation
+        /// </summary>
+        public string? Url { get; set; }
 
         /// <summary>
         /// Content partial path

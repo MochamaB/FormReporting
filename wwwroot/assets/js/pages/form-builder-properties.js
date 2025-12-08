@@ -2680,6 +2680,15 @@ const FormBuilderConfiguration = {
         this.currentFieldId = fieldData.itemId;
         this.currentFieldType = fieldData.dataTypeName || 'Text';
 
+        // Show config-field container and hide empty state
+        const configField = document.getElementById('config-field');
+        const configEmpty = document.getElementById('config-empty');
+        const configSection = document.getElementById('config-section');
+        
+        if (configField) configField.style.display = 'block';
+        if (configEmpty) configEmpty.style.display = 'none';
+        if (configSection) configSection.style.display = 'none';
+
         // Hide all config sections first
         this.hideAllConfigSections();
 
@@ -2698,6 +2707,19 @@ const FormBuilderConfiguration = {
     hideAllConfigSections: function() {
         document.getElementById('config-number-fields')?.style && (document.getElementById('config-number-fields').style.display = 'none');
         document.getElementById('config-text-fields')?.style && (document.getElementById('config-text-fields').style.display = 'none');
+        document.getElementById('config-datetime-fields')?.style && (document.getElementById('config-datetime-fields').style.display = 'none');
+        document.getElementById('config-fileupload-fields')?.style && (document.getElementById('config-fileupload-fields').style.display = 'none');
+        document.getElementById('config-image-fields')?.style && (document.getElementById('config-image-fields').style.display = 'none');
+        document.getElementById('config-signature-fields')?.style && (document.getElementById('config-signature-fields').style.display = 'none');
+        document.getElementById('config-rating-fields')?.style && (document.getElementById('config-rating-fields').style.display = 'none');
+        document.getElementById('config-slider-fields')?.style && (document.getElementById('config-slider-fields').style.display = 'none');
+        document.getElementById('config-currency-fields')?.style && (document.getElementById('config-currency-fields').style.display = 'none');
+        document.getElementById('config-percentage-fields')?.style && (document.getElementById('config-percentage-fields').style.display = 'none');
+        document.getElementById('config-contact-fields')?.style && (document.getElementById('config-contact-fields').style.display = 'none');
+        // Hide contact sub-options
+        document.getElementById('config-email-options')?.style && (document.getElementById('config-email-options').style.display = 'none');
+        document.getElementById('config-phone-options')?.style && (document.getElementById('config-phone-options').style.display = 'none');
+        document.getElementById('config-url-options')?.style && (document.getElementById('config-url-options').style.display = 'none');
         document.getElementById('config-no-settings')?.style && (document.getElementById('config-no-settings').style.display = 'none');
     },
 
@@ -2706,22 +2728,167 @@ const FormBuilderConfiguration = {
      * @param {string} fieldType - Field type name
      */
     showConfigForFieldType: function(fieldType) {
-        // Number-based fields
-        const numberTypes = ['Number', 'Decimal', 'Currency', 'Percentage'];
+        // Number-based fields (basic number config)
+        const numberTypes = ['Number', 'Decimal'];
         if (numberTypes.includes(fieldType)) {
             document.getElementById('config-number-fields').style.display = 'block';
             return;
         }
 
-        // Text-based fields
-        const textTypes = ['Text', 'TextArea', 'Email', 'Phone', 'URL'];
+        // Text-based fields (without contact fields)
+        const textTypes = ['Text', 'TextArea'];
         if (textTypes.includes(fieldType)) {
             document.getElementById('config-text-fields').style.display = 'block';
+            this.toggleTextFields(fieldType);
             return;
         }
 
-        // No special configuration for other types
+        // Contact fields - Email, Phone, Url (have both text config and contact-specific options)
+        const contactTypes = ['Email', 'Phone', 'Url'];
+        if (contactTypes.includes(fieldType)) {
+            document.getElementById('config-contact-fields').style.display = 'block';
+            this.toggleContactFields(fieldType);
+            return;
+        }
+
+        // Date/Time fields
+        const dateTimeTypes = ['Date', 'Time', 'DateTime'];
+        if (dateTimeTypes.includes(fieldType)) {
+            document.getElementById('config-datetime-fields').style.display = 'block';
+            this.toggleDateTimeFields(fieldType);
+            return;
+        }
+
+        // Media fields - FileUpload
+        if (fieldType === 'FileUpload') {
+            document.getElementById('config-fileupload-fields').style.display = 'block';
+            return;
+        }
+
+        // Media fields - Image
+        if (fieldType === 'Image') {
+            document.getElementById('config-image-fields').style.display = 'block';
+            return;
+        }
+
+        // Media fields - Signature
+        if (fieldType === 'Signature') {
+            document.getElementById('config-signature-fields').style.display = 'block';
+            return;
+        }
+
+        // Rating field
+        if (fieldType === 'Rating') {
+            document.getElementById('config-rating-fields').style.display = 'block';
+            return;
+        }
+
+        // Slider field
+        if (fieldType === 'Slider') {
+            document.getElementById('config-slider-fields').style.display = 'block';
+            return;
+        }
+
+        // Currency field
+        if (fieldType === 'Currency') {
+            document.getElementById('config-currency-fields').style.display = 'block';
+            return;
+        }
+
+        // Percentage field
+        if (fieldType === 'Percentage') {
+            document.getElementById('config-percentage-fields').style.display = 'block';
+            return;
+        }
+
+        // No special configuration for other types (Checkbox single, etc.)
         document.getElementById('config-no-settings').style.display = 'block';
+    },
+
+    /**
+     * Toggle visibility of contact field specific options
+     * @param {string} fieldType - Email, Phone, or Url
+     */
+    toggleContactFields: function(fieldType) {
+        // Hide all contact sub-options first
+        document.getElementById('config-email-options').style.display = 'none';
+        document.getElementById('config-phone-options').style.display = 'none';
+        document.getElementById('config-url-options').style.display = 'none';
+
+        // Show specific options based on field type
+        if (fieldType === 'Email') {
+            document.getElementById('config-email-options').style.display = 'block';
+        } else if (fieldType === 'Phone') {
+            document.getElementById('config-phone-options').style.display = 'block';
+        } else if (fieldType === 'Url') {
+            document.getElementById('config-url-options').style.display = 'block';
+        }
+    },
+
+    /**
+     * Toggle visibility of date/time specific fields based on field type
+     * @param {string} fieldType - Date, Time, or DateTime
+     */
+    toggleDateTimeFields: function(fieldType) {
+        const minDateGroup = document.getElementById('config-minDate-group');
+        const maxDateGroup = document.getElementById('config-maxDate-group');
+        const minTimeGroup = document.getElementById('config-minTime-group');
+        const maxTimeGroup = document.getElementById('config-maxTime-group');
+        const disablePastGroup = document.getElementById('config-disablePastDates-group');
+        const disableFutureGroup = document.getElementById('config-disableFutureDates-group');
+
+        // Reset all to visible
+        if (minDateGroup) minDateGroup.style.display = 'block';
+        if (maxDateGroup) maxDateGroup.style.display = 'block';
+        if (minTimeGroup) minTimeGroup.style.display = 'block';
+        if (maxTimeGroup) maxTimeGroup.style.display = 'block';
+        if (disablePastGroup) disablePastGroup.style.display = 'block';
+        if (disableFutureGroup) disableFutureGroup.style.display = 'block';
+
+        // Hide based on field type
+        if (fieldType === 'Date') {
+            // Date only - hide time fields
+            if (minTimeGroup) minTimeGroup.style.display = 'none';
+            if (maxTimeGroup) maxTimeGroup.style.display = 'none';
+        } else if (fieldType === 'Time') {
+            // Time only - hide date fields and disable past/future options
+            if (minDateGroup) minDateGroup.style.display = 'none';
+            if (maxDateGroup) maxDateGroup.style.display = 'none';
+            if (disablePastGroup) disablePastGroup.style.display = 'none';
+            if (disableFutureGroup) disableFutureGroup.style.display = 'none';
+        }
+        // DateTime shows all fields
+    },
+
+    /**
+     * Toggle visibility of text field specific options based on field type
+     * @param {string} fieldType - Text, TextArea, Email, Phone, or Url
+     */
+    toggleTextFields: function(fieldType) {
+        const rowsGroup = document.getElementById('config-rows-group');
+        const inputMaskGroup = document.getElementById('config-inputMask-group');
+        
+        // Tips for each field type
+        const tips = ['text', 'textarea', 'email', 'phone', 'url'];
+        tips.forEach(tip => {
+            const tipEl = document.getElementById(`text-config-tip-${tip}`);
+            if (tipEl) tipEl.style.display = 'none';
+        });
+
+        // Show appropriate tip
+        const tipEl = document.getElementById(`text-config-tip-${fieldType.toLowerCase()}`);
+        if (tipEl) tipEl.style.display = 'block';
+
+        // Rows: only for TextArea
+        if (rowsGroup) {
+            rowsGroup.style.display = fieldType === 'TextArea' ? 'block' : 'none';
+        }
+
+        // Input Mask: only for Text and Phone (not Email, Url which have built-in validation)
+        if (inputMaskGroup) {
+            const showMask = ['Text', 'Phone'].includes(fieldType);
+            inputMaskGroup.style.display = showMask ? 'block' : 'none';
+        }
     },
 
     /**
@@ -2742,6 +2909,118 @@ const FormBuilderConfiguration = {
         this.setInputValue('config-inputMask', fieldData.inputMask);
         this.setSelectValue('config-textTransform', fieldData.textTransform);
         this.setCheckboxValue('config-autoTrim', fieldData.autoTrim ?? true); // Default to true
+        this.setInputValue('config-rows', fieldData.rows);
+
+        // Date/Time field configurations
+        this.setInputValue('config-minDate', fieldData.minDate);
+        this.setInputValue('config-maxDate', fieldData.maxDate);
+        this.setInputValue('config-minTime', fieldData.minTime);
+        this.setInputValue('config-maxTime', fieldData.maxTime);
+        this.setCheckboxValue('config-disablePastDates', fieldData.disablePastDates);
+        this.setCheckboxValue('config-disableFutureDates', fieldData.disableFutureDates);
+        this.setCheckboxValue('config-defaultToToday', fieldData.defaultToToday);
+
+        // FileUpload field configurations
+        this.setMultiSelectValue('config-allowedFileTypes', fieldData.allowedFileTypes);
+        this.setInputValue('config-maxFileSize', fieldData.maxFileSize);
+        this.setInputValue('config-minFileSize', fieldData.minFileSize);
+        this.setInputValue('config-maxFiles', fieldData.maxFiles);
+        this.setCheckboxValue('config-allowMultiple', fieldData.allowMultiple);
+        this.setCheckboxValue('config-preserveFileName', fieldData.preserveFileName);
+
+        // Image field configurations
+        this.setImageTypeCheckboxes(fieldData.allowedImageTypes);
+        this.setInputValue('config-imageMaxFileSize', fieldData.maxFileSize);
+        this.setInputValue('config-imageQuality', fieldData.imageQuality);
+        this.setInputValue('config-maxWidth', fieldData.maxWidth);
+        this.setInputValue('config-maxHeight', fieldData.maxHeight);
+        this.setInputValue('config-minWidth', fieldData.minWidth);
+        this.setInputValue('config-minHeight', fieldData.minHeight);
+        this.setSelectValue('config-aspectRatio', fieldData.aspectRatio);
+        this.setSelectValue('config-thumbnailSize', fieldData.thumbnailSize);
+        this.setCheckboxValue('config-allowCropping', fieldData.allowCropping);
+        this.setCheckboxValue('config-autoResize', fieldData.autoResize);
+
+        // Signature field configurations
+        this.setInputValue('config-canvasWidth', fieldData.canvasWidth);
+        this.setInputValue('config-canvasHeight', fieldData.canvasHeight);
+        this.setColorValue('config-penColor', fieldData.penColor || '#000000');
+        this.setInputValue('config-penWidth', fieldData.penWidth);
+        this.setColorValue('config-backgroundColor', fieldData.backgroundColor || '#ffffff');
+        this.setSelectValue('config-outputFormat', fieldData.outputFormat);
+        this.setCheckboxValue('config-showClearButton', fieldData.showClearButton ?? true);
+        this.setCheckboxValue('config-showUndoButton', fieldData.showUndoButton);
+        this.setCheckboxValue('config-requireFullName', fieldData.requireFullName);
+        this.setCheckboxValue('config-showDateStamp', fieldData.showDateStamp);
+
+        // Rating field configurations
+        this.setSelectValue('config-ratingMax', fieldData.ratingMax || '5');
+        this.setSelectValue('config-ratingIcon', fieldData.ratingIcon || 'star');
+        this.setColorValue('config-ratingActiveColor', fieldData.ratingActiveColor || '#ffc107');
+        this.setColorValue('config-ratingInactiveColor', fieldData.ratingInactiveColor || '#e0e0e0');
+        this.setSelectValue('config-ratingSize', fieldData.ratingSize || 'md');
+        this.setCheckboxValue('config-allowHalfRating', fieldData.allowHalfRating);
+        this.setCheckboxValue('config-showRatingValue', fieldData.showRatingValue);
+        this.setCheckboxValue('config-showRatingLabels', fieldData.showRatingLabels);
+        this.setCheckboxValue('config-allowClearRating', fieldData.allowClearRating);
+
+        // Slider field configurations
+        this.setInputValue('config-sliderMin', fieldData.sliderMin);
+        this.setInputValue('config-sliderMax', fieldData.sliderMax);
+        this.setInputValue('config-sliderStep', fieldData.sliderStep);
+        this.setInputValue('config-sliderDefault', fieldData.sliderDefault);
+        this.setInputValue('config-sliderUnit', fieldData.sliderUnit);
+        this.setInputValue('config-sliderPrefix', fieldData.sliderPrefix);
+        this.setColorValue('config-sliderTrackColor', fieldData.sliderTrackColor || '#405189');
+        this.setCheckboxValue('config-showSliderValue', fieldData.showSliderValue ?? true);
+        this.setCheckboxValue('config-showSliderTicks', fieldData.showSliderTicks);
+        this.setCheckboxValue('config-showMinMaxLabels', fieldData.showMinMaxLabels ?? true);
+        this.setCheckboxValue('config-showSliderInput', fieldData.showSliderInput);
+
+        // Currency field configurations
+        this.setSelectValue('config-currencyCode', fieldData.currencyCode || 'KES');
+        this.setInputValue('config-customCurrencySymbol', fieldData.currencySymbol);
+        this.setSelectValue('config-currencyPosition', fieldData.currencyPosition || 'prefix');
+        this.setSelectValue('config-currencyDecimals', fieldData.currencyDecimals ?? '2');
+        this.setSelectValue('config-thousandSeparator', fieldData.thousandSeparator ?? ',');
+        this.setSelectValue('config-decimalSeparator', fieldData.decimalSeparator ?? '.');
+        this.setInputValue('config-currencyMin', fieldData.currencyMin);
+        this.setInputValue('config-currencyMax', fieldData.currencyMax);
+        this.setCheckboxValue('config-allowNegativeCurrency', fieldData.allowNegativeCurrency);
+        // Show/hide custom symbol field
+        const customSymbolGroup = document.getElementById('config-customCurrencySymbol-group');
+        if (customSymbolGroup) {
+            customSymbolGroup.style.display = fieldData.currencyCode === 'custom' ? 'block' : 'none';
+        }
+
+        // Percentage field configurations
+        this.setInputValue('config-percentageMin', fieldData.percentageMin);
+        this.setInputValue('config-percentageMax', fieldData.percentageMax);
+        this.setSelectValue('config-percentageDecimals', fieldData.percentageDecimals ?? '2');
+        this.setInputValue('config-percentageStep', fieldData.percentageStep);
+        this.setCheckboxValue('config-showPercentSymbol', fieldData.showPercentSymbol ?? true);
+        this.setCheckboxValue('config-allowOverHundred', fieldData.allowOverHundred);
+        this.setCheckboxValue('config-showAsSlider', fieldData.showAsSlider);
+        this.setCheckboxValue('config-showProgressBar', fieldData.showProgressBar);
+
+        // Email field configurations
+        this.setCheckboxValue('config-allowMultipleEmails', fieldData.allowMultipleEmails);
+        this.setInputValue('config-allowedEmailDomains', fieldData.allowedEmailDomains);
+        this.setInputValue('config-blockedEmailDomains', fieldData.blockedEmailDomains);
+
+        // Phone field configurations
+        this.setSelectValue('config-defaultCountryCode', fieldData.defaultCountryCode || '+254');
+        this.setSelectValue('config-phoneFormat', fieldData.phoneFormat || 'international');
+        this.setCheckboxValue('config-showCountrySelector', fieldData.showCountrySelector ?? true);
+        this.setCheckboxValue('config-validatePhoneFormat', fieldData.validatePhoneFormat);
+
+        // URL field configurations
+        this.setCheckboxValue('config-allowHttp', fieldData.allowHttp ?? true);
+        this.setCheckboxValue('config-allowHttps', fieldData.allowHttps ?? true);
+        this.setCheckboxValue('config-allowFtp', fieldData.allowFtp);
+        this.setInputValue('config-allowedUrlDomains', fieldData.allowedUrlDomains);
+        this.setCheckboxValue('config-requireHttps', fieldData.requireHttps);
+        this.setCheckboxValue('config-showUrlPreview', fieldData.showUrlPreview);
     },
 
     /**
@@ -2772,6 +3051,154 @@ const FormBuilderConfiguration = {
         if (element) {
             element.checked = value === true;
         }
+    },
+
+    /**
+     * Set multi-select value (for file types, etc.)
+     */
+    setMultiSelectValue: function(elementId, value) {
+        const element = document.getElementById(elementId);
+        if (!element) return;
+        
+        // Clear all selections
+        Array.from(element.options).forEach(opt => opt.selected = false);
+        
+        if (!value) return;
+        
+        // Parse comma-separated values
+        const values = typeof value === 'string' ? value.split(',').map(v => v.trim()) : value;
+        
+        // Select matching options
+        Array.from(element.options).forEach(opt => {
+            const optValues = opt.value.split(',').map(v => v.trim());
+            if (optValues.some(v => values.includes(v))) {
+                opt.selected = true;
+            }
+        });
+    },
+
+    /**
+     * Set image type checkboxes based on allowed types
+     */
+    setImageTypeCheckboxes: function(allowedTypes) {
+        const typeMap = {
+            'config-allowJpeg': ['.jpg', '.jpeg'],
+            'config-allowPng': ['.png'],
+            'config-allowGif': ['.gif'],
+            'config-allowWebp': ['.webp'],
+            'config-allowSvg': ['.svg']
+        };
+
+        // Clear all checkboxes first
+        Object.keys(typeMap).forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.checked = false;
+        });
+
+        if (!allowedTypes) return;
+
+        const types = typeof allowedTypes === 'string' ? allowedTypes.split(',').map(v => v.trim().toLowerCase()) : allowedTypes;
+
+        Object.entries(typeMap).forEach(([id, extensions]) => {
+            const el = document.getElementById(id);
+            if (el && extensions.some(ext => types.includes(ext))) {
+                el.checked = true;
+            }
+        });
+    },
+
+    /**
+     * Set color input value (both color picker and text input)
+     */
+    setColorValue: function(elementId, value) {
+        const colorInput = document.getElementById(elementId);
+        const textInput = document.getElementById(elementId + 'Text');
+        
+        if (colorInput) colorInput.value = value || '#000000';
+        if (textInput) textInput.value = value || '#000000';
+    },
+
+    /**
+     * Sync color input from text field
+     */
+    syncColorInput: function(configKey, value) {
+        // Validate hex color
+        const hexRegex = /^#[0-9A-Fa-f]{6}$/;
+        if (!hexRegex.test(value)) {
+            console.warn('Invalid hex color:', value);
+            return;
+        }
+        
+        // Update color picker
+        const colorInput = document.getElementById('config-' + configKey);
+        if (colorInput) colorInput.value = value;
+        
+        // Save the value
+        this.saveConfig(configKey, value);
+    },
+
+    /**
+     * Save multi-select configuration (for file types)
+     */
+    saveMultiSelectConfig: function(configKey, selectElement) {
+        const selectedValues = Array.from(selectElement.selectedOptions)
+            .map(opt => opt.value)
+            .join(',');
+        
+        this.saveConfig(configKey, selectedValues || null);
+    },
+
+    /**
+     * Update image types from checkboxes
+     */
+    updateImageTypes: function() {
+        const types = [];
+        
+        if (document.getElementById('config-allowJpeg')?.checked) types.push('.jpg', '.jpeg');
+        if (document.getElementById('config-allowPng')?.checked) types.push('.png');
+        if (document.getElementById('config-allowGif')?.checked) types.push('.gif');
+        if (document.getElementById('config-allowWebp')?.checked) types.push('.webp');
+        if (document.getElementById('config-allowSvg')?.checked) types.push('.svg');
+        
+        this.saveConfig('allowedImageTypes', types.length > 0 ? types.join(',') : null);
+    },
+
+    /**
+     * Save currency configuration (handles symbol and code together)
+     */
+    saveCurrencyConfig: function(selectElement) {
+        const selectedOption = selectElement.selectedOptions[0];
+        const currencyCode = selectedOption.value;
+        const currencySymbol = selectedOption.dataset.symbol;
+        const currencyPosition = selectedOption.dataset.position;
+
+        // Show/hide custom symbol field
+        const customSymbolGroup = document.getElementById('config-customCurrencySymbol-group');
+        if (customSymbolGroup) {
+            customSymbolGroup.style.display = currencyCode === 'custom' ? 'block' : 'none';
+        }
+
+        // Save currency code
+        this.saveConfig('currencyCode', currencyCode);
+        
+        // Save symbol (unless custom)
+        if (currencyCode !== 'custom') {
+            this.saveConfig('currencySymbol', currencySymbol);
+            this.saveConfig('currencyPosition', currencyPosition);
+        }
+    },
+
+    /**
+     * Update URL protocols from checkboxes
+     */
+    updateUrlProtocols: function() {
+        const protocols = [];
+        
+        if (document.getElementById('config-allowHttp')?.checked) protocols.push('http');
+        if (document.getElementById('config-allowHttps')?.checked) protocols.push('https');
+        if (document.getElementById('config-allowFtp')?.checked) protocols.push('ftp');
+        
+        this.saveConfig('allowedProtocols', protocols.length > 0 ? protocols.join(',') : null);
     },
 
     /**
@@ -2814,7 +3241,19 @@ const FormBuilderConfiguration = {
             processedValue = value;
         }
         // Handle numeric inputs
-        else if (['minValue', 'maxValue', 'step', 'decimalPlaces', 'minLength', 'maxLength'].includes(configKey)) {
+        const numericKeys = [
+            'minValue', 'maxValue', 'step', 'decimalPlaces', 'minLength', 'maxLength', 'rows',
+            // Media field numeric configs
+            'maxFileSize', 'minFileSize', 'maxFiles', 'imageQuality',
+            'maxWidth', 'maxHeight', 'minWidth', 'minHeight',
+            'canvasWidth', 'canvasHeight', 'penWidth',
+            // Rating/Slider numeric configs
+            'ratingMax', 'sliderMin', 'sliderMax', 'sliderStep', 'sliderDefault',
+            // Currency/Percentage numeric configs
+            'currencyDecimals', 'currencyMin', 'currencyMax',
+            'percentageMin', 'percentageMax', 'percentageDecimals', 'percentageStep'
+        ];
+        if (numericKeys.includes(configKey)) {
             processedValue = value === '' ? null : parseFloat(value);
         }
 
@@ -2860,7 +3299,17 @@ const FormBuilderConfiguration = {
                 console.log(`✅ Configuration saved: ${configKey}`);
                 // Update local field data with new value
                 currentFieldData[configKey] = processedValue;
-                // TODO: Update canvas preview if needed
+                
+                // Update canvas preview for fields where config affects the input appearance
+                const previewUpdateKeys = [
+                    // Date/Time configs
+                    'minDate', 'maxDate', 'minTime', 'maxTime', 'disablePastDates', 'disableFutureDates', 'defaultToToday',
+                    // Text configs that affect rendering
+                    'rows', 'maxLength'
+                ];
+                if (previewUpdateKeys.includes(configKey)) {
+                    this.updateCanvasPreview(this.currentFieldId);
+                }
             } else {
                 console.error('Failed to save configuration:', result.message);
                 alert('Failed to save: ' + result.message);
@@ -2937,7 +3386,146 @@ const FormBuilderConfiguration = {
             return false;
         }
 
+        // Validate rows is within range (2-20)
+        if (configKey === 'rows') {
+            if (value < 2) {
+                alert('Rows must be at least 2');
+                document.getElementById('config-rows').value = '2';
+                return false;
+            }
+            if (value > 20) {
+                alert('Rows cannot exceed 20');
+                document.getElementById('config-rows').value = '20';
+                return false;
+            }
+        }
+
+        // Validate min/max date relationship
+        if (configKey === 'minDate') {
+            const maxDate = document.getElementById('config-maxDate')?.value;
+            if (maxDate && value > maxDate) {
+                alert('Minimum date cannot be after maximum date');
+                document.getElementById('config-minDate').value = '';
+                return false;
+            }
+        }
+
+        if (configKey === 'maxDate') {
+            const minDate = document.getElementById('config-minDate')?.value;
+            if (minDate && value < minDate) {
+                alert('Maximum date cannot be before minimum date');
+                document.getElementById('config-maxDate').value = '';
+                return false;
+            }
+        }
+
+        // Validate min/max time relationship
+        if (configKey === 'minTime') {
+            const maxTime = document.getElementById('config-maxTime')?.value;
+            if (maxTime && value > maxTime) {
+                alert('Minimum time cannot be after maximum time');
+                document.getElementById('config-minTime').value = '';
+                return false;
+            }
+        }
+
+        if (configKey === 'maxTime') {
+            const minTime = document.getElementById('config-minTime')?.value;
+            if (minTime && value < minTime) {
+                alert('Maximum time cannot be before minimum time');
+                document.getElementById('config-maxTime').value = '';
+                return false;
+            }
+        }
+
         return true;
+    },
+
+    /**
+     * Handle quick date options (disable past/future dates)
+     * These set the minDate/maxDate to today automatically
+     * @param {string} option - 'disablePastDates' or 'disableFutureDates'
+     * @param {boolean} checked - Whether the option is checked
+     */
+    handleDateQuickOption: function(option, checked) {
+        const today = new Date().toISOString().split('T')[0]; // yyyy-MM-dd format
+
+        if (option === 'disablePastDates') {
+            if (checked) {
+                // Set min date to today
+                document.getElementById('config-minDate').value = today;
+                this.saveConfig('minDate', today);
+                // Uncheck disable future dates if checked
+                const disableFuture = document.getElementById('config-disableFutureDates');
+                if (disableFuture && disableFuture.checked) {
+                    disableFuture.checked = false;
+                    // Clear max date
+                    document.getElementById('config-maxDate').value = '';
+                    this.saveConfig('maxDate', null);
+                }
+            } else {
+                // Clear min date
+                document.getElementById('config-minDate').value = '';
+                this.saveConfig('minDate', null);
+            }
+        } else if (option === 'disableFutureDates') {
+            if (checked) {
+                // Set max date to today
+                document.getElementById('config-maxDate').value = today;
+                this.saveConfig('maxDate', today);
+                // Uncheck disable past dates if checked
+                const disablePast = document.getElementById('config-disablePastDates');
+                if (disablePast && disablePast.checked) {
+                    disablePast.checked = false;
+                    // Clear min date
+                    document.getElementById('config-minDate').value = '';
+                    this.saveConfig('minDate', null);
+                }
+            } else {
+                // Clear max date
+                document.getElementById('config-maxDate').value = '';
+                this.saveConfig('maxDate', null);
+            }
+        }
+
+        // Save the quick option flag itself
+        this.saveConfig(option, checked);
+    },
+
+    /**
+     * Update canvas preview after configuration change
+     * @param {number} fieldId - Field ID to update
+     */
+    updateCanvasPreview: async function(fieldId) {
+        try {
+            console.log(`🔄 Updating canvas preview for field ${fieldId}`);
+            
+            const response = await fetch(`/api/formbuilder/fields/${fieldId}/render`);
+            const result = await response.json();
+
+            if (result.success && result.html) {
+                // Find the field card on canvas and replace its content
+                const fieldCard = document.querySelector(`[data-field-id="${fieldId}"]`);
+                if (fieldCard) {
+                    // Create a temporary container to parse the new HTML
+                    const temp = document.createElement('div');
+                    temp.innerHTML = result.html;
+                    const newCard = temp.firstElementChild;
+
+                    // Replace the old card with the new one
+                    fieldCard.parentNode.replaceChild(newCard, fieldCard);
+
+                    // Re-select the field to maintain selection state
+                    if (typeof selectField === 'function') {
+                        selectField(fieldId);
+                    }
+
+                    console.log(`✅ Canvas preview updated for field ${fieldId}`);
+                }
+            }
+        } catch (error) {
+            console.error('Error updating canvas preview:', error);
+        }
     }
 };
 

@@ -1,0 +1,6 @@
+{
+  "dependencies": {
+    "choices.js": "^11.1.0",
+    "flatpickr": "^4.6.13"
+  }
+}

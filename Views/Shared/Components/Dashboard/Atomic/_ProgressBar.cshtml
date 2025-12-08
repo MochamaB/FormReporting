@@ -1,0 +1,35 @@
+@model FormReporting.Models.ViewModels.Dashboard.Components.Atomic.ProgressBarConfig
+
+@{
+    var heightClass = Model.GetHeightClass();
+    var containerClasses = $"progress {heightClass} {Model.ContainerClass}".Trim();
+
+    var colorClass = Model.Soft
+        ? $"bg-{Model.ColorTheme}-subtle"
+        : $"bg-{Model.ColorTheme}";
+
+    var stripedClass = Model.Striped ? "progress-bar-striped" : "";
+    var animatedClass = Model.Animated ? "progress-bar-animated" : "";
+
+    var barClasses = $"progress-bar {colorClass} {stripedClass} {animatedClass} {Model.BarClass}".Trim();
+
+    var labelText = Model.ShowLabel
+        ? (Model.LabelText ?? $"{Model.Percentage:0.#}%")
+        : null;
+
+    var widthStyle = $"width: {Model.Percentage}%";
+}
+
+<div class="@containerClasses">
+    <div class="@barClasses"
+         role="progressbar"
+         style="@widthStyle"
+         aria-valuenow="@Model.Percentage"
+         aria-valuemin="0"
+         aria-valuemax="100">
+        @if (Model.ShowLabel)
+        {
+            <text>@labelText</text>
+        }
+    </div>
+</div>

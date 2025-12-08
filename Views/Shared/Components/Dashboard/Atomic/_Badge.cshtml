@@ -1,0 +1,38 @@
+@model FormReporting.Models.ViewModels.Dashboard.Components.Atomic.BadgeConfig
+
+@{
+    var variantClass = Model.Variant switch
+    {
+        BadgeVariant.Solid => $"bg-{Model.ColorTheme}",
+        BadgeVariant.Subtle => $"bg-{Model.ColorTheme}-subtle text-{Model.ColorTheme}",
+        BadgeVariant.Outline => $"border border-{Model.ColorTheme} text-{Model.ColorTheme}",
+        _ => $"bg-{Model.ColorTheme}"
+    };
+
+    var sizeClass = Model.Size switch
+    {
+        "sm" => "badge-sm",
+        "lg" => "badge-lg",
+        _ => ""
+    };
+
+    var pillClass = Model.Pill ? "rounded-pill" : "";
+
+    var allClasses = $"badge {variantClass} {sizeClass} {pillClass} {Model.CssClass}".Trim();
+}
+
+<span class="@allClasses">
+    @if (!string.IsNullOrEmpty(Model.IconClass) && Model.IconPosition == IconPosition.Left)
+    {
+        <i class="@Model.IconClass @Model.CssClass?.Contains("align-") == true ? "" : "align-middle""></i>
+        <text> </text>
+    }
+
+    @Model.Text
+
+    @if (!string.IsNullOrEmpty(Model.IconClass) && Model.IconPosition == IconPosition.Right)
+    {
+        <text> </text>
+        <i class="@Model.IconClass @Model.CssClass?.Contains("align-") == true ? "" : "align-middle""></i>
+    }
+</span>

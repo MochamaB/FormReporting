@@ -75,7 +75,22 @@
             </div>
 
             @* Right Side: Action Buttons *@
-            <div class="d-flex gap-2">
+            <div class="d-flex gap-2 align-items-center">
+                @* View Toggle Buttons *@
+                @if (Model.EnableViewToggle)
+                {
+                    <div class="btn-group" role="group" aria-label="View toggle">
+                        <button type="button" class="btn btn-soft-secondary btn-sm view-toggle-btn @(Model.DefaultView == "table" ? "active" : "")" 
+                                data-view="table" data-table-id="@Model.TableId" title="Table View">
+                            <i class="ri-list-check"></i>
+                        </button>
+                        <button type="button" class="btn btn-soft-secondary btn-sm view-toggle-btn @(Model.DefaultView == "card" ? "active" : "")" 
+                                data-view="card" data-table-id="@Model.TableId" title="Card View">
+                            <i class="ri-grid-fill"></i>
+                        </button>
+                    </div>
+                }
+                
                 @* Custom Header Actions *@
                 @if (Model.HeaderActions != null && Model.HeaderActions.Any())
                 {
@@ -117,7 +132,8 @@
         }
     </div>
 
-    <div class="card-body p-0">
+    @* Table View *@
+    <div class="card-body p-0" id="@(Model.TableId)_tableView" style="@(Model.EnableViewToggle && Model.DefaultView == "card" ? "display: none;" : "")">
         <div class="table-responsive">
             <table class="@Model.TableClasses" id="@Model.TableId" style="width: 100%;">
                 <thead class="bg-light">
@@ -154,6 +170,14 @@
             </table>
         </div>
     </div>
+    
+    @* Card View *@
+    @if (Model.EnableViewToggle && Model.CardContent != null)
+    {
+        <div class="card-body" id="@(Model.TableId)_cardView" style="@(Model.DefaultView == "table" ? "display: none;" : "")">
+            @Model.CardContent(null)
+        </div>
+    }
 
     @* Pagination Footer *@
     @if (Model.ShowPagination)
@@ -366,6 +390,41 @@
                         @:location.reload();
                     @:});
                 @:});
+            }
+
+            @if (Model.EnableViewToggle)
+            {
+                @:// ========== VIEW TOGGLE (Table/Card) ==========
+                @:var viewToggleBtns = $('.view-toggle-btn[data-table-id="' + tableId + '"]');
+                @:var tableView = $('#' + tableId + '_tableView');
+                @:var cardView = $('#' + tableId + '_cardView');
+                @:var storageKey = 'dataTableViewPreference_' + tableId;
+                @:
+                @:// Restore saved preference
+                @:var savedView = localStorage.getItem(storageKey);
+                @:if (savedView) {
+                    @:switchView(savedView);
+                @:}
+                @:
+                @:// Toggle click handler
+                @:viewToggleBtns.on('click', function() {
+                    @:var view = $(this).data('view');
+                    @:switchView(view);
+                    @:localStorage.setItem(storageKey, view);
+                @:});
+                @:
+                @:function switchView(view) {
+                    @:viewToggleBtns.removeClass('active');
+                    @:viewToggleBtns.filter('[data-view="' + view + '"]').addClass('active');
+                    @:
+                    @:if (view === 'table') {
+                        @:tableView.show();
+                        @:cardView.hide();
+                    @:} else {
+                        @:tableView.hide();
+                        @:cardView.show();
+                    @:}
+                @:}
             }
         });
     </script>

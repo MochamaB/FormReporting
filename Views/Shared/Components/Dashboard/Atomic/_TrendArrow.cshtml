@@ -1,0 +1,15 @@
+@model FormReporting.Models.ViewModels.Dashboard.Components.Atomic.TrendArrowConfig
+
+@{
+    var iconClass = Model.GetIconClass();
+    var allClasses = $"{iconClass} {Model.Alignment} {Model.SizeClass} {Model.CssClass}".Trim();
+}
+
+@if (Model.Library == IconLibrary.Feather)
+{
+    <i data-feather="@iconClass.Replace("arrow-", "").Replace("minus", "minus")" class="@Model.Alignment @Model.SizeClass @Model.CssClass"></i>
+}
+else
+{
+    <i class="@allClasses"></i>
+}
