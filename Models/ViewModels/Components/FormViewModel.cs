@@ -446,6 +446,53 @@ namespace FormReporting.Models.ViewModels.Components
         public string PreviousButtonText { get; set; } = "Previous";
         public string NextButtonText { get; set; } = "Next";
         public int TotalSteps => Sections?.Count ?? 0;
+
+        // ========== SUBMISSION CONTEXT PROPERTIES ==========
+
+        /// <summary>
+        /// Submission ID (null for lazy submission - will be created on first save)
+        /// </summary>
+        public int? SubmissionId { get; set; }
+
+        /// <summary>
+        /// Current section index for wizard resume
+        /// </summary>
+        public int CurrentSectionIndex { get; set; }
+
+        /// <summary>
+        /// URL for auto-save API endpoint
+        /// </summary>
+        public string? AutoSaveUrl { get; set; }
+
+        /// <summary>
+        /// Auto-save interval in milliseconds
+        /// </summary>
+        public int AutoSaveIntervalMs { get; set; } = 30000;
+
+        /// <summary>
+        /// Is the form in read-only mode (for viewing submitted forms)
+        /// </summary>
+        public bool IsReadOnly { get; set; }
+
+        /// <summary>
+        /// Cancel URL (where to redirect on cancel)
+        /// </summary>
+        public string? CancelUrl { get; set; }
+
+        /// <summary>
+        /// Template ID (for auto-save context)
+        /// </summary>
+        public int TemplateId { get; set; }
+
+        /// <summary>
+        /// Tenant ID (optional, for multi-tenant submissions)
+        /// </summary>
+        public int? TenantId { get; set; }
+
+        /// <summary>
+        /// Reporting period for the submission
+        /// </summary>
+        public string? ReportingPeriod { get; set; }
     }
 
     /// <summary>
@@ -541,6 +588,290 @@ namespace FormReporting.Models.ViewModels.Components
         /// Maximum character length
         /// </summary>
         public int? MaxLength { get; set; }
+
+        /// <summary>
+        /// Minimum character length
+        /// </summary>
+        public int? MinLength { get; set; }
+
+        // ========================================================================
+        // NUMERIC FIELD PROPERTIES
+        // ========================================================================
+
+        /// <summary>
+        /// Minimum numeric value allowed
+        /// </summary>
+        public decimal? MinValue { get; set; }
+
+        /// <summary>
+        /// Maximum numeric value allowed
+        /// </summary>
+        public decimal? MaxValue { get; set; }
+
+        /// <summary>
+        /// Step increment for numeric inputs
+        /// </summary>
+        public decimal? Step { get; set; }
+
+        /// <summary>
+        /// Number of decimal places to display
+        /// </summary>
+        public int? DecimalPlaces { get; set; }
+
+        // ========================================================================
+        // RATING FIELD PROPERTIES
+        // ========================================================================
+
+        /// <summary>
+        /// Maximum rating value (default 5 for star ratings)
+        /// </summary>
+        public int RatingMax { get; set; } = 5;
+
+        /// <summary>
+        /// Icon to use for rating (e.g., "star", "heart", "circle")
+        /// </summary>
+        public string RatingIcon { get; set; } = "star";
+
+        /// <summary>
+        /// Allow half ratings (e.g., 3.5 stars)
+        /// </summary>
+        public bool AllowHalfRating { get; set; } = false;
+
+        // ========================================================================
+        // SLIDER FIELD PROPERTIES
+        // ========================================================================
+
+        /// <summary>
+        /// Minimum slider value
+        /// </summary>
+        public decimal SliderMin { get; set; } = 0;
+
+        /// <summary>
+        /// Maximum slider value
+        /// </summary>
+        public decimal SliderMax { get; set; } = 100;
+
+        /// <summary>
+        /// Slider step increment
+        /// </summary>
+        public decimal SliderStep { get; set; } = 1;
+
+        /// <summary>
+        /// Show tick marks on slider
+        /// </summary>
+        public bool ShowSliderTicks { get; set; } = false;
+
+        /// <summary>
+        /// Show value label while dragging
+        /// </summary>
+        public bool ShowSliderValue { get; set; } = true;
+
+        // ========================================================================
+        // FILE UPLOAD PROPERTIES
+        // ========================================================================
+
+        /// <summary>
+        /// Allowed file extensions (e.g., ".pdf,.doc,.docx")
+        /// </summary>
+        public string? AllowedFileTypes { get; set; }
+
+        /// <summary>
+        /// Maximum file size in bytes
+        /// </summary>
+        public long? MaxFileSize { get; set; }
+
+        /// <summary>
+        /// Maximum file size formatted for display (e.g., "5 MB")
+        /// </summary>
+        public string? MaxFileSizeDisplay { get; set; }
+
+        /// <summary>
+        /// Allow multiple file uploads
+        /// </summary>
+        public bool AllowMultipleFiles { get; set; } = false;
+
+        /// <summary>
+        /// Maximum number of files allowed
+        /// </summary>
+        public int? MaxFiles { get; set; }
+
+        // ========================================================================
+        // IMAGE FIELD PROPERTIES
+        // ========================================================================
+
+        /// <summary>
+        /// Allowed image types (e.g., ".jpg,.jpeg,.png,.gif")
+        /// </summary>
+        public string? AllowedImageTypes { get; set; }
+
+        /// <summary>
+        /// Maximum image width in pixels
+        /// </summary>
+        public int? MaxImageWidth { get; set; }
+
+        /// <summary>
+        /// Maximum image height in pixels
+        /// </summary>
+        public int? MaxImageHeight { get; set; }
+
+        /// <summary>
+        /// Enable image cropping
+        /// </summary>
+        public bool EnableImageCrop { get; set; } = false;
+
+        /// <summary>
+        /// Required aspect ratio for cropping (e.g., "16:9", "1:1")
+        /// </summary>
+        public string? ImageAspectRatio { get; set; }
+
+        // ========================================================================
+        // SIGNATURE FIELD PROPERTIES
+        // ========================================================================
+
+        /// <summary>
+        /// Signature canvas width in pixels
+        /// </summary>
+        public int SignatureWidth { get; set; } = 400;
+
+        /// <summary>
+        /// Signature canvas height in pixels
+        /// </summary>
+        public int SignatureHeight { get; set; } = 150;
+
+        /// <summary>
+        /// Signature pen color
+        /// </summary>
+        public string SignaturePenColor { get; set; } = "#000000";
+
+        /// <summary>
+        /// Signature pen width
+        /// </summary>
+        public int SignaturePenWidth { get; set; } = 2;
+
+        // ========================================================================
+        // DROPDOWN/SELECT PROPERTIES
+        // ========================================================================
+
+        /// <summary>
+        /// Enable search/filter in dropdown
+        /// </summary>
+        public bool EnableSearch { get; set; } = false;
+
+        /// <summary>
+        /// Placeholder text for dropdown
+        /// </summary>
+        public string? DropdownPlaceholder { get; set; }
+
+        /// <summary>
+        /// Allow clearing selection
+        /// </summary>
+        public bool AllowClear { get; set; } = false;
+
+        /// <summary>
+        /// Load options dynamically via API
+        /// </summary>
+        public bool IsDynamicOptions { get; set; } = false;
+
+        /// <summary>
+        /// API endpoint for dynamic options
+        /// </summary>
+        public string? OptionsApiUrl { get; set; }
+
+        /// <summary>
+        /// Parent field ID for cascading dropdowns
+        /// </summary>
+        public string? CascadeParentFieldId { get; set; }
+
+        // ========================================================================
+        // MULTISELECT PROPERTIES
+        // ========================================================================
+
+        /// <summary>
+        /// Minimum selections required
+        /// </summary>
+        public int? MinSelections { get; set; }
+
+        /// <summary>
+        /// Maximum selections allowed
+        /// </summary>
+        public int? MaxSelections { get; set; }
+
+        // ========================================================================
+        // PHONE FIELD PROPERTIES
+        // ========================================================================
+
+        /// <summary>
+        /// Default country code for phone field
+        /// </summary>
+        public string? DefaultCountryCode { get; set; }
+
+        /// <summary>
+        /// Phone number format mask (e.g., "(###) ###-####")
+        /// </summary>
+        public string? PhoneFormat { get; set; }
+
+        // ========================================================================
+        // CURRENCY FIELD PROPERTIES
+        // ========================================================================
+
+        /// <summary>
+        /// Currency code (e.g., "USD", "KES", "EUR")
+        /// </summary>
+        public string CurrencyCode { get; set; } = "KES";
+
+        /// <summary>
+        /// Currency symbol (e.g., "$", "KES", "€")
+        /// </summary>
+        public string? CurrencySymbol { get; set; }
+
+        /// <summary>
+        /// Show currency symbol as prefix or suffix
+        /// </summary>
+        public bool CurrencySymbolAsPrefix { get; set; } = true;
+
+        // ========================================================================
+        // ADVANCED DISPLAY PROPERTIES
+        // ========================================================================
+
+        /// <summary>
+        /// Custom input mask pattern (e.g., "99/99/9999" for dates)
+        /// </summary>
+        public string? InputMask { get; set; }
+
+        /// <summary>
+        /// Auto-capitalize input: none, words, sentences, characters
+        /// </summary>
+        public string? AutoCapitalize { get; set; }
+
+        /// <summary>
+        /// Autocomplete attribute value
+        /// </summary>
+        public string? AutoComplete { get; set; }
+
+        /// <summary>
+        /// Spellcheck enabled
+        /// </summary>
+        public bool? SpellCheck { get; set; }
+
+        /// <summary>
+        /// Show character counter for text fields
+        /// </summary>
+        public bool ShowCharacterCount { get; set; } = false;
+
+        /// <summary>
+        /// Custom tooltip text
+        /// </summary>
+        public string? Tooltip { get; set; }
+
+        /// <summary>
+        /// Icon class to display with field (e.g., "ri-user-line")
+        /// </summary>
+        public string? IconClass { get; set; }
+
+        /// <summary>
+        /// Position of icon: prefix or suffix
+        /// </summary>
+        public string IconPosition { get; set; } = "prefix";
 
         // Generated properties for HTML rendering
         public string InputName { get; set; } = string.Empty; // Form POST name

@@ -1,0 +1,132 @@
+@using FormReporting.Models.Entities.Forms
+@model FormTemplateSubmission
+
+@*
+    Submission Card - Single card component for displaying a form submission
+    Uses Velzon card with header and footer pattern
+    Badge colors based on ktda-theme.css
+*@
+
+@{
+    // Badge color mapping based on ktda-theme.css
+    string GetStatusBadgeClass(string status)
+    {
+        return status switch
+        {
+            "Draft" => "bg-warning",
+            "Submitted" => "bg-primary",
+            "InApproval" => "bg-info",
+            "Approved" => "bg-success",
+            "Rejected" => "bg-danger",
+            "Cancelled" => "bg-secondary",
+            _ => "bg-secondary"
+        };
+    }
+    
+    // Get the appropriate action URL based on status
+    string GetPrimaryActionUrl()
+    {
+        if (Model.Status == "Draft")
+        {
+            return Url.Action("Resume", "Submissions", new { submissionId = Model.SubmissionId }) ?? "#";
+        }
+        return Url.Action("View", "Submissions", new { submissionId = Model.SubmissionId }) ?? "#";
+    }
+    
+    string GetPrimaryActionText()
+    {
+        return Model.Status == "Draft" ? "Resume" : "View details";
+    }
+    
+    // Format date display
+    string GetDateDisplay()
+    {
+        if (Model.Status == "Draft")
+        {
+            return Model.LastSavedDate?.ToString("dd MMM yyyy HH:mm") ?? Model.CreatedDate.ToString("dd MMM yyyy HH:mm");
+        }
+        return Model.SubmittedDate?.ToString("dd MMM yyyy HH:mm") ?? Model.LastSavedDate?.ToString("dd MMM yyyy HH:mm") ?? "-";
+    }
+    
+    string GetDateLabel()
+    {
+        return Model.Status == "Draft" ? "Last saved" : "Submitted";
+    }
+}
+
+<div class="card mb-0">
+    <!-- Card Header -->
+    <div class="card-header">
+        <div class="d-flex align-items-center">
+            <div class="flex-grow-1">
+                <h6 class="card-title mb-0">@(Model.Template?.TemplateName ?? "Unknown Form")</h6>
+            </div>
+            <div class="flex-shrink-0">
+                <span class="badge @GetStatusBadgeClass(Model.Status)">@Model.Status</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Card Body -->
+    <div class="card-body">
+        <!-- Tenant (if applicable) -->
+        @if (Model.Tenant != null)
+        {
+            <div class="mb-2">
+                <small class="text-muted">
+                    <i class="ri-building-line me-1"></i>@Model.Tenant.TenantName
+                </small>
+            </div>
+        }
+        
+        <!-- Reporting Period -->
+        @if (Model.ReportingPeriod != default)
+        {
+            <div class="mb-2">
+                <small class="text-muted">
+                    <i class="ri-calendar-line me-1"></i>@Model.ReportingPeriod.ToString("MMMM yyyy")
+                </small>
+            </div>
+        }
+        
+        <!-- Progress for Drafts -->
+        @if (Model.Status == "Draft" && Model.CurrentSection > 0)
+        {
+            var totalSections = Model.Template?.Sections?.Count ?? 1;
+            var progressPercent = totalSections > 0 ? (Model.CurrentSection * 100 / totalSections) : 0;
+            
+            <div class="mb-2">
+                <div class="d-flex justify-content-between mb-1">
+                    <small class="text-muted">Progress</small>
+                    <small class="text-muted">@progressPercent%</small>
+                </div>
+                <div class="progress progress-sm">
+                    <div class="progress-bar bg-primary" role="progressbar" style="width: @progressPercent%;" 
+                         aria-valuenow="@progressPercent" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </div>
+        }
+        
+        <!-- Category Badge -->
+        @if (Model.Template?.Category != null)
+        {
+            <div class="mb-0">
+                <span class="badge bg-light text-body">
+                    <i class="ri-folder-line me-1"></i>@Model.Template.Category.CategoryName
+                </span>
+            </div>
+        }
+    </div>
+    
+    <!-- Card Footer -->
+    <div class="card-footer">
+        <div class="d-flex justify-content-between align-items-center">
+            <p class="text-muted mb-0">
+                <small>@GetDateLabel(): @GetDateDisplay()</small>
+            </p>
+            <a href="@GetPrimaryActionUrl()" class="link-primary">
+                @GetPrimaryActionText() <i class="ri-arrow-right-s-line align-middle ms-1 lh-1"></i>
+            </a>
+        </div>
+    </div>
+</div>

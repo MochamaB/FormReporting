@@ -45,6 +45,13 @@
     --vz-light-bg-subtle: #fcfcfd;
     --vz-light-border-subtle: #e9ecef;
 
+    /* Info Color - Blue */
+    --vz-info: #3577f1;
+    --vz-info-rgb: 53, 119, 241;
+    --vz-info-subtle: rgba(53, 119, 241, 0.1);
+    --vz-info-text-emphasis: #1f5ccf;
+    --vz-info-bg-subtle: #e8f1ff;
+    --vz-info-border-subtle: #c8dcff;
     
 }
 

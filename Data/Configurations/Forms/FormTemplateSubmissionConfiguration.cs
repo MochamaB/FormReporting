@@ -28,6 +28,11 @@ namespace FormReporting.Data.Configurations.Forms
             builder.HasIndex(fts => new { fts.SubmittedBy, fts.ReportingPeriod })
                 .HasDatabaseName("IX_Submission_User_Period");
 
+            // Index for "My Submissions" queries (drafts and completed)
+            builder.HasIndex(fts => new { fts.SubmittedBy, fts.Status })
+                .IncludeProperties(fts => new { fts.TemplateId, fts.CreatedDate, fts.LastSavedDate })
+                .HasDatabaseName("IX_Submission_User_Status");
+
             // Filtered unique indexes for location-based vs user-based forms
             builder.HasIndex(fts => new { fts.TenantId, fts.TemplateId, fts.ReportingPeriod })
                 .IsUnique()
@@ -41,6 +46,7 @@ namespace FormReporting.Data.Configurations.Forms
 
             // Default Values
             builder.Property(fts => fts.Status).HasDefaultValue("Draft");
+            builder.Property(fts => fts.CurrentSection).HasDefaultValue(0);
             builder.Property(fts => fts.CreatedDate).HasDefaultValueSql("GETDATE()");
             builder.Property(fts => fts.ModifiedDate).HasDefaultValueSql("GETDATE()");
 

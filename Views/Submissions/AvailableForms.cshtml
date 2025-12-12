@@ -1,0 +1,174 @@
+@using FormReporting.Models.Entities.Forms
+@using FormReporting.Models.ViewModels.Components
+@using FormReporting.Extensions
+@model List<FormTemplate>
+
+@{
+    ViewData["Title"] = "My Forms";
+    
+    // Get categories with counts from ViewBag
+    var categoriesWithCounts = ViewBag.CategoriesWithCounts as IEnumerable<dynamic> ?? new List<dynamic>();
+    int allTemplatesCount = ViewBag.AllTemplatesCount ?? 0;
+    
+    // Current filters
+    string currentCategory = ViewBag.CurrentCategory ?? "";
+    string currentSearch = ViewBag.CurrentSearch ?? "";
+    string currentType = ViewBag.CurrentType ?? "";
+    
+    // Pagination
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+    int totalRecords = ViewBag.TotalRecords ?? 0;
+    
+    // Current tab from query string (default to "forms")
+    string currentTab = ViewBag.CurrentTab as string ?? "forms";
+}
+
+<style>
+    /* Main tabs styling */
+    .main-tabs .nav-link {
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        color: #495057;
+        border: none;
+        border-bottom: 2px solid transparent;
+        background: transparent;
+    }
+    
+    .main-tabs .nav-link:hover {
+        color: var(--vz-primary);
+        border-bottom-color: var(--vz-primary-bg-subtle);
+    }
+    
+    .main-tabs .nav-link.active {
+        color: var(--vz-primary);
+        border-bottom-color: var(--vz-primary);
+        background: transparent;
+    }
+    
+    .main-tabs .nav-link i {
+        font-size: 16px;
+    }
+    
+    /* Tab content area */
+    .tab-content-area {
+        min-height: 400px;
+    }
+</style>
+
+
+<!-- ============================================================================ -->
+<!-- MAIN TABS: Overview | Forms -->
+<!-- ============================================================================ -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header border-bottom">
+                <ul class="nav nav-tabs-custom main-tabs card-header-tabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link @(currentTab == "overview" ? "active" : "")" 
+                           data-bs-toggle="tab" 
+                           href="#overview-tab" 
+                           role="tab"
+                           aria-selected="@(currentTab == "overview" ? "true" : "false")">
+                            <i class="ri-dashboard-line me-1"></i> Overview
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(currentTab == "forms" ? "active" : "")" 
+                           data-bs-toggle="tab" 
+                           href="#forms-tab" 
+                           role="tab"
+                           aria-selected="@(currentTab == "forms" ? "true" : "false")">
+                            <i class="ri-file-list-3-line me-1"></i> Forms
+                            <span class="badge bg-primary-subtle text-primary ms-1">@allTemplatesCount</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content tab-content-area">
+                    
+                    <!-- ============================================================ -->
+                    <!-- OVERVIEW TAB -->
+                    <!-- ============================================================ -->
+                    <div class="tab-pane fade @(currentTab == "overview" ? "show active" : "")" 
+                         id="overview-tab" 
+                         role="tabpanel">
+                        @await Html.PartialAsync("~/Views/Submissions/Partials/_FormsOverview.cshtml")
+                    </div>
+                    
+                    <!-- ============================================================ -->
+                    <!-- FORMS TAB -->
+                    <!-- ============================================================ -->
+                    <div class="tab-pane fade @(currentTab == "forms" ? "show active" : "")" 
+                         id="forms-tab" 
+                         role="tabpanel">
+                        @{
+                            // ============================================================================
+                            // BUILD CATEGORY TABS (Server-Side Navigation)
+                            // ============================================================================
+                            var categoryTabs = new TabsConfig
+                            {
+                                TabsId = "categoryTabs",
+                                Layout = TabsLayout.Vertical,
+                                Style = TabsStyle.Pills,
+                                WrapInCard = false, // No card wrapper since we're inside a card
+                                NavigationMode = TabsNavigationMode.ServerSide
+                            };
+                            
+                            // Add "All Forms" tab
+                            categoryTabs.WithNavigationTab(
+                                tabId: "all",
+                                title: "All Forms",
+                                url: Url.Action("AvailableForms", "Submissions", new { tab = "forms", search = currentSearch, type = currentType }) ?? "/Submissions/AvailableForms?tab=forms",
+                                icon: "ri-apps-line",
+                                badge: allTemplatesCount.ToString(),
+                                badgeColor: "primary",
+                                isActive: string.IsNullOrEmpty(currentCategory)
+                            );
+                            
+                            // Add category tabs dynamically with descriptions
+                            foreach (var cat in categoriesWithCounts)
+                            {
+                                string catName = cat.CategoryName;
+                                string catDescription = cat.Description ?? "";
+                                string catIcon = cat.IconClass ?? "ri-folder-line";
+                                int catCount = cat.TemplateCount;
+                                bool isActive = currentCategory.Equals(catName, StringComparison.OrdinalIgnoreCase);
+                                
+                                // Add tab with description
+                                categoryTabs.Tabs.Add(new TabConfig
+                                {
+                                    TabId = catName.ToLower().Replace(" ", "-"),
+                                    Title = catName,
+                                    Description = catDescription,
+                                    Url = Url.Action("AvailableForms", "Submissions", new { tab = "forms", category = catName, search = currentSearch, type = currentType }) ?? $"/Submissions/AvailableForms?tab=forms&category={catName}",
+                                    Icon = catIcon,
+                                    Badge = catCount.ToString(),
+                                    BadgeColor = "primary",
+                                    IsActive = isActive,
+                                    DisplayOrder = categoryTabs.Tabs.Count + 1
+                                });
+                            }
+                            
+                            var categoryTabsViewModel = categoryTabs.BuildTabs();
+                            
+                            // Store tabs in ViewData for the component
+                            ViewData["TabsViewModel"] = categoryTabsViewModel;
+                            
+                            // Pass data needed by the content partial
+                            ViewData["ParentModel"] = Model;
+                            
+                            // Set the content partial path for server-side navigation
+                            ViewData["ServerSideContentPartial"] = "~/Views/Submissions/Partials/_AvailableFormsContent.cshtml";
+                        }
+                        
+                        @await Html.PartialAsync("~/Views/Shared/Components/Tabs/_VerticalTabs.cshtml", categoryTabsViewModel)
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

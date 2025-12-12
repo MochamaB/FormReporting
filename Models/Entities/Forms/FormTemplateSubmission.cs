@@ -48,6 +48,17 @@ namespace FormReporting.Models.Entities.Forms
 
         public string? ApprovalComments { get; set; }
 
+        // ===== DRAFT/RESUME FIELDS =====
+        /// <summary>
+        /// Timestamp of last auto-save for draft submissions
+        /// </summary>
+        public DateTime? LastSavedDate { get; set; }
+
+        /// <summary>
+        /// Current wizard section index (0-based) for resuming drafts
+        /// </summary>
+        public int CurrentSection { get; set; } = 0;
+
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
         public int? ModifiedBy { get; set; }

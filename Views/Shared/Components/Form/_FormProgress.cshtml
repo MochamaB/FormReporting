@@ -1,0 +1,389 @@
+@model FormReporting.Models.ViewModels.Components.FormViewModel
+@*
+    Form Progress - Fixed header below navbar with 3-column layout
+    Left: Title & Tenant | Middle: Wizard Stepper | Right: Save Status & Cancel
+*@
+@{
+    // Get submission context from ViewBag
+    var tenantName = ViewBag.TenantName as string ?? "N/A";
+    var reportingPeriodDisplay = ViewBag.ReportingPeriodDisplay as string ?? "N/A";
+    var lastSavedDate = ViewBag.LastSavedDate as string;
+    var isNewSubmission = ViewBag.IsNewSubmission as bool? ?? true;
+    
+    // Determine if we should use compact mode (>4 sections)
+    var sectionCount = Model.Sections?.Count ?? 0;
+    var useCompactMode = sectionCount > 4;
+    var totalSteps = sectionCount + 1; // sections + Complete step
+}
+
+<style>
+    /* Fixed progress bar below navbar */
+    .formprogress {
+        background: #fff;
+        border-bottom: 1px solid #e9ecef;
+        padding: 0.75rem 1.5rem;
+        position: fixed;
+        top: 70px; /* Below the navbar */
+        left: 0;
+        right: 0;
+        z-index: 1000;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+    }
+
+    /* Account for sidebar in non-collapsed state */
+    [data-sidebar-size="lg"] .formprogress {
+        left: 250px;
+    }
+
+    /* Account for sidebar in sm-hover (builder layout) */
+    [data-sidebar-size="sm-hover"] .formprogress {
+        left: 70px;
+    }
+
+    /* Spacer to push content below fixed header */
+    .formprogress-spacer {
+        height: 90px; /* Adjust based on formprogress height */
+    }
+
+    /* 3-column layout */
+    .formprogress-container {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    /* Left column - Title & Tenant (fixed width) */
+    .formprogress-left {
+        flex: 0 0 200px;
+        min-width: 0;
+    }
+
+    .formprogress-left h5 {
+        margin: 0;
+        font-size: 14px;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .formprogress-left .meta {
+        font-size: 11px;
+        color: #878a99;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Middle column - Stepper (flexible, takes most space) */
+    .formprogress-middle {
+        flex: 1;
+        min-width: 0;
+        padding: 0 1rem;
+    }
+
+    /* Right column - Save status & Cancel (fixed width) */
+    .formprogress-right {
+        flex: 0 0 auto;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    /* Horizontal Wizard Stepper */
+    .submission-wizard-stepper {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        position: relative;
+        margin: 0;
+        padding: 0;
+        list-style: none;
+    }
+    
+    .submission-wizard-step {
+        flex: 1;
+        position: relative;
+        text-align: center;
+        cursor: pointer;
+    }
+    
+    /* Connecting line between steps */
+    .submission-wizard-step:not(:last-child)::after {
+        content: '';
+        position: absolute;
+        top: 14px; /* Vertically center on 30px circle */
+        left: 50%;
+        width: 100%;
+        height: 2px;
+        background-color: #e9ecef;
+        z-index: 0;
+    }
+    
+    .submission-wizard-step.done:not(:last-child)::after {
+        background-color: var(--vz-primary);
+    }
+    
+    .submission-wizard-step.active:not(:last-child)::after {
+        background-color: var(--vz-primary); /* Full line colored when active */
+    }
+    
+    /* Step circle */
+    .submission-step-circle {
+        width: 35px;
+        height: 35px;
+        border-radius: 50%;
+        background-color: #f3f6f9;
+        border: 2px solid #e9ecef;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        z-index: 1;
+        margin: 0 auto;
+        transition: all 0.3s ease;
+        font-weight: 600;
+        font-size: 14px;
+        color: #878a99;
+    }
+    
+    .submission-wizard-step.done .submission-step-circle {
+        background-color: var(--vz-primary);
+        border-color: var(--vz-primary);
+        color: white;
+    }
+    
+    .submission-wizard-step.active .submission-step-circle {
+        background-color: var(--vz-secondary);
+        border-color: var(--vz-secondary);
+        box-shadow: 0 0 0 3px var(--vz-secondary-subtle);
+        color: #000;
+    }
+    
+    .submission-step-circle i {
+        font-size: 14px;
+    }
+    
+    /* Step label */
+    .submission-step-label {
+        margin-top: 0.25rem;
+        font-size: 12px;
+        font-weight: 500;
+        color: #495057;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        max-width: 100%; /* Fill parent li width */
+        padding: 0 4px;
+    }
+    
+    .submission-wizard-step.done .submission-step-label {
+        color: var(--vz-primary);
+    }
+    
+    .submission-wizard-step.active .submission-step-label {
+        color: var(--vz-secondary-text-emphasis);
+        font-weight: 600;
+    }
+
+    /* Compact mode (>4 sections) - hide labels */
+    .submission-wizard-stepper.compact-mode .submission-step-label {
+        display: none;
+    }
+
+    .submission-wizard-stepper.compact-mode .submission-step-circle {
+        width: 26px;
+        height: 26px;
+        font-size: 11px;
+    }
+
+    .submission-wizard-stepper.compact-mode .submission-wizard-step:not(:last-child)::after {
+        top: 12px; /* Vertically center on 26px circle */
+    }
+
+    /* Step counter below stepper */
+    .step-counter {
+        text-align: center;
+        margin-top: 0.25rem;
+        font-size: 11px;
+        color: #878a99;
+    }
+
+    /* ========== RESPONSIVE STYLES ========== */
+    
+    /* Tablet and below - hide labels, smaller circles */
+    @@media (max-width: 991.98px) {
+        .submission-step-label {
+            display: none;
+        }
+        
+        .submission-step-circle {
+            width: 30px;
+            height: 30px;
+            font-size: 12px;
+        }
+        
+        .submission-wizard-step:not(:last-child)::after {
+            top: 14px;
+        }
+        
+        .formprogress-left {
+            flex: 0 0 150px;
+        }
+        
+        .formprogress-left h5 {
+            font-size: 12px;
+        }
+        
+        .formprogress-left .meta {
+            font-size: 10px;
+        }
+    }
+    
+    /* Mobile - full width, only stepper visible */
+    @@media (max-width: 767.98px) {
+        .formprogress {
+            padding: 0.75rem 1rem;
+            left: 0 !important; /* Override sidebar offsets */
+            right: 0;
+            top: 70px;
+        }
+        
+        .formprogress-container {
+            gap: 0.5rem;
+        }
+        
+        /* Hide left and right columns on mobile - only show stepper */
+        .formprogress-left,
+        .formprogress-right {
+            display: none;
+        }
+        
+        .formprogress-middle {
+            flex: 1;
+            padding: 0;
+            width: 100%;
+        }
+        
+        .submission-step-circle {
+            width: 32px;
+            height: 32px;
+            font-size: 12px;
+        }
+        
+        .submission-wizard-step:not(:last-child)::after {
+            top: 15px;
+        }
+        
+        .formprogress-spacer {
+            height: 70px;
+        }
+    }
+    
+    /* Very small mobile */
+    @@media (max-width: 400px) {
+        .submission-step-circle {
+            width: 28px;
+            height: 28px;
+            font-size: 11px;
+        }
+        
+        .submission-wizard-step:not(:last-child)::after {
+            top: 13px;
+        }
+    }
+</style>
+
+@* Fixed Progress Bar *@
+<div class="formprogress">
+    <div class="formprogress-container">
+        
+        @* LEFT: Title & Tenant *@
+        <div class="formprogress-left">
+            <h5 title="@Model.Title">@Model.Title</h5>
+            <div class="meta">
+                <i class="ri-building-line me-1"></i>@tenantName
+            </div>
+        </div>
+        
+        @* MIDDLE: Wizard Stepper *@
+        <div class="formprogress-middle">
+            <ul class="submission-wizard-stepper @(useCompactMode ? "compact-mode" : "")" 
+                id="wizard-stepper-@Model.FormId"
+                data-form-id="@Model.FormId">
+                
+                @* Section Steps *@
+                @for (int i = 0; i < sectionCount; i++)
+                {
+                    var formSection = Model.Sections[i];
+                    var stepNumber = i + 1;
+                    var isFirst = i == 0;
+                    var stateClass = isFirst ? "active" : "";
+                    
+                    <li class="submission-wizard-step @stateClass"
+                        data-step="@stepNumber"
+                        data-section-id="@(formSection.SectionId)">
+                        <div class="submission-step-circle">
+                            @if (!string.IsNullOrEmpty(formSection.IconClass) && !useCompactMode)
+                            {
+                                <i class="@(formSection.IconClass)"></i>
+                            }
+                            else
+                            {
+                                <span>@stepNumber</span>
+                            }
+                        </div>
+                        @if (!useCompactMode)
+                        {
+                            <div class="submission-step-label">@(formSection.SectionName)</div>
+                        }
+                    </li>
+                }
+                
+                @* Complete Step (always last) *@
+                <li class="submission-wizard-step" data-step="@totalSteps" data-complete-step="true">
+                    <div class="submission-step-circle">
+                        <i class="ri-check-double-line"></i>
+                    </div>
+                    <div class="submission-step-label">Complete</div>
+                </li>
+            </ul>
+        </div>
+        
+        @* RIGHT: Cancel Button *@
+        <div class="formprogress-right">
+            <button type="button" 
+                    class="btn btn-soft-danger btn-sm"
+                    data-bs-toggle="modal" 
+                    data-bs-target="#cancelSubmissionModal">
+                <i class="ri-close-line"></i> Cancel
+            </button>
+        </div>
+    </div>
+</div>
+
+@* Spacer to push content below fixed header *@
+<div class="formprogress-spacer"></div>
+
+@* Cancel Confirmation Modal *@
+<div class="modal fade" id="cancelSubmissionModal" tabindex="-1" aria-labelledby="cancelSubmissionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="cancelSubmissionModalLabel">
+                    <i class="ri-error-warning-line text-warning me-2"></i>Cancel Submission?
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p class="mb-0">Are you sure you want to cancel? Any unsaved changes will be lost.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Continue</button>
+                <a href="@(Model.CancelUrl ?? Url.Action("Index", "Submissions"))" class="btn btn-danger">
+                    <i class="ri-close-line me-1"></i>Yes, Cancel
+                </a>
+            </div>
+        </div>
+    </div>
+</div>

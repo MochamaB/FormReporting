@@ -3,77 +3,8 @@
 @*
     Form Wizard Wrapper - Displays form sections as wizard steps
     One section visible at a time with Previous/Next navigation
+    Note: The progress header (title, stepper, step counter) is now in _FormProgress.cshtml
 *@
-<div class="row">
-    <div class="col-12">
-        <div class="page-title-box">
-            @* Wizard Header with Stepper *@
-    <div class="card">
-        <div class="card-body">
-            @* Form Title and Description *@
-            <div class="mb-4">
-                <h4 class="card-title mb-1">@Model.Title</h4>
-                @if (!string.IsNullOrEmpty(Model.Description))
-                {
-                    <p class="text-muted mb-0">@Model.Description</p>
-                }
-            </div>
-
-            @* Horizontal Stepper *@
-            <div class="form-wizard-steps mb-3">
-                <div class="progress-nav progress-nav-wizard">
-                    <div class="progress" style="height: 2px;">
-                        <div class="progress-bar"
-                             id="wizard-progress-@Model.FormId"
-                             role="progressbar"
-                             style="width: 0%"
-                             aria-valuenow="0"
-                             aria-valuemin="0"
-                             aria-valuemax="100">
-                        </div>
-                    </div>
-                    <ul class="nav nav-wizard">
-                        @for (int i = 0; i < Model.Sections.Count; i++)
-                        {
-                            var section = Model.Sections[i];
-                            var stepNumber = i + 1;
-                            var isFirst = i == 0;
-                            var isActive = isFirst ? "active" : "";
-                            var isClickable = Model.AllowStepSkipping ? "clickable" : "";
-
-                            <li class="nav-item wizard-step @isActive @isClickable"
-                                data-step="@stepNumber"
-                                data-section-id="@(section.SectionId)">
-                                <a class="nav-link" href="#step-@stepNumber-@Model.FormId">
-                                    @if (Model.ShowStepNumbers)
-                                    {
-                                        <span class="step-number">@stepNumber</span>
-                                    }
-                                    @if (!string.IsNullOrEmpty(section.IconClass))
-                                    {
-                                        <i class="@(section.IconClass) step-icon"></i>
-                                    }
-                                    <span class="step-title">@(section.SectionName)</span>
-                                    <i class="ri-check-line step-check-icon"></i>
-                                </a>
-                            </li>
-                        }
-                    </ul>
-                </div>
-            </div>
-
-            @* Step Counter *@
-            <div class="text-center mb-3">
-                <span class="badge bg-primary-subtle text-primary fs-12">
-                    Step <span id="current-step-@Model.FormId">1</span> of @Model.TotalSteps
-                </span>
-            </div>
-        </div>
-    </div>
-            
-        </div>
-    </div>
-</div>
 
 <div class="form-wizard-wrapper" id="wizard-@Model.FormId" data-wizard-id="@Model.FormId">
 
@@ -98,6 +29,12 @@
         <input type="hidden" name="FormTemplateId" value="@Model.FormTemplateId" />
         <input type="hidden" name="ResponseId" id="response-id-@Model.FormId" value="@Model.ResponseId" />
         <input type="hidden" id="current-step-index-@Model.FormId" value="0" />
+        
+        @* Submission Context for Auto-Save (supports lazy submission) *@
+        <input type="hidden" id="submission-id-@Model.FormId" name="SubmissionId" value="@(Model.SubmissionId?.ToString() ?? "0")" />
+        <input type="hidden" id="template-id-@Model.FormId" name="TemplateId" value="@Model.TemplateId" />
+        <input type="hidden" id="tenant-id-@Model.FormId" name="TenantId" value="@(Model.TenantId?.ToString() ?? "")" />
+        <input type="hidden" id="reporting-period-@Model.FormId" name="ReportingPeriod" value="@Model.ReportingPeriod" />
 
         @* Wizard Step Content - Each section is a step *@
         <div class="wizard-steps-content">
@@ -356,3 +293,181 @@
         }
     }
 </style>
+
+@* Auto-Save Script *@
+@if (Model.EnableAutoSave)
+{
+    <script>
+    (function() {
+        const formId = '@Model.FormId';
+        const autoSaveUrl = '@Model.AutoSaveUrl';
+        const autoSaveInterval = @(Model.AutoSaveIntervalMs > 0 ? Model.AutoSaveIntervalMs : 30000);
+        
+        let autoSaveTimer = null;
+        let isDirty = false;
+        let isSaving = false;
+        
+        // Get form elements
+        const form = document.getElementById('form-' + formId);
+        if (!form) return;
+        
+        // Track changes
+        form.addEventListener('input', function() {
+            isDirty = true;
+        });
+        
+        form.addEventListener('change', function() {
+            isDirty = true;
+        });
+        
+        // Start auto-save timer
+        function startAutoSave() {
+            if (autoSaveTimer) clearInterval(autoSaveTimer);
+            autoSaveTimer = setInterval(function() {
+                if (isDirty && !isSaving) {
+                    saveFormDraft();
+                }
+            }, autoSaveInterval);
+        }
+        
+        // Save draft function
+        async function saveFormDraft() {
+            if (isSaving) return;
+            isSaving = true;
+            
+            // Update status
+            if (typeof window.updateAutoSaveStatus === 'function') {
+                window.updateAutoSaveStatus('saving');
+            }
+            
+            try {
+                // Collect form data
+                const submissionIdInput = document.getElementById('submission-id-' + formId);
+                const templateIdInput = document.getElementById('template-id-' + formId);
+                const tenantIdInput = document.getElementById('tenant-id-' + formId);
+                const reportingPeriodInput = document.getElementById('reporting-period-' + formId);
+                const currentStepInput = document.getElementById('current-step-index-' + formId);
+                
+                const submissionId = parseInt(submissionIdInput?.value) || 0;
+                const templateId = parseInt(templateIdInput?.value) || 0;
+                const tenantId = tenantIdInput?.value ? parseInt(tenantIdInput.value) : null;
+                const reportingPeriod = reportingPeriodInput?.value || '';
+                const currentSection = parseInt(currentStepInput?.value) || 0;
+                
+                // Collect all field responses
+                const responses = {};
+                const formData = new FormData(form);
+                formData.forEach((value, key) => {
+                    // Only include field responses (item_XXX pattern)
+                    if (key.startsWith('item_') || key.match(/^\d+$/)) {
+                        const itemId = key.replace('item_', '');
+                        responses[itemId] = value;
+                    }
+                });
+                
+                // Also collect by data-item-id attribute
+                form.querySelectorAll('[data-item-id]').forEach(el => {
+                    const itemId = el.dataset.itemId;
+                    if (itemId) {
+                        if (el.type === 'checkbox') {
+                            responses[itemId] = el.checked ? 'true' : 'false';
+                        } else if (el.type === 'radio') {
+                            if (el.checked) {
+                                responses[itemId] = el.value;
+                            }
+                        } else {
+                            responses[itemId] = el.value;
+                        }
+                    }
+                });
+                
+                const payload = {
+                    submissionId: submissionId,
+                    templateId: templateId,
+                    tenantId: tenantId,
+                    reportingPeriod: reportingPeriod,
+                    currentSection: currentSection,
+                    responses: responses
+                };
+                
+                const response = await fetch(autoSaveUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    isDirty = false;
+                    
+                    // Update submission ID if this was a lazy creation
+                    if (submissionId === 0 && result.submissionId > 0) {
+                        submissionIdInput.value = result.submissionId;
+                        console.log('Submission created with ID:', result.submissionId);
+                    }
+                    
+                    // Update status
+                    if (typeof window.updateAutoSaveStatus === 'function') {
+                        window.updateAutoSaveStatus('saved', 'Saved at ' + new Date().toLocaleTimeString());
+                    }
+                    
+                    // Show toast
+                    const toast = document.getElementById('auto-save-toast-' + formId);
+                    if (toast && typeof bootstrap !== 'undefined') {
+                        const bsToast = new bootstrap.Toast(toast, { delay: 2000 });
+                        bsToast.show();
+                    }
+                } else {
+                    console.error('Auto-save failed:', result.errors);
+                    if (typeof window.updateAutoSaveStatus === 'function') {
+                        window.updateAutoSaveStatus('error', 'Save failed');
+                    }
+                }
+            } catch (error) {
+                console.error('Auto-save error:', error);
+                if (typeof window.updateAutoSaveStatus === 'function') {
+                    window.updateAutoSaveStatus('error', 'Save failed');
+                }
+            } finally {
+                isSaving = false;
+            }
+        }
+        
+        // Expose save function globally
+        window.saveDraft = function(fId) {
+            if (fId === formId) {
+                saveFormDraft();
+            }
+        };
+        
+        // Cancel form function
+        window.cancelForm = function(fId) {
+            if (fId === formId) {
+                const cancelUrl = '@(Model.CancelUrl ?? "/Submissions/AvailableForms")';
+                if (isDirty) {
+                    if (confirm('You have unsaved changes. Are you sure you want to cancel?')) {
+                        window.location.href = cancelUrl;
+                    }
+                } else {
+                    window.location.href = cancelUrl;
+                }
+            }
+        };
+        
+        // Start auto-save on load
+        startAutoSave();
+        
+        // Save before leaving page
+        window.addEventListener('beforeunload', function(e) {
+            if (isDirty) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
+    })();
+    </script>
+}

@@ -1,0 +1,323 @@
+@model FormReporting.Models.ViewModels.Forms.StartSubmissionViewModel
+@{
+    ViewData["Title"] = "Start Form";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    
+    // Build the form URL
+    var formUrl = $"{Context.Request.Scheme}://{Context.Request.Host}/Submissions/Start/{Model.TemplateId}";
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-9 col-xl-9">
+        
+        @* Survey Welcome Card *@
+        <div class="card">
+            <div class="card-body" style="padding: 2.5rem;">
+                
+                @* Header - Icon and Title *@
+                <div class="text-center mb-4">
+                    <div class="avatar-lg mx-auto mb-3">
+                        <div class="avatar-title bg-primary-subtle text-primary rounded-circle fs-24">
+                            <i class="@Model.CategoryIcon"></i>
+                        </div>
+                    </div>
+                    <h3 class="mb-2">@Model.TemplateName</h3>
+                    @if (!string.IsNullOrEmpty(Model.Description))
+                    {
+                        <p class="text-muted mb-0">@Model.Description</p>
+                    }
+                </div>
+                
+                <hr>
+                
+                @* Template Details *@
+                <div class="mb-4">
+                    <div class="row g-3">
+                        <div class="col-sm-6 col-md-3">
+                            <p class="mb-1 fs-13">Category</p>
+                            <p class="mb-0 text-muted fw-medium">@Model.CategoryName</p>
+                        </div>
+                        <div class="col-sm-6 col-md-3">
+                            <p class="mb-1 fs-13">Type</p>
+                            <p class="mb-0 text-muted fw-medium">@Model.TemplateType</p>
+                        </div>
+                        <div class="col-sm-6 col-md-3">
+                            <p class="mb-1 fs-13">Version</p>
+                            <p class="mb-0 text-muted fw-medium">v@(Model.Version)</p>
+                        </div>
+                        <div class="col-sm-6 col-md-3">
+                            <p class="mb-1 fs-13">Published On</p>
+                            <p class="mb-0 text-muted fw-medium">@(Model.PublishedDate?.ToString("MMM d, yyyy") ?? "Not published")</p>
+                        </div>
+                    </div>
+                </div>
+                
+                @* Form Stats *@
+                <div class="row text-center g-3 mb-4">
+                    <div class="col-4">
+                        <div class="border rounded p-3">
+                            <h4 class="mb-1 text-primary">@Model.SectionCount</h4>
+                            <p class="text-muted mb-0 fs-13">Sections</p>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="border rounded p-3">
+                            <h4 class="mb-1 text-primary">@Model.FieldCount</h4>
+                            <p class="text-muted mb-0 fs-13">Fields</p>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="border rounded p-3">
+                            <h4 class="mb-1 text-primary">~@Model.EstimatedMinutes</h4>
+                            <p class="text-muted mb-0 fs-13">Est. Minutes</p>
+                        </div>
+                    </div>
+                </div>
+                
+            
+                <div class="mb-4">
+                    <h6 class="mb-2">Copy the link to your form</h6>
+                    <p class="text-muted fs-13 mb-3">Share this link to allow others to fill out this form, or use it to directly access the form yourself.</p>
+                    <div class="input-group mb-3">
+                        <input type="text" class="form-control bg-light" id="formLinkInput" value="@formUrl" readonly>
+                        <button class="btn btn-outline-secondary" type="button" id="copyLinkBtn" title="Copy link">
+                            <i class="ri-file-copy-line"></i>
+                        </button>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="@formUrl" target="_blank" class="btn btn-soft-secondary">
+                            <i class="ri-external-link-line me-1"></i>View form
+                        </a>
+                        <button type="button" class="btn btn-primary" id="copyCodeBtn">
+                            <i class="ri-code-line me-1"></i>Copy code
+                        </button>
+                    </div>
+                </div>
+                
+                <hr>
+                
+                @* Submission Details Form *@
+                <form asp-action="CreateSubmission" method="post" id="startForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="templateId" value="@Model.TemplateId" />
+                    
+                    <div class="row g-3">
+                        @* Tenant Selection (only if multiple tenants) *@
+                        @if (Model.ShowTenantSelector)
+                        {
+                            <div class="col-md-6">
+                                <label class="form-label">Location <span class="text-danger">*</span></label>
+                                <select class="form-select" name="tenantId" id="tenantSelect" required>
+                                    <option value="">-- Select Location --</option>
+                                    @foreach (var tenant in Model.AvailableTenants)
+                                    {
+                                        var isSelected = Model.SelectedTenantId.HasValue && Model.SelectedTenantId == tenant.TenantId;
+                                        if (isSelected)
+                                        {
+                                            <option value="@tenant.TenantId" data-type="@tenant.TenantType" selected>
+                                                @tenant.TenantName (@tenant.TenantCode)
+                                            </option>
+                                        }
+                                        else
+                                        {
+                                            <option value="@tenant.TenantId" data-type="@tenant.TenantType">
+                                                @tenant.TenantName (@tenant.TenantCode)
+                                            </option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        }
+                        else if (Model.AvailableTenants.Count == 1)
+                        {
+                            <input type="hidden" name="tenantId" value="@Model.AvailableTenants[0].TenantId" />
+                            <div class="col-md-6">
+                                <label class="form-label">Facility</label>
+                                <div class="form-control bg-light">
+                                    <i class="ri-building-line me-1 text-muted"></i>
+                                    @Model.AvailableTenants[0].TenantName
+                                </div>
+                            </div>
+                        }
+                        
+                        @* Period Selection *@
+                        @if (Model.TemplateType?.ToLower() == "ondemand")
+                        {
+                            @* On Demand: Date Range Picker *@
+                            <div class="col-md-6">
+                                <label class="form-label">Period Start <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" name="periodStart" 
+                                       value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label">Period End <span class="text-danger">*</span></label>
+                                <input type="date" class="form-control" name="periodEnd" 
+                                       value="@DateTime.Now.ToString("yyyy-MM-dd")" required />
+                            </div>
+                        }
+                        else
+                        {
+                            @* Standard Period Dropdown *@
+                            <div class="@(Model.ShowTenantSelector || Model.AvailableTenants.Count == 1 ? "col-md-6" : "col-12")">
+                                <label class="form-label">Reporting Period <span class="text-danger">*</span></label>
+                                <select class="form-select" name="selectedPeriod" id="periodSelect" required>
+                                    @foreach (var period in Model.AvailablePeriods)
+                                    {
+                                        <option value="@period.Value" 
+                                                selected="@period.IsDefault"
+                                                data-has-draft="@period.HasDraft.ToString().ToLower()">
+                                            @period.Label
+                                            @if (period.HasDraft)
+                                            {
+                                                @: (Draft)
+                                            }
+                                        </option>
+                                    }
+                                </select>
+                            </div>
+                        }
+                    </div>
+                    
+                    @* Draft Alert *@
+                    <div class="alert alert-warning d-flex align-items-start mt-3 @(Model.HasExistingDraft ? "" : "d-none")" role="alert" id="draftAlert">
+                        <i class="ri-draft-line fs-16 me-2"></i>
+                        <div class="fs-13">
+                            <strong>Draft Found!</strong> 
+                            @if (Model.DraftLastSaved.HasValue)
+                            {
+                                <span class="text-muted">Last saved @Model.DraftLastSaved.Value.ToString("MMM d, h:mm tt")</span>
+                            }
+                            <span class="text-muted">- You will continue from where you left off.</span>
+                        </div>
+                    </div>
+                </form>
+                
+                <hr>
+                
+                @* Instructions *@
+                <div class="bg-light border-start border-primary border-4 p-3 mb-4">
+                    <p class="text-muted fs-13 mb-2"><i class="ri-information-line me-1"></i>Before you begin:</p>
+                    <ul class="list-unstyled mb-0 vstack gap-1 fs-13 text-muted">
+                        <li><i class="ri-checkbox-circle-line text-success me-2"></i>Your progress is automatically saved as you fill the form.</li>
+                        <li><i class="ri-checkbox-circle-line text-success me-2"></i>You can save and continue later from your Submissions page.</li>
+                        <li><i class="ri-checkbox-circle-line text-success me-2"></i>Fields marked with <span class="text-danger">*</span> are required.</li>
+                        @if (Model.RequiresApproval)
+                        {
+                            <li><i class="ri-shield-check-line text-info me-2"></i>This form requires approval after submission.</li>
+                        }
+                    </ul>
+                </div>
+                <hr>
+                
+                @* Action Buttons *@
+                <div class="d-flex gap-2 justify-content-between">
+                    <a href="@Url.Action("AvailableForms", "Submissions")" class="btn btn-soft-secondary">
+                        <i class="ri-arrow-left-line me-1"></i>Back
+                    </a>
+                    <button type="submit" form="startForm" class="btn btn-primary">
+                        @if (Model.HasExistingDraft)
+                        {
+                            <i class="ri-play-line me-1"></i>@:Continue Draft
+                        }
+                        else
+                        {
+                            <i class="ri-play-line me-1"></i>@:Begin Form
+                        }
+                        <i class="ri-arrow-right-line ms-1"></i>
+                    </button>
+                </div>
+                
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Check for draft when tenant or period changes
+        document.addEventListener('DOMContentLoaded', function() {
+            const tenantSelect = document.getElementById('tenantSelect');
+            const periodSelect = document.getElementById('periodSelect');
+            const draftAlert = document.getElementById('draftAlert');
+            const submitBtn = document.querySelector('button[type="submit"]');
+            
+            async function checkForDraft() {
+                const templateId = @Model.TemplateId;
+                const tenantId = tenantSelect?.value || '@(Model.AvailableTenants.FirstOrDefault()?.TenantId)';
+                const period = periodSelect?.value || '@Model.SelectedPeriod';
+                
+                if (!period) return;
+                
+                try {
+                    const response = await fetch(`/api/submissions/check-draft?templateId=${templateId}&tenantId=${tenantId}&period=${period}`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        updateDraftUI(data.hasDraft, data.lastSaved);
+                    }
+                } catch (error) {
+                    console.log('Draft check failed:', error);
+                }
+            }
+            
+            function updateDraftUI(hasDraft, lastSaved) {
+                if (hasDraft) {
+                    if (draftAlert) {
+                        draftAlert.style.display = 'flex';
+                    }
+                    if (submitBtn) {
+                        submitBtn.innerHTML = '<i class="ri-play-line me-1"></i>Continue Draft<i class="ri-arrow-right-line ms-1"></i>';
+                    }
+                } else {
+                    if (draftAlert) {
+                        draftAlert.style.display = 'none';
+                    }
+                    if (submitBtn) {
+                        submitBtn.innerHTML = '<i class="ri-play-line me-1"></i>Begin Form<i class="ri-arrow-right-line ms-1"></i>';
+                    }
+                }
+            }
+            
+            // Bind change events
+            if (tenantSelect) {
+                tenantSelect.addEventListener('change', checkForDraft);
+            }
+            if (periodSelect) {
+                periodSelect.addEventListener('change', checkForDraft);
+            }
+            
+            // Copy link functionality
+            const copyLinkBtn = document.getElementById('copyLinkBtn');
+            const formLinkInput = document.getElementById('formLinkInput');
+            const copyCodeBtn = document.getElementById('copyCodeBtn');
+            
+            if (copyLinkBtn && formLinkInput) {
+                copyLinkBtn.addEventListener('click', function() {
+                    formLinkInput.select();
+                    navigator.clipboard.writeText(formLinkInput.value).then(function() {
+                        // Show success feedback
+                        const originalIcon = copyLinkBtn.innerHTML;
+                        copyLinkBtn.innerHTML = '<i class="ri-check-line text-success"></i>';
+                        setTimeout(() => {
+                            copyLinkBtn.innerHTML = originalIcon;
+                        }, 2000);
+                    });
+                });
+            }
+            
+            if (copyCodeBtn && formLinkInput) {
+                copyCodeBtn.addEventListener('click', function() {
+                    const embedCode = `<iframe src="${formLinkInput.value}" width="100%" height="600" frameborder="0"></iframe>`;
+                    navigator.clipboard.writeText(embedCode).then(function() {
+                        // Show success feedback
+                        const originalText = copyCodeBtn.innerHTML;
+                        copyCodeBtn.innerHTML = '<i class="ri-check-line me-1"></i>Copied!';
+                        setTimeout(() => {
+                            copyCodeBtn.innerHTML = originalText;
+                        }, 2000);
+                    });
+                });
+            }
+        });
+    </script>
+}

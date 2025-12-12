@@ -1,0 +1,257 @@
+@using FormReporting.Models.Entities.Forms
+@model FormTemplate
+
+@{
+    var categoryIcon = Model.Category?.IconClass ?? "ri-file-list-3-line";
+    var categoryName = Model.Category?.CategoryName ?? "Uncategorized";
+    
+    // Submission stats from ViewData (passed from parent)
+    var responsesCount = ViewData["ResponsesCount"] as int? ?? 0;
+    var fullCount = ViewData["FullCount"] as int? ?? 0;
+    var draftCount = ViewData["DraftCount"] as int? ?? 0;
+    
+    var sectionCount = Model.Sections?.Count ?? 0;
+    var fieldCount = Model.Items?.Count ?? 0;
+}
+
+<style>
+    .form-template-card {
+        border: 2px solid #c6c6c6 !important;
+        transition: all 0.2s ease-in-out;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .form-template-card:hover {
+        border-color: var(--vz-primary) !important;
+        box-shadow: 0 5px 15px rgba(var(--vz-primary-rgb), 0.15) !important;
+        transform: translateY(-2px);
+    }
+    
+    .form-template-card .card-header {
+        background: transparent;
+    }
+    
+    .form-template-card .card-body {
+        flex: 1;
+    }
+    
+    .form-template-card .card-footer {
+         background: transparent;
+        border-top: 1px solid #c6c6c6;
+    }
+    
+    .form-template-card .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 0.5rem;
+    }
+    
+    .form-template-card .stat-item {
+        text-align: center;
+        padding: 0.5rem;
+        background: #f8f9fa;
+        border-radius: 4px;
+    }
+    
+    .form-template-card .stat-item .stat-value {
+        font-size: 1.25rem;
+        font-weight: 600;
+        line-height: 1;
+    }
+    
+    .form-template-card .stat-item .stat-label {
+        font-size: 11px;
+        color: #878a99;
+        margin-top: 2px;
+    }
+    
+    .form-template-card .info-row {
+        display: flex;
+        align-items: center;
+        padding: 0.25rem 0;
+        font-size: 12px;
+    }
+    
+    .form-template-card .info-row .info-label {
+        color: #878a99;
+        min-width: 90px;
+    }
+    
+    .form-template-card .info-row .info-value {
+        color: #495057;
+        font-weight: 500;
+    }
+</style>
+
+@*
+    Available Form Template Card - Redesigned
+    
+    - Header: Icon + Template Name | Version badge
+    - Body: Description, Response stats grid, Info rows
+    - Footer: Actions dropdown
+*@
+
+<div class="card h-100 form-template-card ribbon-box mb-0">
+   
+    
+    <!-- Card Header -->
+    <div class="card-header border-bottom">
+        <div class="d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center overflow-hidden">
+                <div class="flex-shrink-0 me-2">
+                    <div class="avatar-xs">
+                        <div class="avatar-title bg-primary-subtle text-primary rounded">
+                            <i class="@categoryIcon"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="flex-grow-1 overflow-hidden">
+                    <h6 class="card-title mb-0 text-truncate" title="@Model.TemplateName">@Model.TemplateName</h6>
+                </div>
+            </div>
+            <div class="flex-shrink-0 ms-2">
+                <span class="badge bg-secondary-subtle text-secondary">v@(Model.Version)</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Card Body -->
+    <div class="card-body py-3">
+        <!-- Description -->
+        @if (!string.IsNullOrEmpty(Model.Description))
+        {
+            <p class="text-muted small mb-3" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                @Model.Description
+            </p>
+        }
+        else
+        {
+            <p class="text-muted small mb-3 fst-italic">No description available</p>
+        }
+        
+        <!-- Response Stats Grid -->
+        <div class="stats-grid mb-3">
+            <div class="stat-item">
+                <div class="stat-value text-primary">@responsesCount</div>
+                <div class="stat-label">Responses</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value text-success">@fullCount</div>
+                <div class="stat-label">Submitted</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value text-warning">@draftCount</div>
+                <div class="stat-label">Drafts</div>
+            </div>
+        </div>
+        
+        <!-- Info Rows -->
+        <div class="border-top pt-2">
+         <div class="info-row">
+                <span class="info-label"><i class="ri-list-check me-1"></i>Type:</span>
+                <span class="info-value">@Model.TemplateType</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label"><i class="ri-layout-3-line me-1"></i>Sections:</span>
+                <span class="info-value">@sectionCount</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label"><i class="ri-list-check me-1"></i>Fields:</span>
+                <span class="info-value">@fieldCount</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label"><i class="ri-shield-check-line me-1"></i>Approval:</span>
+                <span class="info-value">
+                    @if (Model.RequiresApproval)
+                    {
+                        <span class="text-warning">Required</span>
+                    }
+                    else
+                    {
+                        <span class="text-muted">Not Required</span>
+                    }
+                </span>
+            </div>
+            <div class="info-row">
+                <span class="info-label"><i class="ri-calendar-check-line me-1"></i>Published:</span>
+                <span class="info-value">
+                    @if (Model.PublishedDate.HasValue)
+                    {
+                        @Model.PublishedDate.Value.ToString("MMM dd, yyyy")
+                    }
+                    else
+                    {
+                        <span class="text-muted">-</span>
+                    }
+                </span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Card Footer -->
+    <div class="card-footer bg-transparent border-top">
+        <div class="d-flex justify-content-end">
+            <div class="dropdown">
+                <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class="ri-play-line me-1"></i>Actions
+                </button>
+                <ul class="dropdown-menu dropdown-menu-end">
+                    <!-- Primary Actions -->
+                    @if (draftCount > 0)
+                    {
+                        <li>
+                            <a class="dropdown-item" href="@Url.Action("Form", "Submissions", new { templateCode = Model.TemplateCode })">
+                                <i class="ri-draft-line me-2 text-warning"></i>Resume Draft (@draftCount)
+                            </a>
+                        </li>
+                    }
+                    <li>
+                        <a class="dropdown-item" href="@Url.Action("Start", "Submissions", new { templateId = Model.TemplateId })">
+                            <i class="ri-play-circle-line me-2 text-primary"></i>Start New
+                        </a>
+                    </li>
+                    
+                    <li><hr class="dropdown-divider"></li>
+                    
+                    <!-- View Actions -->
+                    <li>
+                        <a class="dropdown-item" href="@Url.Action("Submissions", "Submissions", new { templateId = Model.TemplateId })">
+                            <i class="ri-file-list-3-line me-2 text-info"></i>View Submissions
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="@Url.Action("Details", "FormTemplates", new { id = Model.TemplateId })">
+                            <i class="ri-information-line me-2 text-secondary"></i>Form Details
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="@Url.Action("Results", "Submissions", new { templateId = Model.TemplateId })">
+                            <i class="ri-bar-chart-box-line me-2 text-success"></i>View Results
+                        </a>
+                    </li>
+                    
+                    <li><hr class="dropdown-divider"></li>
+                    
+                    <!-- Other Actions -->
+                    <li>
+                        <a class="dropdown-item" href="@Url.Action("Preview", "FormTemplates", new { id = Model.TemplateId })" target="_blank">
+                            <i class="ri-eye-line me-2"></i>Preview Form
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item copy-form-link" href="#" 
+                           data-form-url="@($"{Context.Request.Scheme}://{Context.Request.Host}/f/{Model.TemplateCode}")">
+                            <i class="ri-link me-2"></i>Copy Form Link
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" href="@Url.Action("Export", "Submissions", new { templateId = Model.TemplateId })">
+                            <i class="ri-download-2-line me-2"></i>Export Data
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

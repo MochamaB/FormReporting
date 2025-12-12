@@ -1,0 +1,101 @@
+@model FormReporting.Models.ViewModels.Components.FormViewModel
+@{
+    ViewData["Title"] = Model.Title;
+    Layout = "~/Views/Shared/_BuilderLayout.cshtml";
+    
+    // Get submission context from ViewBag
+    var tenantName = ViewBag.TenantName as string ?? "N/A";
+    var reportingPeriodDisplay = ViewBag.ReportingPeriodDisplay as string ?? "N/A";
+    var lastSavedDate = ViewBag.LastSavedDate as string;
+    var isNewSubmission = ViewBag.IsNewSubmission as bool? ?? true;
+}
+
+@* Page Header with Context Info and Auto-Save Status *@
+<div class="row mb-3">
+    <div class="col-12">
+       
+    </div>
+</div>
+
+@* Progress Bar - Field counts and completion status *@
+@await Html.PartialAsync("~/Views/Shared/Components/Form/_FormProgress.cshtml", Model)
+
+@* Main Form Wizard *@
+@await Html.PartialAsync("~/Views/Shared/Components/Form/_FormWizard.cshtml", Model)
+
+@section Styles {
+    <style>
+        /* Focused form filling styles */
+        .page-content {
+            padding-top: 1rem;
+        }
+        
+        /* Auto-save status animations */
+        #auto-save-status .saving {
+            color: var(--vz-warning);
+        }
+        
+        #auto-save-status .saved {
+            color: var(--vz-success);
+        }
+        
+        #auto-save-status .error {
+            color: var(--vz-danger);
+        }
+        
+        /* Pulse animation for saving indicator */
+        @@keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .saving-indicator {
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+        
+        /* Make form wizard full width in builder layout */
+        .form-wizard-wrapper {
+            max-width: 100%;
+        }
+    </style>
+}
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const autoSaveStatus = document.getElementById('auto-save-status');
+            
+            // Update auto-save status display
+            window.updateAutoSaveStatus = function(status, message) {
+                if (!autoSaveStatus) return;
+                
+                let icon, text, cssClass;
+                switch (status) {
+                    case 'saving':
+                        icon = 'ri-loader-4-line saving-indicator';
+                        text = 'Saving...';
+                        cssClass = 'saving';
+                        break;
+                    case 'saved':
+                        icon = 'ri-check-double-line';
+                        text = message || 'Saved just now';
+                        cssClass = 'saved';
+                        break;
+                    case 'error':
+                        icon = 'ri-error-warning-line';
+                        text = message || 'Save failed';
+                        cssClass = 'error';
+                        break;
+                    default:
+                        return;
+                }
+                
+                autoSaveStatus.innerHTML = `
+                    <span class="text-muted fs-13 ${cssClass}">
+                        <i class="${icon} me-1"></i>${text}
+                    </span>
+                `;
+            };
+        });
+    </script>
+}

@@ -50,6 +50,8 @@ builder.Services.AddScoped<IFormCategoryService, FormCategoryService>();
 builder.Services.AddScoped<IFormTemplateService, FormTemplateService>();
 builder.Services.AddScoped<IFormBuilderService, FormBuilderService>();
 builder.Services.AddScoped<IFormItemOptionTemplateService, FormItemOptionTemplateService>();
+builder.Services.AddScoped<IFormSubmissionService, FormSubmissionService>();
+builder.Services.AddScoped<IFormResponseService, FormResponseService>();
 
 // Metrics services
 builder.Services.AddScoped<FormReporting.Services.Metrics.IMetricDefinitionService, FormReporting.Services.Metrics.MetricDefinitionService>();

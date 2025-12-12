@@ -1,0 +1,135 @@
+@using FormReporting.Models.Entities.Forms
+@model List<FormTemplateSubmission>
+
+@{
+    ViewData["Title"] = "My Submissions";
+    
+    // Get statistics from ViewBag
+    int totalSubmissions = ViewBag.TotalSubmissions ?? 0;
+    int draftCount = ViewBag.DraftCount ?? 0;
+    int submittedCount = ViewBag.SubmittedCount ?? 0;
+    int inApprovalCount = ViewBag.InApprovalCount ?? 0;
+    int approvedCount = ViewBag.ApprovedCount ?? 0;
+    
+    // Get available templates for new submission
+    var availableTemplates = ViewBag.AvailableTemplates as List<FormTemplate> ?? new List<FormTemplate>();
+    
+    // Current filters
+    string currentStatus = ViewBag.CurrentStatus ?? "";
+    string currentSearch = ViewBag.CurrentSearch ?? "";
+}
+
+
+
+<!-- Main Content Card with Tabs -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex align-items-center">
+                    <h5 class="card-title mb-0 flex-grow-1">Form Submissions</h5>
+                    <div class="flex-shrink-0">
+                        @if (availableTemplates.Any())
+                        {
+                            <div class="dropdown">
+                                <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="ri-add-line me-1"></i>New Submission
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    @foreach (var template in availableTemplates.Take(10))
+                                    {
+                                        <li>
+                                            <a class="dropdown-item" href="@Url.Action("Start", "Submissions", new { templateId = template.TemplateId })">
+                                                <i class="ri-file-list-3-line me-2 text-muted"></i>@template.TemplateName
+                                            </a>
+                                        </li>
+                                    }
+                                    @if (availableTemplates.Count > 10)
+                                    {
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <a class="dropdown-item" href="@Url.Action("AvailableForms", "Submissions")">
+                                                <i class="ri-more-line me-2"></i>View All Forms...
+                                            </a>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        }
+                        else
+                        {
+                            <a href="@Url.Action("AvailableForms", "Submissions")" class="btn btn-primary">
+                                <i class="ri-add-line me-1"></i>New Submission
+                            </a>
+                        }
+                    </div>
+                </div>
+                
+                <!-- Nav Tabs -->
+                <ul class="nav nav-tabs nav-tabs-custom nav-primary mt-3 mb-0" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link" data-bs-toggle="tab" href="#overview-tab" role="tab">
+                            <i class="ri-dashboard-line me-1"></i>Overview
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" data-bs-toggle="tab" href="#details-tab" role="tab">
+                            <i class="ri-list-check me-1"></i>Details
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="card-body">
+                <div class="tab-content">
+                    <!-- Overview Tab -->
+                    <div class="tab-pane" id="overview-tab" role="tabpanel">
+                        <div class="text-center py-5">
+                            <i class="ri-bar-chart-box-line display-4 text-muted"></i>
+                            <p class="text-muted mt-3">Overview dashboard coming soon...</p>
+                            <p class="text-muted small">Statistics and charts will be displayed here</p>
+                        </div>
+                    </div>
+                    
+                    <!-- Details Tab -->
+                    <div class="tab-pane active" id="details-tab" role="tabpanel">
+                        <partial name="~/Views/Submissions/Partials/_SubmissionsContent.cshtml" model="Model" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // View toggle functionality
+            var storageKey = 'submissionViewPreference';
+            var savedView = localStorage.getItem(storageKey) || 'table';
+            
+            // Apply saved preference
+            switchView(savedView);
+            
+            // Toggle click handler
+            $('.view-toggle-btn').on('click', function() {
+                var view = $(this).data('view');
+                switchView(view);
+                localStorage.setItem(storageKey, view);
+            });
+            
+            function switchView(view) {
+                $('.view-toggle-btn').removeClass('active');
+                $('.view-toggle-btn[data-view="' + view + '"]').addClass('active');
+                
+                if (view === 'table') {
+                    $('#tableView').show();
+                    $('#cardView').hide();
+                } else {
+                    $('#tableView').hide();
+                    $('#cardView').show();
+                }
+            }
+        });
+    </script>
+}

@@ -1,0 +1,332 @@
+@using FormReporting.Models.Entities.Forms
+@using FormReporting.Models.ViewModels.Components
+@using FormReporting.Extensions
+@using FormReporting.Services.Forms
+@model List<FormTemplate>
+
+@{
+    // Current filters from ViewBag
+    string currentCategory = ViewBag.CurrentCategory ?? "";
+    string currentSearch = ViewBag.CurrentSearch ?? "";
+    string currentType = ViewBag.CurrentType ?? "";
+    
+    // Pagination from ViewBag
+    int currentPage = ViewBag.CurrentPage ?? 1;
+    int totalPages = ViewBag.TotalPages ?? 1;
+    int totalRecords = ViewBag.TotalRecords ?? 0;
+    int pageSize = ViewBag.PageSize ?? 12;
+    
+    // Submission stats from ViewBag
+    var submissionStats = ViewBag.SubmissionStats as Dictionary<int, TemplateSubmissionStats> 
+        ?? new Dictionary<int, TemplateSubmissionStats>();
+    
+    // Calculate starting row number for current page
+    int startingNumber = ((currentPage - 1) * pageSize) + 1;
+    
+    // Template Type badge colors
+    string GetTypeBadgeClass(string templateType)
+    {
+        return templateType?.ToLower() switch
+        {
+            "daily" => "bg-info",
+            "weekly" => "bg-primary",
+            "monthly" => "bg-success",
+            "quarterly" => "bg-warning",
+            "annual" => "bg-danger",
+            _ => "bg-secondary"
+        };
+    }
+    
+    // Build SearchBox ViewModel
+    var searchBoxModel = new SearchBoxViewModel
+    {
+        ParameterName = "search",
+        PlaceholderText = "Search forms...",
+        CurrentValue = currentSearch,
+        ActionUrl = Url.Action("AvailableForms", "Submissions", new { tab = "forms", category = currentCategory }) ?? "/Submissions/AvailableForms?tab=forms",
+        ShowButton = false,
+        InputId = "templateSearch",
+        PreserveQueryParams = new Dictionary<string, string>
+        {
+            { "tab", "forms" },
+            { "category", currentCategory },
+            { "type", currentType }
+        }.Where(kv => !string.IsNullOrEmpty(kv.Value)).ToDictionary(kv => kv.Key, kv => kv.Value)
+    };
+    
+    // Build Type Filter Dropdown ViewModel
+    var typeFilterModel = new FilterDropdownViewModel
+    {
+        Label = string.IsNullOrEmpty(currentType) ? "All Types" : currentType,
+        Options = new List<FilterOptionViewModel>
+        {
+            new FilterOptionViewModel { Text = "All Types", Value = "", Url = Url.Action("AvailableForms", "Submissions", new { tab = "forms", category = currentCategory, search = currentSearch }), IsActive = string.IsNullOrEmpty(currentType) },
+            new FilterOptionViewModel { Text = "Daily", Value = "Daily", Url = Url.Action("AvailableForms", "Submissions", new { tab = "forms", category = currentCategory, type = "Daily", search = currentSearch }), IsActive = currentType == "Daily" },
+            new FilterOptionViewModel { Text = "Weekly", Value = "Weekly", Url = Url.Action("AvailableForms", "Submissions", new { tab = "forms", category = currentCategory, type = "Weekly", search = currentSearch }), IsActive = currentType == "Weekly" },
+            new FilterOptionViewModel { Text = "Monthly", Value = "Monthly", Url = Url.Action("AvailableForms", "Submissions", new { tab = "forms", category = currentCategory, type = "Monthly", search = currentSearch }), IsActive = currentType == "Monthly" },
+            new FilterOptionViewModel { Text = "Quarterly", Value = "Quarterly", Url = Url.Action("AvailableForms", "Submissions", new { tab = "forms", category = currentCategory, type = "Quarterly", search = currentSearch }), IsActive = currentType == "Quarterly" },
+            new FilterOptionViewModel { Text = "Annual", Value = "Annual", Url = Url.Action("AvailableForms", "Submissions", new { tab = "forms", category = currentCategory, type = "Annual", search = currentSearch }), IsActive = currentType == "Annual" }
+        }
+    };
+}
+
+<!-- Toolbar Row -->
+<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <!-- Left: Search + Filters -->
+    <div class="d-flex gap-2 flex-wrap align-items-center">
+        <!-- Search Box Component -->
+        <partial name="~/Views/Shared/Components/DataTable/_SearchBox.cshtml" model="searchBoxModel" />
+        
+        <!-- Type Filter Dropdown Component -->
+        <partial name="~/Views/Shared/Components/DataTable/_FilterDropdown.cshtml" model="typeFilterModel" />
+        
+        @if (!string.IsNullOrEmpty(currentType) || !string.IsNullOrEmpty(currentSearch))
+        {
+            <a href="@Url.Action("AvailableForms", "Submissions", new { tab = "forms", category = currentCategory })" class="btn btn-soft-danger btn-sm">
+                <i class="ri-close-line me-1"></i>Clear Filters
+            </a>
+        }
+    </div>
+    
+    <!-- Right: View Toggle -->
+    <div class="d-flex gap-2 align-items-center">
+        <div class="btn-group" role="group" aria-label="View toggle">
+            <button type="button" class="btn btn-soft-secondary btn-sm view-toggle-btn" data-view="table" title="Table View">
+                <i class="ri-list-check"></i>
+            </button>
+            <button type="button" class="btn btn-soft-secondary btn-sm view-toggle-btn active" data-view="card" title="Card View">
+                <i class="ri-grid-fill"></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- CARD VIEW (Default) -->
+<div id="cardView">
+    @if (Model == null || Model.Count == 0)
+    {
+        <div class="text-center py-5">
+            <div class="d-flex flex-column align-items-center">
+                <img src="~/assets/images/svg/emptyform.svg" alt="No forms" style="max-width: 200px; height: auto;" class="mb-3" />
+                @if (!string.IsNullOrEmpty(currentType) || !string.IsNullOrEmpty(currentSearch) || !string.IsNullOrEmpty(currentCategory))
+                {
+                    <h5 class="text-muted mb-2">No forms found</h5>
+                    <p class="text-muted mb-0">Try adjusting your filters</p>
+                }
+                else
+                {
+                    <h5 class="text-muted mb-2">No forms available</h5>
+                    <p class="text-muted mb-0">There are no published forms at this time</p>
+                }
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row row-cols-1 row-cols-md-2 row-cols-xl-3 g-3">
+            @foreach (var template in Model)
+            {
+                var stats = submissionStats.ContainsKey(template.TemplateId) 
+                    ? submissionStats[template.TemplateId] 
+                    : new TemplateSubmissionStats();
+                    
+                <div class="col">
+                    <partial name="~/Views/Submissions/Partials/_AvailableFormCard.cshtml" 
+                             model="template" 
+                             view-data='@(new ViewDataDictionary(ViewData) { 
+                                 { "ResponsesCount", stats.TotalResponses },
+                                 { "FullCount", stats.SubmittedCount },
+                                 { "DraftCount", stats.DraftCount }
+                             })' />
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<!-- TABLE VIEW (Hidden by default) -->
+<div id="tableView" style="display: none;">
+    <div class="table-responsive">
+        <table class="table table-hover align-middle mb-0" id="availableFormsTable" style="width: 100%;">
+            <thead class="table-light">
+                <tr>
+                    <th style="width: 40px;">#</th>
+                    <th>Form Name</th>
+                    <th>Category</th>
+                    <th>Type</th>
+                    <th>Version</th>
+                    <th style="width: 120px;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (Model == null || Model.Count == 0)
+                {
+                    <tr>
+                        <td colspan="6" class="text-center py-5">
+                            <div class="d-flex flex-column align-items-center">
+                                <img src="~/assets/images/svg/emptyform.svg" alt="No forms" style="max-width: 200px; height: auto;" class="mb-3" />
+                                @if (!string.IsNullOrEmpty(currentType) || !string.IsNullOrEmpty(currentSearch) || !string.IsNullOrEmpty(currentCategory))
+                                {
+                                    <h5 class="text-muted mb-2">No forms found</h5>
+                                    <p class="text-muted mb-0">Try adjusting your filters</p>
+                                }
+                                else
+                                {
+                                    <h5 class="text-muted mb-2">No forms available</h5>
+                                    <p class="text-muted mb-0">There are no published forms at this time</p>
+                                }
+                            </div>
+                        </td>
+                    </tr>
+                }
+                else
+                {
+                    @for (int i = 0; i < Model.Count; i++)
+                    {
+                        var template = Model[i];
+                        var rowNumber = startingNumber + i;
+                        <tr>
+                            <td class="text-muted">@rowNumber</td>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0 me-2">
+                                        <div class="avatar-xs">
+                                            <div class="avatar-title bg-primary-subtle text-primary rounded">
+                                                <i class="@(template.Category?.IconClass ?? "ri-file-list-3-line")"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-0">@template.TemplateName</h6>
+                                        @if (!string.IsNullOrEmpty(template.Description))
+                                        {
+                                            <small class="text-muted text-truncate d-block" style="max-width: 250px;">@template.Description</small>
+                                        }
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <span class="text-muted">@(template.Category?.CategoryName ?? "-")</span>
+                            </td>
+                            <td>
+                                <span class="badge @GetTypeBadgeClass(template.TemplateType)">@template.TemplateType</span>
+                            </td>
+                            <td>
+                                <span class="text-muted">v@(template.Version)</span>
+                            </td>
+                            <td>
+                                <a href="@Url.Action("Start", "Submissions", new { templateId = template.TemplateId })" class="btn btn-sm btn-primary">
+                                    <i class="ri-play-line me-1"></i>Start
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Pagination (shared for both views) -->
+@if (totalPages > 1)
+{
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mt-3 pt-3 border-top">
+        <div>
+            <span class="text-muted">
+                Showing page @currentPage of @totalPages (@totalRecords total)
+            </span>
+        </div>
+        <nav aria-label="Page navigation">
+            <ul class="pagination mb-0">
+                @{
+                    string BuildPageUrl(int pageNumber)
+                    {
+                        return Url.Action("AvailableForms", "Submissions", new
+                        {
+                            tab = "forms",
+                            page = pageNumber,
+                            category = currentCategory,
+                            search = currentSearch,
+                            type = currentType
+                        }) ?? $"/Submissions/AvailableForms?tab=forms&page={pageNumber}";
+                    }
+                }
+                <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                    <a class="page-link" href="@(currentPage > 1 ? BuildPageUrl(currentPage - 1) : "#")">
+                        <i class="ri-arrow-left-s-line"></i>
+                    </a>
+                </li>
+                @for (int p = Math.Max(1, currentPage - 2); p <= Math.Min(totalPages, currentPage + 2); p++)
+                {
+                    <li class="page-item @(p == currentPage ? "active" : "")">
+                        <a class="page-link" href="@BuildPageUrl(p)">@p</a>
+                    </li>
+                }
+                <li class="page-item @(currentPage >= totalPages ? "disabled" : "")">
+                    <a class="page-link" href="@(currentPage < totalPages ? BuildPageUrl(currentPage + 1) : "#")">
+                        <i class="ri-arrow-right-s-line"></i>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </div>
+}
+
+<script>
+    // View toggle functionality for Available Forms
+    (function() {
+        const tableView = document.getElementById('tableView');
+        const cardView = document.getElementById('cardView');
+        const toggleButtons = document.querySelectorAll('.view-toggle-btn');
+        
+        if (!tableView || !cardView) return;
+        
+        // Load saved preference (default to card)
+        const savedView = localStorage.getItem('availableFormsView') || 'card';
+        setView(savedView);
+        
+        toggleButtons.forEach(btn => {
+            btn.addEventListener('click', function() {
+                const view = this.dataset.view;
+                setView(view);
+                localStorage.setItem('availableFormsView', view);
+            });
+        });
+        
+        function setView(view) {
+            if (view === 'table') {
+                tableView.style.display = 'block';
+                cardView.style.display = 'none';
+            } else {
+                tableView.style.display = 'none';
+                cardView.style.display = 'block';
+            }
+            
+            toggleButtons.forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.view === view);
+            });
+        }
+    })();
+    
+    // Copy form link functionality
+    document.addEventListener('click', function(e) {
+        if (e.target.closest('.copy-form-link')) {
+            e.preventDefault();
+            const link = e.target.closest('.copy-form-link');
+            const formUrl = link.dataset.formUrl;
+            
+            navigator.clipboard.writeText(formUrl).then(() => {
+                // Show success feedback
+                const originalHtml = link.innerHTML;
+                link.innerHTML = '<i class="ri-check-line me-2 text-success"></i>Link Copied!';
+                setTimeout(() => {
+                    link.innerHTML = originalHtml;
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                // Fallback - show the URL
+                prompt('Copy this link:', formUrl);
+            });
+        }
+    });
+</script>
