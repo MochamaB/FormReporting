@@ -1,0 +1,575 @@
+@*
+    Conditional Logic Builder
+    
+    Allows users to configure show/hide rules for fields based on other field values.
+    Uses admin template Bootstrap 5 components - no custom styling needed.
+*@
+
+<div id="conditionalLogicBuilder" class="p-3">
+    
+    <!-- Enable/Disable Toggle -->
+    <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="conditionalLogicEnabled" onchange="ConditionalLogic.toggleEnabled()">
+        <label class="form-check-label" for="conditionalLogicEnabled">
+            Enable conditional logic for this field
+        </label>
+    </div>
+    
+    <!-- Logic Configuration (shown when enabled) -->
+    <div id="conditionalLogicConfig" style="display: none;">
+        
+        <!-- Action Selection -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <label class="form-label fw-medium">Action</label>
+                <div class="d-flex gap-3">
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="conditionalAction" 
+                               id="actionShow" value="show" checked onchange="ConditionalLogic.updateAction()">
+                        <label class="form-check-label" for="actionShow">
+                            <i class="ri-eye-line me-1"></i>Show this field
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="radio" name="conditionalAction" 
+                               id="actionHide" value="hide" onchange="ConditionalLogic.updateAction()">
+                        <label class="form-check-label" for="actionHide">
+                            <i class="ri-eye-off-line me-1"></i>Hide this field
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Logic Type -->
+        <div class="row mb-3">
+            <div class="col-12">
+                <label class="form-label fw-medium">When</label>
+                <select class="form-select form-select-sm" id="conditionalLogicType" onchange="ConditionalLogic.updateLogicType()">
+                    <option value="all">ALL of the following conditions are met (AND)</option>
+                    <option value="any">ANY of the following conditions are met (OR)</option>
+                </select>
+            </div>
+        </div>
+        
+        <!-- Conditions List -->
+        <div class="mb-3">
+            <label class="form-label fw-medium d-flex justify-content-between align-items-center">
+                <span>Conditions</span>
+                <button type="button" class="btn btn-soft-primary btn-sm" onclick="ConditionalLogic.addRule()">
+                    <i class="ri-add-line me-1"></i>Add Condition
+                </button>
+            </label>
+            
+            <!-- Rules Container -->
+            <div id="conditionalRulesContainer">
+                <!-- Rules will be dynamically added here -->
+            </div>
+            
+            <!-- Empty State -->
+            <div id="noRulesMessage" class="alert alert-light text-center py-3">
+                <i class="ri-information-line me-1"></i>
+                No conditions added. Click "Add Condition" to create a rule.
+            </div>
+        </div>
+        
+        <!-- Action Buttons -->
+        <div class="d-flex justify-content-between border-top pt-3">
+            <button type="button" class="btn btn-soft-danger btn-sm" onclick="ConditionalLogic.clearAll()">
+                <i class="ri-delete-bin-line me-1"></i>Clear All
+            </button>
+            <button type="button" class="btn btn-primary btn-sm" id="saveConditionalLogicBtn" onclick="ConditionalLogic.save()">
+                <i class="ri-save-line me-1"></i>Save Logic
+            </button>
+        </div>
+        
+    </div>
+    
+    <!-- No Logic Configured Message (shown when disabled) -->
+    <div id="conditionalLogicDisabled" class="text-center text-muted py-2">
+        <small>Enable the toggle above to configure when this field should be shown or hidden.</small>
+    </div>
+    
+</div>
+
+<!-- Rule Template (hidden, cloned for each new rule) -->
+<template id="conditionalRuleTemplate">
+    <div class="card card-body p-2 mb-2 conditional-rule" data-rule-index="">
+        <div class="row g-2 align-items-center">
+            <!-- Field Selector -->
+            <div class="col-md-4">
+                <select class="form-select form-select-sm rule-field" onchange="ConditionalLogic.onFieldChange(this)">
+                    <option value="">Select field...</option>
+                </select>
+            </div>
+            
+            <!-- Operator Selector -->
+            <div class="col-md-3">
+                <select class="form-select form-select-sm rule-operator" onchange="ConditionalLogic.onOperatorChange(this)">
+                    <option value="equals">Equals</option>
+                    <option value="not_equals">Does not equal</option>
+                    <option value="contains">Contains</option>
+                    <option value="not_contains">Does not contain</option>
+                    <option value="greater_than">Greater than</option>
+                    <option value="less_than">Less than</option>
+                    <option value="is_empty">Is empty</option>
+                    <option value="is_not_empty">Is not empty</option>
+                </select>
+            </div>
+            
+            <!-- Value Input/Selector -->
+            <div class="col-md-4">
+                <div class="rule-value-container">
+                    <input type="text" class="form-control form-control-sm rule-value" placeholder="Enter value...">
+                </div>
+            </div>
+            
+            <!-- Remove Button -->
+            <div class="col-md-1 text-end">
+                <button type="button" class="btn btn-soft-danger btn-sm btn-icon" 
+                        onclick="ConditionalLogic.removeRule(this)" title="Remove condition">
+                    <i class="ri-close-line"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</template>
+
+<script>
+/**
+ * Conditional Logic Builder Module
+ */
+const ConditionalLogic = {
+    currentFieldId: null,
+    templateId: null,
+    availableFields: [],
+    rules: [],
+    isEnabled: false,
+    action: 'show',
+    logicType: 'all',
+
+    /**
+     * Initialize the builder for a field
+     */
+    init: async function(fieldId, templateId) {
+        this.currentFieldId = fieldId;
+        this.templateId = templateId || (typeof TEMPLATE_ID !== 'undefined' ? TEMPLATE_ID : null);
+        this.rules = [];
+        
+        if (!this.templateId) {
+            console.error('[ConditionalLogic] No template ID available');
+            return;
+        }
+        
+        // Load available fields
+        await this.loadAvailableFields();
+        
+        // Load existing logic
+        await this.loadExistingLogic();
+        
+        // Update UI
+        this.updateUI();
+    },
+
+    /**
+     * Load available fields for the dropdown
+     */
+    loadAvailableFields: async function() {
+        try {
+            const response = await fetch(`/api/formbuilder/templates/${this.templateId}/available-fields?excludeFieldId=${this.currentFieldId}`);
+            const result = await response.json();
+            
+            if (result.success) {
+                this.availableFields = result.data || [];
+            } else {
+                console.error('Failed to load available fields:', result.message);
+                this.availableFields = [];
+            }
+        } catch (error) {
+            console.error('Error loading available fields:', error);
+            this.availableFields = [];
+        }
+    },
+
+    /**
+     * Load existing conditional logic for the field
+     */
+    loadExistingLogic: async function() {
+        try {
+            const response = await fetch(`/api/formbuilder/fields/${this.currentFieldId}/conditional-logic`);
+            const result = await response.json();
+            
+            if (result.success && result.data) {
+                this.isEnabled = result.data.isEnabled !== false;
+                this.action = result.data.action || 'show';
+                this.logicType = result.data.logicType || 'all';
+                this.rules = result.data.rules || [];
+            } else {
+                // No existing logic
+                this.isEnabled = false;
+                this.action = 'show';
+                this.logicType = 'all';
+                this.rules = [];
+            }
+        } catch (error) {
+            console.error('Error loading conditional logic:', error);
+            this.isEnabled = false;
+            this.rules = [];
+        }
+    },
+
+    /**
+     * Update the UI based on current state
+     */
+    updateUI: function() {
+        // Update enabled toggle
+        document.getElementById('conditionalLogicEnabled').checked = this.isEnabled;
+        
+        // Show/hide config section
+        document.getElementById('conditionalLogicConfig').style.display = this.isEnabled ? 'block' : 'none';
+        document.getElementById('conditionalLogicDisabled').style.display = this.isEnabled ? 'none' : 'block';
+        
+        // Update action radio
+        document.getElementById('actionShow').checked = this.action === 'show';
+        document.getElementById('actionHide').checked = this.action === 'hide';
+        
+        // Update logic type
+        document.getElementById('conditionalLogicType').value = this.logicType;
+        
+        // Render rules
+        this.renderRules();
+        
+        // Update badge
+        const badge = document.getElementById('conditionalLogicBadge');
+        if (badge) {
+            badge.style.display = (this.isEnabled && this.rules.length > 0) ? 'inline' : 'none';
+        }
+    },
+
+    /**
+     * Render all rules
+     */
+    renderRules: function() {
+        const container = document.getElementById('conditionalRulesContainer');
+        const noRulesMsg = document.getElementById('noRulesMessage');
+        
+        container.innerHTML = '';
+        
+        if (this.rules.length === 0) {
+            noRulesMsg.style.display = 'block';
+            return;
+        }
+        
+        noRulesMsg.style.display = 'none';
+        
+        this.rules.forEach((rule, index) => {
+            const ruleElement = this.createRuleElement(rule, index);
+            container.appendChild(ruleElement);
+        });
+    },
+
+    /**
+     * Create a rule element from template
+     */
+    createRuleElement: function(rule, index) {
+        const template = document.getElementById('conditionalRuleTemplate');
+        const clone = template.content.cloneNode(true);
+        const ruleDiv = clone.querySelector('.conditional-rule');
+        
+        ruleDiv.dataset.ruleIndex = index;
+        
+        // Populate field dropdown
+        const fieldSelect = ruleDiv.querySelector('.rule-field');
+        this.populateFieldDropdown(fieldSelect, rule.sourceItemId);
+        
+        // Set operator
+        const operatorSelect = ruleDiv.querySelector('.rule-operator');
+        operatorSelect.value = rule.operator || 'equals';
+        
+        // Set value (handle options if available)
+        this.updateValueInput(ruleDiv, rule.sourceItemId, rule.value);
+        
+        return ruleDiv;
+    },
+
+    /**
+     * Populate field dropdown with available fields
+     */
+    populateFieldDropdown: function(select, selectedId) {
+        select.innerHTML = '<option value="">Select field...</option>';
+        
+        // Group by section
+        const sections = {};
+        this.availableFields.forEach(field => {
+            const sectionName = field.sectionName || 'Other';
+            if (!sections[sectionName]) {
+                sections[sectionName] = [];
+            }
+            sections[sectionName].push(field);
+        });
+        
+        // Create optgroups
+        Object.keys(sections).forEach(sectionName => {
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = sectionName;
+            
+            sections[sectionName].forEach(field => {
+                const option = document.createElement('option');
+                option.value = field.itemId;
+                option.textContent = `${field.itemName} (${field.itemCode})`;
+                option.dataset.dataType = field.dataType;
+                option.dataset.hasOptions = (field.options && field.options.length > 0) ? 'true' : 'false';
+                
+                if (field.itemId === selectedId) {
+                    option.selected = true;
+                }
+                
+                optgroup.appendChild(option);
+            });
+            
+            select.appendChild(optgroup);
+        });
+    },
+
+    /**
+     * Update value input based on selected field (text input or dropdown for options)
+     */
+    updateValueInput: function(ruleDiv, fieldId, currentValue) {
+        const container = ruleDiv.querySelector('.rule-value-container');
+        const operator = ruleDiv.querySelector('.rule-operator').value;
+        
+        // If operator doesn't need a value, hide input
+        if (operator === 'is_empty' || operator === 'is_not_empty') {
+            container.innerHTML = '<span class="text-muted small">(no value needed)</span>';
+            return;
+        }
+        
+        // Find the field
+        const field = this.availableFields.find(f => f.itemId === parseInt(fieldId));
+        
+        if (field && field.options && field.options.length > 0) {
+            // Create dropdown for options
+            let html = '<select class="form-select form-select-sm rule-value">';
+            html += '<option value="">Select value...</option>';
+            field.options.forEach(opt => {
+                const selected = opt.optionValue === currentValue ? 'selected' : '';
+                html += `<option value="${opt.optionValue}" ${selected}>${opt.optionLabel}</option>`;
+            });
+            html += '</select>';
+            container.innerHTML = html;
+        } else {
+            // Create text input
+            container.innerHTML = `<input type="text" class="form-control form-control-sm rule-value" 
+                                          placeholder="Enter value..." value="${currentValue || ''}">`;
+        }
+    },
+
+    /**
+     * Toggle enabled state
+     */
+    toggleEnabled: function() {
+        this.isEnabled = document.getElementById('conditionalLogicEnabled').checked;
+        this.updateUI();
+    },
+
+    /**
+     * Update action (show/hide)
+     */
+    updateAction: function() {
+        this.action = document.querySelector('input[name="conditionalAction"]:checked').value;
+    },
+
+    /**
+     * Update logic type (all/any)
+     */
+    updateLogicType: function() {
+        this.logicType = document.getElementById('conditionalLogicType').value;
+    },
+
+    /**
+     * Add a new rule
+     */
+    addRule: function() {
+        this.rules.push({
+            sourceItemId: 0,
+            sourceItemCode: '',
+            sourceItemName: '',
+            operator: 'equals',
+            value: ''
+        });
+        this.renderRules();
+    },
+
+    /**
+     * Remove a rule
+     */
+    removeRule: function(button) {
+        const ruleDiv = button.closest('.conditional-rule');
+        const index = parseInt(ruleDiv.dataset.ruleIndex);
+        this.rules.splice(index, 1);
+        this.renderRules();
+    },
+
+    /**
+     * Handle field selection change
+     */
+    onFieldChange: function(select) {
+        const ruleDiv = select.closest('.conditional-rule');
+        const index = parseInt(ruleDiv.dataset.ruleIndex);
+        const fieldId = parseInt(select.value) || 0;
+        
+        // Update rule
+        const field = this.availableFields.find(f => f.itemId === fieldId);
+        this.rules[index].sourceItemId = fieldId;
+        this.rules[index].sourceItemCode = field?.itemCode || '';
+        this.rules[index].sourceItemName = field?.itemName || '';
+        this.rules[index].value = ''; // Reset value when field changes
+        
+        // Update value input
+        this.updateValueInput(ruleDiv, fieldId, '');
+    },
+
+    /**
+     * Handle operator change
+     */
+    onOperatorChange: function(select) {
+        const ruleDiv = select.closest('.conditional-rule');
+        const index = parseInt(ruleDiv.dataset.ruleIndex);
+        const operator = select.value;
+        
+        this.rules[index].operator = operator;
+        
+        // Update value input (may need to hide for is_empty/is_not_empty)
+        const fieldId = this.rules[index].sourceItemId;
+        this.updateValueInput(ruleDiv, fieldId, this.rules[index].value);
+    },
+
+    /**
+     * Collect current values from UI
+     */
+    collectRulesFromUI: function() {
+        const container = document.getElementById('conditionalRulesContainer');
+        const ruleDivs = container.querySelectorAll('.conditional-rule');
+        
+        this.rules = [];
+        
+        ruleDivs.forEach((ruleDiv, index) => {
+            const fieldSelect = ruleDiv.querySelector('.rule-field');
+            const operatorSelect = ruleDiv.querySelector('.rule-operator');
+            const valueInput = ruleDiv.querySelector('.rule-value');
+            
+            const fieldId = parseInt(fieldSelect.value) || 0;
+            const field = this.availableFields.find(f => f.itemId === fieldId);
+            
+            this.rules.push({
+                sourceItemId: fieldId,
+                sourceItemCode: field?.itemCode || '',
+                sourceItemName: field?.itemName || '',
+                operator: operatorSelect.value,
+                value: valueInput ? valueInput.value : ''
+            });
+        });
+    },
+
+    /**
+     * Save conditional logic
+     */
+    save: async function() {
+        // Collect current values from UI
+        this.collectRulesFromUI();
+        
+        // Validate
+        if (this.isEnabled && this.rules.length === 0) {
+            alert('Please add at least one condition or disable conditional logic.');
+            return;
+        }
+        
+        // Check for incomplete rules
+        const incompleteRules = this.rules.filter(r => !r.sourceItemId);
+        if (incompleteRules.length > 0) {
+            alert('Please select a field for all conditions.');
+            return;
+        }
+        
+        const btn = document.getElementById('saveConditionalLogicBtn');
+        const originalHtml = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
+        
+        try {
+            const payload = {
+                action: this.action,
+                logicType: this.logicType,
+                rules: this.rules,
+                isEnabled: this.isEnabled
+            };
+            
+            const response = await fetch(`/api/formbuilder/fields/${this.currentFieldId}/conditional-logic`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                btn.innerHTML = '<i class="ri-check-line me-1"></i>Saved!';
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-success');
+                
+                // Update badge
+                const badge = document.getElementById('conditionalLogicBadge');
+                if (badge) {
+                    badge.style.display = (this.isEnabled && this.rules.length > 0) ? 'inline' : 'none';
+                }
+                
+                setTimeout(() => {
+                    btn.disabled = false;
+                    btn.innerHTML = originalHtml;
+                    btn.classList.remove('btn-success');
+                    btn.classList.add('btn-primary');
+                }, 2000);
+            } else {
+                alert('Failed to save: ' + (result.message || 'Unknown error'));
+                btn.disabled = false;
+                btn.innerHTML = originalHtml;
+            }
+        } catch (error) {
+            console.error('Error saving conditional logic:', error);
+            alert('An error occurred while saving.');
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+        }
+    },
+
+    /**
+     * Clear all rules
+     */
+    clearAll: async function() {
+        if (!confirm('Are you sure you want to clear all conditional logic for this field?')) {
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/formbuilder/fields/${this.currentFieldId}/conditional-logic`, {
+                method: 'DELETE'
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                this.isEnabled = false;
+                this.rules = [];
+                this.action = 'show';
+                this.logicType = 'all';
+                this.updateUI();
+            } else {
+                alert('Failed to clear: ' + (result.message || 'Unknown error'));
+            }
+        } catch (error) {
+            console.error('Error clearing conditional logic:', error);
+            alert('An error occurred while clearing.');
+        }
+    }
+};
+</script>

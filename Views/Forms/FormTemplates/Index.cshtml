@@ -14,7 +14,8 @@
     var categoriesWithCounts = ViewBag.CategoriesWithCounts as IEnumerable<dynamic> ?? new List<dynamic>();
     int allTemplatesCount = ViewBag.AllTemplatesCount ?? 0;
     
-    // Current category filter
+    // Current tab and category filter
+    string currentTab = ViewBag.CurrentTab as string ?? "templates";
     string currentCategory = ViewBag.CurrentCategory ?? "";
     
     // ============================================================================
@@ -29,33 +30,41 @@
         NavigationMode = TabsNavigationMode.ServerSide
     };
     
-    // Add "All Templates" tab
-    categoryTabs.WithNavigationTab(
-        tabId: "all",
-        title: "All Templates",
-        url: Url.Action("Index", "FormTemplates", new { search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, type = ViewBag.CurrentType }) ?? "/Forms/FormTemplates",
-        icon: "ri-folder-line",
-        badge: allTemplatesCount.ToString(),
-        badgeColor: "light",
-        isActive: string.IsNullOrEmpty(currentCategory)
-    );
+    // Add "All Templates" tab FIRST (DisplayOrder = 0)
+    categoryTabs.Tabs.Add(new TabConfig
+    {
+        TabId = "all",
+        Title = "All Templates",
+        Url = Url.Action("Index", "FormTemplates", new { tab = "templates", search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, type = ViewBag.CurrentType }) ?? "/Forms/FormTemplates?tab=templates",
+        Icon = "ri-apps-line",
+        Badge = allTemplatesCount.ToString(),
+        BadgeColor = "light",
+        IsActive = string.IsNullOrEmpty(currentCategory),
+        DisplayOrder = 0
+    });
     
-    // Add category tabs dynamically
+    // Add category tabs dynamically with descriptions (DisplayOrder starts at 1)
+    int displayOrder = 1;
     foreach (var cat in categoriesWithCounts)
     {
         string catName = cat.CategoryName;
+        string catDescription = cat.Description ?? "";
+        string catIcon = cat.IconClass ?? "ri-folder-3-line";
         int catCount = cat.TemplateCount;
         bool isActive = currentCategory.Equals(catName, StringComparison.OrdinalIgnoreCase);
         
-        categoryTabs.WithNavigationTab(
-            tabId: catName.ToLower().Replace(" ", "-"),
-            title: catName,
-            url: Url.Action("Index", "FormTemplates", new { search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, type = ViewBag.CurrentType, category = catName.ToLower() }) ?? $"/Forms/FormTemplates?category={catName.ToLower()}",
-            icon: "ri-folder-3-line",
-            badge: catCount.ToString(),
-            badgeColor: "light",
-            isActive: isActive
-        );
+        categoryTabs.Tabs.Add(new TabConfig
+        {
+            TabId = catName.ToLower().Replace(" ", "-"),
+            Title = catName,
+            Description = catDescription,
+            Url = Url.Action("Index", "FormTemplates", new { tab = "templates", search = ViewBag.CurrentSearch, status = ViewBag.CurrentStatus, type = ViewBag.CurrentType, category = catName.ToLower() }) ?? $"/Forms/FormTemplates?tab=templates&category={catName.ToLower()}",
+            Icon = catIcon,
+            Badge = catCount.ToString(),
+            BadgeColor = "light",
+            IsActive = isActive,
+            DisplayOrder = displayOrder++
+        });
     }
     
     var categoryTabsViewModel = categoryTabs.BuildTabs();
@@ -242,14 +251,53 @@
     ViewData["ServerSideContentPartial"] = "~/Views/Forms/FormTemplates/Partials/_TemplatesContent.cshtml";
 }
 
-<!-- ============================================================================ -->
-<!-- MAIN LAYOUT: Using Vertical Tabs Component -->
-<!-- ============================================================================ -->
-@await Html.PartialAsync("~/Views/Shared/Components/Tabs/_VerticalTabs.cshtml", categoryTabsViewModel)
-
 <style>
-    /* Configuration status icons */
-    .config-status-icon {
+    /* Main tabs styling */
+    .main-tabs .nav-link {
+        padding: 0.75rem 1.5rem;
+        font-weight: 500;
+        color: #495057;
+        border: none;
+        border-bottom: 2px solid transparent;
+        background: transparent;
+    }
+    
+    .main-tabs .nav-link:hover {
+        color: var(--vz-primary);
+        border-bottom-color: var(--vz-primary-bg-subtle);
+    }
+    
+    .main-tabs .nav-link.active {
+        color: var(--vz-primary);
+        border-bottom-color: var(--vz-primary);
+        background: transparent;
+    }
+    
+    .main-tabs .nav-link i {
+        font-size: 16px;
+    }
+    
+    /* Tab content area */
+    .tab-content-area {
+        min-height: 400px;
+    }
+    
+    /* ============================================
+       CONFIGURATION DISPLAY STYLES
+       ============================================ */
+    
+    /* DataTable Config Cell */
+    .config-cell {
+        min-width: 140px;
+    }
+    
+    .config-cell .badge-sm {
+        font-size: 10px;
+        padding: 0.2em 0.4em;
+    }
+    
+    /* Clickable Config Icons (DataTable) */
+    .config-icon-link {
         width: 24px;
         height: 24px;
         display: inline-flex;
@@ -257,16 +305,198 @@
         justify-content: center;
         border-radius: 4px;
         font-size: 12px;
+        text-decoration: none;
+        transition: all 0.2s ease;
     }
-    .config-status-icon.configured {
+    
+    .config-icon-link.configured {
         background-color: rgba(var(--vz-success-rgb), 0.15);
         color: var(--vz-success);
     }
-    .config-status-icon.not-configured {
+    
+    .config-icon-link.configured:hover {
+        background-color: rgba(var(--vz-success-rgb), 0.25);
+    }
+    
+    .config-icon-link.not-configured {
         background-color: rgba(var(--vz-secondary-rgb), 0.1);
         color: var(--vz-secondary);
     }
+    
+    .config-icon-link.not-configured:hover {
+        background-color: rgba(var(--vz-primary-rgb), 0.15);
+        color: var(--vz-primary);
+    }
+    
+    /* Template Config Card Styles */
+    .template-config-card {
+        border: 2px solid #e9ecef !important;
+        transition: all 0.2s ease-in-out;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .template-config-card:hover {
+        border-color: var(--vz-primary) !important;
+        box-shadow: 0 5px 15px rgba(var(--vz-primary-rgb), 0.1) !important;
+    }
+    
+    .template-config-card .card-header {
+        background: transparent;
+    }
+    
+    .template-config-card .card-body {
+        flex: 1;
+    }
+    
+    .template-config-card .card-footer {
+        background: transparent;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    /* Config Items (Card) */
+    .config-items {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .config-item {
+        display: flex;
+        align-items: center;
+        padding: 0.5rem 0.75rem;
+        border-radius: 6px;
+        text-decoration: none;
+        transition: all 0.2s ease;
+        background-color: #f8f9fa;
+    }
+    
+    .config-item:hover {
+        background-color: rgba(var(--vz-primary-rgb), 0.1);
+    }
+    
+    .config-item.configured {
+        background-color: rgba(var(--vz-success-rgb), 0.08);
+    }
+    
+    .config-item.configured:hover {
+        background-color: rgba(var(--vz-success-rgb), 0.15);
+    }
+    
+    .config-item-icon {
+        width: 28px;
+        height: 28px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+        margin-right: 0.75rem;
+        font-size: 14px;
+    }
+    
+    .config-item.configured .config-item-icon {
+        background-color: rgba(var(--vz-success-rgb), 0.15);
+        color: var(--vz-success);
+    }
+    
+    .config-item.not-configured .config-item-icon {
+        background-color: rgba(var(--vz-secondary-rgb), 0.15);
+        color: var(--vz-secondary);
+    }
+    
+    .config-item-content {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .config-item-title {
+        display: block;
+        font-size: 13px;
+        font-weight: 500;
+        color: #495057;
+    }
+    
+    .config-item-detail {
+        display: block;
+        font-size: 11px;
+        color: #878a99;
+    }
+    
+    .config-item.configured .config-item-detail {
+        color: var(--vz-success);
+    }
+    
+    .config-item-status {
+        margin-left: 0.5rem;
+        font-size: 16px;
+    }
+    
+    /* Dropdown item with status icon */
+    .dropdown-item {
+        display: flex;
+        align-items: center;
+    }
+    
+    .dropdown-item .ms-auto {
+        margin-left: auto !important;
+    }
 </style>
+
+<!-- ============================================================================ -->
+<!-- MAIN TABS: Overview | Templates -->
+<!-- ============================================================================ -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header border-bottom">
+                <ul class="nav nav-tabs-custom main-tabs card-header-tabs" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link @(currentTab == "overview" ? "active" : "")" 
+                           data-bs-toggle="tab" 
+                           href="#overview-tab" 
+                           role="tab"
+                           aria-selected="@(currentTab == "overview" ? "true" : "false")">
+                            <i class="ri-dashboard-line me-1"></i> Overview
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(currentTab == "templates" ? "active" : "")" 
+                           data-bs-toggle="tab" 
+                           href="#templates-tab" 
+                           role="tab"
+                           aria-selected="@(currentTab == "templates" ? "true" : "false")">
+                            <i class="ri-file-list-3-line me-1"></i> Templates
+                            <span class="badge bg-primary-subtle text-primary ms-1">@allTemplatesCount</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content tab-content-area">
+                    
+                    <!-- ============================================================ -->
+                    <!-- OVERVIEW TAB -->
+                    <!-- ============================================================ -->
+                    <div class="tab-pane fade @(currentTab == "overview" ? "show active" : "")" 
+                         id="overview-tab" 
+                         role="tabpanel">
+                        @await Html.PartialAsync("~/Views/Forms/FormTemplates/Partials/_TemplatesOverview.cshtml")
+                    </div>
+                    
+                    <!-- ============================================================ -->
+                    <!-- TEMPLATES TAB -->
+                    <!-- ============================================================ -->
+                    <div class="tab-pane fade @(currentTab == "templates" ? "show active" : "")" 
+                         id="templates-tab" 
+                         role="tabpanel">
+                        @await Html.PartialAsync("~/Views/Shared/Components/Tabs/_VerticalTabs.cshtml", categoryTabsViewModel)
+                    </div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
 @section Scripts {
     <script>

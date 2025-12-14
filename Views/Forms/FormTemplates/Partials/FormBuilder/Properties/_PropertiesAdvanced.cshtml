@@ -1,20 +1,127 @@
 @model FormReporting.Models.ViewModels.Forms.FormBuilderViewModel
 
 @*
-    ADVANCED TAB: Options, Conditional Logic, Calculations, Matrix, Library
+    ADVANCED TAB: Conditional Logic, Calculations, Matrix, Library
     
-    A. Options (FormItemOptions) - for Dropdown/Radio/Checkbox/MultiSelect
-       - OptionValue, OptionLabel, DisplayOrder, IsDefault, ParentOptionId
-    
-    B. Conditional Logic (ConditionalLogic JSON)
+    A. Conditional Logic (ConditionalLogic JSON)
        - action, rules, logicType
     
-    C. Calculations (FormItemCalculation)
+    B. Calculations (FormItemCalculation)
        - CalculationFormula, IsActive
     
-    D. Matrix/Grid Layout
+    C. Matrix/Grid Layout
        - MatrixGroupId, MatrixRowLabel
     
-    E. Field Library
+    D. Field Library
        - LibraryFieldId, IsLibraryOverride
 *@
+
+<!-- Empty State (no field selected) -->
+<div id="advanced-empty" class="text-center py-4">
+    <i class="ri-settings-4-line text-muted" style="font-size: 3rem;"></i>
+    <p class="text-muted mt-2 mb-0">Select a field to configure advanced settings</p>
+</div>
+
+<!-- Field Advanced Settings -->
+<div id="advanced-field" style="display: none;">
+    
+    <!-- Accordion for Advanced Features -->
+    <div class="accordion accordion-flush" id="advancedAccordion">
+        
+        <!-- 1. Conditional Logic -->
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button" type="button" data-bs-toggle="collapse" 
+                        data-bs-target="#conditionalLogicCollapse" aria-expanded="true">
+                    <i class="ri-git-branch-line me-2"></i>
+                    Conditional Logic
+                    <span class="badge bg-secondary-subtle text-secondary ms-2" id="conditionalLogicBadge" style="display: none;">
+                        Configured
+                    </span>
+                </button>
+            </h2>
+            <div id="conditionalLogicCollapse" class="accordion-collapse collapse show" 
+                 data-bs-parent="#advancedAccordion">
+                <div class="accordion-body p-0">
+                    <partial name="~/Views/Forms/FormTemplates/Partials/FormBuilder/Properties/_ConditionalLogicBuilder.cshtml" />
+                </div>
+            </div>
+        </div>
+        
+        <!-- 2. Calculations (Coming Soon) -->
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                        data-bs-target="#calculationsCollapse" aria-expanded="false">
+                    <i class="ri-calculator-line me-2"></i>
+                    Calculations
+                    <span class="badge bg-light text-muted ms-2">Coming Soon</span>
+                </button>
+            </h2>
+            <div id="calculationsCollapse" class="accordion-collapse collapse" 
+                 data-bs-parent="#advancedAccordion">
+                <div class="accordion-body">
+                    <div class="text-center text-muted py-3">
+                        <i class="ri-calculator-line" style="font-size: 2rem;"></i>
+                        <p class="mb-0 mt-2">Auto-calculate field values based on formulas</p>
+                        <small>Feature coming soon</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 3. Matrix/Grid Layout (Coming Soon) -->
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                        data-bs-target="#matrixCollapse" aria-expanded="false">
+                    <i class="ri-layout-grid-line me-2"></i>
+                    Matrix/Grid Layout
+                    <span class="badge bg-light text-muted ms-2">Coming Soon</span>
+                </button>
+            </h2>
+            <div id="matrixCollapse" class="accordion-collapse collapse" 
+                 data-bs-parent="#advancedAccordion">
+                <div class="accordion-body">
+                    <div class="text-center text-muted py-3">
+                        <i class="ri-layout-grid-line" style="font-size: 2rem;"></i>
+                        <p class="mb-0 mt-2">Group fields in a table/matrix layout</p>
+                        <small>Feature coming soon</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- 4. Field Library (Coming Soon) -->
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" 
+                        data-bs-target="#libraryCollapse" aria-expanded="false">
+                    <i class="ri-archive-line me-2"></i>
+                    Field Library
+                    <span class="badge bg-light text-muted ms-2">Coming Soon</span>
+                </button>
+            </h2>
+            <div id="libraryCollapse" class="accordion-collapse collapse" 
+                 data-bs-parent="#advancedAccordion">
+                <div class="accordion-body">
+                    <div class="text-center text-muted py-3">
+                        <i class="ri-archive-line" style="font-size: 2rem;"></i>
+                        <p class="mb-0 mt-2">Link to reusable field definitions</p>
+                        <small>Feature coming soon</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+</div>
+
+<!-- Section Advanced Settings (minimal for now) -->
+<div id="advanced-section" style="display: none;">
+    <div class="text-center text-muted py-4">
+        <i class="ri-layout-line" style="font-size: 2rem;"></i>
+        <p class="mb-0 mt-2">Section advanced settings</p>
+        <small>Section routing and skip logic coming soon</small>
+    </div>
+</div>

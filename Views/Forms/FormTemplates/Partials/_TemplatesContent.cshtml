@@ -11,27 +11,22 @@
     {
         var actions = new List<RowActionConfig>();
 
+        // Primary Actions based on status
         if (template.PublishStatus == "Draft")
         {
             actions.Add(new RowActionConfig { Text = "Continue Editing", IconClass = "ri-play-line", ColorClass = "primary", 
                 UrlTemplate = Url.Action("Create", "FormTemplates", new { id = template.TemplateId }) });
             actions.Add(new RowActionConfig { Text = "View Preview", IconClass = "ri-eye-line", ColorClass = "secondary", 
                 UrlTemplate = Url.Action("Preview", "FormTemplates", new { id = template.TemplateId }) });
-            actions.Add(new RowActionConfig { Text = "Delete Draft", IconClass = "ri-delete-bin-line", ColorClass = "danger", 
-                RequiresConfirmation = true, ConfirmationMessage = $"Are you sure you want to delete draft '{template.TemplateName}'?" });
         }
         else if (template.PublishStatus == "Published")
         {
+            actions.Add(new RowActionConfig { Text = "View Details", IconClass = "ri-eye-line", ColorClass = "primary", 
+                UrlTemplate = Url.Action("Details", "FormTemplates", new { id = template.TemplateId }) });
             actions.Add(new RowActionConfig { Text = $"Edit (Create v{template.Version + 1})", IconClass = "ri-git-branch-line", ColorClass = "warning", 
                 UrlTemplate = Url.Action("Edit", "FormTemplates", new { id = template.TemplateId }) });
-            actions.Add(new RowActionConfig { Text = "View Template", IconClass = "ri-eye-line", ColorClass = "primary", 
-                UrlTemplate = Url.Action("Preview", "FormTemplates", new { id = template.TemplateId }) });
-            actions.Add(new RowActionConfig { Text = "View Assignments", IconClass = "ri-user-follow-line", ColorClass = "info", 
-                UrlTemplate = Url.Action("Assignments", "FormTemplates", new { id = template.TemplateId }) });
             actions.Add(new RowActionConfig { Text = "View Submissions", IconClass = "ri-file-list-3-line", ColorClass = "success", 
-                UrlTemplate = Url.Action("Submissions", "FormSubmissions", new { templateId = template.TemplateId }) });
-            actions.Add(new RowActionConfig { Text = "Archive", IconClass = "ri-archive-line", ColorClass = "danger", 
-                RequiresConfirmation = true, ConfirmationMessage = $"Are you sure you want to archive '{template.TemplateName}'?" });
+                UrlTemplate = Url.Action("Index", "Submissions", new { templateId = template.TemplateId }) });
         }
         else if (template.PublishStatus == "Archived" || template.PublishStatus == "Deprecated")
         {
@@ -39,15 +34,41 @@
                 UrlTemplate = Url.Action("Preview", "FormTemplates", new { id = template.TemplateId }) });
             actions.Add(new RowActionConfig { Text = "Create New Version", IconClass = "ri-git-branch-line", ColorClass = "primary", 
                 UrlTemplate = Url.Action("Edit", "FormTemplates", new { id = template.TemplateId }) });
-            if (template.PublishStatus == "Archived")
-            {
-                actions.Add(new RowActionConfig { Text = "Restore", IconClass = "ri-restart-line", ColorClass = "success", 
-                    RequiresConfirmation = true, ConfirmationMessage = $"Restore '{template.TemplateName}' to published status?" });
-            }
         }
 
+        // Configuration Links (with divider)
+        actions.Add(new RowActionConfig { Text = "---DIVIDER---", IsDivider = true });
+        actions.Add(new RowActionConfig { Text = "Form Builder", IconClass = "ri-layout-3-line", ColorClass = "secondary", 
+            UrlTemplate = template.PublishStatus == "Draft" 
+                ? Url.Action("Create", "FormTemplates", new { id = template.TemplateId }) 
+                : Url.Action("Preview", "FormTemplates", new { id = template.TemplateId }) });
+        actions.Add(new RowActionConfig { Text = "Assignments", IconClass = "ri-user-add-line", ColorClass = "secondary", 
+            UrlTemplate = Url.Action("Assignments", "FormTemplates", new { id = template.TemplateId }) });
+        actions.Add(new RowActionConfig { Text = "Workflow", IconClass = "ri-flow-chart", ColorClass = "secondary", 
+            UrlTemplate = Url.Action("Workflow", "FormTemplates", new { id = template.TemplateId }) });
+        actions.Add(new RowActionConfig { Text = "Metrics", IconClass = "ri-bar-chart-2-line", ColorClass = "secondary", 
+            UrlTemplate = Url.Action("Metrics", "FormTemplates", new { id = template.TemplateId }) });
+
+        // Other Actions (with divider)
+        actions.Add(new RowActionConfig { Text = "---DIVIDER---", IsDivider = true });
         actions.Add(new RowActionConfig { Text = "Clone", IconClass = "ri-file-copy-line", ColorClass = "info", 
             UrlTemplate = Url.Action("Clone", "FormTemplates", new { id = template.TemplateId }) });
+        
+        if (template.PublishStatus == "Draft")
+        {
+            actions.Add(new RowActionConfig { Text = "Delete Draft", IconClass = "ri-delete-bin-line", ColorClass = "danger", 
+                RequiresConfirmation = true, ConfirmationMessage = $"Are you sure you want to delete draft '{template.TemplateName}'?" });
+        }
+        else if (template.PublishStatus == "Published")
+        {
+            actions.Add(new RowActionConfig { Text = "Archive", IconClass = "ri-archive-line", ColorClass = "danger", 
+                RequiresConfirmation = true, ConfirmationMessage = $"Are you sure you want to archive '{template.TemplateName}'?" });
+        }
+        else if (template.PublishStatus == "Archived")
+        {
+            actions.Add(new RowActionConfig { Text = "Restore", IconClass = "ri-restart-line", ColorClass = "success", 
+                RequiresConfirmation = true, ConfirmationMessage = $"Restore '{template.TemplateName}' to published status?" });
+        }
 
         return new RowActionsViewModel
         {
@@ -57,7 +78,7 @@
             ButtonSizeClass = "btn-sm",
             UseSoftButtons = true,
             RowId = template.TemplateId.ToString(),
-            Actions = actions.Select(a => new RowActionViewModel
+            Actions = actions.Where(a => !a.IsDivider).Select(a => new RowActionViewModel
             {
                 Text = a.Text, IconClass = a.IconClass, ColorClass = a.ColorClass, Url = a.UrlTemplate,
                 RequiresConfirmation = a.RequiresConfirmation, ConfirmationMessage = a.ConfirmationMessage, IsVisible = true
@@ -200,20 +221,41 @@
                             </td>
                             <td>@Html.Raw(item.TypeBadge)</td>
                             <td>@Html.Raw(item.StatusBadge)</td>
-                            <td class="text-center">
-                                <div class="d-flex gap-1 justify-content-center">
-                                    <span class="config-status-icon @(item.HasFormBuilder ? "configured" : "not-configured")" title="Form Builder">
-                                        <i class="ri-layout-3-line"></i>
-                                    </span>
-                                    <span class="config-status-icon @(item.HasAssignments ? "configured" : "not-configured")" title="Assignments">
-                                        <i class="ri-user-add-line"></i>
-                                    </span>
-                                    <span class="config-status-icon @(item.HasWorkflow ? "configured" : "not-configured")" title="Workflow">
-                                        <i class="ri-flow-chart"></i>
-                                    </span>
-                                    <span class="config-status-icon @(item.HasMetrics ? "configured" : "not-configured")" title="Metrics">
-                                        <i class="ri-bar-chart-2-line"></i>
-                                    </span>
+                            <td>
+                                <div class="config-cell">
+                                    <!-- Progress Bar -->
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <div class="progress flex-grow-1" style="height: 5px; min-width: 60px;">
+                                            <div class="progress-bar @item.ConfigurationProgressColor" 
+                                                 style="width: @(item.ConfigurationPercentage)%"></div>
+                                        </div>
+                                        <span class="badge @(item.ConfigurationPercentage == 100 ? "bg-success" : "bg-secondary-subtle text-secondary") badge-sm">
+                                            @item.ConfigurationLevel/4
+                                        </span>
+                                    </div>
+                                    <!-- Config Icons (Clickable) -->
+                                    <div class="d-flex gap-1">
+                                        <a href="@(item.PublishStatus == "Draft" ? Url.Action("Create", "FormTemplates", new { id = item.TemplateId }) : Url.Action("Preview", "FormTemplates", new { id = item.TemplateId }))" 
+                                           class="config-icon-link @(item.HasFormBuilder ? "configured" : "not-configured")" 
+                                           title="Form Builder: @(item.HasFormBuilder ? $"{item.SectionCount} sections, {item.FieldCount} fields" : "Not configured")">
+                                            <i class="ri-layout-3-line"></i>
+                                        </a>
+                                        <a href="@Url.Action("Assignments", "FormTemplates", new { id = item.TemplateId })" 
+                                           class="config-icon-link @(item.HasAssignments ? "configured" : "not-configured")" 
+                                           title="Assignments: @(item.HasAssignments ? "Configured" : "Not configured")">
+                                            <i class="ri-user-add-line"></i>
+                                        </a>
+                                        <a href="@Url.Action("Workflow", "FormTemplates", new { id = item.TemplateId })" 
+                                           class="config-icon-link @(item.HasWorkflow ? "configured" : "not-configured")" 
+                                           title="Workflow: @(item.HasWorkflow ? "Configured" : "Not configured")">
+                                            <i class="ri-flow-chart"></i>
+                                        </a>
+                                        <a href="@Url.Action("Metrics", "FormTemplates", new { id = item.TemplateId })" 
+                                           class="config-icon-link @(item.HasMetrics ? "configured" : "not-configured")" 
+                                           title="Metrics: @(item.HasMetrics ? "Configured" : "Not configured")">
+                                            <i class="ri-bar-chart-2-line"></i>
+                                        </a>
+                                    </div>
                                 </div>
                             </td>
                             <td>

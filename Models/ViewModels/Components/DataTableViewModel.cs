@@ -459,6 +459,11 @@ namespace FormReporting.Models.ViewModels.Components
         /// Show icon only (no text) when DisplayStyle = Inline
         /// </summary>
         public bool IconOnly { get; set; } = true;
+
+        /// <summary>
+        /// Is this a divider (separator) item
+        /// </summary>
+        public bool IsDivider { get; set; } = false;
     }
 
     /// <summary>

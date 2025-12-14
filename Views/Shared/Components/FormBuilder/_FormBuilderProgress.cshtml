@@ -1,41 +1,93 @@
 @model FormReporting.Models.ViewModels.Components.FormBuilderProgressViewModel
+@using FormReporting.Models.ViewModels.Components
 
 @*
-    Form Builder Progress Tracker
-
-    Features:
-    - Horizontal step indicator
-    - Shows current progress
-    - Clickable steps (if navigable)
-    - Status indicators (pending, active, completed, error)
-    - Exit button
-    - Progress bar at bottom
+    Form Builder Progress Tracker - 3-Column Layout
+    
+    LEFT: Template Name, Status, Version
+    MIDDLE: Step Indicators (unchanged styling)
+    RIGHT: Action Buttons (Back, Exit)
 *@
 
 <style>
     .form-builder-progress {
         background: #fff;
         border-bottom: 2px solid #f3f3f9;
-        padding-bottom: 3px; /* Space for absolute progress bar */
+        padding: 0;
         position: -webkit-sticky;
         position: sticky;
         top: 0;
-        z-index: 99; /* Above content but below sidebar/modals */
+        z-index: 99;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
 
-        /* Extend to edges of container-fluid (offset its padding) */
+        /* Extend to edges of container-fluid */
         width: calc(100% + 3rem);
         margin-left: -1.5rem;
         margin-right: -1.5rem;
         margin-top: -1.3rem;
         margin-bottom: 1.2rem;
         
-        /* Ensure visibility */
         display: block !important;
         visibility: visible !important;
         opacity: 1 !important;
     }
 
+    /* 3-Column Container */
+    .progress-container {
+        display: flex;
+        align-items: stretch;
+        min-height: 70px;
+    }
+
+    /* LEFT: Template Info */
+    .progress-left {
+        flex: 0 0 250px;
+        padding: 0.75rem 1rem;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        border-right: 1px solid #e9ecef;
+        background: #fff;
+        border-bottom:2px solid #e9ecef;
+    }
+
+    .progress-left .template-name {
+        font-size: 14px;
+        font-weight: 600;
+        color: #495057;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-bottom: 0.25rem;
+    }
+
+    .progress-left .template-meta {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 11px;
+    }
+
+    /* MIDDLE: Steps (flex-grow to take remaining space) */
+    .progress-middle {
+        flex: 1;
+        display: flex;
+        min-width: 0;
+    }
+
+    /* RIGHT: Action Buttons */
+    .progress-right {
+        flex: 0 0 163px;
+        padding: 0.75rem 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        border-left: 1px solid #e9ecef;
+        background: #fff;
+        border-bottom:2px solid #e9ecef;
+    }
+
+    /* Step Styles (unchanged) */
     .progress-step {
         flex: 1;
         position: relative;
@@ -44,7 +96,7 @@
         display: flex;
         align-items: center;
         gap: 0.75rem;
-        border-bottom: 7px solid #e9ecef; /* Grey for pending/default */
+        border-bottom: 7px solid #e9ecef;
     }
 
     .progress-step.navigable {
@@ -57,17 +109,17 @@
 
     .progress-step.active {
         background-color: rgba(var(--vz-secondary-rgb), 0.08);
-        border-bottom: 7px solid var(--vz-secondary); /* Secondary color for active */
+        border-bottom: 7px solid var(--vz-secondary);
     }
 
     .progress-step.completed {
         background-color: rgba(var(--vz-success-rgb), 0.03);
-        border-bottom: 7px solid var(--vz-success); /* Green for completed */
+        border-bottom: 7px solid var(--vz-success);
     }
 
     .progress-step.error {
         background-color: rgba(var(--vz-danger-rgb), 0.03);
-        border-bottom: 7px solid var(--vz-danger); /* Red for error */
+        border-bottom: 7px solid var(--vz-danger);
     }
 
     .progress-step::after {
@@ -117,14 +169,13 @@
         background: rgba(var(--vz-danger-rgb), 0.1);
     }
 
-    /* Scope step-number to form-builder-progress only to avoid conflicts */
     .form-builder-progress .step-number {
         position: absolute;
         top: -8px;
         right: -8px;
         width: 24px;
         height: 24px;
-        background: #b1b1b1; /* Grey for pending/inactive steps */
+        background: #b1b1b1;
         color: white;
         border-radius: 50%;
         font-size: 12px;
@@ -136,7 +187,7 @@
     }
 
     .form-builder-progress .progress-step.active .step-number {
-        background: var(--vz-secondary); /* Secondary color for active step */
+        background: var(--vz-secondary);
     }
 
     .form-builder-progress .progress-step.completed .step-number {
@@ -149,11 +200,6 @@
 
     .step-text-content {
         flex: 1;
-    }
-
-    .step-content {
-        flex: 1;
-        text-align: left;
     }
 
     .step-title {
@@ -169,16 +215,48 @@
         line-height: 1.3;
     }
 
-    /* Overall progress bar removed - using step bottom borders instead */
-    .overall-progress {
-        display: none;
+    /* Responsive adjustments */
+    @@media (max-width: 991.98px) {
+        .progress-left {
+            flex: 0 0 150px;
+        }
+        .progress-left .template-name {
+            font-size: 12px;
+        }
+        .step-icon-wrapper {
+            width: 40px;
+            height: 40px;
+        }
+        .step-title {
+            font-size: 11px;
+        }
     }
 
+    @@media (max-width: 767.98px) {
+        .progress-container {
+            flex-wrap: wrap;
+        }
+        .progress-left {
+            flex: 0 0 100%;
+            border-right: none;
+            border-bottom: 1px solid #e9ecef;
+            padding: 0.5rem 1rem;
+        }
+        .progress-middle {
+            flex: 1;
+            order: 3;
+        }
+        .progress-right {
+            flex: 0 0 auto;
+            border-left: none;
+            border-bottom: 1px solid #e9ecef;
+            padding: 0.5rem 1rem;
+        }
+    }
 </style>
 
 @if (Model == null || Model.Steps == null || !Model.Steps.Any())
 {
-    <!-- Debug: Progress model is null or empty -->
     <div class="alert alert-warning m-2 py-2" style="display: none;">
         <small>Progress tracker: Model or Steps is null</small>
     </div>
@@ -186,51 +264,127 @@
 else
 {
 <div class="form-builder-progress">
-    @* Step Indicators *@
-    <div class="d-flex">
-        @foreach (var step in Model.Steps)
-        {
-            <div class="@step.StepClasses"
-                data-step="@((int)step.Step)"
-                @if (step.IsNavigable && step.NavigateUrl != null)
-                {
-                    <text>onclick="navigateToStep('@step.NavigateUrl')"</text>
-                }>
-
-                @* Step Icon *@
-                <div class="step-icon-wrapper">
-                    @if (step.IsCompleted)
-                    {
-                        <i class="ri-checkbox-circle-fill text-success fs-20"></i>
-                    }
-                    else if (step.IsActive)
-                    {
-                        <i class="@step.Icon text-secondary fs-20"></i>
-                    }
-                    else
-                    {
-                        <i class="@step.Icon text-muted fs-20"></i>
-                    }
-                    @if (!step.IsCompleted)
-                    {
-                        <div class="step-number">@step.StepNumber</div>
-                    }
-                </div>
-
-                @* Step Text Content *@
-                <div class="step-text-content">
-                    @* Step Title *@
-                    <div class="@step.TitleClasses">@step.Title</div>
-
-                    @* Step Description *@
-                   
-                </div>
+    <div class="progress-container">
+        
+        @* LEFT: Template Info *@
+        <div class="progress-left">
+            <div class="template-name" title="@Model.TemplateName">
+                <i class="ri-file-list-3-line me-1"></i>@Model.TemplateName
             </div>
-        }
-    </div>
+            <div class="template-meta">
+                
+            </div>
+        </div>
+        
+        @* MIDDLE: Step Indicators (unchanged structure) *@
+        <div class="progress-middle">
+            @foreach (var step in Model.Steps)
+            {
+                <div class="@step.StepClasses"
+                    data-step="@((int)step.Step)"
+                    @if (step.IsNavigable && step.NavigateUrl != null)
+                    {
+                        <text>onclick="navigateToStep('@step.NavigateUrl')"</text>
+                    }>
 
+                    @* Step Icon *@
+                    <div class="step-icon-wrapper">
+                        @if (step.IsCompleted)
+                        {
+                            <i class="ri-checkbox-circle-fill text-success fs-20"></i>
+                        }
+                        else if (step.IsActive)
+                        {
+                            <i class="@step.Icon text-secondary fs-20"></i>
+                        }
+                        else
+                        {
+                            <i class="@step.Icon text-muted fs-20"></i>
+                        }
+                        @if (!step.IsCompleted)
+                        {
+                            <div class="step-number">@step.StepNumber</div>
+                        }
+                    </div>
+
+                    @* Step Text Content *@
+                    <div class="step-text-content">
+                        <div class="@step.TitleClasses">@step.Title</div>
+                    </div>
+                </div>
+            }
+        </div>
+        
+        @* RIGHT: Action Buttons *@
+        <div class="progress-right">
+            @* Back Button - Navigate to previous step based on current step *@
+            @{
+                // Determine back URL based on current step
+                string? backUrl = null;
+                string backText = "Back";
+                
+                if (Model.CurrentStep == FormBuilderStep.FormBuilder && Model.TemplateId.HasValue)
+                {
+                    // From Form Builder → go to Template Setup
+                    backUrl = Url.Action("TemplateSetup", "FormTemplates", new { id = Model.TemplateId.Value });
+                    backText = "Back";
+                }
+                else if (Model.CurrentStep == FormBuilderStep.ReviewPublish && Model.TemplateId.HasValue)
+                {
+                    // From Review → go to Form Builder
+                    backUrl = Url.Action("FormBuilder", "FormTemplates", new { id = Model.TemplateId.Value });
+                    backText = "Back";
+                }
+                // TemplateSetup has no back button (it's the first step)
+            }
+            @if (!string.IsNullOrEmpty(backUrl))
+            {
+                <a href="@backUrl" 
+                   class="btn btn-soft-secondary btn-sm"
+                   onclick="return confirmNavigation();">
+                    <i class="ri-arrow-left-line me-1"></i>@backText
+                </a>
+            }
+            
+            @* Exit Button *@
+            @if (Model.ShowExit && !string.IsNullOrEmpty(Model.ExitUrl))
+            {
+                <a href="@Model.ExitUrl" 
+                   class="btn btn-danger btn-sm"
+                   onclick="return confirmExit();">
+                    <i class="ri-close-line me-1"></i>Exit
+                </a>
+            }
+        </div>
+        
+    </div>
 </div>
 } @* End of else block for null check *@
+
+<script>
+    function confirmExit() {
+        if (typeof window.hasUnsavedChanges === 'function' && window.hasUnsavedChanges()) {
+            return confirm('You have unsaved changes. Are you sure you want to exit?');
+        }
+        return true;
+    }
+    
+    function confirmNavigation() {
+        if (typeof window.hasUnsavedChanges === 'function' && window.hasUnsavedChanges()) {
+            return confirm('You have unsaved changes. Are you sure you want to go back?');
+        }
+        return true;
+    }
+    
+    function navigateToStep(url) {
+        if (typeof window.hasUnsavedChanges === 'function' && window.hasUnsavedChanges()) {
+            if (!confirm('You have unsaved changes. Are you sure you want to navigate away?')) {
+                return;
+            }
+        }
+        window.location.href = url;
+    }
+</script>
 
 <!-- Exit Confirmation Modal -->
 <div class="modal fade" id="exitConfirmModal" tabindex="-1" aria-labelledby="exitConfirmModalLabel" aria-hidden="true">

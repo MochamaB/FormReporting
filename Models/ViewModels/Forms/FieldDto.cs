@@ -14,6 +14,11 @@ namespace FormReporting.Models.ViewModels.Forms
         public int ItemId { get; set; }
 
         /// <summary>
+        /// Parent template ID
+        /// </summary>
+        public int TemplateId { get; set; }
+
+        /// <summary>
         /// Parent section ID
         /// </summary>
         public int SectionId { get; set; }
@@ -623,5 +628,83 @@ namespace FormReporting.Models.ViewModels.Forms
     {
         public int ValidationId { get; set; }
         public int ValidationOrder { get; set; }
+    }
+
+    // ========================================================================
+    // CONDITIONAL LOGIC DTOs
+    // ========================================================================
+
+    /// <summary>
+    /// DTO for conditional logic configuration
+    /// Stored as JSON in FormTemplateItem.ConditionalLogic
+    /// </summary>
+    public class ConditionalLogicDto
+    {
+        /// <summary>
+        /// Action to perform when conditions are met: "show" or "hide"
+        /// </summary>
+        public string Action { get; set; } = "show";
+
+        /// <summary>
+        /// Logic type: "all" (AND) or "any" (OR)
+        /// </summary>
+        public string LogicType { get; set; } = "all";
+
+        /// <summary>
+        /// List of condition rules
+        /// </summary>
+        public List<ConditionalRuleDto> Rules { get; set; } = new();
+
+        /// <summary>
+        /// Is the conditional logic enabled?
+        /// </summary>
+        public bool IsEnabled { get; set; } = true;
+    }
+
+    /// <summary>
+    /// Individual condition rule
+    /// </summary>
+    public class ConditionalRuleDto
+    {
+        /// <summary>
+        /// Source field ID that triggers this condition
+        /// </summary>
+        public int SourceItemId { get; set; }
+
+        /// <summary>
+        /// Source field code (for display purposes)
+        /// </summary>
+        public string? SourceItemCode { get; set; }
+
+        /// <summary>
+        /// Source field name (for display purposes)
+        /// </summary>
+        public string? SourceItemName { get; set; }
+
+        /// <summary>
+        /// Comparison operator: equals, not_equals, contains, not_contains, 
+        /// greater_than, less_than, greater_or_equal, less_or_equal,
+        /// is_empty, is_not_empty, starts_with, ends_with
+        /// </summary>
+        public string Operator { get; set; } = "equals";
+
+        /// <summary>
+        /// Value to compare against
+        /// </summary>
+        public string? Value { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for available fields list (for conditional logic source field dropdown)
+    /// </summary>
+    public class AvailableFieldDto
+    {
+        public int ItemId { get; set; }
+        public string ItemCode { get; set; } = string.Empty;
+        public string ItemName { get; set; } = string.Empty;
+        public string DataType { get; set; } = string.Empty;
+        public int SectionId { get; set; }
+        public string? SectionName { get; set; }
+        public List<FieldOptionDto>? Options { get; set; }
     }
 }

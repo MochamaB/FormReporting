@@ -102,6 +102,7 @@ namespace FormReporting.Services.Forms
             return new FieldDto
             {
                 ItemId = item.ItemId,
+                TemplateId = item.TemplateId,
                 SectionId = item.SectionId,
                 ItemCode = item.ItemCode,
                 ItemName = item.ItemName,
@@ -1847,6 +1848,116 @@ namespace FormReporting.Services.Forms
                     _context.FormItemConfigurations.Add(newConfig);
                 }
             }
+        }
+
+        // ========================================================================
+        // CONDITIONAL LOGIC MANAGEMENT
+        // ========================================================================
+
+        /// <summary>
+        /// Get conditional logic for a field
+        /// </summary>
+        public async Task<ConditionalLogicDto?> GetConditionalLogicAsync(int fieldId)
+        {
+            var field = await _context.FormTemplateItems
+                .AsNoTracking()
+                .FirstOrDefaultAsync(f => f.ItemId == fieldId);
+
+            if (field == null || string.IsNullOrEmpty(field.ConditionalLogic))
+                return null;
+
+            try
+            {
+                return System.Text.Json.JsonSerializer.Deserialize<ConditionalLogicDto>(
+                    field.ConditionalLogic,
+                    new System.Text.Json.JsonSerializerOptions { PropertyNameCaseInsensitive = true }
+                );
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Save conditional logic for a field
+        /// </summary>
+        public async Task<bool> SaveConditionalLogicAsync(int fieldId, ConditionalLogicDto dto)
+        {
+            var field = await _context.FormTemplateItems
+                .FirstOrDefaultAsync(f => f.ItemId == fieldId);
+
+            if (field == null)
+                return false;
+
+            // Serialize to JSON
+            var json = System.Text.Json.JsonSerializer.Serialize(dto, new System.Text.Json.JsonSerializerOptions
+            {
+                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase,
+                WriteIndented = false
+            });
+
+            field.ConditionalLogic = json;
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        /// <summary>
+        /// Delete/clear conditional logic for a field
+        /// </summary>
+        public async Task<bool> DeleteConditionalLogicAsync(int fieldId)
+        {
+            var field = await _context.FormTemplateItems
+                .FirstOrDefaultAsync(f => f.ItemId == fieldId);
+
+            if (field == null)
+                return false;
+
+            field.ConditionalLogic = null;
+            await _context.SaveChangesAsync();
+
+            return true;
+        }
+
+        /// <summary>
+        /// Get available fields for conditional logic
+        /// </summary>
+        public async Task<List<AvailableFieldDto>> GetAvailableFieldsForLogicAsync(int templateId, int? excludeFieldId = null)
+        {
+            var query = _context.FormTemplateItems
+                .Include(f => f.Section)
+                .Include(f => f.Options.Where(o => o.IsActive))
+                .Where(f => f.TemplateId == templateId && f.IsActive);
+
+            if (excludeFieldId.HasValue)
+            {
+                query = query.Where(f => f.ItemId != excludeFieldId.Value);
+            }
+
+            var fields = await query
+                .OrderBy(f => f.Section.DisplayOrder)
+                .ThenBy(f => f.DisplayOrder)
+                .ToListAsync();
+
+            return fields.Select(f => new AvailableFieldDto
+            {
+                ItemId = f.ItemId,
+                ItemCode = f.ItemCode,
+                ItemName = f.ItemName,
+                DataType = f.DataType ?? "Text",
+                SectionId = f.SectionId,
+                SectionName = f.Section?.SectionName,
+                Options = f.Options?.Select(o => new FieldOptionDto
+                {
+                    OptionId = o.OptionId,
+                    OptionLabel = o.OptionLabel,
+                    OptionValue = o.OptionValue,
+                    DisplayOrder = o.DisplayOrder,
+                    IsDefault = o.IsDefault,
+                    IsActive = o.IsActive
+                }).OrderBy(o => o.DisplayOrder).ToList()
+            }).ToList();
         }
     }
 }

@@ -46,6 +46,14 @@ const FormBuilderProperties = {
         document.getElementById('properties-empty').style.display = 'block';
         document.getElementById('config-empty').style.display = 'block';
 
+        // Reset advanced tab to empty state
+        const advancedEmpty = document.getElementById('advanced-empty');
+        const advancedField = document.getElementById('advanced-field');
+        const advancedSection = document.getElementById('advanced-section');
+        if (advancedEmpty) advancedEmpty.style.display = 'block';
+        if (advancedField) advancedField.style.display = 'none';
+        if (advancedSection) advancedSection.style.display = 'none';
+
         // Reset tab visibility (show all tabs in empty state)
         this.updateTabVisibility(null);
 
@@ -133,6 +141,9 @@ const FormBuilderProperties = {
 
                 // Show section properties panel
                 document.getElementById('properties-section-general').style.display = 'block';
+
+                // Load section advanced settings
+                this.loadSectionAdvancedSettings(result.data);
             } else {
                 console.error('Failed to load section:', result.message);
                 alert('Failed to load section properties');
@@ -392,6 +403,9 @@ const FormBuilderProperties = {
                 // Load field-specific configurations
                 FormBuilderConfiguration.loadConfiguration(result.field);
 
+                // Load advanced settings (conditional logic, etc.)
+                this.loadAdvancedSettings(result.field);
+
                 console.log('Field properties loaded:', result.field);
             } else {
                 console.error('Failed to load field:', result.message);
@@ -464,6 +478,46 @@ const FormBuilderProperties = {
                 defaultValueContainer.style.display = 'block';
             }
         }
+    },
+
+    /**
+     * Load advanced settings for a field (conditional logic, etc.)
+     * @param {object} fieldData - The field data
+     */
+    loadAdvancedSettings: function(fieldData) {
+        // Show field advanced panel, hide empty state
+        const advancedEmpty = document.getElementById('advanced-empty');
+        const advancedField = document.getElementById('advanced-field');
+        const advancedSection = document.getElementById('advanced-section');
+        
+        if (advancedEmpty) advancedEmpty.style.display = 'none';
+        if (advancedField) advancedField.style.display = 'block';
+        if (advancedSection) advancedSection.style.display = 'none';
+        
+        // Initialize conditional logic builder if it exists
+        if (typeof ConditionalLogic !== 'undefined' && ConditionalLogic.init) {
+            // Get template ID from field data or global variable
+            const templateId = fieldData.templateId || (typeof TEMPLATE_ID !== 'undefined' ? TEMPLATE_ID : null);
+            if (templateId) {
+                ConditionalLogic.init(fieldData.itemId, templateId);
+            } else {
+                console.warn('[FormBuilderProperties] No template ID available for conditional logic');
+            }
+        }
+    },
+
+    /**
+     * Show advanced settings for a section
+     */
+    loadSectionAdvancedSettings: function(sectionData) {
+        // Show section advanced panel, hide others
+        const advancedEmpty = document.getElementById('advanced-empty');
+        const advancedField = document.getElementById('advanced-field');
+        const advancedSection = document.getElementById('advanced-section');
+        
+        if (advancedEmpty) advancedEmpty.style.display = 'none';
+        if (advancedField) advancedField.style.display = 'none';
+        if (advancedSection) advancedSection.style.display = 'block';
     },
 
     /**

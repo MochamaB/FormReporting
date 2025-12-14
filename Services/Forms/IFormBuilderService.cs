@@ -249,6 +249,41 @@ namespace FormReporting.Services.Forms
         /// <param name="fieldId">Field ID</param>
         /// <returns>List of validation rules</returns>
         Task<List<ValidationRuleDto>> GetValidationsForFieldAsync(int fieldId);
+
+        // ========================================================================
+        // CONDITIONAL LOGIC MANAGEMENT
+        // ========================================================================
+
+        /// <summary>
+        /// Get conditional logic for a field
+        /// </summary>
+        /// <param name="fieldId">Field ID</param>
+        /// <returns>Conditional logic DTO or null if not configured</returns>
+        Task<ConditionalLogicDto?> GetConditionalLogicAsync(int fieldId);
+
+        /// <summary>
+        /// Save conditional logic for a field
+        /// </summary>
+        /// <param name="fieldId">Field ID</param>
+        /// <param name="dto">Conditional logic configuration</param>
+        /// <returns>True if successful</returns>
+        Task<bool> SaveConditionalLogicAsync(int fieldId, ConditionalLogicDto dto);
+
+        /// <summary>
+        /// Delete/clear conditional logic for a field
+        /// </summary>
+        /// <param name="fieldId">Field ID</param>
+        /// <returns>True if successful</returns>
+        Task<bool> DeleteConditionalLogicAsync(int fieldId);
+
+        /// <summary>
+        /// Get available fields for conditional logic (fields that can be used as source)
+        /// Excludes the current field and returns fields with their options
+        /// </summary>
+        /// <param name="templateId">Template ID</param>
+        /// <param name="excludeFieldId">Field ID to exclude (the field being configured)</param>
+        /// <returns>List of available fields</returns>
+        Task<List<AvailableFieldDto>> GetAvailableFieldsForLogicAsync(int templateId, int? excludeFieldId = null);
     }
 
     /// <summary>

@@ -859,6 +859,94 @@ namespace FormReporting.Controllers.API
                 return StatusCode(500, new { success = false, message = $"Error getting validations: {ex.Message}" });
             }
         }
+
+        // ========================================================================
+        // CONDITIONAL LOGIC ENDPOINTS
+        // ========================================================================
+
+        /// <summary>
+        /// Get conditional logic for a field
+        /// GET /api/formbuilder/fields/{fieldId}/conditional-logic
+        /// </summary>
+        [HttpGet("fields/{fieldId}/conditional-logic")]
+        public async Task<IActionResult> GetConditionalLogic(int fieldId)
+        {
+            try
+            {
+                var logic = await _formBuilderService.GetConditionalLogicAsync(fieldId);
+                return Ok(new { success = true, data = logic });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = $"Error getting conditional logic: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// Save conditional logic for a field
+        /// POST /api/formbuilder/fields/{fieldId}/conditional-logic
+        /// </summary>
+        [HttpPost("fields/{fieldId}/conditional-logic")]
+        public async Task<IActionResult> SaveConditionalLogic(int fieldId, [FromBody] ConditionalLogicDto dto)
+        {
+            try
+            {
+                var success = await _formBuilderService.SaveConditionalLogicAsync(fieldId, dto);
+
+                if (!success)
+                {
+                    return NotFound(new { success = false, message = "Field not found" });
+                }
+
+                return Ok(new { success = true, message = "Conditional logic saved successfully" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = $"Error saving conditional logic: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// Delete/clear conditional logic for a field
+        /// DELETE /api/formbuilder/fields/{fieldId}/conditional-logic
+        /// </summary>
+        [HttpDelete("fields/{fieldId}/conditional-logic")]
+        public async Task<IActionResult> DeleteConditionalLogic(int fieldId)
+        {
+            try
+            {
+                var success = await _formBuilderService.DeleteConditionalLogicAsync(fieldId);
+
+                if (!success)
+                {
+                    return NotFound(new { success = false, message = "Field not found" });
+                }
+
+                return Ok(new { success = true, message = "Conditional logic cleared successfully" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = $"Error clearing conditional logic: {ex.Message}" });
+            }
+        }
+
+        /// <summary>
+        /// Get available fields for conditional logic (fields that can be used as source)
+        /// GET /api/formbuilder/templates/{templateId}/available-fields?excludeFieldId={fieldId}
+        /// </summary>
+        [HttpGet("templates/{templateId}/available-fields")]
+        public async Task<IActionResult> GetAvailableFields(int templateId, [FromQuery] int? excludeFieldId = null)
+        {
+            try
+            {
+                var fields = await _formBuilderService.GetAvailableFieldsForLogicAsync(templateId, excludeFieldId);
+                return Ok(new { success = true, data = fields });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = $"Error getting available fields: {ex.Message}" });
+            }
+        }
     }
 
     /// <summary>

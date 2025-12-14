@@ -53,6 +53,23 @@ namespace FormReporting.Models.ViewModels.Forms
             (HasMetrics ? 1 : 0);
 
         /// <summary>
+        /// Configuration completion percentage (0-100)
+        /// </summary>
+        public int ConfigurationPercentage => (ConfigurationLevel * 100) / 4;
+
+        /// <summary>
+        /// Progress bar color based on completion
+        /// </summary>
+        public string ConfigurationProgressColor => ConfigurationPercentage switch
+        {
+            100 => "bg-success",
+            >= 75 => "bg-info",
+            >= 50 => "bg-primary",
+            >= 25 => "bg-warning",
+            _ => "bg-secondary"
+        };
+
+        /// <summary>
         /// Formatted version display (e.g., v1.0, v2.5)
         /// </summary>
         public string VersionFormatted => $"v{Version / 10}.{Version % 10}";

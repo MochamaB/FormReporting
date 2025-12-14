@@ -81,41 +81,13 @@ else
 
         <!-- Right side: Action buttons -->
         <div class="d-flex align-items-center gap-2">
-           
-            
             <!-- Add Section button -->
             <button type="button"
-                    class="btn btn-info "
+                    class="btn btn-info"
                     onclick="addSection()">
                 <i class="ri-add-line me-1"></i>
                 Add Section
             </button>
-            <!-- Back to Basic Info -->
-            <a href="@Url.Action("TemplateSetup", "FormTemplates", new { id = Model.TemplateId })"
-               class="btn btn-soft-secondary">
-                <i class="ri-arrow-left-line me-1"></i>
-                Back to Basic Info
-            </a>
-
-           
-
-            <!-- Save Progress -->
-            <button type="button" 
-                    class="btn btn-soft-primary" 
-                    id="saveProgressBtn"
-                    onclick="saveFormBuilderProgress()">
-                <i class="ri-save-line me-1"></i>
-                Save Progress
-            </button>
-             @* Exit Builder Button *@
-            @if (progress?.ShowExit == true)
-            {
-                <a href="@progress.ExitUrl" 
-                   class="btn btn-danger" 
-                   id="exitBtn">
-                    <i class="ri-close-line me-1"></i>Exit Builder
-                </a>
-            }
 
             <!-- Continue to Review & Publish (Step 3) -->
             <button type="button" 

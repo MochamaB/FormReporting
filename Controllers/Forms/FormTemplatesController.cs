@@ -35,6 +35,7 @@ namespace FormReporting.Controllers.Forms
         /// Index - Template Management Dashboard with statistics, filters, and pagination
         /// </summary>
         public async Task<IActionResult> Index(
+            string? tab,
             string? search,
             string? status,
             string? type,
@@ -169,6 +170,7 @@ namespace FormReporting.Controllers.Forms
             ViewBag.TotalItems = totalItems;
 
             // Pass filter values to view for maintaining state
+            ViewBag.CurrentTab = tab ?? "templates";
             ViewBag.CurrentSearch = search;
             ViewBag.CurrentStatus = status;
             ViewBag.CurrentType = type;
@@ -180,13 +182,15 @@ namespace FormReporting.Controllers.Forms
                 .Select(c => new {
                     c.CategoryId,
                     c.CategoryName,
+                    c.Description,
+                    c.IconClass,
                     TemplateCount = c.FormTemplates.Count(t => t.IsActive)
                 })
                 .OrderBy(c => c.CategoryName)
                 .ToListAsync();
             
             ViewBag.CategoriesWithCounts = categoriesWithCounts
-                .Select(c => new { c.CategoryId, c.CategoryName, c.TemplateCount })
+                .Select(c => new { c.CategoryId, c.CategoryName, c.Description, c.IconClass, c.TemplateCount })
                 .ToList();
             
             // Legacy: Keep simple category list for backwards compatibility
