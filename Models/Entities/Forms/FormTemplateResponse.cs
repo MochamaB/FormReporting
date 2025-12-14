@@ -31,6 +31,30 @@ namespace FormReporting.Models.Entities.Forms
         [StringLength(1000)]
         public string? Remarks { get; set; }
 
+        // ===== SCORING FIELDS (For Assessment/Survey Forms) =====
+        /// <summary>
+        /// The score value of the selected option (copied from FormItemOption.ScoreValue at save time)
+        /// </summary>
+        [Column(TypeName = "decimal(10,2)")]
+        public decimal? SelectedScoreValue { get; set; }
+
+        /// <summary>
+        /// The weight multiplier of the selected option (copied from FormItemOption.ScoreWeight at save time)
+        /// </summary>
+        [Column(TypeName = "decimal(10,2)")]
+        public decimal? SelectedScoreWeight { get; set; }
+
+        /// <summary>
+        /// Calculated weighted score (SelectedScoreValue * SelectedScoreWeight)
+        /// </summary>
+        [Column(TypeName = "decimal(10,2)")]
+        public decimal? WeightedScore { get; set; }
+
+        /// <summary>
+        /// The OptionId of the selected option (for single-select fields like dropdown/radio)
+        /// </summary>
+        public int? SelectedOptionId { get; set; }
+
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
         public DateTime ModifiedDate { get; set; } = DateTime.Now;
@@ -41,5 +65,8 @@ namespace FormReporting.Models.Entities.Forms
 
         [ForeignKey(nameof(ItemId))]
         public virtual FormTemplateItem Item { get; set; } = null!;
+
+        [ForeignKey(nameof(SelectedOptionId))]
+        public virtual FormItemOption? SelectedOption { get; set; }
     }
 }

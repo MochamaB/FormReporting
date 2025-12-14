@@ -1,8 +1,8 @@
 @model FormReporting.Models.ViewModels.Components.FormSectionViewModel
 
 @*
-    Form Section - Collapsible section container for grouping form fields
-    Similar to SurveyJS panel/section structure with expandable header
+    Form Section - Clean, transparent section with individual field cards
+    Industry-standard design: minimal section chrome, each field in its own card
 *@
 
 @{
@@ -10,161 +10,158 @@
     var ariaExpanded = Model.IsCollapsedByDefault ? "false" : "true";
 }
 
-<div class="card form-section"
+<div class="form-section-wrapper"
      id="section-card-@Model.SectionId"
      data-section-id="@Model.SectionId">
 
-    @if (Model.IsCollapsible)
-    {
-        @* Collapsible Section Header *@
-        <div class="card-header" id="heading-@Model.CollapseId">
-            <button class="btn btn-link w-100 text-start d-flex align-items-center justify-content-between p-0"
-                    type="button"
-                    data-bs-toggle="collapse"
-                    data-bs-target="#@Model.CollapseId"
-                    aria-expanded="@ariaExpanded"
-                    aria-controls="@Model.CollapseId">
-                <div class="d-flex align-items-center">
-                    @if (!string.IsNullOrEmpty(Model.IconClass))
-                    {
-                        <i class="@Model.IconClass me-2 fs-16 text-primary"></i>
-                    }
-                    <div>
-                        <h5 class="mb-0 text-body">
-                            @Model.SectionName
-                            @if (Model.IsRequired)
-                            {
-                                <span class="text-danger">*</span>
-                            }
-                        </h5>
-                        @if (!string.IsNullOrEmpty(Model.SectionDescription))
-                        {
-                            <small class="text-muted d-block mt-1">@Model.SectionDescription</small>
-                        }
-                    </div>
+    @* Section Header - Clean, minimal styling *@
+    <div class="form-section-header mb-4">
+        <div class="d-flex align-items-start">
+            @if (!string.IsNullOrEmpty(Model.IconClass))
+            {
+                <div class="section-icon-wrapper me-3">
+                    <i class="@Model.IconClass"></i>
                 </div>
-                <div class="d-flex align-items-center gap-2">
-                    @if (Model.TotalFields > 0)
+            }
+            <div class="flex-grow-1">
+                <h4 class="form-section-title mb-1">
+                    @Model.SectionName
+                    @if (Model.IsRequired)
                     {
-                        <span class="badge bg-secondary-subtle text-secondary">
-                            @Model.TotalFields @(Model.TotalFields == 1 ? "field" : "fields")
-                        </span>
+                        <span class="text-danger">*</span>
                     }
-                    <i class="ri-arrow-down-s-line fs-18 text-muted section-toggle-icon"></i>
-                </div>
-            </button>
+                </h4>
+                @if (!string.IsNullOrEmpty(Model.SectionDescription))
+                {
+                    <p class="form-section-description text-muted mb-0">@Model.SectionDescription</p>
+                }
+            </div>
+            @if (Model.TotalFields > 0)
+            {
+                <span class="badge bg-light text-secondary border">
+                    @Model.TotalFields @(Model.TotalFields == 1 ? "question" : "questions")
+                </span>
+            }
         </div>
+    </div>
 
-        @* Collapsible Body *@
-        <div id="@Model.CollapseId"
-             class="@collapseClass"
-             aria-labelledby="heading-@Model.CollapseId">
-            <div class="card-body">
-                @* Render fields in rows (responsive multi-column layout) *@
-                <div class="form-fields-container">
-                    @foreach (var fieldRow in Model.FieldRows)
-                    {
-                        <div class="row">
-                            @foreach (var field in fieldRow)
-                            {
-                                @await Html.PartialAsync("Components/Form/_FormField", field)
-                            }
-                        </div>
-                    }
-                </div>
-            </div>
+    @* Section Body - Fields Container *@
+    <div class="form-section-body">
+        <div class="form-fields-container">
+            @foreach (var field in Model.Fields)
+            {
+                @await Html.PartialAsync("Components/Form/_FormField", field)
+            }
         </div>
-    }
-    else
-    {
-        @* Non-Collapsible Section Header *@
-        <div class="card-header">
-            <div class="d-flex align-items-center">
-                @if (!string.IsNullOrEmpty(Model.IconClass))
-                {
-                    <i class="@Model.IconClass me-2 fs-16 text-primary"></i>
-                }
-                <div class="flex-grow-1">
-                    <h5 class="mb-0">
-                        @Model.SectionName
-                        @if (Model.IsRequired)
-                        {
-                            <span class="text-danger">*</span>
-                        }
-                    </h5>
-                    @if (!string.IsNullOrEmpty(Model.SectionDescription))
-                    {
-                        <small class="text-muted d-block mt-1">@Model.SectionDescription</small>
-                    }
-                </div>
-                @if (Model.TotalFields > 0)
-                {
-                    <span class="badge bg-secondary-subtle text-secondary">
-                        @Model.TotalFields @(Model.TotalFields == 1 ? "field" : "fields")
-                    </span>
-                }
-            </div>
-        </div>
-
-        @* Always-Visible Body *@
-        <div class="card-body">
-            @* Render fields in rows (responsive multi-column layout) *@
-            <div class="form-fields-container">
-                @foreach (var fieldRow in Model.FieldRows)
-                {
-                    <div class="row">
-                        @foreach (var field in fieldRow)
-                        {
-                            @await Html.PartialAsync("Components/Form/_FormField", field)
-                        }
-                    </div>
-                }
-            </div>
-        </div>
-    }
+    </div>
 </div>
 
-@* Inline Styles for Section Appearance *@
+@* Clean Form Section Styles *@
 <style>
-    .form-section {
-        border: 1px solid #e9ebec;
-        box-shadow: 0 1px 2px rgba(56, 65, 74, 0.05);
+    /* Section Wrapper - Transparent background */
+    .form-section-wrapper {
+        margin-bottom: 2rem;
     }
 
-    .form-section .card-header {
-        background-color: #f8f9fa;
-        border-bottom: 1px solid #e9ebec;
-        padding: 1rem 1.25rem;
+    /* Section Header - Sticky at top */
+    .form-section-header {
+        position: sticky;
+        top: 160px; /* Below the progress header */
+        z-index: 100;
+        background: #f3f3f9; /* Match wizard wrapper background */
+        padding: 0.75rem 0;
+        margin: 0 -0.5rem;
+        padding-left: 0.5rem;
+        padding-right: 0.5rem;
+        border-bottom: 2px solid var(--vz-primary);
+        margin-bottom: 1.5rem;
     }
 
-    .form-section .card-header .btn-link {
-        text-decoration: none;
-        color: inherit;
+    .form-section-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: #495057;
+        margin: 0;
     }
 
-    .form-section .card-header .btn-link:hover {
-        background-color: rgba(0, 0, 0, 0.02);
-        border-radius: 0.25rem;
-        padding: 0.5rem;
-        margin: -0.5rem;
+    .form-section-description {
+        font-size: 0.875rem;
+        line-height: 1.5;
     }
 
-    .form-section .card-header .btn-link[aria-expanded="true"] .section-toggle-icon {
-        transform: rotate(180deg);
-        transition: transform 0.3s ease;
+    .section-icon-wrapper {
+        width: 40px;
+        height: 40px;
+        background: var(--vz-primary-bg-subtle);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--vz-primary);
+        font-size: 1.25rem;
     }
 
-    .form-section .card-header .btn-link[aria-expanded="false"] .section-toggle-icon {
-        transform: rotate(0deg);
-        transition: transform 0.3s ease;
+    /* Fields Container */
+    .form-fields-container {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-left: 2.5rem;
     }
 
-    .field-placeholder {
-        transition: all 0.2s ease;
+    /* Hide scrollbar by default, show on hover */
+    .form-wizard-wrapper {
+        scrollbar-width: thin;
+        scrollbar-color: transparent transparent;
     }
 
-    .field-placeholder:hover {
-        background-color: #e9ecef !important;
-        border-color: #adb5bd !important;
+    .form-wizard-wrapper:hover {
+        scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+    }
+
+    /* Webkit browsers (Chrome, Safari, Edge) */
+    .form-wizard-wrapper::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .form-wizard-wrapper::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .form-wizard-wrapper::-webkit-scrollbar-thumb {
+        background-color: transparent;
+        border-radius: 3px;
+        transition: background-color 0.3s ease;
+    }
+
+    .form-wizard-wrapper:hover::-webkit-scrollbar-thumb {
+        background-color: rgba(0, 0, 0, 0.2);
+    }
+
+    /* Global page scrollbar - hide unless hovering on content area */
+    body {
+        scrollbar-width: thin;
+        scrollbar-color: transparent transparent;
+    }
+
+    body:hover {
+        scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+    }
+
+    body::-webkit-scrollbar {
+        width: 8px;
+    }
+
+    body::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    body::-webkit-scrollbar-thumb {
+        background-color: transparent;
+        border-radius: 4px;
+    }
+
+    body:hover::-webkit-scrollbar-thumb {
+        background-color: rgba(0, 0, 0, 0.2);
     }
 </style>

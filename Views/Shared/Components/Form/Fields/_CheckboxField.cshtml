@@ -5,7 +5,7 @@
 *@
 
 <div class="mb-3 col-md-@Model.ColumnWidth">
-    <label class="form-label" style="word-wrap: break-word; overflow-wrap: break-word;">
+    <label class="form-label mb-3" style="word-wrap: break-word; overflow-wrap: break-word;">
         @if (Model.ShowFieldNumber)
         {
             <span class="text-primary me-2">@Model.DisplayOrder.</span>
@@ -36,6 +36,7 @@
                            id="@(Model.InputId)_@option.Value"
                            name="@Model.InputName"
                            value="@option.Value"
+                           data-field-id="@Model.FieldId"
                            @(isChecked ? "checked" : "")
                            @(Model.IsDisabled ? "disabled" : "")
                            @if (!string.IsNullOrEmpty(Model.ValidationDataAttribute))

@@ -1,0 +1,107 @@
+@model FormReporting.Models.Entities.Forms.FormTemplateSubmission
+
+@{
+    ViewData["Title"] = "Submission Confirmed";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    
+    var statusMessage = Model.Status == "InApproval" 
+        ? "Your submission is awaiting approval." 
+        : "Your submission has been received.";
+    
+    var statusBadgeClass = Model.Status switch
+    {
+        "Submitted" => "bg-success",
+        "InApproval" => "bg-info",
+        "Approved" => "bg-primary",
+        _ => "bg-secondary"
+    };
+    
+    var statusDisplayText = Model.Status switch
+    {
+        "InApproval" => "Awaiting Approval",
+        _ => Model.Status
+    };
+}
+
+<div class="row justify-content-center">
+    <div class="col-lg-9 col-xl-9">
+        <div class="card">
+            <div class="card-body p-4 text-center">
+                
+                @* Success Icon *@
+                <div class="avatar-lg mx-auto mb-4">
+                    <div class="avatar-title bg-primary text-white rounded-circle fs-22">
+                        <i class="ri-check-line"></i>
+                    </div>
+                </div>
+                
+                @* Title and Subtitle *@
+                <h4 class="mb-2">Form Submitted Successfully!</h4>
+                <p class="text-muted mb-4">@statusMessage</p>
+
+                <hr>
+
+                @* Submission Details *@
+               <div class="text-center mb-4">
+
+                    <p class="mb-2 d-flex justify-content-center gap-2">
+                        <span class="text-muted">Form:</span>
+                        <span class="fw-medium">@Model.Template?.TemplateName</span>
+                    </p>
+
+                    <p class="mb-2 d-flex justify-content-center gap-2">
+                        <span class="text-muted">Submission ID:</span>
+                        <span class="fw-medium">#@Model.SubmissionId</span>
+                    </p>
+
+                    @if (Model.Tenant != null)
+                    {
+                        <p class="mb-2 d-flex justify-content-center gap-2">
+                            <span class="text-muted">Location:</span>
+                            <span class="fw-medium">@Model.Tenant.TenantName</span>
+                        </p>
+                    }
+
+                    <p class="mb-2 d-flex justify-content-center gap-2">
+                        <span class="text-muted">Reporting Period:</span>
+                        <span class="fw-medium">@Model.ReportingPeriod.ToString("MMMM yyyy")</span>
+                    </p>
+
+                    <p class="mb-2 d-flex justify-content-center gap-2">
+                        <span class="text-muted">Submitted:</span>
+                        <span class="fw-medium">@Model.SubmittedDate?.ToString("MMM dd, yyyy 'at' h:mm tt")</span>
+                    </p>
+
+                    <p class="mb-0 d-flex justify-content-center gap-2">
+                        <span class="text-muted">Status:</span>
+                        <span class="badge @statusBadgeClass">@statusDisplayText</span>
+                    </p>
+
+                </div>
+
+
+                <hr>
+                
+                @* Action Buttons *@
+                <div class="d-flex gap-2 justify-content-center flex-wrap">
+                    <a href="@Url.Action("View", "Submissions", new { submissionId = Model.SubmissionId })" 
+                       class="btn btn-primary">
+                        <i class="ri-eye-line me-1"></i>
+                        View Submission
+                    </a>
+                    <a href="@Url.Action("AvailableForms", "Submissions")" 
+                       class="btn btn-outline-primary">
+                        <i class="ri-add-line me-1"></i>
+                        Submit Another
+                    </a>
+                    <a href="@Url.Action("Index", "Submissions")" 
+                       class="btn btn-soft-secondary">
+                        <i class="ri-list-check me-1"></i>
+                        Back to List
+                    </a>
+                </div>
+                
+            </div>
+        </div>
+    </div>
+</div>

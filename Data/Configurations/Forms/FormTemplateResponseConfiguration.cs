@@ -24,6 +24,16 @@ namespace FormReporting.Data.Configurations.Forms
             builder.Property(ftr => ftr.CreatedDate).HasDefaultValueSql("GETDATE()");
             builder.Property(ftr => ftr.ModifiedDate).HasDefaultValueSql("GETDATE()");
 
+            // Scoring Fields - Precision configuration
+            builder.Property(ftr => ftr.SelectedScoreValue)
+                .HasColumnType("decimal(10,2)");
+
+            builder.Property(ftr => ftr.SelectedScoreWeight)
+                .HasColumnType("decimal(10,2)");
+
+            builder.Property(ftr => ftr.WeightedScore)
+                .HasColumnType("decimal(10,2)");
+
             // Relationships
             builder.HasOne(ftr => ftr.Submission)
                 .WithMany(fts => fts.Responses)
@@ -34,6 +44,12 @@ namespace FormReporting.Data.Configurations.Forms
                 .WithMany(fti => fti.Responses)
                 .HasForeignKey(ftr => ftr.ItemId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(ftr => ftr.SelectedOption)
+                .WithMany()
+                .HasForeignKey(ftr => ftr.SelectedOptionId)
+                .OnDelete(DeleteBehavior.SetNull)
+                .IsRequired(false);
         }
     }
 }

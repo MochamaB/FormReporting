@@ -6,7 +6,11 @@
     Note: The progress header (title, stepper, step counter) is now in _FormProgress.cshtml
 *@
 
-<div class="form-wizard-wrapper" id="wizard-@Model.FormId" data-wizard-id="@Model.FormId">
+<div class="form-wizard-wrapper" 
+     id="wizard-@Model.FormId" 
+     data-wizard-id="@Model.FormId"
+     data-cancel-url="@(Model.CancelUrl ?? "/Submissions/AvailableForms")"
+     data-total-steps="@Model.TotalSteps">
 
    
 
@@ -56,61 +60,50 @@
         </div>
 
         @* Wizard Navigation Buttons *@
-        <div class="card mt-3">
-            <div class="card-body">
-                <div class="d-flex gap-2 justify-content-between align-items-center">
-                    @* Left side: Previous button *@
-                    <div>
-                        <button type="button"
-                                class="btn btn-soft-secondary wizard-btn-prev"
-                                id="wizard-prev-@Model.FormId"
-                                style="display: none;">
-                            <i class="ri-arrow-left-line align-bottom me-1"></i>
-                            @Model.PreviousButtonText
-                        </button>
-                    </div>
-
-                    @* Right side: Save Draft, Cancel, Next/Submit buttons *@
-                    <div class="d-flex gap-2">
-                        @if (Model.EnableAutoSave && !string.IsNullOrEmpty(Model.SaveDraftUrl))
-                        {
-                            <button type="button"
-                                    class="btn btn-soft-secondary"
-                                    id="save-draft-btn-@Model.FormId"
-                                    onclick="saveDraft('@Model.FormId')">
-                                <i class="ri-save-line align-bottom me-1"></i>
-                                @Model.SaveDraftButtonText
-                            </button>
-                        }
-
-                        @if (Model.ShowCancelButton)
-                        {
-                            <button type="button"
-                                    class="btn btn-soft-danger"
-                                    onclick="cancelForm('@Model.FormId')">
-                                <i class="ri-close-line align-bottom me-1"></i>
-                                Cancel
-                            </button>
-                        }
-
-                        @* Next Button (shown on all steps except last) *@
-                        <button type="button"
-                                class="btn btn-primary wizard-btn-next"
-                                id="wizard-next-@Model.FormId">
-                            @Model.NextButtonText
-                            <i class="ri-arrow-right-line align-bottom ms-1"></i>
-                        </button>
-
-                        @* Submit Button (shown only on last step) *@
-                        <button type="submit"
-                                class="btn btn-success wizard-btn-submit"
-                                id="wizard-submit-@Model.FormId"
-                                style="display: none;">
-                            <i class="ri-send-plane-line align-bottom me-1"></i>
-                            @Model.SubmitButtonText
-                        </button>
-                    </div>
+        <div class="wizard-navigation mt-4 pt-3 border-top">
+            <div class="d-flex gap-2 justify-content-between align-items-center">
+                @* Left side: Previous button *@
+                <div>
+                    <button type="button"
+                            class="btn btn-outline-secondary wizard-btn-prev"
+                            id="wizard-prev-@Model.FormId"
+                            style="display: none;">
+                        <i class="ri-arrow-left-line align-bottom me-1"></i>
+                        @Model.PreviousButtonText
+                    </button>
                 </div>
+
+                @* Right side: Save Draft, Next/Submit buttons *@
+                <div class="d-flex gap-2">
+                    @if (Model.EnableAutoSave && !string.IsNullOrEmpty(Model.SaveDraftUrl))
+                    {
+                        <button type="button"
+                                class="btn btn-outline-secondary"
+                                id="save-draft-btn-@Model.FormId"
+                                onclick="saveDraft('@Model.FormId')">
+                            <i class="ri-save-line align-bottom me-1"></i>
+                            @Model.SaveDraftButtonText
+                        </button>
+                    }
+
+                    @* Next Button (shown on all steps except last) *@
+                    <button type="button"
+                            class="btn btn-primary wizard-btn-next"
+                            id="wizard-next-@Model.FormId">
+                        @Model.NextButtonText
+                        <i class="ri-arrow-right-line align-bottom ms-1"></i>
+                    </button>
+
+                    @* Submit Button (shown only on last step) *@
+                    <button type="submit"
+                            class="btn btn-success wizard-btn-submit"
+                            id="wizard-submit-@Model.FormId"
+                            style="display: none;">
+                        <i class="ri-send-plane-line align-bottom me-1"></i>
+                        @Model.SubmitButtonText
+                    </button>
+                </div>
+            </div>
 
                 @* Required Fields Notice *@
                 @if (Model.RequiredFields > 0)
@@ -121,7 +114,6 @@
                         </small>
                     </div>
                 }
-            </div>
         </div>
     </form>
 
@@ -155,6 +147,52 @@
     .form-wizard-wrapper {
         max-width: 900px;
         margin: 0 auto;
+        padding: 1.5rem;
+        background: #f3f3f9;
+        border-radius: 12px;
+        min-height: 400px;
+    }
+
+    /* Step Content Transitions */
+    .wizard-step-content {
+        opacity: 1;
+        transform: translateX(0);
+        transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .wizard-steps-content {
+        min-height: 300px;
+        padding: 0.5rem 0;
+    }
+
+    /* Form Card - Main container */
+    .form-wizard-wrapper .card {
+        border: none;
+        background: transparent;
+        box-shadow: none;
+    }
+
+    .form-wizard-wrapper .card-body {
+        padding: 0;
+    }
+
+    /* Wizard Navigation */
+    .wizard-navigation {
+        background: #f3f3f9;
+        margin: 1.5rem -1.5rem -1.5rem -1.5rem;
+        padding: 1rem 1.5rem;
+        border-radius: 0 0 12px 12px;
+        border-top: 2px solid var(--vz-primary) !important;
+    }
+
+    .wizard-btn-next,
+    .wizard-btn-submit {
+        min-width: 140px;
+        font-weight: 500;
+    }
+
+    .wizard-btn-prev {
+        min-width: 120px;
     }
 
     /* Wizard Stepper Styles */
@@ -293,181 +331,3 @@
         }
     }
 </style>
-
-@* Auto-Save Script *@
-@if (Model.EnableAutoSave)
-{
-    <script>
-    (function() {
-        const formId = '@Model.FormId';
-        const autoSaveUrl = '@Model.AutoSaveUrl';
-        const autoSaveInterval = @(Model.AutoSaveIntervalMs > 0 ? Model.AutoSaveIntervalMs : 30000);
-        
-        let autoSaveTimer = null;
-        let isDirty = false;
-        let isSaving = false;
-        
-        // Get form elements
-        const form = document.getElementById('form-' + formId);
-        if (!form) return;
-        
-        // Track changes
-        form.addEventListener('input', function() {
-            isDirty = true;
-        });
-        
-        form.addEventListener('change', function() {
-            isDirty = true;
-        });
-        
-        // Start auto-save timer
-        function startAutoSave() {
-            if (autoSaveTimer) clearInterval(autoSaveTimer);
-            autoSaveTimer = setInterval(function() {
-                if (isDirty && !isSaving) {
-                    saveFormDraft();
-                }
-            }, autoSaveInterval);
-        }
-        
-        // Save draft function
-        async function saveFormDraft() {
-            if (isSaving) return;
-            isSaving = true;
-            
-            // Update status
-            if (typeof window.updateAutoSaveStatus === 'function') {
-                window.updateAutoSaveStatus('saving');
-            }
-            
-            try {
-                // Collect form data
-                const submissionIdInput = document.getElementById('submission-id-' + formId);
-                const templateIdInput = document.getElementById('template-id-' + formId);
-                const tenantIdInput = document.getElementById('tenant-id-' + formId);
-                const reportingPeriodInput = document.getElementById('reporting-period-' + formId);
-                const currentStepInput = document.getElementById('current-step-index-' + formId);
-                
-                const submissionId = parseInt(submissionIdInput?.value) || 0;
-                const templateId = parseInt(templateIdInput?.value) || 0;
-                const tenantId = tenantIdInput?.value ? parseInt(tenantIdInput.value) : null;
-                const reportingPeriod = reportingPeriodInput?.value || '';
-                const currentSection = parseInt(currentStepInput?.value) || 0;
-                
-                // Collect all field responses
-                const responses = {};
-                const formData = new FormData(form);
-                formData.forEach((value, key) => {
-                    // Only include field responses (item_XXX pattern)
-                    if (key.startsWith('item_') || key.match(/^\d+$/)) {
-                        const itemId = key.replace('item_', '');
-                        responses[itemId] = value;
-                    }
-                });
-                
-                // Also collect by data-item-id attribute
-                form.querySelectorAll('[data-item-id]').forEach(el => {
-                    const itemId = el.dataset.itemId;
-                    if (itemId) {
-                        if (el.type === 'checkbox') {
-                            responses[itemId] = el.checked ? 'true' : 'false';
-                        } else if (el.type === 'radio') {
-                            if (el.checked) {
-                                responses[itemId] = el.value;
-                            }
-                        } else {
-                            responses[itemId] = el.value;
-                        }
-                    }
-                });
-                
-                const payload = {
-                    submissionId: submissionId,
-                    templateId: templateId,
-                    tenantId: tenantId,
-                    reportingPeriod: reportingPeriod,
-                    currentSection: currentSection,
-                    responses: responses
-                };
-                
-                const response = await fetch(autoSaveUrl, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
-                    },
-                    body: JSON.stringify(payload)
-                });
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    isDirty = false;
-                    
-                    // Update submission ID if this was a lazy creation
-                    if (submissionId === 0 && result.submissionId > 0) {
-                        submissionIdInput.value = result.submissionId;
-                        console.log('Submission created with ID:', result.submissionId);
-                    }
-                    
-                    // Update status
-                    if (typeof window.updateAutoSaveStatus === 'function') {
-                        window.updateAutoSaveStatus('saved', 'Saved at ' + new Date().toLocaleTimeString());
-                    }
-                    
-                    // Show toast
-                    const toast = document.getElementById('auto-save-toast-' + formId);
-                    if (toast && typeof bootstrap !== 'undefined') {
-                        const bsToast = new bootstrap.Toast(toast, { delay: 2000 });
-                        bsToast.show();
-                    }
-                } else {
-                    console.error('Auto-save failed:', result.errors);
-                    if (typeof window.updateAutoSaveStatus === 'function') {
-                        window.updateAutoSaveStatus('error', 'Save failed');
-                    }
-                }
-            } catch (error) {
-                console.error('Auto-save error:', error);
-                if (typeof window.updateAutoSaveStatus === 'function') {
-                    window.updateAutoSaveStatus('error', 'Save failed');
-                }
-            } finally {
-                isSaving = false;
-            }
-        }
-        
-        // Expose save function globally
-        window.saveDraft = function(fId) {
-            if (fId === formId) {
-                saveFormDraft();
-            }
-        };
-        
-        // Cancel form function
-        window.cancelForm = function(fId) {
-            if (fId === formId) {
-                const cancelUrl = '@(Model.CancelUrl ?? "/Submissions/AvailableForms")';
-                if (isDirty) {
-                    if (confirm('You have unsaved changes. Are you sure you want to cancel?')) {
-                        window.location.href = cancelUrl;
-                    }
-                } else {
-                    window.location.href = cancelUrl;
-                }
-            }
-        };
-        
-        // Start auto-save on load
-        startAutoSave();
-        
-        // Save before leaving page
-        window.addEventListener('beforeunload', function(e) {
-            if (isDirty) {
-                e.preventDefault();
-                e.returnValue = '';
-            }
-        });
-    })();
-    </script>
-}

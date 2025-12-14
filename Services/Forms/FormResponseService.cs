@@ -39,6 +39,25 @@ namespace FormReporting.Services.Forms
                 .Where(i => itemIds.Contains(i.ItemId))
                 .ToDictionaryAsync(i => i.ItemId);
 
+            // Load all options for items that have selection fields (dropdown, radio, checkbox, multiselect)
+            var selectionFieldTypes = new[] { "dropdown", "radio", "checkbox", "multiselect" };
+            var selectionItemIds = items.Values
+                .Where(i => selectionFieldTypes.Contains(i.DataType?.ToLower() ?? ""))
+                .Select(i => i.ItemId)
+                .ToList();
+
+            var optionsByItemId = new Dictionary<int, List<FormItemOption>>();
+            if (selectionItemIds.Any())
+            {
+                var options = await _context.FormItemOptions
+                    .Where(o => selectionItemIds.Contains(o.ItemId) && o.IsActive)
+                    .ToListAsync();
+
+                optionsByItemId = options
+                    .GroupBy(o => o.ItemId)
+                    .ToDictionary(g => g.Key, g => g.ToList());
+            }
+
             int savedCount = 0;
 
             foreach (var (itemId, value) in responses)
@@ -49,24 +68,31 @@ namespace FormReporting.Services.Forms
                 // Find existing response or create new
                 var existingResponse = submission.Responses.FirstOrDefault(r => r.ItemId == itemId);
 
+                FormTemplateResponse response;
                 if (existingResponse != null)
                 {
-                    // Update existing response
-                    SetResponseValue(existingResponse, item.DataType, value);
-                    existingResponse.ModifiedDate = DateTime.Now;
+                    response = existingResponse;
+                    response.ModifiedDate = DateTime.Now;
                 }
                 else
                 {
-                    // Create new response
-                    var newResponse = new FormTemplateResponse
+                    response = new FormTemplateResponse
                     {
                         SubmissionId = submissionId,
                         ItemId = itemId,
                         CreatedDate = DateTime.Now,
                         ModifiedDate = DateTime.Now
                     };
-                    SetResponseValue(newResponse, item.DataType, value);
-                    _context.FormTemplateResponses.Add(newResponse);
+                    _context.FormTemplateResponses.Add(response);
+                }
+
+                // Set the response value based on data type
+                SetResponseValue(response, item.DataType, value);
+
+                // Set score values if this is a selection field with options
+                if (optionsByItemId.TryGetValue(itemId, out var itemOptions))
+                {
+                    SetScoreValues(response, item.DataType, value, itemOptions);
                 }
 
                 savedCount++;
@@ -394,6 +420,89 @@ namespace FormReporting.Services.Forms
 
                 default:
                     response.TextValue = value;
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Set score values for selection fields (dropdown, radio, checkbox, multiselect)
+        /// Looks up the selected option(s) and copies score/weight values to the response
+        /// </summary>
+        private void SetScoreValues(FormTemplateResponse response, string? dataType, string? value, List<FormItemOption> options)
+        {
+            // Clear existing score values
+            response.SelectedScoreValue = null;
+            response.SelectedScoreWeight = null;
+            response.WeightedScore = null;
+            response.SelectedOptionId = null;
+
+            if (string.IsNullOrWhiteSpace(value) || options == null || !options.Any())
+                return;
+
+            var fieldType = ParseDataType(dataType);
+
+            switch (fieldType)
+            {
+                case FormFieldType.Dropdown:
+                case FormFieldType.Radio:
+                    // Single selection - find the matching option
+                    var selectedOption = options.FirstOrDefault(o => 
+                        o.OptionValue.Equals(value, StringComparison.OrdinalIgnoreCase));
+                    
+                    if (selectedOption != null)
+                    {
+                        response.SelectedOptionId = selectedOption.OptionId;
+                        response.SelectedScoreValue = selectedOption.ScoreValue;
+                        response.SelectedScoreWeight = selectedOption.ScoreWeight ?? 1.0m;
+                        
+                        // Calculate weighted score
+                        if (selectedOption.ScoreValue.HasValue)
+                        {
+                            response.WeightedScore = selectedOption.ScoreValue.Value * (selectedOption.ScoreWeight ?? 1.0m);
+                        }
+                    }
+                    break;
+
+                case FormFieldType.Checkbox:
+                case FormFieldType.MultiSelect:
+                    // Multi-selection - sum scores for all selected options
+                    var selectedValues = value.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                        .Select(v => v.Trim())
+                        .ToList();
+
+                    if (selectedValues.Any())
+                    {
+                        var matchedOptions = options
+                            .Where(o => selectedValues.Any(v => 
+                                o.OptionValue.Equals(v, StringComparison.OrdinalIgnoreCase)))
+                            .ToList();
+
+                        if (matchedOptions.Any())
+                        {
+                            // For multi-select, store the first option ID (or could store comma-separated)
+                            response.SelectedOptionId = matchedOptions.First().OptionId;
+                            
+                            // Sum all scores
+                            decimal totalScore = 0;
+                            decimal totalWeightedScore = 0;
+                            
+                            foreach (var opt in matchedOptions)
+                            {
+                                if (opt.ScoreValue.HasValue)
+                                {
+                                    totalScore += opt.ScoreValue.Value;
+                                    totalWeightedScore += opt.ScoreValue.Value * (opt.ScoreWeight ?? 1.0m);
+                                }
+                            }
+
+                            if (totalScore > 0)
+                            {
+                                response.SelectedScoreValue = totalScore;
+                                response.SelectedScoreWeight = 1.0m; // For multi-select, weight is already applied
+                                response.WeightedScore = totalWeightedScore;
+                            }
+                        }
+                    }
                     break;
             }
         }
