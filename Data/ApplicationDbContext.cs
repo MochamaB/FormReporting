@@ -250,6 +250,11 @@ namespace FormReporting.Data
         public DbSet<WorkflowStep> WorkflowSteps { get; set; } = null!;
 
         /// <summary>
+        /// Workflow actions (Fill, Sign, Approve, Reject, Review, Verify)
+        /// </summary>
+        public DbSet<WorkflowAction> WorkflowActions { get; set; } = null!;
+
+        /// <summary>
         /// Section routing (skip logic)
         /// </summary>
         public DbSet<SectionRouting> SectionRoutings { get; set; } = null!;
@@ -260,9 +265,14 @@ namespace FormReporting.Data
         public DbSet<FormAnalytics> FormAnalytics { get; set; } = null!;
 
         /// <summary>
-        /// Form template assignments
+        /// Form template assignments - WHO can access/submit forms
         /// </summary>
         public DbSet<FormTemplateAssignment> FormTemplateAssignments { get; set; } = null!;
+
+        /// <summary>
+        /// Form template submission rules - WHEN/HOW submissions should occur
+        /// </summary>
+        public DbSet<FormTemplateSubmissionRule> FormTemplateSubmissionRules { get; set; } = null!;
 
         // ============================================================================
         // SECTION 5: SOFTWARE MANAGEMENT
@@ -542,9 +552,11 @@ namespace FormReporting.Data
             modelBuilder.ApplyConfiguration(new SubmissionWorkflowProgressConfiguration());
             modelBuilder.ApplyConfiguration(new WorkflowDefinitionConfiguration());
             modelBuilder.ApplyConfiguration(new WorkflowStepConfiguration());
+            modelBuilder.ApplyConfiguration(new WorkflowActionConfiguration());
             modelBuilder.ApplyConfiguration(new SectionRoutingConfiguration());
             modelBuilder.ApplyConfiguration(new FormAnalyticsConfiguration());
             modelBuilder.ApplyConfiguration(new FormTemplateAssignmentConfiguration());
+            modelBuilder.ApplyConfiguration(new FormTemplateSubmissionRuleConfiguration());
 
             // Apply Section 5: Software Management configurations
             modelBuilder.ApplyConfiguration(new SoftwareProductConfiguration());

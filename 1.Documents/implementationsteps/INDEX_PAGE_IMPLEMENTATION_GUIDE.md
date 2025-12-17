@@ -540,6 +540,235 @@ public async Task<IActionResult> Index()
 
 ---
 
+## 🔄 AJAX Mode DataTable (Alternative to TableContentRenderer)
+
+For pages that need **dynamic data loading without page refresh** (e.g., tabbed interfaces, dashboards), use the **AJAX Mode** instead of `TableContentRenderer`.
+
+### When to Use AJAX Mode
+
+| Scenario | Use Server-Side | Use AJAX Mode |
+|----------|-----------------|---------------|
+| Simple list page | ✅ | |
+| Tabbed interface | | ✅ |
+| Dashboard panels | | ✅ |
+| Frequent filtering | | ✅ |
+| Large datasets | | ✅ |
+| Real-time updates | | ✅ |
+
+### AJAX Mode Features
+
+- **Skeleton loader** shown during data fetch
+- **No page reload** when filtering/paginating
+- **API-driven** data loading
+- **Column type rendering** (avatar, badge, date, actions)
+- **Automatic pagination** controls
+
+---
+
+### AJAX Mode Implementation
+
+#### **STEP 1: Ensure API Endpoint Exists**
+
+The API must return data in this format:
+
+```json
+{
+    "success": true,
+    "data": [
+        {
+            "id": 1,
+            "targetName": "Marketing Department",
+            "targetDetail": "5 users",
+            "targetIcon": "ri-building-line",
+            "targetColor": "primary",
+            "assignmentType": "Department",
+            "typeColor": "info",
+            "status": "Active",
+            "statusColor": "success",
+            "dueDate": "2024-12-31T00:00:00"
+        }
+    ],
+    "pagination": {
+        "page": 1,
+        "pageSize": 10,
+        "totalCount": 47,
+        "totalPages": 5
+    }
+}
+```
+
+#### **STEP 2: Configure DataTable with AJAX Mode**
+
+```cshtml
+@using FormReporting.Models.ViewModels.Components
+@using FormReporting.Extensions
+
+@{
+    var tableConfig = new DataTableConfig
+    {
+        TableId = "assignmentsTable",
+        Columns = new List<string> { "", "Target", "Type", "Due Date", "Status", "Actions" },
+        EnableSearch = true,
+        SearchBox = new SearchBoxConfig
+        {
+            ParameterName = "search",
+            PlaceholderText = "Search..."
+        },
+        EnableBulkActions = true,
+        BulkActions = new List<BulkActionConfig>
+        {
+            new BulkActionConfig 
+            { 
+                Text = "Delete Selected", 
+                ActionUrl = "/api/items/bulk-delete", 
+                IconClass = "ri-delete-bin-line",
+                ColorClass = "danger",
+                RequiresConfirmation = true
+            }
+        },
+        CreateButtonText = "Create New",
+        CreateButtonUrl = "/items/create",
+        ShowPagination = true,
+        PageSize = 10,
+        EnableSorting = true,
+        EnableHover = true
+    }
+    // ═══════════════════════════════════════════════════════════
+    // AJAX MODE CONFIGURATION
+    // ═══════════════════════════════════════════════════════════
+    .WithAjaxLoading("/api/items", skeletonRowCount: 5)
+    .WithAjaxParam("categoryId", "123")  // Additional query params
+    
+    // ═══════════════════════════════════════════════════════════
+    // COLUMN DEFINITIONS (maps API response fields to columns)
+    // ═══════════════════════════════════════════════════════════
+    .WithAvatarColumn("targetName", 
+        iconField: "targetIcon", 
+        secondaryField: "targetDetail", 
+        colorField: "targetColor")
+    .WithBadgeColumn("assignmentType", colorField: "typeColor")
+    .WithDateColumn("dueDate")
+    .WithBadgeColumn("status", colorField: "statusColor")
+    .WithActionsColumn(
+        new AjaxRowActionConfig { Text = "Edit", IconClass = "ri-pencil-line", Url = "/items/{id}/edit" },
+        new AjaxRowActionConfig { Text = "View", IconClass = "ri-eye-line", Url = "/items/{id}" },
+        new AjaxRowActionConfig { IsDivider = true },
+        new AjaxRowActionConfig { Text = "Delete", IconClass = "ri-delete-bin-line", ColorClass = "danger", OnClick = "deleteItem({id})" }
+    )
+    
+    // ═══════════════════════════════════════════════════════════
+    // FILTERS (work with AJAX - no page reload)
+    // ═══════════════════════════════════════════════════════════
+    .WithFilterDropdown("Status", new List<FilterOption>
+    {
+        new FilterOption { Text = "All Status", Value = "", IsActive = true },
+        new FilterOption { Text = "Active", Value = "Active" },
+        new FilterOption { Text = "Inactive", Value = "Inactive" }
+    })
+    .WithFilterSelect("category", "Category", categoryOptions);
+
+    var tableViewModel = tableConfig.BuildDataTable();
+}
+
+<!-- Render the DataTable -->
+<partial name="~/Views/Shared/Components/DataTable/_DataTable.cshtml" model="tableViewModel" />
+```
+
+---
+
+### Column Types Reference
+
+| Type | Method | Description | Required Fields |
+|------|--------|-------------|-----------------|
+| **checkbox** | `WithCheckboxColumn("id")` | Row selection checkbox | `id` field |
+| **text** | `WithTextColumn("name", "subtitle")` | Plain text with optional secondary | `name`, optional `subtitle` |
+| **avatar** | `WithAvatarColumn("name", icon, secondary, color)` | Icon + text + secondary | `name`, `iconField`, `secondaryField`, `colorField` |
+| **badge** | `WithBadgeColumn("status", "statusColor")` | Colored badge | `status`, `colorField` |
+| **date** | `WithDateColumn("dueDate", "MMM dd, yyyy")` | Formatted date | `dueDate` |
+| **actions** | `WithActionsColumn(...)` | Dropdown menu | Action configs |
+
+---
+
+### Action Configuration
+
+```csharp
+new AjaxRowActionConfig 
+{ 
+    Text = "Edit",                    // Display text
+    IconClass = "ri-pencil-line",     // Remix icon class
+    Url = "/items/{id}/edit",         // URL with {id} placeholder
+    OnClick = "editItem({id})",       // JavaScript function (alternative to Url)
+    ColorClass = "danger",            // For danger actions (red text)
+    IsDivider = true                  // Renders <hr> divider
+}
+```
+
+---
+
+### Comparison: Server-Side vs AJAX Mode
+
+```cshtml
+@* ═══════════════════════════════════════════════════════════ *@
+@* SERVER-SIDE MODE (Traditional) *@
+@* ═══════════════════════════════════════════════════════════ *@
+
+var tableConfig = new DataTableConfig
+{
+    TableId = "rolesTable",
+    Columns = new List<string> { "Name", "Status", "Actions" },
+    // ... other config
+    
+    // Server-side: Use TableContentRenderer
+    TableContentRenderer = _ =>
+    {
+        var sb = new StringBuilder();
+        foreach (var role in roles)
+        {
+            sb.Append("<tr>");
+            sb.Append($"<td>{role.Name}</td>");
+            sb.Append($"<td><span class='badge bg-success'>{role.Status}</span></td>");
+            sb.Append($"<td><a href='/roles/{role.Id}/edit'>Edit</a></td>");
+            sb.Append("</tr>");
+        }
+        return new HtmlString(sb.ToString());
+    }
+};
+
+@* ═══════════════════════════════════════════════════════════ *@
+@* AJAX MODE (Dynamic) *@
+@* ═══════════════════════════════════════════════════════════ *@
+
+var tableConfig = new DataTableConfig
+{
+    TableId = "rolesTable",
+    Columns = new List<string> { "Name", "Status", "Actions" },
+    // ... other config
+}
+// AJAX mode: Define columns declaratively
+.WithAjaxLoading("/api/roles")
+.WithTextColumn("name")
+.WithBadgeColumn("status", colorField: "statusColor")
+.WithActionsColumn(
+    new AjaxRowActionConfig { Text = "Edit", Url = "/roles/{id}/edit" }
+);
+```
+
+---
+
+### JavaScript API
+
+The DataTable component exposes a reload function for each AJAX table:
+
+```javascript
+// Reload table data (e.g., after creating/deleting an item)
+window.reloadTable_assignmentsTable();
+
+// Or use the table ID
+window['reloadTable_' + tableId]();
+```
+
+---
+
 ## ✅ Checklist for New Index Pages
 
 - [ ] Controller calculates statistics
@@ -554,6 +783,19 @@ public async Task<IActionResult> Index()
 - [ ] Pagination implemented
 - [ ] Search functionality working
 - [ ] Filter dropdowns configured
+
+## ✅ Checklist for AJAX Mode DataTables
+
+- [ ] API endpoint returns correct JSON format
+- [ ] API supports filtering via query params
+- [ ] API supports pagination (page, pageSize)
+- [ ] DataTableConfig uses `.WithAjaxLoading(url)`
+- [ ] Column mappings defined with `.With*Column()` methods
+- [ ] Actions configured with `AjaxRowActionConfig`
+- [ ] Filters use `.WithFilterDropdown()` or `.WithFilterSelect()`
+- [ ] Bulk actions configured if needed
+- [ ] Skeleton loader displays during loading
+- [ ] Error state shows retry button
 
 ---
 

@@ -1092,6 +1092,11 @@ namespace FormReporting.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("AssignmentId"));
 
+                    b.Property<bool>("AllowAnonymous")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<int>("AssignedBy")
                         .HasColumnType("int");
 
@@ -1105,13 +1110,26 @@ namespace FormReporting.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
 
+                    b.Property<string>("CancellationReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("CancelledBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("CancelledDate")
+                        .HasColumnType("datetime2");
+
                     b.Property<int?>("DepartmentId")
                         .HasColumnType("int");
 
-                    b.Property<bool>("IsActive")
+                    b.Property<DateTime>("EffectiveFrom")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<DateTime?>("EffectiveUntil")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Notes")
                         .HasMaxLength(500)
@@ -1119,6 +1137,13 @@ namespace FormReporting.Data.Migrations
 
                     b.Property<int?>("RoleId")
                         .HasColumnType("int");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("Active");
 
                     b.Property<int>("TemplateId")
                         .HasColumnType("int");
@@ -1141,34 +1166,51 @@ namespace FormReporting.Data.Migrations
 
                     b.HasKey("AssignmentId");
 
+                    b.HasIndex("AllowAnonymous")
+                        .HasDatabaseName("IX_TemplateAssignment_Anonymous")
+                        .HasFilter("AllowAnonymous = 1");
+
                     b.HasIndex("AssignedBy");
+
+                    b.HasIndex("CancelledBy");
 
                     b.HasIndex("DepartmentId");
 
                     b.HasIndex("RoleId")
                         .HasDatabaseName("IX_TemplateAssignment_Role");
 
+                    b.HasIndex("Status")
+                        .HasDatabaseName("IX_TemplateAssignment_Status");
+
                     b.HasIndex("UserGroupId");
 
                     b.HasIndex("UserId");
 
-                    b.HasIndex("AssignmentType", "IsActive")
+                    b.HasIndex("AssignmentType", "Status")
                         .HasDatabaseName("IX_TemplateAssignments_Type");
 
-                    b.HasIndex("TemplateId", "IsActive")
+                    b.HasIndex("EffectiveFrom", "EffectiveUntil")
+                        .HasDatabaseName("IX_TemplateAssignment_EffectivePeriod");
+
+                    b.HasIndex("TemplateId", "Status")
                         .HasDatabaseName("IX_TemplateAssignments_Template");
 
-                    b.HasIndex("TenantGroupId", "IsActive")
+                    b.HasIndex("TenantGroupId", "Status")
                         .HasDatabaseName("IX_TemplateAssignments_TenantGroup");
 
-                    b.HasIndex("TenantId", "IsActive")
+                    b.HasIndex("TenantId", "Status")
                         .HasDatabaseName("IX_TemplateAssignments_Tenant");
 
-                    b.HasIndex("TenantType", "IsActive")
+                    b.HasIndex("TenantType", "Status")
                         .HasDatabaseName("IX_TemplateAssignments_TenantType");
+
+                    b.HasIndex("TemplateId", "Status", "EffectiveFrom")
+                        .HasDatabaseName("IX_TemplateAssignment_Template_Status_Effective");
 
                     b.ToTable("FormTemplateAssignments", t =>
                         {
+                            t.HasCheckConstraint("CK_TemplateAssignment_Status", "Status IN ('Active', 'Suspended', 'Revoked')");
+
                             t.HasCheckConstraint("CK_TemplateAssignment_Target", "(AssignmentType = 'All' AND TenantType IS NULL AND TenantGroupId IS NULL AND TenantId IS NULL AND RoleId IS NULL AND DepartmentId IS NULL AND UserGroupId IS NULL AND UserId IS NULL) OR\n                  (AssignmentType = 'TenantType' AND TenantType IS NOT NULL AND TenantGroupId IS NULL AND TenantId IS NULL AND RoleId IS NULL AND DepartmentId IS NULL AND UserGroupId IS NULL AND UserId IS NULL) OR\n                  (AssignmentType = 'TenantGroup' AND TenantGroupId IS NOT NULL AND TenantType IS NULL AND TenantId IS NULL AND RoleId IS NULL AND DepartmentId IS NULL AND UserGroupId IS NULL AND UserId IS NULL) OR\n                  (AssignmentType = 'SpecificTenant' AND TenantId IS NOT NULL AND TenantType IS NULL AND TenantGroupId IS NULL AND RoleId IS NULL AND DepartmentId IS NULL AND UserGroupId IS NULL AND UserId IS NULL) OR\n                  (AssignmentType = 'Role' AND RoleId IS NOT NULL AND TenantType IS NULL AND TenantGroupId IS NULL AND TenantId IS NULL AND DepartmentId IS NULL AND UserGroupId IS NULL AND UserId IS NULL) OR\n                  (AssignmentType = 'Department' AND DepartmentId IS NOT NULL AND TenantType IS NULL AND TenantGroupId IS NULL AND TenantId IS NULL AND RoleId IS NULL AND UserGroupId IS NULL AND UserId IS NULL) OR\n                  (AssignmentType = 'UserGroup' AND UserGroupId IS NOT NULL AND TenantType IS NULL AND TenantGroupId IS NULL AND TenantId IS NULL AND RoleId IS NULL AND DepartmentId IS NULL AND UserId IS NULL) OR\n                  (AssignmentType = 'SpecificUser' AND UserId IS NOT NULL AND TenantType IS NULL AND TenantGroupId IS NULL AND TenantId IS NULL AND RoleId IS NULL AND DepartmentId IS NULL AND UserGroupId IS NULL)");
 
                             t.HasCheckConstraint("CK_TemplateAssignment_Type", "AssignmentType IN ('All', 'TenantType', 'TenantGroup', 'SpecificTenant', 'Role', 'Department', 'UserGroup', 'SpecificUser')");
@@ -1542,6 +1584,89 @@ namespace FormReporting.Data.Migrations
                     b.ToTable("FormTemplateSubmissions");
                 });
 
+            modelBuilder.Entity("FormReporting.Models.Entities.Forms.FormTemplateSubmissionRule", b =>
+                {
+                    b.Property<int>("SubmissionRuleId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SubmissionRuleId"));
+
+                    b.Property<bool>("AllowLateSubmission")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("CreatedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int?>("DueDay")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("DueMonth")
+                        .HasColumnType("int");
+
+                    b.Property<TimeSpan?>("DueTime")
+                        .HasColumnType("time");
+
+                    b.Property<string>("Frequency")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<int>("GracePeriodDays")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("ModifiedBy")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("ModifiedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ReminderDaysBefore")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("RuleConfig")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("RuleName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<DateTime?>("SpecificDueDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("Active");
+
+                    b.Property<int>("TemplateId")
+                        .HasColumnType("int");
+
+                    b.HasKey("SubmissionRuleId");
+
+                    b.HasIndex("CreatedBy");
+
+                    b.HasIndex("ModifiedBy");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("TemplateId");
+
+                    b.HasIndex("TemplateId", "Status");
+
+                    b.ToTable("FormTemplateSubmissionRules", (string)null);
+                });
+
             modelBuilder.Entity("FormReporting.Models.Entities.Forms.MetricPopulationLog", b =>
                 {
                     b.Property<long>("LogId")
@@ -1676,6 +1801,15 @@ namespace FormReporting.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ProgressId"));
 
+                    b.Property<int?>("ActionId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("AssignedDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int?>("AssignedTo")
+                        .HasColumnType("int");
+
                     b.Property<string>("Comments")
                         .HasColumnType("nvarchar(max)");
 
@@ -1693,6 +1827,10 @@ namespace FormReporting.Data.Migrations
                     b.Property<int?>("DelegatedTo")
                         .HasColumnType("int");
 
+                    b.Property<string>("DelegationReason")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
                     b.Property<DateTime?>("DueDate")
                         .HasColumnType("datetime2");
 
@@ -1701,6 +1839,20 @@ namespace FormReporting.Data.Migrations
 
                     b.Property<DateTime?>("ReviewedDate")
                         .HasColumnType("datetime2");
+
+                    b.Property<string>("SignatureData")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("SignatureIP")
+                        .HasMaxLength(45)
+                        .HasColumnType("nvarchar(45)");
+
+                    b.Property<DateTime?>("SignatureTimestamp")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("SignatureType")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -1718,7 +1870,20 @@ namespace FormReporting.Data.Migrations
                     b.Property<int>("SubmissionId")
                         .HasColumnType("int");
 
+                    b.Property<int?>("TargetId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TargetType")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.HasKey("ProgressId");
+
+                    b.HasIndex("ActionId")
+                        .HasDatabaseName("IX_Progress_Action");
+
+                    b.HasIndex("AssignedTo")
+                        .HasDatabaseName("IX_Progress_AssignedTo");
 
                     b.HasIndex("DelegatedBy");
 
@@ -1737,6 +1902,12 @@ namespace FormReporting.Data.Migrations
 
                     b.HasIndex("StepId");
 
+                    b.HasIndex("TargetType")
+                        .HasDatabaseName("IX_Progress_TargetType");
+
+                    b.HasIndex("AssignedTo", "Status")
+                        .HasDatabaseName("IX_Progress_AssignedTo_Status");
+
                     b.HasIndex("SubmissionId", "StepId")
                         .IsUnique()
                         .HasDatabaseName("UQ_Progress_Submission_Step");
@@ -1745,6 +1916,76 @@ namespace FormReporting.Data.Migrations
                         .HasDatabaseName("IX_Progress_Submission_Order");
 
                     b.ToTable("SubmissionWorkflowProgress");
+                });
+
+            modelBuilder.Entity("FormReporting.Models.Entities.Forms.WorkflowAction", b =>
+                {
+                    b.Property<int>("ActionId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("ActionId"));
+
+                    b.Property<string>("ActionCode")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("ActionName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<bool>("AllowDelegate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("CssClass")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<string>("IconClass")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<bool>("RequiresComment")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.Property<bool>("RequiresSignature")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
+                    b.HasKey("ActionId");
+
+                    b.HasIndex("ActionCode")
+                        .IsUnique()
+                        .HasDatabaseName("UQ_WorkflowAction_Code");
+
+                    b.HasIndex("DisplayOrder")
+                        .HasDatabaseName("IX_WorkflowAction_DisplayOrder");
+
+                    b.HasIndex("IsActive")
+                        .HasDatabaseName("IX_WorkflowAction_Active");
+
+                    b.ToTable("WorkflowActions");
                 });
 
             modelBuilder.Entity("FormReporting.Models.Entities.Forms.WorkflowDefinition", b =>
@@ -1800,11 +2041,27 @@ namespace FormReporting.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("StepId"));
 
+                    b.Property<int?>("ActionId")
+                        .HasColumnType("int");
+
                     b.Property<int?>("ApproverRoleId")
                         .HasColumnType("int");
 
                     b.Property<int?>("ApproverUserId")
                         .HasColumnType("int");
+
+                    b.Property<int?>("AssigneeDepartmentId")
+                        .HasColumnType("int");
+
+                    b.Property<int?>("AssigneeFieldId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("AssigneeType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("Role");
 
                     b.Property<string>("AutoApproveCondition")
                         .HasColumnType("nvarchar(max)");
@@ -1816,6 +2073,9 @@ namespace FormReporting.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("DependsOnStepIds")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int?>("DueDays")
                         .HasColumnType("int");
@@ -1841,26 +2101,46 @@ namespace FormReporting.Data.Migrations
                     b.Property<int>("StepOrder")
                         .HasColumnType("int");
 
+                    b.Property<int?>("TargetId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("TargetType")
+                        .IsRequired()
+                        .ValueGeneratedOnAdd()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)")
+                        .HasDefaultValue("Submission");
+
                     b.Property<int>("WorkflowId")
                         .HasColumnType("int");
 
                     b.HasKey("StepId");
 
+                    b.HasIndex("ActionId")
+                        .HasDatabaseName("IX_WorkflowStep_Action");
+
                     b.HasIndex("ApproverRoleId");
 
                     b.HasIndex("ApproverUserId");
 
+                    b.HasIndex("AssigneeDepartmentId");
+
+                    b.HasIndex("AssigneeFieldId");
+
+                    b.HasIndex("AssigneeType")
+                        .HasDatabaseName("IX_WorkflowStep_AssigneeType");
+
                     b.HasIndex("EscalationRoleId")
                         .HasDatabaseName("IX_WorkflowStep_Escalation");
+
+                    b.HasIndex("TargetType")
+                        .HasDatabaseName("IX_WorkflowStep_TargetType");
 
                     b.HasIndex("WorkflowId", "StepOrder")
                         .IsUnique()
                         .HasDatabaseName("IX_WorkflowStep_Workflow");
 
-                    b.ToTable("WorkflowSteps", t =>
-                        {
-                            t.HasCheckConstraint("CK_WorkflowStep_Approver", "(ApproverRoleId IS NOT NULL AND ApproverUserId IS NULL) OR (ApproverRoleId IS NULL AND ApproverUserId IS NOT NULL)");
-                        });
+                    b.ToTable("WorkflowSteps");
                 });
 
             modelBuilder.Entity("FormReporting.Models.Entities.Hardware.HardwareCategory", b =>
@@ -6244,6 +6524,11 @@ namespace FormReporting.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
+                    b.HasOne("FormReporting.Models.Entities.Identity.User", "CancelledByUser")
+                        .WithMany()
+                        .HasForeignKey("CancelledBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("FormReporting.Models.Entities.Organizational.Department", "Department")
                         .WithMany()
                         .HasForeignKey("DepartmentId")
@@ -6281,6 +6566,8 @@ namespace FormReporting.Data.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("AssignedByUser");
+
+                    b.Navigation("CancelledByUser");
 
                     b.Navigation("Department");
 
@@ -6400,6 +6687,32 @@ namespace FormReporting.Data.Migrations
                     b.Navigation("Tenant");
                 });
 
+            modelBuilder.Entity("FormReporting.Models.Entities.Forms.FormTemplateSubmissionRule", b =>
+                {
+                    b.HasOne("FormReporting.Models.Entities.Identity.User", "CreatedByUser")
+                        .WithMany()
+                        .HasForeignKey("CreatedBy")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FormReporting.Models.Entities.Identity.User", "ModifiedByUser")
+                        .WithMany()
+                        .HasForeignKey("ModifiedBy")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("FormReporting.Models.Entities.Forms.FormTemplate", "Template")
+                        .WithMany("SubmissionRules")
+                        .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CreatedByUser");
+
+                    b.Navigation("ModifiedByUser");
+
+                    b.Navigation("Template");
+                });
+
             modelBuilder.Entity("FormReporting.Models.Entities.Forms.MetricPopulationLog", b =>
                 {
                     b.HasOne("FormReporting.Models.Entities.Forms.FormItemMetricMapping", "Mapping")
@@ -6470,6 +6783,16 @@ namespace FormReporting.Data.Migrations
 
             modelBuilder.Entity("FormReporting.Models.Entities.Forms.SubmissionWorkflowProgress", b =>
                 {
+                    b.HasOne("FormReporting.Models.Entities.Forms.WorkflowAction", "Action")
+                        .WithMany()
+                        .HasForeignKey("ActionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("FormReporting.Models.Entities.Identity.User", "AssignedToUser")
+                        .WithMany()
+                        .HasForeignKey("AssignedTo")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("FormReporting.Models.Entities.Identity.User", "DelegatedByUser")
                         .WithMany()
                         .HasForeignKey("DelegatedBy")
@@ -6497,6 +6820,10 @@ namespace FormReporting.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Action");
+
+                    b.Navigation("AssignedToUser");
+
                     b.Navigation("DelegatedByUser");
 
                     b.Navigation("DelegatedToUser");
@@ -6521,6 +6848,11 @@ namespace FormReporting.Data.Migrations
 
             modelBuilder.Entity("FormReporting.Models.Entities.Forms.WorkflowStep", b =>
                 {
+                    b.HasOne("FormReporting.Models.Entities.Forms.WorkflowAction", "Action")
+                        .WithMany("WorkflowSteps")
+                        .HasForeignKey("ActionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("FormReporting.Models.Entities.Identity.Role", "ApproverRole")
                         .WithMany()
                         .HasForeignKey("ApproverRoleId")
@@ -6529,6 +6861,16 @@ namespace FormReporting.Data.Migrations
                     b.HasOne("FormReporting.Models.Entities.Identity.User", "ApproverUser")
                         .WithMany()
                         .HasForeignKey("ApproverUserId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("FormReporting.Models.Entities.Organizational.Department", "AssigneeDepartment")
+                        .WithMany()
+                        .HasForeignKey("AssigneeDepartmentId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("FormReporting.Models.Entities.Forms.FormTemplateItem", "AssigneeField")
+                        .WithMany()
+                        .HasForeignKey("AssigneeFieldId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("FormReporting.Models.Entities.Identity.Role", "EscalationRole")
@@ -6542,9 +6884,15 @@ namespace FormReporting.Data.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.Navigation("Action");
+
                     b.Navigation("ApproverRole");
 
                     b.Navigation("ApproverUser");
+
+                    b.Navigation("AssigneeDepartment");
+
+                    b.Navigation("AssigneeField");
 
                     b.Navigation("EscalationRole");
 
@@ -7685,6 +8033,8 @@ namespace FormReporting.Data.Migrations
 
                     b.Navigation("Sections");
 
+                    b.Navigation("SubmissionRules");
+
                     b.Navigation("Submissions");
                 });
 
@@ -7723,6 +8073,11 @@ namespace FormReporting.Data.Migrations
                     b.Navigation("Responses");
 
                     b.Navigation("WorkflowProgress");
+                });
+
+            modelBuilder.Entity("FormReporting.Models.Entities.Forms.WorkflowAction", b =>
+                {
+                    b.Navigation("WorkflowSteps");
                 });
 
             modelBuilder.Entity("FormReporting.Models.Entities.Forms.WorkflowDefinition", b =>

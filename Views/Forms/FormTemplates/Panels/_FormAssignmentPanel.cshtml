@@ -1,0 +1,300 @@
+@using FormReporting.Models.ViewModels.Forms
+@using FormReporting.Models.ViewModels.Components
+@using FormReporting.Models.Entities.Forms
+@using FormReporting.Extensions
+
+@{
+    var model = ViewData["TemplateDetails"] as TemplateDetailsViewModel;
+    if (model == null) return;
+    
+    // Get assignments directly from ViewData (passed from controller)
+    var assignments = ViewData["Assignments"] as List<FormTemplateAssignment> ?? new List<FormTemplateAssignment>();
+
+    // Helper to get target name based on assignment type
+    string GetTargetName(FormTemplateAssignment a) => a.AssignmentType switch
+    {
+        "All" => "All Tenants",
+        "TenantType" => a.TenantType ?? "Unknown Type",
+        "TenantGroup" => a.TenantGroup?.GroupName ?? $"Group #{a.TenantGroupId}",
+        "SpecificTenant" => a.Tenant?.TenantName ?? $"Tenant #{a.TenantId}",
+        "Role" => a.Role?.RoleName ?? $"Role #{a.RoleId}",
+        "Department" => a.Department?.DepartmentName ?? $"Dept #{a.DepartmentId}",
+        "UserGroup" => a.UserGroup?.GroupName ?? $"Group #{a.UserGroupId}",
+        "SpecificUser" => a.User?.FullName ?? $"User #{a.UserId}",
+        _ => "Unknown"
+    };
+
+    // Helper to get target icon
+    string GetTargetIcon(string assignmentType) => assignmentType switch
+    {
+        "All" => "ri-global-line",
+        "TenantType" => "ri-building-2-line",
+        "TenantGroup" => "ri-group-line",
+        "SpecificTenant" => "ri-building-line",
+        "Role" => "ri-shield-user-line",
+        "Department" => "ri-organization-chart",
+        "UserGroup" => "ri-team-line",
+        "SpecificUser" => "ri-user-line",
+        _ => "ri-question-line"
+    };
+
+    // Helper to get type color
+    string GetTypeColor(string assignmentType) => assignmentType switch
+    {
+        "All" => "primary",
+        "TenantType" => "info",
+        "TenantGroup" => "success",
+        "SpecificTenant" => "warning",
+        "Role" => "danger",
+        "Department" => "secondary",
+        "UserGroup" => "dark",
+        "SpecificUser" => "primary",
+        _ => "secondary"
+    };
+
+    // Helper to get status color
+    string GetStatusColor(string status) => status switch
+    {
+        "Active" => "success",
+        "Suspended" => "warning",
+        "Revoked" => "danger",
+        _ => "secondary"
+    };
+
+    // Build DataTable configuration
+    var tableConfig = new DataTableConfig
+    {
+        TableId = "assignmentsTable",
+        Columns = new List<string> { "Target", "Type", "Effective Period", "Status", "Assigned", "Actions" },
+        EnableSearch = false,
+        CreateButtonText = "Create Assignment",
+        CreateButtonUrl = $"/FormTemplates/{model.TemplateId}/Assignments/Create",
+        ShowPagination = false,
+        EnableSorting = true,
+        EnableHover = true
+    };
+
+    var table = tableConfig.BuildDataTable();
+}
+
+<!-- Assignment Panel -->
+<div id="assignments-panel">
+    <div class="card">
+        <div class="card-header">
+            <div class="d-flex justify-content-between align-items-center flex-wrap w-100 gap-2">
+                <h5 class="mb-0">
+                    <i class="ri-user-shared-line me-2 text-primary"></i>
+                    Assignments <span class="badge bg-primary-subtle text-primary ms-2">@assignments.Count</span>
+                </h5>
+                <a href="@table.CreateButtonUrl" class="btn btn-primary btn-sm">
+                    <i class="ri-add-line me-1"></i>@table.CreateButtonText
+                </a>
+            </div>
+        </div>
+
+        <div class="card-body p-0">
+            @if (assignments.Any())
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0" id="@table.TableId">
+                        <thead class="bg-light">
+                            <tr>
+                                @foreach (var column in table.Columns)
+                                {
+                                    <th scope="col" style="padding: 12px; white-space: nowrap;">@column</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var a in assignments)
+                            {
+                                var targetName = GetTargetName(a);
+                                var targetIcon = GetTargetIcon(a.AssignmentType);
+                                var typeColor = GetTypeColor(a.AssignmentType);
+                                var statusColor = GetStatusColor(a.Status);
+                                var effectivePeriod = a.EffectiveUntil.HasValue 
+                                    ? $"{a.EffectiveFrom:MMM d, yyyy} - {a.EffectiveUntil:MMM d, yyyy}"
+                                    : $"{a.EffectiveFrom:MMM d, yyyy} - Indefinite";
+
+                                <tr data-id="@a.AssignmentId">
+                                    <!-- Target -->
+                                    <td>
+                                        <div class="d-flex align-items-center gap-2">
+                                            <div class="avatar-xs bg-@typeColor-subtle text-@typeColor rounded-circle d-flex align-items-center justify-content-center" style="width:32px;height:32px;">
+                                                <i class="@targetIcon"></i>
+                                            </div>
+                                            <div>
+                                                <div class="fw-medium">@targetName</div>
+                                                @if (a.AllowAnonymous)
+                                                {
+                                                    <small class="text-muted"><i class="ri-eye-off-line me-1"></i>Anonymous allowed</small>
+                                                }
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <!-- Type -->
+                                    <td>
+                                        <span class="badge bg-@typeColor-subtle text-@typeColor">@a.AssignmentType</span>
+                                    </td>
+                                    <!-- Effective Period -->
+                                    <td>
+                                        <div>@a.EffectiveFrom.ToString("MMM d, yyyy")</div>
+                                        <small class="text-muted">to @(a.EffectiveUntil?.ToString("MMM d, yyyy") ?? "Indefinite")</small>
+                                    </td>
+                                    <!-- Status -->
+                                    <td>
+                                        <span class="badge bg-@statusColor-subtle text-@statusColor">@a.Status</span>
+                                    </td>
+                                    <!-- Assigned Date -->
+                                    <td>
+                                        <div>@a.AssignedDate.ToString("MMM d, yyyy")</div>
+                                        <small class="text-muted">@a.AssignedDate.ToString("HH:mm")</small>
+                                    </td>
+                                    <!-- Actions -->
+                                    <td>
+                                        <div class="dropdown">
+                                            <button class="btn btn-soft-secondary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                                <i class="ri-more-2-fill"></i>
+                                            </button>
+                                            <ul class="dropdown-menu dropdown-menu-end">
+                                                <li>
+                                                    <a class="dropdown-item" href="/FormTemplates/@(model.TemplateId)/Assignments/@(a.AssignmentId)/Edit">
+                                                        <i class="ri-pencil-line me-2"></i>Edit
+                                                    </a>
+                                                </li>
+                                                <li>
+                                                    <a class="dropdown-item" href="#" onclick="extendAssignment(@a.AssignmentId); return false;">
+                                                        <i class="ri-calendar-line me-2"></i>Extend Period
+                                                    </a>
+                                                </li>
+                                                <li><hr class="dropdown-divider"></li>
+                                                @if (a.Status == "Active")
+                                                {
+                                                    <li>
+                                                        <a class="dropdown-item text-warning" href="#" onclick="suspendAssignment(@a.AssignmentId); return false;">
+                                                            <i class="ri-pause-circle-line me-2"></i>Suspend
+                                                        </a>
+                                                    </li>
+                                                }
+                                                else if (a.Status == "Suspended")
+                                                {
+                                                    <li>
+                                                        <a class="dropdown-item text-success" href="#" onclick="reactivateAssignment(@a.AssignmentId); return false;">
+                                                            <i class="ri-play-circle-line me-2"></i>Reactivate
+                                                        </a>
+                                                    </li>
+                                                }
+                                                <li>
+                                                    <a class="dropdown-item text-danger" href="#" onclick="revokeAssignment(@a.AssignmentId, '@targetName'); return false;">
+                                                        <i class="ri-close-circle-line me-2"></i>Revoke
+                                                    </a>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-5">
+                    <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center" style="width:80px;height:80px;">
+                        <i class="ri-user-add-line fs-1 text-muted"></i>
+                    </div>
+                    <h5 class="mt-3">No Assignments</h5>
+                    <p class="text-muted">Create an assignment to allow users to access this form.</p>
+                    <a href="/FormTemplates/@(model.TemplateId)/Assignments/Create" class="btn btn-primary">
+                        <i class="ri-add-line me-1"></i>Create First Assignment
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<!-- Revoke Confirmation Modal -->
+<div class="modal fade" id="revokeAssignmentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header bg-danger">
+                <h5 class="modal-title text-white">
+                    <i class="ri-alert-line me-2"></i>Revoke Assignment
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to revoke the assignment for <strong id="revokeTargetName"></strong>?</p>
+                <p class="text-muted mb-0">This will prevent the assigned users from submitting this form.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <form id="revokeAssignmentForm" method="post" style="display:inline;">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">
+                        <i class="ri-close-circle-line me-1"></i>Revoke Assignment
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Assignment action functions
+    function extendAssignment(assignmentId) {
+        // TODO: Implement extend period modal
+        alert('Extend period for assignment #' + assignmentId + ' - Coming soon');
+    }
+
+    function suspendAssignment(assignmentId) {
+        if (confirm('Are you sure you want to suspend this assignment?')) {
+            fetch(`/api/assignments/${assignmentId}/suspend`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.message || 'Failed to suspend assignment'));
+                }
+            })
+            .catch(err => alert('Error suspending assignment'));
+        }
+    }
+
+    function reactivateAssignment(assignmentId) {
+        if (confirm('Are you sure you want to reactivate this assignment?')) {
+            fetch(`/api/assignments/${assignmentId}/reactivate`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value || ''
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.message || 'Failed to reactivate assignment'));
+                }
+            })
+            .catch(err => alert('Error reactivating assignment'));
+        }
+    }
+
+    function revokeAssignment(assignmentId, targetName) {
+        document.getElementById('revokeTargetName').textContent = targetName;
+        document.getElementById('revokeAssignmentForm').action = `/FormTemplates/@(model.TemplateId)/Assignments/${assignmentId}/Delete`;
+        const modal = new bootstrap.Modal(document.getElementById('revokeAssignmentModal'));
+        modal.show();
+    }
+</script>

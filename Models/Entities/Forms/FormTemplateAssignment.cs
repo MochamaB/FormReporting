@@ -6,7 +6,9 @@ using FormReporting.Models.Entities.Identity;
 namespace FormReporting.Models.Entities.Forms
 {
     /// <summary>
-    /// Form template assignments with 8 assignment types (tenant-based + user-based)
+    /// Form template assignments - defines WHO can access/submit a form template.
+    /// Supports 8 assignment types (tenant-based + user-based).
+    /// Submission rules (WHEN/HOW) are managed separately in FormTemplateSubmissionRule.
     /// </summary>
     [Table("FormTemplateAssignments")]
     public class FormTemplateAssignment
@@ -17,14 +19,16 @@ namespace FormReporting.Models.Entities.Forms
         [Required]
         public int TemplateId { get; set; }
 
-        // Assignment Type (8 types total)
+        // ===== ASSIGNMENT TYPE (8 types total) =====
+        /// <summary>
+        /// Tenant-based: 'All', 'TenantType', 'TenantGroup', 'SpecificTenant'
+        /// User-based: 'Role', 'Department', 'UserGroup', 'SpecificUser'
+        /// </summary>
         [Required]
         [StringLength(50)]
         public string AssignmentType { get; set; } = string.Empty;
-        // Tenant-based: 'All', 'TenantType', 'TenantGroup', 'SpecificTenant'
-        // User-based: 'Role', 'Department', 'UserGroup', 'SpecificUser'
 
-        // Tenant-based assignment targets
+        // ===== TENANT-BASED TARGETS =====
         [StringLength(20)]
         public string? TenantType { get; set; }
 
@@ -32,7 +36,7 @@ namespace FormReporting.Models.Entities.Forms
 
         public int? TenantId { get; set; }
 
-        // User-based assignment targets
+        // ===== USER-BASED TARGETS =====
         public int? RoleId { get; set; }
 
         public int? DepartmentId { get; set; }
@@ -41,18 +45,57 @@ namespace FormReporting.Models.Entities.Forms
 
         public int? UserId { get; set; }
 
-        // Metadata
+        // ===== ACCESS PERIOD =====
+        /// <summary>
+        /// When the assignment becomes effective (access starts)
+        /// </summary>
+        public DateTime EffectiveFrom { get; set; } = DateTime.UtcNow;
+
+        /// <summary>
+        /// When the assignment expires (NULL = indefinite access)
+        /// </summary>
+        public DateTime? EffectiveUntil { get; set; }
+
+        // ===== ACCESS OPTIONS =====
+        /// <summary>
+        /// Allow anonymous submissions (no login required)
+        /// </summary>
+        public bool AllowAnonymous { get; set; } = false;
+
+        // ===== ASSIGNMENT STATUS =====
+        /// <summary>
+        /// Status: Active, Suspended, Revoked
+        /// </summary>
+        [StringLength(20)]
+        public string Status { get; set; } = "Active";
+
+        // ===== CANCELLATION =====
+        /// <summary>
+        /// User who cancelled/revoked this assignment
+        /// </summary>
+        public int? CancelledBy { get; set; }
+
+        /// <summary>
+        /// When the assignment was cancelled
+        /// </summary>
+        public DateTime? CancelledDate { get; set; }
+
+        /// <summary>
+        /// Reason for cancellation
+        /// </summary>
+        [StringLength(500)]
+        public string? CancellationReason { get; set; }
+
+        // ===== METADATA =====
         [Required]
         public int AssignedBy { get; set; }
 
         public DateTime AssignedDate { get; set; } = DateTime.UtcNow;
 
-        public bool IsActive { get; set; } = true;
-
         [StringLength(500)]
         public string? Notes { get; set; }
 
-        // Navigation properties
+        // ===== NAVIGATION PROPERTIES =====
         [ForeignKey(nameof(TemplateId))]
         public virtual FormTemplate Template { get; set; } = null!;
 
@@ -76,5 +119,8 @@ namespace FormReporting.Models.Entities.Forms
 
         [ForeignKey(nameof(AssignedBy))]
         public virtual User AssignedByUser { get; set; } = null!;
+
+        [ForeignKey(nameof(CancelledBy))]
+        public virtual User? CancelledByUser { get; set; }
     }
 }

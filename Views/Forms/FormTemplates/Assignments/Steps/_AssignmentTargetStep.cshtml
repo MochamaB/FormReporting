@@ -1,0 +1,647 @@
+@*
+    Assignment Target Step
+    
+    Content:
+    - 8 assignment type buttons (All, TenantType, TenantGroup, SpecificTenant, Role, Department, UserGroup, SpecificUser)
+    - Conditional target picker based on selected type
+    - Preview count of affected users/tenants (scope-filtered)
+*@
+
+<div class="assignment-target-step">
+    <!-- Hidden field for assignment type -->
+    <input type="hidden" name="assignmentType" id="assignmentType" required />
+
+    <!-- Allow Anonymous Toggle -->
+    <div class="mb-4">
+        <div class="card border border-primary-subtle bg-primary-subtle bg-opacity-10">
+            <div class="card-body py-3">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-sm me-3">
+                            <div class="avatar-title bg-primary text-white rounded-circle fs-5">
+                                <i class="ri-user-unfollow-line"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">Allow Anonymous Submissions</h6>
+                            <p class="text-muted small mb-0">Enable this for public forms that don't require login (surveys, feedback, etc.)</p>
+                        </div>
+                    </div>
+                    <div class="form-check form-switch form-switch-lg">
+                        <input class="form-check-input" type="checkbox" role="switch" id="allowAnonymous" name="allowAnonymous" value="true">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Anonymous Mode Info (shown when anonymous is enabled) -->
+    <div id="anonymous-mode-info" class="d-none">
+        <div class="alert alert-info d-flex align-items-start mb-4" role="alert">
+            <i class="ri-information-line fs-4 me-3 mt-1"></i>
+            <div>
+                <h6 class="alert-heading mb-1">Anonymous Mode Enabled</h6>
+                <p class="mb-2">This form will be accessible to anyone with the link, without requiring login.</p>
+                <ul class="mb-0 small">
+                    <li>No target selection needed - form is publicly accessible</li>
+                    <li>Submissions will not be linked to any user account</li>
+                    <li>You can still set access period and submission rules in the next steps</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Target Selection Container (hidden when anonymous is enabled) -->
+    <div id="target-selection-container">
+        <!-- Tenant-Based Assignment Types -->
+    <div class="mb-4">
+        <h6 class="text-muted fw-semibold mb-3">
+            <i class="ri-building-line me-2"></i>Tenant-Based Assignment
+        </h6>
+        <div class="row g-3">
+            <!-- All Tenants -->
+            <div class="col-md-3 col-sm-6">
+                <div class="target-type-card" data-type="All" data-category="tenant">
+                    <div class="card border h-100 cursor-pointer target-card" tabindex="0">
+                        <div class="card-body text-center py-4">
+                            <div class="avatar-sm mx-auto mb-3">
+                                <div class="avatar-title bg-primary-subtle text-primary rounded-circle fs-4">
+                                    <i class="ri-global-line"></i>
+                                </div>
+                            </div>
+                            <h6 class="mb-1">All Tenants</h6>
+                            <p class="text-muted small mb-0">Assign to everyone</p>
+                        </div>
+                        <div class="card-footer bg-transparent border-top-0 text-center py-2 d-none selected-indicator">
+                            <span class="badge bg-success"><i class="ri-check-line me-1"></i>Selected</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tenant Type -->
+            <div class="col-md-3 col-sm-6">
+                <div class="target-type-card" data-type="TenantType" data-category="tenant">
+                    <div class="card border h-100 cursor-pointer target-card" tabindex="0">
+                        <div class="card-body text-center py-4">
+                            <div class="avatar-sm mx-auto mb-3">
+                                <div class="avatar-title bg-info-subtle text-info rounded-circle fs-4">
+                                    <i class="ri-building-4-line"></i>
+                                </div>
+                            </div>
+                            <h6 class="mb-1">By Type</h6>
+                            <p class="text-muted small mb-0">Factory, Subsidiary...</p>
+                        </div>
+                        <div class="card-footer bg-transparent border-top-0 text-center py-2 d-none selected-indicator">
+                            <span class="badge bg-success"><i class="ri-check-line me-1"></i>Selected</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tenant Group -->
+            <div class="col-md-3 col-sm-6">
+                <div class="target-type-card" data-type="TenantGroup" data-category="tenant">
+                    <div class="card border h-100 cursor-pointer target-card" tabindex="0">
+                        <div class="card-body text-center py-4">
+                            <div class="avatar-sm mx-auto mb-3">
+                                <div class="avatar-title bg-warning-subtle text-warning rounded-circle fs-4">
+                                    <i class="ri-group-line"></i>
+                                </div>
+                            </div>
+                            <h6 class="mb-1">Tenant Group</h6>
+                            <p class="text-muted small mb-0">Predefined groups</p>
+                        </div>
+                        <div class="card-footer bg-transparent border-top-0 text-center py-2 d-none selected-indicator">
+                            <span class="badge bg-success"><i class="ri-check-line me-1"></i>Selected</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Specific Tenant -->
+            <div class="col-md-3 col-sm-6">
+                <div class="target-type-card" data-type="SpecificTenant" data-category="tenant">
+                    <div class="card border h-100 cursor-pointer target-card" tabindex="0">
+                        <div class="card-body text-center py-4">
+                            <div class="avatar-sm mx-auto mb-3">
+                                <div class="avatar-title bg-secondary-subtle text-secondary rounded-circle fs-4">
+                                    <i class="ri-building-line"></i>
+                                </div>
+                            </div>
+                            <h6 class="mb-1">Specific Tenant</h6>
+                            <p class="text-muted small mb-0">Select one tenant</p>
+                        </div>
+                        <div class="card-footer bg-transparent border-top-0 text-center py-2 d-none selected-indicator">
+                            <span class="badge bg-success"><i class="ri-check-line me-1"></i>Selected</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User-Based Assignment Types -->
+    <div class="mb-4">
+        <h6 class="text-muted fw-semibold mb-3">
+            <i class="ri-user-line me-2"></i>User-Based Assignment
+        </h6>
+        <div class="row g-3">
+            <!-- Role -->
+            <div class="col-md-3 col-sm-6">
+                <div class="target-type-card" data-type="Role" data-category="user">
+                    <div class="card border h-100 cursor-pointer target-card" tabindex="0">
+                        <div class="card-body text-center py-4">
+                            <div class="avatar-sm mx-auto mb-3">
+                                <div class="avatar-title bg-danger-subtle text-danger rounded-circle fs-4">
+                                    <i class="ri-shield-user-line"></i>
+                                </div>
+                            </div>
+                            <h6 class="mb-1">By Role</h6>
+                            <p class="text-muted small mb-0">Admin, Manager...</p>
+                        </div>
+                        <div class="card-footer bg-transparent border-top-0 text-center py-2 d-none selected-indicator">
+                            <span class="badge bg-success"><i class="ri-check-line me-1"></i>Selected</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Department -->
+            <div class="col-md-3 col-sm-6">
+                <div class="target-type-card" data-type="Department" data-category="user">
+                    <div class="card border h-100 cursor-pointer target-card" tabindex="0">
+                        <div class="card-body text-center py-4">
+                            <div class="avatar-sm mx-auto mb-3">
+                                <div class="avatar-title bg-success-subtle text-success rounded-circle fs-4">
+                                    <i class="ri-building-2-line"></i>
+                                </div>
+                            </div>
+                            <h6 class="mb-1">Department</h6>
+                            <p class="text-muted small mb-0">IT, Finance, HR...</p>
+                        </div>
+                        <div class="card-footer bg-transparent border-top-0 text-center py-2 d-none selected-indicator">
+                            <span class="badge bg-success"><i class="ri-check-line me-1"></i>Selected</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Group -->
+            <div class="col-md-3 col-sm-6">
+                <div class="target-type-card" data-type="UserGroup" data-category="user">
+                    <div class="card border h-100 cursor-pointer target-card" tabindex="0">
+                        <div class="card-body text-center py-4">
+                            <div class="avatar-sm mx-auto mb-3">
+                                <div class="avatar-title bg-purple-subtle text-purple rounded-circle fs-4">
+                                    <i class="ri-team-line"></i>
+                                </div>
+                            </div>
+                            <h6 class="mb-1">User Group</h6>
+                            <p class="text-muted small mb-0">Custom groups</p>
+                        </div>
+                        <div class="card-footer bg-transparent border-top-0 text-center py-2 d-none selected-indicator">
+                            <span class="badge bg-success"><i class="ri-check-line me-1"></i>Selected</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Specific User -->
+            <div class="col-md-3 col-sm-6">
+                <div class="target-type-card" data-type="SpecificUser" data-category="user">
+                    <div class="card border h-100 cursor-pointer target-card" tabindex="0">
+                        <div class="card-body text-center py-4">
+                            <div class="avatar-sm mx-auto mb-3">
+                                <div class="avatar-title bg-dark-subtle text-dark rounded-circle fs-4">
+                                    <i class="ri-user-line"></i>
+                                </div>
+                            </div>
+                            <h6 class="mb-1">Specific User</h6>
+                            <p class="text-muted small mb-0">Select one user</p>
+                        </div>
+                        <div class="card-footer bg-transparent border-top-0 text-center py-2 d-none selected-indicator">
+                            <span class="badge bg-success"><i class="ri-check-line me-1"></i>Selected</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Target Picker (Conditional) -->
+    <div id="target-picker-container" class="d-none">
+        <div class="card border shadow-none">
+            <div class="card-header bg-light">
+                <h6 class="card-title mb-0" id="target-picker-title">
+                    <i class="ri-list-check me-2"></i>Select Target
+                </h6>
+            </div>
+            <div class="card-body">
+                <!-- Loading state -->
+                <div id="target-picker-loading" class="text-center py-4 d-none">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="text-muted mt-2 mb-0">Loading options...</p>
+                </div>
+
+                <!-- Target select -->
+                <div id="target-picker-content">
+                    <select class="form-select" id="targetSelect" name="targetId">
+                        <option value="">-- Select --</option>
+                    </select>
+                    <div class="form-text mt-2" id="target-picker-hint"></div>
+                </div>
+
+                <!-- Hidden fields for specific target IDs -->
+                <input type="hidden" name="tenantType" id="tenantTypeValue" />
+                <input type="hidden" name="tenantGroupId" id="tenantGroupIdValue" />
+                <input type="hidden" name="tenantId" id="tenantIdValue" />
+                <input type="hidden" name="roleId" id="roleIdValue" />
+                <input type="hidden" name="departmentId" id="departmentIdValue" />
+                <input type="hidden" name="userGroupId" id="userGroupIdValue" />
+                <input type="hidden" name="userId" id="userIdValue" />
+            </div>
+        </div>
+    </div>
+
+        <!-- Target Preview -->
+        <div id="target-preview" class="mt-4 d-none">
+            <div class="alert alert-soft-info d-flex align-items-center" role="alert">
+                <i class="ri-information-line fs-4 me-3"></i>
+                <div>
+                    <strong>Assignment Target:</strong>
+                    <span id="target-preview-text">Select a target type above</span>
+                </div>
+            </div>
+        </div>
+    </div><!-- End target-selection-container -->
+</div>
+
+<style>
+    .target-card {
+        transition: all 0.2s ease;
+    }
+    .target-card:hover {
+        border-color: var(--bs-primary) !important;
+        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+    }
+    .target-card.selected {
+        border-color: var(--bs-success) !important;
+        background-color: rgba(var(--bs-success-rgb), 0.05);
+    }
+    .target-card.selected .avatar-title {
+        background-color: var(--bs-success) !important;
+        color: white !important;
+    }
+    .cursor-pointer {
+        cursor: pointer;
+    }
+    .bg-purple-subtle {
+        background-color: rgba(111, 66, 193, 0.1);
+    }
+    .text-purple {
+        color: #6f42c1;
+    }
+</style>
+
+<script>
+(function() {
+    'use strict';
+
+    // State
+    let selectedType = null;
+    let selectedTarget = null;
+    let targetOptions = [];
+    let isAnonymous = false;
+
+    // Elements
+    const typeCards = document.querySelectorAll('.target-type-card');
+    const assignmentTypeInput = document.getElementById('assignmentType');
+    const pickerContainer = document.getElementById('target-picker-container');
+    const pickerTitle = document.getElementById('target-picker-title');
+    const pickerLoading = document.getElementById('target-picker-loading');
+    const pickerContent = document.getElementById('target-picker-content');
+    const pickerHint = document.getElementById('target-picker-hint');
+    const targetSelect = document.getElementById('targetSelect');
+    const targetPreview = document.getElementById('target-preview');
+    const targetPreviewText = document.getElementById('target-preview-text');
+    
+    // Anonymous mode elements
+    const allowAnonymousCheckbox = document.getElementById('allowAnonymous');
+    const anonymousModeInfo = document.getElementById('anonymous-mode-info');
+    const targetSelectionContainer = document.getElementById('target-selection-container');
+
+    // Hidden fields
+    const hiddenFields = {
+        tenantType: document.getElementById('tenantTypeValue'),
+        tenantGroupId: document.getElementById('tenantGroupIdValue'),
+        tenantId: document.getElementById('tenantIdValue'),
+        roleId: document.getElementById('roleIdValue'),
+        departmentId: document.getElementById('departmentIdValue'),
+        userGroupId: document.getElementById('userGroupIdValue'),
+        userId: document.getElementById('userIdValue')
+    };
+
+    // Type card click handler
+    typeCards.forEach(card => {
+        const cardElement = card.querySelector('.target-card');
+        
+        cardElement.addEventListener('click', () => selectType(card));
+        cardElement.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                selectType(card);
+            }
+        });
+    });
+
+    // Anonymous toggle handler
+    allowAnonymousCheckbox.addEventListener('change', () => {
+        isAnonymous = allowAnonymousCheckbox.checked;
+        toggleAnonymousMode(isAnonymous);
+    });
+
+    function toggleAnonymousMode(enabled) {
+        if (enabled) {
+            // Show anonymous info, hide target selection
+            anonymousModeInfo.classList.remove('d-none');
+            targetSelectionContainer.classList.add('d-none');
+            
+            // Set assignment type to 'All' for anonymous (public access)
+            assignmentTypeInput.value = 'All';
+            selectedType = 'All';
+            
+            // Clear target selection
+            selectedTarget = null;
+            clearHiddenFields();
+        } else {
+            // Hide anonymous info, show target selection
+            anonymousModeInfo.classList.add('d-none');
+            targetSelectionContainer.classList.remove('d-none');
+            
+            // Reset assignment type
+            assignmentTypeInput.value = '';
+            selectedType = null;
+            
+            // Reset visual state
+            typeCards.forEach(c => {
+                c.querySelector('.target-card').classList.remove('selected');
+                c.querySelector('.selected-indicator').classList.add('d-none');
+            });
+            pickerContainer.classList.add('d-none');
+            targetPreview.classList.add('d-none');
+        }
+    }
+
+    // Target select change handler
+    targetSelect.addEventListener('change', () => {
+        const value = targetSelect.value;
+        const option = targetOptions.find(o => o.value === value);
+        
+        if (option) {
+            selectedTarget = option;
+            updateHiddenFields();
+            updatePreview();
+        } else {
+            selectedTarget = null;
+            clearHiddenFields();
+            updatePreview();
+        }
+    });
+
+    function selectType(card) {
+        const type = card.dataset.type;
+        const category = card.dataset.category;
+
+        // Update visual state
+        typeCards.forEach(c => {
+            c.querySelector('.target-card').classList.remove('selected');
+            c.querySelector('.selected-indicator').classList.add('d-none');
+        });
+        
+        card.querySelector('.target-card').classList.add('selected');
+        card.querySelector('.selected-indicator').classList.remove('d-none');
+
+        // Update state
+        selectedType = type;
+        assignmentTypeInput.value = type;
+
+        // Clear previous selection
+        selectedTarget = null;
+        clearHiddenFields();
+        targetSelect.innerHTML = '<option value="">-- Select --</option>';
+
+        // Handle "All" type - no picker needed
+        if (type === 'All') {
+            pickerContainer.classList.add('d-none');
+            loadTargetOptions(type).then(() => {
+                if (targetOptions.length > 0) {
+                    selectedTarget = targetOptions[0];
+                    updatePreview();
+                }
+            });
+            return;
+        }
+
+        // Show picker and load options
+        pickerContainer.classList.remove('d-none');
+        pickerTitle.innerHTML = `<i class="ri-list-check me-2"></i>Select ${getTypeLabel(type)}`;
+        pickerHint.textContent = getTypeHint(type);
+
+        loadTargetOptions(type);
+    }
+
+    async function loadTargetOptions(type) {
+        console.log('[AssignmentWizard] Loading target options for type:', type);
+        pickerLoading.classList.remove('d-none');
+        pickerContent.classList.add('d-none');
+        targetPreview.classList.add('d-none');
+
+        try {
+            const url = `/api/assignments/target-options/${type}`;
+            console.log('[AssignmentWizard] Fetching:', url);
+            
+            const response = await fetch(url);
+            console.log('[AssignmentWizard] Response status:', response.status);
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                console.error('[AssignmentWizard] API error:', response.status, errorText);
+                targetOptions = [];
+                showPickerError(`Failed to load options (${response.status})`);
+                // Don't return - let finally block run to hide loading spinner
+                throw new Error(`API returned ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log('[AssignmentWizard] Result:', result);
+
+            if (result.success && result.data) {
+                targetOptions = result.data;
+                populateSelect(result.data);
+                
+                if (result.data.length === 0) {
+                    showPickerError('No options available for your scope');
+                }
+            } else {
+                console.error('[AssignmentWizard] Failed to load target options:', result.message);
+                targetOptions = [];
+                showPickerError(result.message || 'Failed to load options');
+            }
+        } catch (error) {
+            console.error('[AssignmentWizard] Error loading target options:', error);
+            targetOptions = [];
+            showPickerError('Error loading options. Check console for details.');
+        } finally {
+            pickerLoading.classList.add('d-none');
+            pickerContent.classList.remove('d-none');
+            targetPreview.classList.remove('d-none');
+            updatePreview();
+        }
+    }
+
+    function showPickerError(message) {
+        targetSelect.innerHTML = `<option value="">-- ${message} --</option>`;
+    }
+
+    function populateSelect(options) {
+        targetSelect.innerHTML = '<option value="">-- Select --</option>';
+
+        // Group options if they have a group property
+        const grouped = {};
+        const ungrouped = [];
+
+        options.forEach(opt => {
+            if (opt.group) {
+                if (!grouped[opt.group]) grouped[opt.group] = [];
+                grouped[opt.group].push(opt);
+            } else {
+                ungrouped.push(opt);
+            }
+        });
+
+        // Add ungrouped options
+        ungrouped.forEach(opt => {
+            const optionEl = document.createElement('option');
+            optionEl.value = opt.value;
+            optionEl.textContent = opt.count !== null && opt.count !== undefined
+                ? `${opt.label} (${opt.count})`
+                : opt.label;
+            optionEl.dataset.description = opt.description || '';
+            optionEl.dataset.icon = opt.icon || '';
+            targetSelect.appendChild(optionEl);
+        });
+
+        // Add grouped options
+        Object.keys(grouped).sort().forEach(groupName => {
+            const optgroup = document.createElement('optgroup');
+            optgroup.label = groupName;
+            
+            grouped[groupName].forEach(opt => {
+                const optionEl = document.createElement('option');
+                optionEl.value = opt.value;
+                optionEl.textContent = opt.count !== null && opt.count !== undefined
+                    ? `${opt.label} (${opt.count})`
+                    : opt.label;
+                optionEl.dataset.description = opt.description || '';
+                optionEl.dataset.icon = opt.icon || '';
+                optgroup.appendChild(optionEl);
+            });
+            
+            targetSelect.appendChild(optgroup);
+        });
+    }
+
+    function updateHiddenFields() {
+        clearHiddenFields();
+        
+        if (!selectedType || !selectedTarget) return;
+
+        switch (selectedType) {
+            case 'TenantType':
+                hiddenFields.tenantType.value = selectedTarget.value;
+                break;
+            case 'TenantGroup':
+                hiddenFields.tenantGroupId.value = selectedTarget.value;
+                break;
+            case 'SpecificTenant':
+                hiddenFields.tenantId.value = selectedTarget.value;
+                break;
+            case 'Role':
+                hiddenFields.roleId.value = selectedTarget.value;
+                break;
+            case 'Department':
+                hiddenFields.departmentId.value = selectedTarget.value;
+                break;
+            case 'UserGroup':
+                hiddenFields.userGroupId.value = selectedTarget.value;
+                break;
+            case 'SpecificUser':
+                hiddenFields.userId.value = selectedTarget.value;
+                break;
+        }
+    }
+
+    function clearHiddenFields() {
+        Object.values(hiddenFields).forEach(field => field.value = '');
+    }
+
+    function updatePreview() {
+        if (!selectedType) {
+            targetPreviewText.textContent = 'Select a target type above';
+            targetPreview.classList.add('d-none');
+            return;
+        }
+
+        targetPreview.classList.remove('d-none');
+
+        if (selectedType === 'All') {
+            const count = targetOptions.length > 0 ? targetOptions[0].count : 0;
+            targetPreviewText.innerHTML = `<strong>All Tenants</strong> - ${count} tenants in your scope`;
+            return;
+        }
+
+        if (!selectedTarget) {
+            targetPreviewText.textContent = `Select a ${getTypeLabel(selectedType).toLowerCase()} from the dropdown`;
+            return;
+        }
+
+        const countText = selectedTarget.count !== null && selectedTarget.count !== undefined
+            ? ` (${selectedTarget.count} ${selectedType.includes('User') || selectedType === 'Role' || selectedType === 'Department' ? 'users' : 'tenants'})`
+            : '';
+
+        targetPreviewText.innerHTML = `<strong>${selectedTarget.label}</strong>${countText}`;
+    }
+
+    function getTypeLabel(type) {
+        const labels = {
+            'All': 'All Tenants',
+            'TenantType': 'Tenant Type',
+            'TenantGroup': 'Tenant Group',
+            'SpecificTenant': 'Tenant',
+            'Role': 'Role',
+            'Department': 'Department',
+            'UserGroup': 'User Group',
+            'SpecificUser': 'User'
+        };
+        return labels[type] || type;
+    }
+
+    function getTypeHint(type) {
+        const hints = {
+            'TenantType': 'Select a tenant type (e.g., Factory, Subsidiary)',
+            'TenantGroup': 'Select a predefined tenant group',
+            'SpecificTenant': 'Select a specific tenant',
+            'Role': 'Select a role - all users with this role will be assigned',
+            'Department': 'Select a department - all users in this department will be assigned',
+            'UserGroup': 'Select a user group',
+            'SpecificUser': 'Select a specific user'
+        };
+        return hints[type] || '';
+    }
+
+    console.log('[AssignmentWizard] Target step initialized');
+})();
+</script>

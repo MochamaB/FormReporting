@@ -1,0 +1,62 @@
+@{
+    ViewData["Title"] = "Edit Assignment";
+    var templateId = ViewData["TemplateId"] as int? ?? 0;
+    var templateName = ViewData["TemplateName"] as string ?? "Template";
+    var assignmentId = ViewData["AssignmentId"] as int? ?? 0;
+}
+
+@*
+    Edit Assignment Page
+    
+    Full page view for editing an existing assignment.
+    TODO: Implement edit form with pre-populated values
+*@
+
+<div class="row">
+    <div class="col-12">
+        <!-- Page Header -->
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h5 class="card-title mb-1">
+                            <i class="ri-pencil-line me-2"></i>Edit Assignment #@assignmentId
+                        </h5>
+                        <p class="text-muted mb-0">
+                            Modify assignment for <strong>@templateName</strong>
+                        </p>
+                    </div>
+                    <div>
+                        <a href="@Url.Action("Details", "FormTemplates", new { id = templateId, tab = "assignments" })" 
+                           class="btn btn-soft-secondary">
+                            <i class="ri-arrow-left-line me-1"></i>Back to Template
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Form -->
+        <div class="card">
+            <div class="card-body">
+                <form action="@Url.Action("Update", "FormAssignments", new { templateId, id = assignmentId })" method="post">
+                    @Html.AntiForgeryToken()
+                    
+                    <!-- TODO: Implement edit form fields -->
+                    <div class="text-center text-muted py-5">
+                        <i class="ri-pencil-line fs-1 mb-3 d-block"></i>
+                        <p>Edit form content coming soon...</p>
+                    </div>
+                    
+                    <div class="d-flex justify-content-end gap-2 mt-4">
+                        <a href="@Url.Action("Details", "FormTemplates", new { id = templateId, tab = "assignments" })" 
+                           class="btn btn-secondary">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ri-save-line me-1"></i>Save Changes
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>

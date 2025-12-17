@@ -53,6 +53,11 @@ builder.Services.AddScoped<IFormItemOptionTemplateService, FormItemOptionTemplat
 builder.Services.AddScoped<IFormSubmissionService, FormSubmissionService>();
 builder.Services.AddScoped<IFormResponseService, FormResponseService>();
 
+// Assignment & Workflow services
+builder.Services.AddScoped<IFormAssignmentService, FormAssignmentService>();
+builder.Services.AddScoped<IWorkflowService, WorkflowService>();
+builder.Services.AddScoped<IWorkflowEngineService, WorkflowEngineService>();
+
 // Metrics services
 builder.Services.AddScoped<FormReporting.Services.Metrics.IMetricDefinitionService, FormReporting.Services.Metrics.MetricDefinitionService>();
 builder.Services.AddScoped<FormReporting.Services.Metrics.IMetricMappingService, FormReporting.Services.Metrics.MetricMappingService>();
@@ -107,6 +112,9 @@ using (var scope = app.Services.CreateScope())
 
         // 7. Seed Metric Definitions (no dependencies)
        // MetricDefinitionSeeder.SeedMetricDefinitions(context);
+
+        // 8. Seed Workflow Actions (no dependencies)
+         WorkflowActionSeeder.SeedWorkflowActions(context);
         
     }
     catch (Exception ex)

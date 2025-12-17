@@ -87,6 +87,7 @@ namespace FormReporting.Models.Entities.Forms
         public virtual ICollection<FormTemplateItem> Items { get; set; } = new List<FormTemplateItem>();
         public virtual ICollection<FormTemplateSubmission> Submissions { get; set; } = new List<FormTemplateSubmission>();
         public virtual ICollection<FormTemplateAssignment> Assignments { get; set; } = new List<FormTemplateAssignment>();
+        public virtual ICollection<FormTemplateSubmissionRule> SubmissionRules { get; set; } = new List<FormTemplateSubmissionRule>();
         public virtual ICollection<FormAnalytics> Analytics { get; set; } = new List<FormAnalytics>();
     }
 }

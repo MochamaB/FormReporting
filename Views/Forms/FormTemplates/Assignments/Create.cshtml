@@ -1,0 +1,67 @@
+@{
+    ViewData["Title"] = "Create Assignment";
+    var templateId = ViewData["TemplateId"] as int? ?? 0;
+    var templateName = ViewData["TemplateName"] as string ?? "Template";
+    var templateCode = ViewData["TemplateCode"] as string ?? "";
+}
+
+@*
+    Create Assignment Page
+    
+    Full page view that wraps the assignment wizard partial.
+    Provides page layout, header, and form wrapper.
+*@
+
+<div class="row">
+    <div class="col-12">
+        <!-- Page Header -->
+        <div class="card">
+            <div class="card-header">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h5 class="card-title mb-1">
+                            <i class="ri-user-add-line me-2"></i>Create Assignment
+                        </h5>
+                        <p class="text-muted mb-0">
+                            Assign <strong>@templateName</strong> 
+                            @if (!string.IsNullOrEmpty(templateCode))
+                            {
+                                <span class="badge bg-secondary-subtle text-secondary ms-1">@templateCode</span>
+                            }
+                            to users or groups
+                        </p>
+                    </div>
+                    <div>
+                        <a href="@Url.Action("Details", "FormTemplates", new { id = templateId, tab = "assignments" })" 
+                           class="btn btn-soft-secondary">
+                            <i class="ri-arrow-left-line me-1"></i>Back to Template
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assignment Wizard Form -->
+        <div class="card">
+            <div class="card-body">
+                <form id="create-assignment-form" 
+                      action="@Url.Action("Store", "FormAssignments", new { templateId })" 
+                      method="post">
+                    @Html.AntiForgeryToken()
+                    
+                    <!-- Wizard Partial -->
+                    <partial name="~/Views/Forms/FormTemplates/Assignments/_CreateAssignmentForm.cshtml" />
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Assignment wizard JavaScript will be added here
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('[AssignmentWizard] Create page initialized for template @templateId');
+        });
+    </script>
+}

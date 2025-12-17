@@ -1,0 +1,535 @@
+/**
+ * Template Details Page Styles
+ * Used for post-publish template configuration (Assignments, Workflow, Metrics, etc.)
+ */
+
+/* ============================================================================
+   TEMPLATE HEADER
+   ============================================================================ */
+
+.template-header {
+    background: linear-gradient(135deg, var(--vz-primary-bg-subtle) 0%, var(--vz-light) 100%);
+    border-radius: 0.5rem;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.template-header .template-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+}
+
+.template-header .template-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+}
+
+.template-header .template-code {
+    font-size: 0.875rem;
+    color: var(--vz-secondary-color);
+}
+
+.template-header .template-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 0.75rem;
+}
+
+.template-header .template-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: 0.8125rem;
+    color: var(--vz-secondary-color);
+}
+
+.template-header .template-meta-item i {
+    font-size: 1rem;
+}
+
+/* ============================================================================
+   OVERVIEW PANEL - STAT CARDS
+   ============================================================================ */
+
+.stat-card-mini {
+    background: var(--vz-card-bg);
+    border: 1px solid var(--vz-border-color);
+    border-radius: 0.375rem;
+    padding: 1rem;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.stat-card-mini:hover {
+    border-color: var(--vz-primary);
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.stat-card-mini .stat-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.stat-card-mini .stat-value {
+    font-size: 1.5rem;
+    font-weight: 600;
+    line-height: 1.2;
+}
+
+.stat-card-mini .stat-label {
+    font-size: 0.75rem;
+    color: var(--vz-secondary-color);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* ============================================================================
+   PANEL HEADERS
+   ============================================================================ */
+
+.panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--vz-border-color);
+}
+
+.panel-header .panel-title {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.panel-header .panel-title .badge {
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.panel-header .panel-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* ============================================================================
+   FILTER BAR
+   ============================================================================ */
+
+.filter-bar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem;
+    background: var(--vz-light);
+    border-radius: 0.375rem;
+    margin-bottom: 1rem;
+}
+
+.filter-bar .filter-group {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.filter-bar .filter-label {
+    font-size: 0.8125rem;
+    color: var(--vz-secondary-color);
+    white-space: nowrap;
+}
+
+.filter-bar .form-select-sm {
+    min-width: 120px;
+}
+
+.filter-bar .bulk-actions {
+    margin-left: auto;
+}
+
+/* ============================================================================
+   ASSIGNMENT LIST
+   ============================================================================ */
+
+.assignment-table {
+    font-size: 0.875rem;
+}
+
+.assignment-table th {
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--vz-secondary-color);
+    border-bottom-width: 2px;
+}
+
+.assignment-table .assignment-target {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.assignment-table .assignment-target .target-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+}
+
+.assignment-table .assignment-target .target-info {
+    line-height: 1.3;
+}
+
+.assignment-table .assignment-target .target-name {
+    font-weight: 500;
+}
+
+.assignment-table .assignment-target .target-detail {
+    font-size: 0.75rem;
+    color: var(--vz-secondary-color);
+}
+
+.assignment-table .status-badge {
+    font-size: 0.6875rem;
+    padding: 0.25rem 0.5rem;
+}
+
+/* ============================================================================
+   WORKFLOW BUILDER
+   ============================================================================ */
+
+.workflow-timeline-horizontal {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    padding: 2rem 1rem;
+    overflow-x: auto;
+}
+
+.workflow-step-node {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-width: 100px;
+    position: relative;
+}
+
+.workflow-step-node:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    top: 20px;
+    left: calc(50% + 25px);
+    width: calc(100% - 50px);
+    height: 2px;
+    background: var(--vz-border-color);
+}
+
+.workflow-step-node.completed:not(:last-child)::after {
+    background: var(--vz-success);
+}
+
+.workflow-step-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+    background: var(--vz-light);
+    border: 2px solid var(--vz-border-color);
+    z-index: 1;
+    transition: all 0.2s ease;
+}
+
+.workflow-step-node.completed .workflow-step-icon {
+    background: var(--vz-success);
+    border-color: var(--vz-success);
+    color: white;
+}
+
+.workflow-step-node.active .workflow-step-icon {
+    background: var(--vz-primary);
+    border-color: var(--vz-primary);
+    color: white;
+    box-shadow: 0 0 0 4px var(--vz-primary-bg-subtle);
+}
+
+.workflow-step-label {
+    margin-top: 0.5rem;
+    text-align: center;
+    font-size: 0.75rem;
+    font-weight: 500;
+    max-width: 80px;
+}
+
+.workflow-step-assignee {
+    font-size: 0.6875rem;
+    color: var(--vz-secondary-color);
+}
+
+/* Workflow Steps List */
+.workflow-steps-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.workflow-step-card {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1rem;
+    background: var(--vz-card-bg);
+    border: 1px solid var(--vz-border-color);
+    border-radius: 0.375rem;
+    margin-bottom: 0.5rem;
+    transition: all 0.2s ease;
+}
+
+.workflow-step-card:hover {
+    border-color: var(--vz-primary);
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.workflow-step-card .drag-handle {
+    cursor: grab;
+    color: var(--vz-secondary-color);
+    padding: 0.25rem;
+}
+
+.workflow-step-card .drag-handle:active {
+    cursor: grabbing;
+}
+
+.workflow-step-card .step-number {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--vz-primary-bg-subtle);
+    color: var(--vz-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 600;
+    flex-shrink: 0;
+}
+
+.workflow-step-card .step-content {
+    flex-grow: 1;
+    min-width: 0;
+}
+
+.workflow-step-card .step-title {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    margin-bottom: 0.25rem;
+}
+
+.workflow-step-card .step-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    font-size: 0.75rem;
+    color: var(--vz-secondary-color);
+}
+
+.workflow-step-card .step-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.workflow-step-card .step-actions {
+    display: flex;
+    gap: 0.25rem;
+    flex-shrink: 0;
+}
+
+/* ============================================================================
+   EMPTY STATES
+   ============================================================================ */
+
+.empty-state {
+    text-align: center;
+    padding: 3rem 1.5rem;
+}
+
+.empty-state .empty-icon {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: var(--vz-light);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: var(--vz-secondary-color);
+    margin-bottom: 1rem;
+}
+
+.empty-state .empty-title {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+
+.empty-state .empty-description {
+    color: var(--vz-secondary-color);
+    margin-bottom: 1.5rem;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* ============================================================================
+   STRUCTURE PANEL
+   ============================================================================ */
+
+.section-card {
+    border: 1px solid var(--vz-border-color);
+    border-radius: 0.375rem;
+    margin-bottom: 1rem;
+}
+
+.section-card .section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0.75rem 1rem;
+    background: var(--vz-light);
+    border-bottom: 1px solid var(--vz-border-color);
+    cursor: pointer;
+}
+
+.section-card .section-header:hover {
+    background: var(--vz-primary-bg-subtle);
+}
+
+.section-card .section-title {
+    font-weight: 600;
+    font-size: 0.9375rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.section-card .section-badge {
+    font-size: 0.6875rem;
+    font-weight: 500;
+}
+
+.section-card .field-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.section-card .field-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.625rem 1rem;
+    border-bottom: 1px solid var(--vz-border-color);
+    font-size: 0.875rem;
+}
+
+.section-card .field-item:last-child {
+    border-bottom: none;
+}
+
+.section-card .field-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 0.25rem;
+    background: var(--vz-light);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    color: var(--vz-secondary-color);
+}
+
+.section-card .field-name {
+    flex-grow: 1;
+}
+
+.section-card .field-type {
+    font-size: 0.75rem;
+    color: var(--vz-secondary-color);
+}
+
+.section-card .field-required {
+    color: var(--vz-danger);
+    font-size: 0.75rem;
+}
+
+/* ============================================================================
+   SKELETON LOADER
+   ============================================================================ */
+
+.skeleton {
+    background: linear-gradient(90deg, var(--vz-light) 25%, var(--vz-gray-200) 50%, var(--vz-light) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+}
+
+@keyframes skeleton-loading {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+}
+
+/* ============================================================================
+   RESPONSIVE
+   ============================================================================ */
+
+@media (max-width: 768px) {
+    .template-header {
+        padding: 1rem;
+    }
+
+    .template-header .template-icon {
+        width: 48px;
+        height: 48px;
+        font-size: 20px;
+    }
+
+    .template-header .template-title {
+        font-size: 1.25rem;
+    }
+
+    .filter-bar {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .filter-bar .bulk-actions {
+        margin-left: 0;
+        margin-top: 0.5rem;
+    }
+
+    .workflow-timeline-horizontal {
+        justify-content: flex-start;
+    }
+}

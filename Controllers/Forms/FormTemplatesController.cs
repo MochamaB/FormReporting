@@ -1,14 +1,17 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FormReporting.Data;
+using FormReporting.Models.Entities.Forms;
 using FormReporting.Models.ViewModels.Forms;
 using FormReporting.Models.ViewModels.Components;
 using FormReporting.Extensions;
 using FormReporting.Services.Forms;
 using FormReporting.Services.Identity;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FormReporting.Controllers.Forms
 {
+    [Authorize]
     public class FormTemplatesController : Controller
     {
         private readonly ApplicationDbContext _context;
@@ -205,6 +208,123 @@ namespace FormReporting.Controllers.Forms
         }
 
         /// <summary>
+        /// Details - View published template details with tabbed interface
+        /// Post-publish configuration: Assignments, Workflow, Metrics, Submissions
+        /// </summary>
+        /// <param name="id">Template ID</param>
+        /// <param name="tab">Active tab (overview, structure, assignments, workflow, metrics, submissions)</param>
+        [HttpGet("FormTemplates/Details/{id}")]
+        public async Task<IActionResult> Details(int id, string? tab = "overview")
+        {
+            // Load template with all related data including assignment targets
+            var template = await _context.FormTemplates
+                .Include(t => t.Category)
+                .Include(t => t.Creator)
+                .Include(t => t.Sections)
+                    .ThenInclude(s => s.Items)
+                .Include(t => t.Submissions)
+                .Include(t => t.Assignments)
+                    .ThenInclude(a => a.TenantGroup)
+                .Include(t => t.Assignments)
+                    .ThenInclude(a => a.Tenant)
+                .Include(t => t.Assignments)
+                    .ThenInclude(a => a.Role)
+                .Include(t => t.Assignments)
+                    .ThenInclude(a => a.Department)
+                .Include(t => t.Assignments)
+                    .ThenInclude(a => a.UserGroup)
+                .Include(t => t.Assignments)
+                    .ThenInclude(a => a.User)
+                .Include(t => t.Workflow)
+                    .ThenInclude(w => w!.Steps)
+                .FirstOrDefaultAsync(t => t.TemplateId == id);
+
+            if (template == null)
+            {
+                TempData["ErrorMessage"] = "Template not found.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Build ViewModel
+            var viewModel = new TemplateDetailsViewModel
+            {
+                TemplateId = template.TemplateId,
+                TemplateName = template.TemplateName,
+                TemplateCode = template.TemplateCode,
+                Description = template.Description,
+                TemplateType = template.TemplateType,
+                PublishStatus = template.PublishStatus,
+                CategoryName = template.Category?.CategoryName,
+                CategoryId = template.CategoryId,
+                CreatedDate = template.CreatedDate,
+                PublishedDate = template.PublishedDate,
+                CreatorName = template.Creator?.FullName,
+                Version = template.Version,
+                ActiveTab = tab ?? "overview",
+
+                // Structure
+                TotalFields = template.Sections.Sum(s => s.Items.Count),
+                Sections = template.Sections.OrderBy(s => s.DisplayOrder).Select(s => new TemplateSectionSummary
+                {
+                    SectionId = s.SectionId,
+                    SectionName = s.SectionName,
+                    SectionOrder = s.DisplayOrder,
+                    FieldCount = s.Items.Count,
+                    RequiredFieldCount = s.Items.Count(i => i.IsRequired),
+                    Fields = s.Items.OrderBy(i => i.DisplayOrder).Select(i => new TemplateFieldSummary
+                    {
+                        ItemId = i.ItemId,
+                        ItemName = i.ItemName,
+                        ItemCode = i.ItemCode,
+                        FieldType = i.DataType,
+                        IsRequired = i.IsRequired,
+                        ItemOrder = i.DisplayOrder
+                    }).ToList()
+                }).ToList(),
+
+                // Assignments
+                AssignmentCount = template.Assignments.Count,
+                ActiveAssignmentCount = template.Assignments.Count(a => a.Status == "Active" || a.Status == "Pending"),
+                OverdueAssignmentCount = template.Assignments.Count(a => a.Status == "Overdue"),
+
+                // Workflow
+                WorkflowId = template.WorkflowId,
+                WorkflowName = template.Workflow?.WorkflowName,
+                WorkflowStepCount = template.Workflow?.Steps.Count ?? 0,
+
+                // Submissions
+                SubmissionCount = template.Submissions.Count,
+                PendingSubmissionCount = template.Submissions.Count(s => s.Status == "Draft" || s.Status == "Submitted" || s.Status == "InApproval"),
+                CompletedSubmissionCount = template.Submissions.Count(s => s.Status == "Approved"),
+
+                // Statistics
+                Statistics = new TemplateStatistics
+                {
+                    TotalSubmissions = template.Submissions.Count,
+                    PendingSubmissions = template.Submissions.Count(s => s.Status == "Draft" || s.Status == "Submitted" || s.Status == "InApproval"),
+                    CompletedSubmissions = template.Submissions.Count(s => s.Status == "Approved"),
+                    OverdueSubmissions = template.Submissions.Count(s => s.Status == "Rejected"),
+                    CompletionRate = template.Submissions.Count > 0 
+                        ? (decimal)template.Submissions.Count(s => s.Status == "Approved") / template.Submissions.Count * 100 
+                        : 0,
+                    TotalAssignments = template.Assignments.Count,
+                    ActiveAssignments = template.Assignments.Count(a => a.Status == "Active"),
+                    OverdueAssignments = 0, // No longer tracked at assignment level - calculated per submission
+                    AssignmentComplianceRate = template.Assignments.Count > 0
+                        ? (decimal)template.Assignments.Count(a => a.Status == "Active") / template.Assignments.Count * 100
+                        : 0,
+                    LastSubmissionDate = template.Submissions.OrderByDescending(s => s.SubmittedDate).FirstOrDefault()?.SubmittedDate,
+                    NextDueDate = null // Due dates are now calculated dynamically based on frequency rules
+                }
+            };
+
+            // DEBUG: Pass assignments directly to view for server-side rendering
+            ViewData["Assignments"] = template.Assignments.ToList();
+
+            return View("~/Views/Forms/FormTemplates/Details.cshtml", viewModel);
+        }
+
+        /// <summary>
         /// Create - Display form for creating a new template OR resume editing a draft
         /// </summary>
         /// <param name="id">Optional: Template ID to resume (must be Draft status)</param>
@@ -243,7 +363,7 @@ namespace FormReporting.Controllers.Forms
         /// Clones the published template as a new draft version and starts wizard
         /// </summary>
         /// <param name="id">Published template ID to version</param>
-        [HttpGet("Edit/{id}")]
+        [HttpGet("FormTemplates/Edit/{id}")]
         public async Task<IActionResult> Edit(int id)
         {
             try
@@ -730,7 +850,7 @@ namespace FormReporting.Controllers.Forms
         /// AJAX: Validate template progress before advancing to next stage
         /// Uses direct database counts for reliable validation
         /// </summary>
-        [HttpGet("Forms/FormTemplates/ValidateStageCompletion")]
+        [HttpGet("FormTemplates/ValidateStageCompletion")]
         public async Task<IActionResult> ValidateStageCompletion(int id, int currentStage)
         {
             try

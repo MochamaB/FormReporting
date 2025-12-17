@@ -12,23 +12,37 @@ namespace FormReporting.Data.Configurations.Forms
             builder.HasKey(fta => fta.AssignmentId);
 
             // Indexes
-            builder.HasIndex(fta => new { fta.TemplateId, fta.IsActive })
+            builder.HasIndex(fta => new { fta.TemplateId, fta.Status })
                 .HasDatabaseName("IX_TemplateAssignments_Template");
 
-            builder.HasIndex(fta => new { fta.AssignmentType, fta.IsActive })
+            builder.HasIndex(fta => new { fta.AssignmentType, fta.Status })
                 .HasDatabaseName("IX_TemplateAssignments_Type");
 
-            builder.HasIndex(fta => new { fta.TenantType, fta.IsActive })
+            builder.HasIndex(fta => new { fta.TenantType, fta.Status })
                 .HasDatabaseName("IX_TemplateAssignments_TenantType");
 
-            builder.HasIndex(fta => new { fta.TenantGroupId, fta.IsActive })
+            builder.HasIndex(fta => new { fta.TenantGroupId, fta.Status })
                 .HasDatabaseName("IX_TemplateAssignments_TenantGroup");
 
-            builder.HasIndex(fta => new { fta.TenantId, fta.IsActive })
+            builder.HasIndex(fta => new { fta.TenantId, fta.Status })
                 .HasDatabaseName("IX_TemplateAssignments_Tenant");
 
             builder.HasIndex(fta => fta.RoleId)
                 .HasDatabaseName("IX_TemplateAssignment_Role");
+
+            // Indexes for access fields
+            builder.HasIndex(fta => fta.Status)
+                .HasDatabaseName("IX_TemplateAssignment_Status");
+
+            builder.HasIndex(fta => new { fta.EffectiveFrom, fta.EffectiveUntil })
+                .HasDatabaseName("IX_TemplateAssignment_EffectivePeriod");
+
+            builder.HasIndex(fta => new { fta.TemplateId, fta.Status, fta.EffectiveFrom })
+                .HasDatabaseName("IX_TemplateAssignment_Template_Status_Effective");
+
+            builder.HasIndex(fta => fta.AllowAnonymous)
+                .HasFilter("AllowAnonymous = 1")
+                .HasDatabaseName("IX_TemplateAssignment_Anonymous");
 
             // Check Constraints
             builder.ToTable(t => t.HasCheckConstraint(
@@ -49,9 +63,17 @@ namespace FormReporting.Data.Configurations.Forms
                   (AssignmentType = 'SpecificUser' AND UserId IS NOT NULL AND TenantType IS NULL AND TenantGroupId IS NULL AND TenantId IS NULL AND RoleId IS NULL AND DepartmentId IS NULL AND UserGroupId IS NULL)"
             ));
 
+            // Check constraint for status values
+            builder.ToTable(t => t.HasCheckConstraint(
+                "CK_TemplateAssignment_Status",
+                "Status IN ('Active', 'Suspended', 'Revoked')"
+            ));
+
             // Default Values
             builder.Property(fta => fta.AssignedDate).HasDefaultValueSql("GETUTCDATE()");
-            builder.Property(fta => fta.IsActive).HasDefaultValue(true);
+            builder.Property(fta => fta.EffectiveFrom).HasDefaultValueSql("GETUTCDATE()");
+            builder.Property(fta => fta.Status).HasDefaultValue("Active");
+            builder.Property(fta => fta.AllowAnonymous).HasDefaultValue(false);
 
             // Relationships
             builder.HasOne(fta => fta.Template)
@@ -92,6 +114,11 @@ namespace FormReporting.Data.Configurations.Forms
             builder.HasOne(fta => fta.AssignedByUser)
                 .WithMany()
                 .HasForeignKey(fta => fta.AssignedBy)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(fta => fta.CancelledByUser)
+                .WithMany()
+                .HasForeignKey(fta => fta.CancelledBy)
                 .OnDelete(DeleteBehavior.Restrict);
         }
     }

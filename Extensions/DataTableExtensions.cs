@@ -85,6 +85,20 @@ namespace FormReporting.Extensions
             viewModel.DefaultView = config.DefaultView;
             viewModel.CardContent = config.CardContentRenderer;
 
+            // AJAX loading
+            viewModel.EnableAjaxLoading = config.EnableAjaxLoading;
+            viewModel.AjaxUrl = config.AjaxUrl;
+            viewModel.SkeletonRowCount = config.SkeletonRowCount;
+            viewModel.AjaxQueryParams = config.AjaxQueryParams;
+
+            // Build AJAX columns
+            if (config.EnableAjaxLoading && config.AjaxColumns != null && config.AjaxColumns.Any())
+            {
+                viewModel.AjaxColumns = config.AjaxColumns
+                    .Select(BuildAjaxColumn)
+                    .ToList();
+            }
+
             // Add Actions column to NonSortableColumns if not already there
             if (config.EnableSorting && config.Columns.Any())
             {
@@ -92,6 +106,15 @@ namespace FormReporting.Extensions
                 if (!viewModel.NonSortableColumns.Contains(actionsColumnIndex))
                 {
                     viewModel.NonSortableColumns.Add(actionsColumnIndex);
+                }
+            }
+
+            // For AJAX mode, also add checkbox column (index 0) to non-sortable
+            if (config.EnableAjaxLoading && config.EnableBulkActions)
+            {
+                if (!viewModel.NonSortableColumns.Contains(0))
+                {
+                    viewModel.NonSortableColumns.Insert(0, 0);
                 }
             }
 
@@ -334,6 +357,157 @@ namespace FormReporting.Extensions
                 classes.Add($"table-{config.TableSize}");
 
             return string.Join(" ", classes);
+        }
+
+        private static AjaxColumnViewModel BuildAjaxColumn(AjaxColumnConfig config)
+        {
+            return new AjaxColumnViewModel
+            {
+                FieldName = config.FieldName,
+                DisplayType = config.DisplayType,
+                BadgeColorField = config.BadgeColorField,
+                IconField = config.IconField,
+                SecondaryField = config.SecondaryField,
+                DateFormat = config.DateFormat,
+                Actions = config.Actions?.Select(a => new AjaxRowActionViewModel
+                {
+                    Text = a.Text,
+                    IconClass = a.IconClass,
+                    Url = a.Url,
+                    OnClick = a.OnClick,
+                    ColorClass = a.ColorClass,
+                    IsDivider = a.IsDivider
+                }).ToList()
+            };
+        }
+
+        // ========== AJAX MODE FLUENT API ==========
+
+        /// <summary>
+        /// Fluent API: Enable AJAX loading mode
+        /// </summary>
+        public static DataTableConfig WithAjaxLoading(this DataTableConfig config,
+            string ajaxUrl,
+            int skeletonRowCount = 5)
+        {
+            config.EnableAjaxLoading = true;
+            config.AjaxUrl = ajaxUrl;
+            config.SkeletonRowCount = skeletonRowCount;
+            config.AjaxColumns = new List<AjaxColumnConfig>();
+            return config;
+        }
+
+        /// <summary>
+        /// Fluent API: Add AJAX query parameter
+        /// </summary>
+        public static DataTableConfig WithAjaxParam(this DataTableConfig config,
+            string key, string value)
+        {
+            config.AjaxQueryParams ??= new Dictionary<string, string>();
+            config.AjaxQueryParams[key] = value;
+            return config;
+        }
+
+        /// <summary>
+        /// Fluent API: Add checkbox column for AJAX mode
+        /// </summary>
+        public static DataTableConfig WithCheckboxColumn(this DataTableConfig config, string idField = "id")
+        {
+            config.AjaxColumns ??= new List<AjaxColumnConfig>();
+            config.AjaxColumns.Add(new AjaxColumnConfig
+            {
+                FieldName = idField,
+                DisplayType = "checkbox"
+            });
+            return config;
+        }
+
+        /// <summary>
+        /// Fluent API: Add text column for AJAX mode
+        /// </summary>
+        public static DataTableConfig WithTextColumn(this DataTableConfig config,
+            string fieldName,
+            string? secondaryField = null)
+        {
+            config.AjaxColumns ??= new List<AjaxColumnConfig>();
+            config.AjaxColumns.Add(new AjaxColumnConfig
+            {
+                FieldName = fieldName,
+                DisplayType = "text",
+                SecondaryField = secondaryField
+            });
+            return config;
+        }
+
+        /// <summary>
+        /// Fluent API: Add avatar column for AJAX mode (icon + text + secondary)
+        /// </summary>
+        public static DataTableConfig WithAvatarColumn(this DataTableConfig config,
+            string fieldName,
+            string? iconField = null,
+            string? secondaryField = null,
+            string? colorField = null)
+        {
+            config.AjaxColumns ??= new List<AjaxColumnConfig>();
+            config.AjaxColumns.Add(new AjaxColumnConfig
+            {
+                FieldName = fieldName,
+                DisplayType = "avatar",
+                IconField = iconField,
+                SecondaryField = secondaryField,
+                BadgeColorField = colorField
+            });
+            return config;
+        }
+
+        /// <summary>
+        /// Fluent API: Add badge column for AJAX mode
+        /// </summary>
+        public static DataTableConfig WithBadgeColumn(this DataTableConfig config,
+            string fieldName,
+            string? colorField = null)
+        {
+            config.AjaxColumns ??= new List<AjaxColumnConfig>();
+            config.AjaxColumns.Add(new AjaxColumnConfig
+            {
+                FieldName = fieldName,
+                DisplayType = "badge",
+                BadgeColorField = colorField
+            });
+            return config;
+        }
+
+        /// <summary>
+        /// Fluent API: Add date column for AJAX mode
+        /// </summary>
+        public static DataTableConfig WithDateColumn(this DataTableConfig config,
+            string fieldName,
+            string format = "MMM dd, yyyy")
+        {
+            config.AjaxColumns ??= new List<AjaxColumnConfig>();
+            config.AjaxColumns.Add(new AjaxColumnConfig
+            {
+                FieldName = fieldName,
+                DisplayType = "date",
+                DateFormat = format
+            });
+            return config;
+        }
+
+        /// <summary>
+        /// Fluent API: Add actions column for AJAX mode
+        /// </summary>
+        public static DataTableConfig WithActionsColumn(this DataTableConfig config,
+            params AjaxRowActionConfig[] actions)
+        {
+            config.AjaxColumns ??= new List<AjaxColumnConfig>();
+            config.AjaxColumns.Add(new AjaxColumnConfig
+            {
+                FieldName = "",
+                DisplayType = "actions",
+                Actions = actions.ToList()
+            });
+            return config;
         }
 
         // ========== HELPER METHODS FOR CONTROLLERS ==========

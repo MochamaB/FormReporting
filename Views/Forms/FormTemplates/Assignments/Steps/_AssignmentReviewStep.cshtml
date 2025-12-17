@@ -1,0 +1,286 @@
+@*
+    Assignment Review Step (Step 3)
+    
+    Content:
+    - Summary display of Target Selection and Access Period
+    - Notes/comments field
+    - Final confirmation before creating assignment
+    
+    Note: Submission Rules are now managed separately via FormTemplateSubmissionRule
+*@
+
+<div class="assignment-review-step">
+    <!-- Summary Cards -->
+    <div class="row g-4">
+        <!-- Target Selection Summary -->
+        <div class="col-md-6">
+            <div class="card border shadow-none h-100 review-card" data-step="1">
+                <div class="card-header bg-primary-subtle d-flex justify-content-between align-items-center">
+                    <label class="form-label mb-0 text-primary">
+                        <i class="ri-user-settings-line me-2"></i>Target Selection
+                    </label>
+                    <button type="button" class="btn btn-sm btn-soft-primary edit-step-btn" data-step="1">
+                        <i class="ri-pencil-line"></i> Edit
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="avatar-sm me-3">
+                            <div class="avatar-title bg-primary-subtle text-primary rounded-circle" id="review-target-icon">
+                                <i class="ri-user-line"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <small class="text-muted d-block">Assignment Type</small>
+                            <span class="fw-semibold" id="review-assignment-type">Not selected</span>
+                        </div>
+                    </div>
+                    <div class="border-top pt-3">
+                        <div class="row g-2">
+                            <div class="col-6">
+                                <small class="text-muted d-block">Target</small>
+                                <span class="fw-medium" id="review-target-name">-</span>
+                            </div>
+                            <div class="col-6">
+                                <small class="text-muted d-block">Anonymous</small>
+                                <span class="fw-medium" id="review-anonymous">No</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Access Period Summary -->
+        <div class="col-md-6">
+            <div class="card border shadow-none h-100 review-card" data-step="2">
+                <div class="card-header bg-success-subtle d-flex justify-content-between align-items-center">
+                    <label class="form-label mb-0 text-success">
+                        <i class="ri-calendar-check-line me-2"></i>Access Period
+                    </label>
+                    <button type="button" class="btn btn-sm btn-soft-success edit-step-btn" data-step="2">
+                        <i class="ri-pencil-line"></i> Edit
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-6">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-xs me-2">
+                                    <div class="avatar-title bg-success-subtle text-success rounded-circle">
+                                        <i class="ri-play-circle-line"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <small class="text-muted d-block">Starts</small>
+                                    <span class="fw-semibold small" id="review-effective-from">-</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="d-flex align-items-center">
+                                <div class="avatar-xs me-2">
+                                    <div class="avatar-title bg-warning-subtle text-warning rounded-circle">
+                                        <i class="ri-stop-circle-line"></i>
+                                    </div>
+                                </div>
+                                <div>
+                                    <small class="text-muted d-block">Expires</small>
+                                    <span class="fw-semibold small" id="review-effective-until">Indefinite</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="border-top pt-3 mt-3">
+                        <small class="text-muted d-block">Duration</small>
+                        <span class="fw-medium" id="review-duration">-</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Notes Section -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card border shadow-none">
+                <div class="card-header bg-light">
+                    <h6 class="card-title mb-0">
+                        <i class="ri-sticky-note-line me-2"></i>Notes (Optional)
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <textarea class="form-control" 
+                              name="notes" 
+                              id="notes" 
+                              rows="3" 
+                              placeholder="Add any notes or comments about this assignment..."></textarea>
+                    <div class="form-text">
+                        <i class="ri-information-line me-1"></i>
+                        These notes are for internal reference only and won't be visible to assignees.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Notice -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="alert alert-warning d-flex align-items-start mb-0" role="alert">
+                <i class="ri-error-warning-line fs-4 me-3 mt-1"></i>
+                <div>
+                    <h6 class="alert-heading mb-1">Ready to Create?</h6>
+                    <p class="mb-0 small">Once created, the assignment will become active according to the effective date. Notifications will be sent to all affected users (unless anonymous mode is enabled).</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .review-card {
+        transition: all 0.2s ease;
+    }
+    .review-card:hover {
+        box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1);
+    }
+    .avatar-xs {
+        width: 1.75rem;
+        height: 1.75rem;
+    }
+    .avatar-xs .avatar-title {
+        font-size: 0.75rem;
+    }
+</style>
+
+<script>
+(function() {
+    'use strict';
+
+    // Elements for review display
+    const reviewElements = {
+        assignmentType: document.getElementById('review-assignment-type'),
+        targetIcon: document.getElementById('review-target-icon'),
+        targetName: document.getElementById('review-target-name'),
+        anonymous: document.getElementById('review-anonymous'),
+        effectiveFrom: document.getElementById('review-effective-from'),
+        effectiveUntil: document.getElementById('review-effective-until'),
+        duration: document.getElementById('review-duration')
+    };
+
+    // Edit step buttons
+    const editButtons = document.querySelectorAll('.edit-step-btn');
+    editButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const step = parseInt(btn.dataset.step);
+            // Trigger wizard navigation (will be handled by parent wizard)
+            if (window.AssignmentWizard && window.AssignmentWizard.goToStep) {
+                window.AssignmentWizard.goToStep(step);
+            } else {
+                // Fallback: dispatch custom event
+                document.dispatchEvent(new CustomEvent('wizard:goToStep', { detail: { step } }));
+            }
+        });
+    });
+
+    // Update review when step becomes active
+    function updateReview() {
+        // Get values from form fields
+        const assignmentType = document.getElementById('assignmentType')?.value || '';
+        const allowAnonymous = document.getElementById('allowAnonymous')?.checked || false;
+        const effectiveFromDate = document.getElementById('effectiveFromDate')?.value || '';
+        const effectiveFromTime = document.getElementById('effectiveFromTime')?.value || '00:00';
+        const effectiveUntilDate = document.getElementById('effectiveUntilDate')?.value || '';
+        const hasExpiration = document.getElementById('hasExpiration')?.checked || false;
+
+        // Update Target Selection
+        const typeLabels = {
+            'All': 'All Tenants',
+            'TenantType': 'By Tenant Type',
+            'TenantGroup': 'Tenant Group',
+            'SpecificTenant': 'Specific Tenant',
+            'Role': 'By Role',
+            'Department': 'By Department',
+            'UserGroup': 'User Group',
+            'SpecificUser': 'Specific User'
+        };
+        const typeIcons = {
+            'All': 'ri-global-line',
+            'TenantType': 'ri-building-4-line',
+            'TenantGroup': 'ri-group-line',
+            'SpecificTenant': 'ri-building-line',
+            'Role': 'ri-shield-user-line',
+            'Department': 'ri-building-2-line',
+            'UserGroup': 'ri-team-line',
+            'SpecificUser': 'ri-user-line'
+        };
+
+        reviewElements.assignmentType.textContent = allowAnonymous ? 'Anonymous (Public)' : (typeLabels[assignmentType] || 'Not selected');
+        reviewElements.targetIcon.innerHTML = `<i class="${allowAnonymous ? 'ri-user-unfollow-line' : (typeIcons[assignmentType] || 'ri-user-line')}"></i>`;
+        reviewElements.targetName.textContent = allowAnonymous ? 'Public Access' : (document.getElementById('targetSelect')?.selectedOptions[0]?.text || '-');
+        reviewElements.anonymous.textContent = allowAnonymous ? 'Yes' : 'No';
+        reviewElements.anonymous.className = allowAnonymous ? 'fw-medium text-primary' : 'fw-medium';
+
+        // Update Access Period
+        if (effectiveFromDate) {
+            const fromDate = new Date(effectiveFromDate + 'T' + effectiveFromTime);
+            reviewElements.effectiveFrom.textContent = formatDate(fromDate);
+        } else {
+            reviewElements.effectiveFrom.textContent = '-';
+        }
+
+        if (hasExpiration && effectiveUntilDate) {
+            const untilDate = new Date(effectiveUntilDate + 'T23:59');
+            reviewElements.effectiveUntil.textContent = formatDate(untilDate);
+            
+            // Calculate duration
+            if (effectiveFromDate) {
+                const from = new Date(effectiveFromDate);
+                const until = new Date(effectiveUntilDate);
+                const days = Math.ceil((until - from) / (1000 * 60 * 60 * 24));
+                reviewElements.duration.textContent = `${days} days`;
+            }
+        } else {
+            reviewElements.effectiveUntil.textContent = 'Indefinite';
+            reviewElements.duration.textContent = 'No limit';
+        }
+    }
+
+    function formatDate(date) {
+        return date.toLocaleDateString('en-US', { 
+            weekday: 'short',
+            year: 'numeric', 
+            month: 'short', 
+            day: 'numeric'
+        });
+    }
+
+    function formatTime(time) {
+        const [hours, minutes] = time.split(':').map(Number);
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        const hour12 = hours % 12 || 12;
+        return `${hour12}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+    }
+
+    // Listen for step activation
+    document.addEventListener('wizard:stepActivated', (e) => {
+        if (e.detail && e.detail.step === 3) {
+            updateReview();
+        }
+    });
+
+    // Also update on any form field change
+    document.addEventListener('change', () => {
+        // Debounce updates
+        clearTimeout(window._reviewUpdateTimeout);
+        window._reviewUpdateTimeout = setTimeout(updateReview, 100);
+    });
+
+    // Initial update
+    setTimeout(updateReview, 200);
+
+    console.log('[AssignmentWizard] Review step initialized');
+})();
+</script>

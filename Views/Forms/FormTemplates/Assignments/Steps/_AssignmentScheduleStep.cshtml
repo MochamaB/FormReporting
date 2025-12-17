@@ -1,0 +1,806 @@
+@*
+    Assignment Submission Rules Step (Step 3)
+    
+    Fields:
+    - Frequency (optional) - null = access only, no submission rules
+    - DueDay (conditional) - Day of period when due
+    - DueTime (optional) - Time of day when due
+    - GracePeriodDays - Days after due to accept
+    - AllowLateSubmission - Allow after grace period
+    - ReminderDaysBefore - Days before due to send reminder
+*@
+
+<div class="assignment-schedule-step">
+    <!-- Submission Rules Toggle -->
+    <div class="mb-4">
+        <div class="card border border-secondary-subtle">
+            <div class="card-body py-3">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="d-flex align-items-center">
+                        <div class="avatar-sm me-3">
+                            <div class="avatar-title bg-secondary text-white rounded-circle fs-5">
+                                <i class="ri-time-line"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <h6 class="mb-1">Enforce Submission Schedule</h6>
+                            <p class="text-muted small mb-0">Set frequency and deadlines for form submissions</p>
+                        </div>
+                    </div>
+                    <div class="form-check form-switch form-switch-lg">
+                        <input class="form-check-input" type="checkbox" role="switch" id="hasSubmissionRules">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Access Only Message (shown when no submission rules) -->
+    <div id="accessOnlyMessage">
+        <div class="alert alert-soft-secondary d-flex align-items-start" role="alert">
+            <i class="ri-checkbox-circle-line fs-4 me-3 mt-1"></i>
+            <div>
+                <h6 class="alert-heading mb-1">Access Only Mode</h6>
+                <p class="mb-2">Users can submit this form anytime within the access period without any deadline constraints.</p>
+                <ul class="mb-0 small">
+                    <li>No submission frequency enforced</li>
+                    <li>No due dates or deadlines</li>
+                    <li>Ideal for one-time forms, surveys, or feedback</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Submission Rules Container (hidden by default) -->
+    <div id="submissionRulesContainer" class="d-none">
+        <!-- Frequency Selection -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <div class="card border shadow-none mb-0 h-100">
+                    <div class="card-header bg-primary-subtle">
+                        <label class="form-label mb-0 text-primary">
+                            <i class="ri-repeat-line me-2"></i>Submission Frequency
+                            <span class="text-danger">*</span>
+                        </label>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">How often should this form be submitted?</p>
+                        <select class="form-select" name="frequency" id="frequency">
+                            <option value="Daily">Daily</option>
+                            <option value="Weekly">Weekly</option>
+                            <option value="Monthly" selected>Monthly</option>
+                            <option value="Quarterly">Quarterly</option>
+                            <option value="Annually">Annually</option>
+                            <option value="Custom">Custom (manual due dates)</option>
+                        </select>
+                        <div class="form-text mt-2" id="frequencyHint">
+                            <i class="ri-information-line me-1"></i>
+                            Submissions expected once per month
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card border shadow-none mb-0 h-100">
+                    <div class="card-header bg-danger-subtle">
+                        <label class="form-label mb-0 text-danger">
+                            <i class="ri-calendar-check-line me-2"></i>Due Date Settings
+                        </label>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3" id="dueDateDescription">When within the period is the submission due?</p>
+                        
+                        <!-- Hidden field for dueDay (populated by JS based on frequency) -->
+                        <input type="hidden" name="dueDay" id="dueDay" value="15" />
+                        
+                        <!-- DAILY: Time only -->
+                        <div id="dailyOptions" class="d-none">
+                            <div class="row g-2">
+                                <div class="col-12">
+                                    <label class="form-label small text-muted">Due Time</label>
+                                    <input type="time" 
+                                           class="form-control" 
+                                           id="dueTimeDaily"
+                                           value="17:00">
+                                    <div class="form-text mt-1">
+                                        <i class="ri-information-line me-1"></i>
+                                        Form must be submitted by this time each day
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- WEEKLY: Day of week + Time -->
+                        <div id="weeklyOptions" class="d-none">
+                            <div class="row g-2">
+                                <div class="col-7">
+                                    <label class="form-label small text-muted">Day of Week</label>
+                                    <select class="form-select" id="dueDayWeekly">
+                                        <option value="1">Monday</option>
+                                        <option value="2">Tuesday</option>
+                                        <option value="3">Wednesday</option>
+                                        <option value="4">Thursday</option>
+                                        <option value="5" selected>Friday</option>
+                                        <option value="6">Saturday</option>
+                                        <option value="0">Sunday</option>
+                                    </select>
+                                </div>
+                                <div class="col-5">
+                                    <label class="form-label small text-muted">Due Time</label>
+                                    <input type="time" 
+                                           class="form-control" 
+                                           id="dueTimeWeekly"
+                                           value="17:00">
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- MONTHLY: Day of month (1-31) + Time -->
+                        <div id="monthlyOptions">
+                            <div class="row g-2">
+                                <div class="col-7">
+                                    <label class="form-label small text-muted">Day of Month</label>
+                                    <select class="form-select" id="dueDayMonthly">
+                                        <!-- Days 1-28 -->
+                                        <option value="1">1st</option>
+                                        <option value="2">2nd</option>
+                                        <option value="3">3rd</option>
+                                        <option value="4">4th</option>
+                                        <option value="5">5th</option>
+                                        <option value="6">6th</option>
+                                        <option value="7">7th</option>
+                                        <option value="8">8th</option>
+                                        <option value="9">9th</option>
+                                        <option value="10">10th</option>
+                                        <option value="11">11th</option>
+                                        <option value="12">12th</option>
+                                        <option value="13">13th</option>
+                                        <option value="14">14th</option>
+                                        <option value="15" selected>15th</option>
+                                        <option value="16">16th</option>
+                                        <option value="17">17th</option>
+                                        <option value="18">18th</option>
+                                        <option value="19">19th</option>
+                                        <option value="20">20th</option>
+                                        <option value="21">21st</option>
+                                        <option value="22">22nd</option>
+                                        <option value="23">23rd</option>
+                                        <option value="24">24th</option>
+                                        <option value="25">25th</option>
+                                        <option value="26">26th</option>
+                                        <option value="27">27th</option>
+                                        <option value="28">28th</option>
+                                        <option value="29">29th</option>
+                                        <option value="30">30th</option>
+                                        <option value="31">31st</option>
+                                        <option value="-1">Last day of month</option>
+                                    </select>
+                                </div>
+                                <div class="col-5">
+                                    <label class="form-label small text-muted">Due Time</label>
+                                    <input type="time" 
+                                           class="form-control" 
+                                           id="dueTimeMonthly"
+                                           value="17:00">
+                                </div>
+                            </div>
+                            <div class="form-text mt-1">
+                                <i class="ri-information-line me-1"></i>
+                                If day doesn't exist in a month (e.g., 31st in Feb), last day is used
+                            </div>
+                        </div>
+                        
+                        <!-- QUARTERLY: Quarter end options + Time -->
+                        <div id="quarterlyOptions" class="d-none">
+                            <div class="row g-2">
+                                <div class="col-7">
+                                    <label class="form-label small text-muted">Due Day</label>
+                                    <select class="form-select" id="dueDayQuarterly">
+                                        <option value="-1" selected>Last day of quarter</option>
+                                        <option value="1">1st of last month</option>
+                                        <option value="5">5th of last month</option>
+                                        <option value="10">10th of last month</option>
+                                        <option value="15">15th of last month</option>
+                                        <option value="20">20th of last month</option>
+                                        <option value="25">25th of last month</option>
+                                    </select>
+                                </div>
+                                <div class="col-5">
+                                    <label class="form-label small text-muted">Due Time</label>
+                                    <input type="time" 
+                                           class="form-control" 
+                                           id="dueTimeQuarterly"
+                                           value="17:00">
+                                </div>
+                            </div>
+                            <div class="form-text mt-1">
+                                <i class="ri-information-line me-1"></i>
+                                Quarters: Jan-Mar, Apr-Jun, Jul-Sep, Oct-Dec
+                            </div>
+                        </div>
+                        
+                        <!-- ANNUALLY: Month + Day + Time -->
+                        <div id="annuallyOptions" class="d-none">
+                            <div class="row g-2 mb-2">
+                                <div class="col-6">
+                                    <label class="form-label small text-muted">Month</label>
+                                    <select class="form-select" id="dueMonthAnnually">
+                                        <option value="1">January</option>
+                                        <option value="2">February</option>
+                                        <option value="3">March</option>
+                                        <option value="4">April</option>
+                                        <option value="5">May</option>
+                                        <option value="6">June</option>
+                                        <option value="7">July</option>
+                                        <option value="8">August</option>
+                                        <option value="9">September</option>
+                                        <option value="10">October</option>
+                                        <option value="11">November</option>
+                                        <option value="12" selected>December</option>
+                                    </select>
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label small text-muted">Day</label>
+                                    <select class="form-select" id="dueDayAnnually">
+                                        <option value="-1" selected>Last day</option>
+                                        <option value="1">1st</option>
+                                        <option value="5">5th</option>
+                                        <option value="10">10th</option>
+                                        <option value="15">15th</option>
+                                        <option value="20">20th</option>
+                                        <option value="25">25th</option>
+                                        <option value="28">28th</option>
+                                        <option value="30">30th</option>
+                                        <option value="31">31st</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="row g-2">
+                                <div class="col-12">
+                                    <label class="form-label small text-muted">Due Time</label>
+                                    <input type="time" 
+                                           class="form-control" 
+                                           id="dueTimeAnnually"
+                                           value="17:00">
+                                </div>
+                            </div>
+                            <!-- Hidden field for annual month -->
+                            <input type="hidden" name="dueMonth" id="dueMonth" value="12" />
+                        </div>
+                        
+                        <!-- CUSTOM: Placeholder for now -->
+                        <div id="customOptions" class="d-none">
+                            <div class="alert alert-soft-warning mb-0">
+                                <i class="ri-information-line me-2"></i>
+                                <strong>Custom Schedule</strong>
+                                <p class="mb-0 small mt-1">Due dates will be set manually for each submission period. This is ideal for one-time submissions or irregular schedules.</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Actual dueTime field sent to server -->
+                        <input type="hidden" name="dueTime" id="dueTime" value="17:00" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Late Submission Settings -->
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <div class="card border shadow-none mb-0 h-100">
+                    <div class="card-header bg-warning-subtle">
+                        <label class="form-label mb-0 text-warning">
+                            <i class="ri-timer-flash-line me-2"></i>Grace Period
+                        </label>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">How many days after the due date to accept submissions without penalty?</p>
+                        
+                        <div class="input-group">
+                            <input type="number" 
+                                   class="form-control" 
+                                   name="gracePeriodDays" 
+                                   id="gracePeriodDays"
+                                   value="0"
+                                   min="0"
+                                   max="30">
+                            <span class="input-group-text">days</span>
+                        </div>
+                        
+                        <div class="form-text mt-2">
+                            <i class="ri-information-line me-1"></i>
+                            Set to 0 for no grace period
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card border shadow-none mb-0 h-100">
+                    <div class="card-header bg-secondary-subtle">
+                        <label class="form-label mb-0 text-secondary">
+                            <i class="ri-error-warning-line me-2"></i>Late Submissions
+                        </label>
+                    </div>
+                    <div class="card-body">
+                        <p class="text-muted small mb-3">Allow submissions after the grace period has ended?</p>
+                        
+                        <div class="form-check form-switch">
+                            <!-- Hidden field ensures "false" is sent when checkbox is unchecked -->
+                            <input type="hidden" name="allowLateSubmission" value="false" />
+                            <input class="form-check-input" 
+                                   type="checkbox" 
+                                   role="switch" 
+                                   id="allowLateSubmission" 
+                                   name="allowLateSubmission"
+                                   value="true"
+                                   checked>
+                            <label class="form-check-label" for="allowLateSubmission">
+                                Allow late submissions
+                            </label>
+                        </div>
+                        
+                        <div class="form-text mt-2">
+                            <i class="ri-information-line me-1"></i>
+                            Late submissions will be flagged but accepted
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Reminder Settings -->
+        <div class="row g-4 mb-4">
+            <div class="col-12">
+                <div class="card border shadow-none mb-0">
+                    <div class="card-header bg-info-subtle">
+                        <label class="form-label mb-0 text-info">
+                            <i class="ri-notification-3-line me-2"></i>Reminder Settings
+                        </label>
+                    </div>
+                    <div class="card-body">
+                        <div class="row align-items-center">
+                            <div class="col-md-6">
+                                <p class="text-muted small mb-2">Send reminder before due date</p>
+                                <select class="form-select" id="reminderDaysBefore" name="reminderDaysBefore">
+                                    <option value="">No reminder</option>
+                                    <option value="1">1 day before</option>
+                                    <option value="3" selected>3 days before</option>
+                                    <option value="5">5 days before</option>
+                                    <option value="7">7 days before</option>
+                                    <option value="14">14 days before</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="alert alert-soft-info mb-0 py-2">
+                                    <i class="ri-mail-send-line me-2"></i>
+                                    <span class="small">Email notifications will be sent to all assignees</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Submission Timeline Preview -->
+        <div class="row">
+            <div class="col-12">
+                <div class="card border-primary border shadow-none mb-0">
+                    <div class="card-header bg-primary-subtle border-0">
+                        <h6 class="card-title mb-0 text-primary">
+                            <i class="ri-calendar-schedule-line me-2"></i>Submission Timeline Example
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3" id="timelinePreview">
+                            <!-- Timeline items will be generated by JS -->
+                        </div>
+                        <div class="mt-3 pt-3 border-top">
+                            <p class="text-muted mb-0 small" id="timelineSummary">
+                                For the current period, submissions are due on the 15th at 5:00 PM
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    'use strict';
+
+    // Elements - Main controls
+    const hasSubmissionRulesCheckbox = document.getElementById('hasSubmissionRules');
+    const accessOnlyMessage = document.getElementById('accessOnlyMessage');
+    const submissionRulesContainer = document.getElementById('submissionRulesContainer');
+    const frequencySelect = document.getElementById('frequency');
+    const frequencyHint = document.getElementById('frequencyHint');
+    const dueDateDescription = document.getElementById('dueDateDescription');
+    
+    // Hidden fields for server submission
+    const dueDayHidden = document.getElementById('dueDay');
+    const dueTimeHidden = document.getElementById('dueTime');
+    const dueMonthHidden = document.getElementById('dueMonth');
+    
+    // Frequency-specific option containers
+    const dailyOptions = document.getElementById('dailyOptions');
+    const weeklyOptions = document.getElementById('weeklyOptions');
+    const monthlyOptions = document.getElementById('monthlyOptions');
+    const quarterlyOptions = document.getElementById('quarterlyOptions');
+    const annuallyOptions = document.getElementById('annuallyOptions');
+    const customOptions = document.getElementById('customOptions');
+    
+    // Frequency-specific inputs
+    const dueTimeDaily = document.getElementById('dueTimeDaily');
+    const dueDayWeekly = document.getElementById('dueDayWeekly');
+    const dueTimeWeekly = document.getElementById('dueTimeWeekly');
+    const dueDayMonthly = document.getElementById('dueDayMonthly');
+    const dueTimeMonthly = document.getElementById('dueTimeMonthly');
+    const dueDayQuarterly = document.getElementById('dueDayQuarterly');
+    const dueTimeQuarterly = document.getElementById('dueTimeQuarterly');
+    const dueMonthAnnually = document.getElementById('dueMonthAnnually');
+    const dueDayAnnually = document.getElementById('dueDayAnnually');
+    const dueTimeAnnually = document.getElementById('dueTimeAnnually');
+    
+    // Other elements
+    const gracePeriodInput = document.getElementById('gracePeriodDays');
+    const allowLateCheckbox = document.getElementById('allowLateSubmission');
+    const reminderSelect = document.getElementById('reminderDaysBefore');
+    const timelinePreview = document.getElementById('timelinePreview');
+    const timelineSummary = document.getElementById('timelineSummary');
+
+    // Hidden field for frequency (null when no rules)
+    let frequencyHiddenField = document.querySelector('input[name="frequency"][type="hidden"]');
+    if (!frequencyHiddenField) {
+        frequencyHiddenField = document.createElement('input');
+        frequencyHiddenField.type = 'hidden';
+        frequencyHiddenField.name = 'frequency';
+        frequencySelect.parentNode.appendChild(frequencyHiddenField);
+    }
+
+    // Toggle submission rules
+    hasSubmissionRulesCheckbox.addEventListener('change', () => {
+        const hasRules = hasSubmissionRulesCheckbox.checked;
+        
+        if (hasRules) {
+            accessOnlyMessage.classList.add('d-none');
+            submissionRulesContainer.classList.remove('d-none');
+            frequencySelect.disabled = false;
+            frequencyHiddenField.value = frequencySelect.value;
+            showFrequencyOptions(frequencySelect.value);
+        } else {
+            accessOnlyMessage.classList.remove('d-none');
+            submissionRulesContainer.classList.add('d-none');
+            frequencySelect.disabled = true;
+            frequencyHiddenField.value = ''; // null = access only
+        }
+        
+        updateHiddenFields();
+        updateTimeline();
+    });
+
+    // Frequency change handler
+    frequencySelect.addEventListener('change', () => {
+        const frequency = frequencySelect.value;
+        frequencyHiddenField.value = frequency;
+        
+        // Update hint text
+        const hints = {
+            'Daily': 'Submissions expected every day',
+            'Weekly': 'Submissions expected once per week',
+            'Monthly': 'Submissions expected once per month',
+            'Quarterly': 'Submissions expected once per quarter',
+            'Annually': 'Submissions expected once per year',
+            'Custom': 'Due dates will be set manually'
+        };
+        frequencyHint.innerHTML = `<i class="ri-information-line me-1"></i>${hints[frequency] || ''}`;
+        
+        // Update description
+        const descriptions = {
+            'Daily': 'What time each day is the submission due?',
+            'Weekly': 'Which day and time each week is the submission due?',
+            'Monthly': 'Which day and time each month is the submission due?',
+            'Quarterly': 'When within each quarter is the submission due?',
+            'Annually': 'Which month, day, and time each year is the submission due?',
+            'Custom': 'Due dates will be configured manually.'
+        };
+        dueDateDescription.textContent = descriptions[frequency] || '';
+        
+        // Show appropriate options
+        showFrequencyOptions(frequency);
+        updateHiddenFields();
+        updateTimeline();
+    });
+
+    // Show/hide frequency-specific options
+    function showFrequencyOptions(frequency) {
+        // Hide all
+        dailyOptions.classList.add('d-none');
+        weeklyOptions.classList.add('d-none');
+        monthlyOptions.classList.add('d-none');
+        quarterlyOptions.classList.add('d-none');
+        annuallyOptions.classList.add('d-none');
+        customOptions.classList.add('d-none');
+        
+        // Show selected
+        switch (frequency) {
+            case 'Daily':
+                dailyOptions.classList.remove('d-none');
+                break;
+            case 'Weekly':
+                weeklyOptions.classList.remove('d-none');
+                break;
+            case 'Monthly':
+                monthlyOptions.classList.remove('d-none');
+                break;
+            case 'Quarterly':
+                quarterlyOptions.classList.remove('d-none');
+                break;
+            case 'Annually':
+                annuallyOptions.classList.remove('d-none');
+                break;
+            case 'Custom':
+                customOptions.classList.remove('d-none');
+                break;
+        }
+    }
+
+    // Update hidden fields based on current frequency selection
+    function updateHiddenFields() {
+        const frequency = frequencySelect.value;
+        
+        switch (frequency) {
+            case 'Daily':
+                dueDayHidden.value = ''; // Not used for daily
+                dueTimeHidden.value = dueTimeDaily.value;
+                if (dueMonthHidden) dueMonthHidden.value = '';
+                break;
+            case 'Weekly':
+                dueDayHidden.value = dueDayWeekly.value;
+                dueTimeHidden.value = dueTimeWeekly.value;
+                if (dueMonthHidden) dueMonthHidden.value = '';
+                break;
+            case 'Monthly':
+                dueDayHidden.value = dueDayMonthly.value;
+                dueTimeHidden.value = dueTimeMonthly.value;
+                if (dueMonthHidden) dueMonthHidden.value = '';
+                break;
+            case 'Quarterly':
+                dueDayHidden.value = dueDayQuarterly.value;
+                dueTimeHidden.value = dueTimeQuarterly.value;
+                if (dueMonthHidden) dueMonthHidden.value = '';
+                break;
+            case 'Annually':
+                dueDayHidden.value = dueDayAnnually.value;
+                dueTimeHidden.value = dueTimeAnnually.value;
+                if (dueMonthHidden) dueMonthHidden.value = dueMonthAnnually.value;
+                break;
+            case 'Custom':
+                dueDayHidden.value = '';
+                dueTimeHidden.value = '';
+                if (dueMonthHidden) dueMonthHidden.value = '';
+                break;
+        }
+    }
+
+    // Attach change handlers to all frequency-specific inputs
+    [dueTimeDaily, dueDayWeekly, dueTimeWeekly, dueDayMonthly, dueTimeMonthly, 
+     dueDayQuarterly, dueTimeQuarterly, dueMonthAnnually, dueDayAnnually, dueTimeAnnually].forEach(el => {
+        if (el) {
+            el.addEventListener('change', () => {
+                updateHiddenFields();
+                updateTimeline();
+            });
+        }
+    });
+
+    // Other change handlers
+    gracePeriodInput.addEventListener('change', updateTimeline);
+    reminderSelect.addEventListener('change', updateTimeline);
+    allowLateCheckbox.addEventListener('change', updateTimeline);
+
+    function updateTimeline() {
+        if (!hasSubmissionRulesCheckbox.checked) {
+            timelinePreview.innerHTML = '';
+            timelineSummary.textContent = 'No submission schedule - users can submit anytime within the access period.';
+            return;
+        }
+
+        const frequency = frequencySelect.value;
+        const dueDay = parseInt(dueDayHidden.value) || 0;
+        const dueTime = dueTimeHidden.value || '17:00';
+        const dueMonth = dueMonthHidden ? parseInt(dueMonthHidden.value) : null;
+        const gracePeriod = parseInt(gracePeriodInput.value) || 0;
+        const reminderDays = parseInt(reminderSelect.value) || 0;
+
+        // Calculate example dates based on current period
+        const now = new Date();
+        let dueDate = calculateDueDate(frequency, dueDay, dueTime, dueMonth, now);
+        
+        if (!dueDate) {
+            timelinePreview.innerHTML = '<span class="text-muted">Custom frequency - due dates set manually</span>';
+            timelineSummary.textContent = 'Due dates will be configured manually for each submission period.';
+            return;
+        }
+
+        const reminderDate = reminderDays > 0 ? new Date(dueDate.getTime() - (reminderDays * 24 * 60 * 60 * 1000)) : null;
+        const graceEndDate = gracePeriod > 0 ? new Date(dueDate.getTime() + (gracePeriod * 24 * 60 * 60 * 1000)) : null;
+
+        // Build timeline HTML
+        let timelineHtml = '';
+        
+        if (reminderDate) {
+            timelineHtml += `
+                <div class="text-center">
+                    <div class="avatar-sm mx-auto mb-2">
+                        <div class="avatar-title bg-info-subtle text-info rounded-circle">
+                            <i class="ri-notification-3-line"></i>
+                        </div>
+                    </div>
+                    <small class="text-muted d-block">Reminder</small>
+                    <span class="fw-semibold small">${formatDateShort(reminderDate)}</span>
+                </div>
+                <div class="text-muted"><i class="ri-arrow-right-line"></i></div>
+            `;
+        }
+
+        timelineHtml += `
+            <div class="text-center">
+                <div class="avatar-sm mx-auto mb-2">
+                    <div class="avatar-title bg-danger-subtle text-danger rounded-circle">
+                        <i class="ri-calendar-check-line"></i>
+                    </div>
+                </div>
+                <small class="text-muted d-block">Due Date</small>
+                <span class="fw-semibold small">${formatDateShort(dueDate)}</span>
+                <small class="text-muted d-block">${formatTime(dueTime)}</small>
+            </div>
+        `;
+
+        if (graceEndDate) {
+            timelineHtml += `
+                <div class="text-muted"><i class="ri-arrow-right-line"></i></div>
+                <div class="text-center">
+                    <div class="avatar-sm mx-auto mb-2">
+                        <div class="avatar-title bg-warning-subtle text-warning rounded-circle">
+                            <i class="ri-timer-flash-line"></i>
+                        </div>
+                    </div>
+                    <small class="text-muted d-block">Grace Ends</small>
+                    <span class="fw-semibold small">${formatDateShort(graceEndDate)}</span>
+                </div>
+            `;
+        }
+
+        if (allowLateCheckbox.checked) {
+            timelineHtml += `
+                <div class="text-muted"><i class="ri-arrow-right-line"></i></div>
+                <div class="text-center">
+                    <div class="avatar-sm mx-auto mb-2">
+                        <div class="avatar-title bg-secondary-subtle text-secondary rounded-circle">
+                            <i class="ri-error-warning-line"></i>
+                        </div>
+                    </div>
+                    <small class="text-muted d-block">Late</small>
+                    <span class="fw-semibold small text-muted">Accepted</span>
+                </div>
+            `;
+        }
+
+        timelinePreview.innerHTML = timelineHtml;
+
+        // Update summary
+        const dayText = getDayText(frequency, dueDay, dueMonth);
+        const graceText = gracePeriod > 0 ? `Grace period: ${gracePeriod} days.` : 'No grace period.';
+        const lateText = allowLateCheckbox.checked ? 'Late submissions allowed.' : 'Late submissions blocked.';
+        timelineSummary.textContent = `${frequency} submissions due ${dayText} at ${formatTime(dueTime)}. ${graceText} ${lateText}`;
+    }
+
+    function calculateDueDate(frequency, dueDay, dueTime, dueMonth, periodStart) {
+        if (frequency === 'Custom') return null;
+
+        let dueDate = new Date(periodStart);
+        const [hours, minutes] = dueTime.split(':').map(Number);
+
+        switch (frequency) {
+            case 'Daily':
+                dueDate.setHours(hours, minutes, 0, 0);
+                break;
+            case 'Weekly':
+                const currentDay = dueDate.getDay();
+                const targetDay = dueDay; // 0=Sunday, 1=Monday, etc.
+                let daysUntil = (targetDay - currentDay + 7) % 7;
+                if (daysUntil === 0) daysUntil = 7; // Next week if same day
+                dueDate.setDate(dueDate.getDate() + daysUntil);
+                dueDate.setHours(hours, minutes, 0, 0);
+                break;
+            case 'Monthly':
+                if (dueDay === -1) {
+                    // Last day of current month
+                    dueDate = new Date(dueDate.getFullYear(), dueDate.getMonth() + 1, 0);
+                } else {
+                    const maxDay = new Date(dueDate.getFullYear(), dueDate.getMonth() + 1, 0).getDate();
+                    dueDate.setDate(Math.min(dueDay, maxDay));
+                }
+                dueDate.setHours(hours, minutes, 0, 0);
+                break;
+            case 'Quarterly':
+                // Find end of current quarter
+                const quarter = Math.floor(dueDate.getMonth() / 3);
+                const quarterEndMonth = (quarter + 1) * 3 - 1; // 2, 5, 8, 11 (Mar, Jun, Sep, Dec)
+                if (dueDay === -1) {
+                    // Last day of quarter
+                    dueDate = new Date(dueDate.getFullYear(), quarterEndMonth + 1, 0);
+                } else {
+                    const maxDay = new Date(dueDate.getFullYear(), quarterEndMonth + 1, 0).getDate();
+                    dueDate = new Date(dueDate.getFullYear(), quarterEndMonth, Math.min(dueDay, maxDay));
+                }
+                dueDate.setHours(hours, minutes, 0, 0);
+                break;
+            case 'Annually':
+                const targetMonth = (dueMonth || 12) - 1; // Convert to 0-indexed
+                if (dueDay === -1) {
+                    // Last day of target month
+                    dueDate = new Date(dueDate.getFullYear(), targetMonth + 1, 0);
+                } else {
+                    const maxDay = new Date(dueDate.getFullYear(), targetMonth + 1, 0).getDate();
+                    dueDate = new Date(dueDate.getFullYear(), targetMonth, Math.min(dueDay, maxDay));
+                }
+                dueDate.setHours(hours, minutes, 0, 0);
+                break;
+        }
+
+        return dueDate;
+    }
+
+    function getDayText(frequency, dueDay, dueMonth) {
+        switch (frequency) {
+            case 'Daily':
+                return 'every day';
+            case 'Weekly':
+                const weekDays = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+                return `on ${weekDays[dueDay] || 'Friday'}`;
+            case 'Monthly':
+                return dueDay === -1 ? 'on the last day of each month' : `on the ${getOrdinal(dueDay)} of each month`;
+            case 'Quarterly':
+                return dueDay === -1 ? 'on the last day of each quarter' : `on the ${getOrdinal(dueDay)} of the last month of each quarter`;
+            case 'Annually':
+                const months = ['January', 'February', 'March', 'April', 'May', 'June', 
+                               'July', 'August', 'September', 'October', 'November', 'December'];
+                const monthName = months[(dueMonth || 12) - 1];
+                return dueDay === -1 ? `on the last day of ${monthName}` : `on ${monthName} ${getOrdinal(dueDay)}`;
+            default:
+                return '';
+        }
+    }
+
+    function getOrdinal(n) {
+        const s = ['th', 'st', 'nd', 'rd'];
+        const v = n % 100;
+        return n + (s[(v - 20) % 10] || s[v] || s[0]);
+    }
+
+    function formatDateShort(date) {
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    }
+
+    function formatTime(time) {
+        if (!time) return '';
+        const [hours, minutes] = time.split(':').map(Number);
+        const ampm = hours >= 12 ? 'PM' : 'AM';
+        const hour12 = hours % 12 || 12;
+        return `${hour12}:${minutes.toString().padStart(2, '0')} ${ampm}`;
+    }
+
+    // Initialize - show Monthly options by default
+    showFrequencyOptions('Monthly');
+    updateHiddenFields();
+    updateTimeline();
+
+    console.log('[AssignmentWizard] Submission Rules step initialized');
+})();
+</script>

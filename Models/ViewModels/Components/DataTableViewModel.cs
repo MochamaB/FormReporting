@@ -162,6 +162,94 @@ namespace FormReporting.Models.ViewModels.Components
         /// Signature: Func<object?, IHtmlContent>
         /// </summary>
         public Func<object?, IHtmlContent>? CardContentRenderer { get; set; }
+
+        // ========== AJAX LOADING ==========
+
+        /// <summary>
+        /// Enable AJAX-based data loading instead of server-side rendering.
+        /// When true, TableContentRenderer is ignored and skeleton is shown initially.
+        /// JavaScript fetches data from AjaxUrl and renders rows dynamically.
+        /// </summary>
+        public bool EnableAjaxLoading { get; set; } = false;
+
+        /// <summary>
+        /// API endpoint URL for fetching table data (required when EnableAjaxLoading = true)
+        /// Example: "/api/assignments"
+        /// </summary>
+        public string? AjaxUrl { get; set; }
+
+        /// <summary>
+        /// Number of skeleton rows to show while loading (default: 5)
+        /// </summary>
+        public int SkeletonRowCount { get; set; } = 5;
+
+        /// <summary>
+        /// Column field mappings for AJAX mode - maps column index to API response field name.
+        /// Example: { 0: "targetName", 1: "assignmentType", 2: "dueDate" }
+        /// Used by JavaScript to render rows from API response.
+        /// </summary>
+        public List<AjaxColumnConfig>? AjaxColumns { get; set; }
+
+        /// <summary>
+        /// Additional query parameters to include in AJAX requests
+        /// Example: { "templateId": "5" }
+        /// </summary>
+        public Dictionary<string, string>? AjaxQueryParams { get; set; }
+    }
+
+    /// <summary>
+    /// Configuration for a column in AJAX mode
+    /// </summary>
+    public class AjaxColumnConfig
+    {
+        /// <summary>
+        /// Field name in the API response (e.g., "targetName", "status")
+        /// </summary>
+        public string FieldName { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Display type: "text", "badge", "date", "avatar", "actions", "checkbox"
+        /// </summary>
+        public string DisplayType { get; set; } = "text";
+
+        /// <summary>
+        /// For badge type: field name containing the color (e.g., "statusColor")
+        /// Or a fixed color class (e.g., "primary", "success")
+        /// </summary>
+        public string? BadgeColorField { get; set; }
+
+        /// <summary>
+        /// For avatar type: field name containing the icon class
+        /// </summary>
+        public string? IconField { get; set; }
+
+        /// <summary>
+        /// For avatar type: field name containing the secondary text
+        /// </summary>
+        public string? SecondaryField { get; set; }
+
+        /// <summary>
+        /// For date type: format string (default: "MMM dd, yyyy")
+        /// </summary>
+        public string? DateFormat { get; set; }
+
+        /// <summary>
+        /// For actions type: list of action configurations
+        /// </summary>
+        public List<AjaxRowActionConfig>? Actions { get; set; }
+    }
+
+    /// <summary>
+    /// Configuration for row actions in AJAX mode
+    /// </summary>
+    public class AjaxRowActionConfig
+    {
+        public string Text { get; set; } = string.Empty;
+        public string IconClass { get; set; } = string.Empty;
+        public string? Url { get; set; }
+        public string? OnClick { get; set; }
+        public string ColorClass { get; set; } = "secondary";
+        public bool IsDivider { get; set; } = false;
     }
 
     /// <summary>
@@ -281,6 +369,40 @@ namespace FormReporting.Models.ViewModels.Components
         public bool EnableViewToggle { get; set; } = false;
         public string DefaultView { get; set; } = "table";
         public Func<object?, IHtmlContent>? CardContent { get; set; }
+
+        // AJAX Loading
+        public bool EnableAjaxLoading { get; set; } = false;
+        public string? AjaxUrl { get; set; }
+        public int SkeletonRowCount { get; set; } = 5;
+        public List<AjaxColumnViewModel>? AjaxColumns { get; set; }
+        public Dictionary<string, string>? AjaxQueryParams { get; set; }
+    }
+
+    /// <summary>
+    /// Column configuration for AJAX mode (for rendering)
+    /// </summary>
+    public class AjaxColumnViewModel
+    {
+        public string FieldName { get; set; } = string.Empty;
+        public string DisplayType { get; set; } = "text";
+        public string? BadgeColorField { get; set; }
+        public string? IconField { get; set; }
+        public string? SecondaryField { get; set; }
+        public string? DateFormat { get; set; }
+        public List<AjaxRowActionViewModel>? Actions { get; set; }
+    }
+
+    /// <summary>
+    /// Row action configuration for AJAX mode (for rendering)
+    /// </summary>
+    public class AjaxRowActionViewModel
+    {
+        public string Text { get; set; } = string.Empty;
+        public string IconClass { get; set; } = string.Empty;
+        public string? Url { get; set; }
+        public string? OnClick { get; set; }
+        public string ColorClass { get; set; } = "secondary";
+        public bool IsDivider { get; set; } = false;
     }
 
     /// <summary>

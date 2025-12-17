@@ -55,5 +55,35 @@ namespace FormReporting.Services.Identity
         /// </summary>
         /// <param name="userId">User ID</param>
         Task InvalidateUserClaimsCacheAsync(int userId);
+
+        // ===== Current User Helpers =====
+
+        /// <summary>
+        /// Get the current user's ID from HttpContext
+        /// </summary>
+        /// <returns>User ID or 0 if not authenticated</returns>
+        int GetUserId();
+
+        /// <summary>
+        /// Get the current user's full name from HttpContext
+        /// </summary>
+        /// <returns>Full name or empty string</returns>
+        string GetUserFullName();
+
+        /// <summary>
+        /// Get the client IP address from HttpContext
+        /// </summary>
+        /// <returns>IP address or null</returns>
+        string? GetClientIP();
+
+        /// <summary>
+        /// Check if current user has a specific role
+        /// </summary>
+        bool HasRole(string roleName);
+
+        /// <summary>
+        /// Check if current user has a specific permission
+        /// </summary>
+        bool HasPermission(string permissionCode);
     }
 }

@@ -352,9 +352,12 @@ namespace FormReporting.Services.Forms
                     DepartmentId = oldAssignment.DepartmentId,
                     UserGroupId = oldAssignment.UserGroupId,
                     UserId = oldAssignment.UserId,
+                    EffectiveFrom = oldAssignment.EffectiveFrom,
+                    EffectiveUntil = oldAssignment.EffectiveUntil,
+                    AllowAnonymous = oldAssignment.AllowAnonymous,
+                    Status = oldAssignment.Status,
                     AssignedBy = userId,
                     AssignedDate = DateTime.UtcNow,
-                    IsActive = oldAssignment.IsActive,
                     Notes = $"Copied from v{publishedTemplate.Version}"
                 };
 

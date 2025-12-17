@@ -1,0 +1,299 @@
+@using FormReporting.Models.ViewModels.Components
+@using FormReporting.Extensions
+
+@*
+    Create Assignment Form (Wizard Partial)
+    
+    A standalone partial that uses the _VerticalWizard component.
+    Can be:
+    - Embedded in a full page view (Create.cshtml)
+    - Loaded into a modal via AJAX
+    - Used in different contexts
+    
+    Steps:
+    1. Target - Who to assign (8 assignment types + anonymous option)
+    2. Access Period - When users can access the form
+    3. Review - Confirm and submit
+    
+    Note: Submission Rules are now managed separately via FormTemplateSubmissionRule
+*@
+
+@{
+    // Get template ID from ViewData (passed by parent view)
+    var templateId = ViewData["TemplateId"] as int? ?? 0;
+    
+    // Configure the assignment wizard
+    var assignmentWizard = new WizardConfig
+    {
+        Layout = WizardLayout.Vertical,
+        FormId = "create-assignment-form",
+        FormAction = $"/FormTemplates/{templateId}/Assignments",
+        FormMethod = "POST",
+        ContainerCssClass = "assignment-wizard",
+        Steps = new List<WizardStep>
+        {
+            new WizardStep
+            {
+                StepId = "target",
+                Title = "Target Selection",
+                Description = "Who can access",
+                Instructions = "Select who should receive this assignment. Enable anonymous mode for public forms, or choose specific tenants, departments, roles, or users.",
+                Icon = "ri-user-add-line",
+                ContentPartialPath = "~/Views/Forms/FormTemplates/Assignments/Steps/_AssignmentTargetStep.cshtml",
+                State = WizardStepState.Active,
+                ShowPrevious = false,
+                NextButtonText = "Continue to Access Period"
+            },
+            new WizardStep
+            {
+                StepId = "period",
+                Title = "Access Period",
+                Description = "When to access",
+                Instructions = "Set when users can access this form. The assignment becomes active on the start date and expires on the end date (if set).",
+                Icon = "ri-calendar-check-line",
+                ContentPartialPath = "~/Views/Forms/FormTemplates/Assignments/Steps/_AssignmentPeriodStep.cshtml",
+                PreviousButtonText = "Back to Target",
+                NextButtonText = "Review Assignment"
+            },
+            new WizardStep
+            {
+                StepId = "review",
+                Title = "Review & Confirm",
+                Description = "Confirm assignment",
+                Instructions = "Review the assignment details below and confirm to create the assignment.",
+                Icon = "ri-check-double-line",
+                ContentPartialPath = "~/Views/Forms/FormTemplates/Assignments/Steps/_AssignmentReviewStep.cshtml",
+                PreviousButtonText = "Back to Access Period",
+                ShowNext = false,
+                CustomButtonHtml = @"<button type=""submit"" class=""btn btn-success btn-label ms-auto"" id=""submit-assignment-btn"">
+                    <i class=""ri-check-line label-icon align-middle fs-16 me-2""></i>
+                    Create Assignment
+                </button>"
+            }
+        }
+    }.BuildWizard();
+    
+    // Pass template ID to step partials via ViewData
+    ViewData["ParentModel"] = new { TemplateId = templateId };
+}
+
+<!-- Hidden field for template ID -->
+<input type="hidden" name="templateId" value="@templateId" />
+
+<!-- Assignment Wizard -->
+<partial name="~/Views/Shared/Components/Wizards/_VerticalWizard.cshtml" model="assignmentWizard" />
+
+<!-- Wizard Validation Script -->
+<script>
+(function() {
+    'use strict';
+
+    // Register validation callback for this wizard
+    window.wizardValidationCallbacks = window.wizardValidationCallbacks || {};
+    window.wizardValidationCallbacks['create-assignment-form'] = validateStep;
+
+    // Step validation functions (will be populated by step partials)
+    window.AssignmentWizardValidation = window.AssignmentWizardValidation || {};
+
+    /**
+     * Main validation dispatcher - called by form-wizard.js before navigation
+     * @@param {string} currentStepId - The ID of the current step (e.g., 'target', 'period', 'schedule')
+     * @@returns {boolean} - True if validation passes, false otherwise
+     */
+    function validateStep(currentStepId) {
+        console.log('[AssignmentWizard] Validating step:', currentStepId);
+
+        // Clear previous validation errors
+        clearValidationErrors(currentStepId);
+
+        let isValid = true;
+        let errors = [];
+
+        switch (currentStepId) {
+            case 'target':
+                const targetResult = validateTargetStep();
+                isValid = targetResult.isValid;
+                errors = targetResult.errors;
+                break;
+
+            case 'period':
+                const periodResult = validatePeriodStep();
+                isValid = periodResult.isValid;
+                errors = periodResult.errors;
+                break;
+
+            case 'review':
+                // Review step has no validation - just display
+                isValid = true;
+                break;
+
+            default:
+                console.warn('[AssignmentWizard] Unknown step:', currentStepId);
+                isValid = true;
+        }
+
+        // Show errors if validation failed
+        if (!isValid && errors.length > 0) {
+            showValidationErrors(currentStepId, errors);
+        }
+
+        return isValid;
+    }
+
+    /**
+     * Step 1: Target Selection Validation
+     */
+    function validateTargetStep() {
+        const errors = [];
+        const allowAnonymous = document.getElementById('allowAnonymous')?.checked || false;
+
+        // If anonymous is enabled, no further validation needed
+        if (allowAnonymous) {
+            return { isValid: true, errors: [] };
+        }
+
+        // Check assignment type is selected
+        const assignmentType = document.getElementById('assignmentType')?.value;
+        if (!assignmentType) {
+            errors.push({ field: 'target-selection-container', message: 'Please select an assignment type by clicking one of the cards above' });
+            // Add visual highlight to the card container
+            const container = document.getElementById('target-selection-container');
+            if (container) {
+                container.classList.add('border', 'border-danger', 'rounded', 'p-2');
+            }
+        }
+
+        // Check target selection for types that require it
+        const typesRequiringTarget = ['TenantType', 'TenantGroup', 'SpecificTenant', 'Role', 'Department', 'UserGroup', 'SpecificUser'];
+        if (assignmentType && typesRequiringTarget.includes(assignmentType)) {
+            const targetSelect = document.getElementById('targetSelect');
+            if (!targetSelect || !targetSelect.value) {
+                errors.push({ field: 'targetSelect', message: 'Please select a target from the dropdown' });
+            }
+        }
+
+        return { isValid: errors.length === 0, errors };
+    }
+
+    /**
+     * Step 2: Access Period Validation
+     */
+    function validatePeriodStep() {
+        const errors = [];
+
+        // Check effective from date is set
+        const effectiveFromDate = document.getElementById('effectiveFromDate')?.value;
+        if (!effectiveFromDate) {
+            errors.push({ field: 'effectiveFromDate', message: 'Start date is required' });
+        }
+
+        // Check effective until date if expiration is enabled
+        const hasExpiration = document.getElementById('hasExpiration')?.checked || false;
+        if (hasExpiration) {
+            const effectiveUntilDate = document.getElementById('effectiveUntilDate')?.value;
+            if (!effectiveUntilDate) {
+                errors.push({ field: 'effectiveUntilDate', message: 'End date is required when expiration is enabled' });
+            } else if (effectiveFromDate && new Date(effectiveUntilDate) <= new Date(effectiveFromDate)) {
+                errors.push({ field: 'effectiveUntilDate', message: 'End date must be after start date' });
+            }
+        }
+
+        return { isValid: errors.length === 0, errors };
+    }
+
+    /**
+     * Clear validation errors for a step
+     */
+    function clearValidationErrors(stepId) {
+        const stepPane = document.getElementById(stepId);
+        if (!stepPane) return;
+
+        // Remove error classes from inputs
+        stepPane.querySelectorAll('.is-invalid').forEach(el => {
+            el.classList.remove('is-invalid');
+        });
+
+        // Remove error messages
+        stepPane.querySelectorAll('.invalid-feedback').forEach(el => {
+            el.remove();
+        });
+
+        // Remove error alert if exists
+        const errorAlert = stepPane.querySelector('.validation-error-alert');
+        if (errorAlert) {
+            errorAlert.remove();
+        }
+
+        // Remove border highlight from target selection container (Step 1 specific)
+        const targetContainer = document.getElementById('target-selection-container');
+        if (targetContainer) {
+            targetContainer.classList.remove('border', 'border-danger', 'rounded', 'p-2');
+        }
+    }
+
+    /**
+     * Show validation errors for a step
+     */
+    function showValidationErrors(stepId, errors) {
+        const stepPane = document.getElementById(stepId);
+        if (!stepPane) return;
+
+        // Add error class to specific fields
+        errors.forEach(error => {
+            const field = document.getElementById(error.field);
+            if (field) {
+                field.classList.add('is-invalid');
+
+                // Add error message after the field
+                const existingFeedback = field.parentNode.querySelector('.invalid-feedback');
+                if (!existingFeedback) {
+                    const feedback = document.createElement('div');
+                    feedback.className = 'invalid-feedback';
+                    feedback.textContent = error.message;
+                    field.parentNode.appendChild(feedback);
+                }
+            }
+        });
+
+        // Show summary alert at top of step content
+        const stepContent = stepPane.querySelector('.step-content-area');
+        if (stepContent && errors.length > 0) {
+            const existingAlert = stepContent.querySelector('.validation-error-alert');
+            if (existingAlert) {
+                existingAlert.remove();
+            }
+
+            const alertHtml = `
+                <div class="alert alert-danger alert-dismissible fade show validation-error-alert mb-4" role="alert">
+                    <div class="d-flex align-items-start">
+                        <i class="ri-error-warning-line fs-4 me-3"></i>
+                        <div>
+                            <h6 class="alert-heading mb-1">Please fix the following errors:</h6>
+                            <ul class="mb-0 ps-3">
+                                ${errors.map(e => `<li>${e.message}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            `;
+
+            // Insert after the step header
+            const stepHeader = stepContent.querySelector('.step-content-header');
+            if (stepHeader) {
+                stepHeader.insertAdjacentHTML('afterend', alertHtml);
+            } else {
+                stepContent.insertAdjacentHTML('afterbegin', alertHtml);
+            }
+
+            // Scroll to alert
+            const alert = stepContent.querySelector('.validation-error-alert');
+            if (alert) {
+                alert.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+        }
+    }
+
+    console.log('[AssignmentWizard] Validation registered for create-assignment-form');
+})();
+</script>

@@ -1,5 +1,6 @@
 using FormReporting.Data;
 using FormReporting.Models.Entities.Identity;
+using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
 
@@ -11,10 +12,12 @@ namespace FormReporting.Services.Identity
     public class ClaimsService : IClaimsService
     {
         private readonly ApplicationDbContext _context;
+        private readonly IHttpContextAccessor _httpContextAccessor;
 
-        public ClaimsService(ApplicationDbContext context)
+        public ClaimsService(ApplicationDbContext context, IHttpContextAccessor httpContextAccessor)
         {
             _context = context;
+            _httpContextAccessor = httpContextAccessor;
         }
 
         /// <summary>
@@ -263,5 +266,65 @@ namespace FormReporting.Services.Identity
             // For now, claims are built fresh on each login
             return Task.CompletedTask;
         }
+
+        #region Current User Helpers
+
+        /// <summary>
+        /// Get the current user's ID from HttpContext
+        /// </summary>
+        public int GetUserId()
+        {
+            var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst("UserId");
+            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out var userId))
+            {
+                return userId;
+            }
+            return 0;
+        }
+
+        /// <summary>
+        /// Get the current user's full name from HttpContext
+        /// </summary>
+        public string GetUserFullName()
+        {
+            return _httpContextAccessor.HttpContext?.User?.FindFirst("FullName")?.Value ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Get the client IP address from HttpContext
+        /// </summary>
+        public string? GetClientIP()
+        {
+            var httpContext = _httpContextAccessor.HttpContext;
+            if (httpContext == null)
+                return null;
+
+            // Try to get forwarded IP first (for proxies/load balancers)
+            var forwardedFor = httpContext.Request.Headers["X-Forwarded-For"].FirstOrDefault();
+            if (!string.IsNullOrEmpty(forwardedFor))
+            {
+                return forwardedFor.Split(',').First().Trim();
+            }
+
+            return httpContext.Connection.RemoteIpAddress?.ToString();
+        }
+
+        /// <summary>
+        /// Check if current user has a specific role
+        /// </summary>
+        public bool HasRole(string roleName)
+        {
+            return _httpContextAccessor.HttpContext?.User?.IsInRole(roleName) ?? false;
+        }
+
+        /// <summary>
+        /// Check if current user has a specific permission
+        /// </summary>
+        public bool HasPermission(string permissionCode)
+        {
+            return _httpContextAccessor.HttpContext?.User?.HasClaim("Permission", permissionCode) ?? false;
+        }
+
+        #endregion
     }
 }
