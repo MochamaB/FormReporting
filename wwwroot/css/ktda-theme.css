@@ -289,4 +289,14 @@ a:hover {
     border-color: #324721 !important;
 }
 
+.nav-tabs-custom.card-header-tabs .nav-link {
+    padding: 1rem 1rem;
+    color:gray;
+}
+
+.nav-tabs-custom.card-header-tabs .nav-link:hover {
+    padding: 1rem 1rem;
+    color:var(--vz-warning-text-emphasis);
+}
+
 

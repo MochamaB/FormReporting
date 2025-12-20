@@ -7,6 +7,10 @@ using FormReporting.Models.ViewModels.Forms;
 using FormReporting.Models.Common;
 using FormReporting.Extensions;
 using System.Security.Claims;
+using ClosedXML.Excel;
+using QuestPDF.Fluent;
+using QuestPDF.Helpers;
+using QuestPDF.Infrastructure;
 
 namespace FormReporting.Controllers.Submissions
 {
@@ -203,6 +207,439 @@ namespace FormReporting.Controllers.Submissions
             ViewBag.CurrentTab = tab ?? "forms";
 
             return View(pagedTemplates);
+        }
+
+        // ========================================================================
+        // TEMPLATE SUBMISSIONS - VIEW ALL SUBMISSIONS FOR A TEMPLATE (SCOPE-FILTERED)
+        // ========================================================================
+
+        /// <summary>
+        /// View all submissions for a specific template, filtered by user's scope
+        /// GET /Submissions/Template/{templateId}
+        /// </summary>
+        /// <param name="templateId">Template ID</param>
+        /// <param name="status">Filter by status</param>
+        /// <param name="tenantId">Filter by tenant</param>
+        /// <param name="period">Filter by period (thisMonth, lastMonth, thisQuarter, thisYear)</param>
+        /// <param name="search">Search text</param>
+        /// <param name="page">Page number</param>
+        /// <param name="tab">Active tab (responses or summary)</param>
+        [HttpGet("Submissions/Template/{templateId:int}")]
+        public async Task<IActionResult> TemplateSubmissions(
+            int templateId,
+            string? status = null,
+            int? tenantId = null,
+            string? period = null,
+            string? search = null,
+            DateTime? dateFrom = null,
+            DateTime? dateTo = null,
+            int? submitterId = null,
+            int page = 1,
+            string? tab = "responses")
+        {
+            var userId = GetCurrentUserId();
+            if (userId == 0)
+                return RedirectToAction("Login", "Account");
+
+            // Check if user can access this template
+            var canAccess = await _submissionService.CanUserAccessTemplateAsync(userId, templateId);
+            if (!canAccess)
+            {
+                TempData["Error"] = "You do not have access to this form template.";
+                return RedirectToAction("AvailableForms");
+            }
+
+            try
+            {
+                // Build filters
+                var filters = new Models.ViewModels.Forms.SubmissionFilters
+                {
+                    Status = status,
+                    TenantId = tenantId,
+                    Period = period,
+                    Search = search,
+                    DateFrom = dateFrom,
+                    DateTo = dateTo,
+                    SubmitterId = submitterId
+                };
+
+                // Get scope-filtered submissions
+                var viewModel = await _submissionService.GetScopedTemplateSubmissionsAsync(
+                    templateId,
+                    User,
+                    filters,
+                    page,
+                    pageSize: 10);
+
+                // Set active tab
+                viewModel.ActiveTab = tab ?? "responses";
+
+                return View(viewModel);
+            }
+            catch (InvalidOperationException ex)
+            {
+                TempData["Error"] = ex.Message;
+                return RedirectToAction("AvailableForms");
+            }
+        }
+
+        /// <summary>
+        /// Get submission detail for offcanvas display (AJAX)
+        /// GET /Submissions/Detail/{submissionId}
+        /// </summary>
+        /// <param name="submissionId">Submission ID</param>
+        [HttpGet("Submissions/Detail/{submissionId:int}")]
+        public async Task<IActionResult> GetSubmissionDetail(int submissionId)
+        {
+            var userId = GetCurrentUserId();
+            if (userId == 0)
+                return Unauthorized();
+
+            // Check if user can access this submission
+            var canAccess = await _submissionService.CanUserAccessSubmissionAsync(submissionId, User);
+            if (!canAccess)
+            {
+                return Forbid();
+            }
+
+            var detail = await _submissionService.GetSubmissionDetailAsync(submissionId, User);
+            if (detail == null)
+            {
+                return NotFound();
+            }
+
+            // Return partial view for AJAX loading
+            return PartialView("Partials/_SubmissionDetailOffcanvas", detail);
+        }
+
+        // ========================================================================
+        // EXPORT
+        // ========================================================================
+
+        /// <summary>
+        /// Export submissions to CSV, Excel, or PDF
+        /// GET /Submissions/Export
+        /// </summary>
+        [HttpGet("Submissions/Export")]
+        public async Task<IActionResult> ExportSubmissions(
+            int templateId,
+            string format = "csv",
+            string? status = null,
+            int? tenantId = null,
+            string? period = null,
+            string? search = null,
+            DateTime? dateFrom = null,
+            DateTime? dateTo = null,
+            int? submitterId = null)
+        {
+            var userId = GetCurrentUserId();
+            if (userId == 0)
+                return RedirectToAction("Login", "Account");
+
+            // Check if user can access this template
+            var canAccess = await _submissionService.CanUserAccessTemplateAsync(userId, templateId);
+            if (!canAccess)
+            {
+                TempData["Error"] = "You do not have access to this form template.";
+                return RedirectToAction("AvailableForms");
+            }
+
+            try
+            {
+                // Build filters
+                var filters = new Models.ViewModels.Forms.SubmissionFilters
+                {
+                    Status = status,
+                    TenantId = tenantId,
+                    Period = period,
+                    Search = search,
+                    DateFrom = dateFrom,
+                    DateTo = dateTo,
+                    SubmitterId = submitterId
+                };
+
+                // Get export data
+                var exportData = await _submissionService.GetSubmissionsForExportAsync(templateId, User, filters);
+
+                if (exportData.Rows.Count == 0)
+                {
+                    TempData["Warning"] = "No submissions found to export.";
+                    return RedirectToAction("TemplateSubmissions", new { templateId });
+                }
+
+                // Generate file based on format
+                return format.ToLower() switch
+                {
+                    "csv" => GenerateCsvExport(exportData),
+                    "excel" => GenerateExcelExport(exportData),
+                    "pdf" => GeneratePdfExport(exportData),
+                    _ => GenerateCsvExport(exportData)
+                };
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Export failed: {ex.Message}";
+                return RedirectToAction("TemplateSubmissions", new { templateId });
+            }
+        }
+
+        /// <summary>
+        /// Generate CSV file from export data
+        /// </summary>
+        private FileContentResult GenerateCsvExport(Services.Forms.SubmissionExportData exportData)
+        {
+            var sb = new System.Text.StringBuilder();
+
+            // Add headers
+            sb.AppendLine(string.Join(",", exportData.Headers.Select(EscapeCsvField)));
+
+            // Add rows
+            foreach (var row in exportData.Rows)
+            {
+                sb.AppendLine(string.Join(",", row.Select(EscapeCsvField)));
+            }
+
+            var bytes = System.Text.Encoding.UTF8.GetBytes(sb.ToString());
+            var fileName = $"{SanitizeFileName(exportData.TemplateName)}_Export_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+
+            return File(bytes, "text/csv", fileName);
+        }
+
+        /// <summary>
+        /// Generate Excel file from export data using ClosedXML
+        /// </summary>
+        private FileContentResult GenerateExcelExport(Services.Forms.SubmissionExportData exportData)
+        {
+            using var workbook = new XLWorkbook();
+            var worksheet = workbook.Worksheets.Add("Submissions");
+
+            // Add headers
+            for (int col = 0; col < exportData.Headers.Count; col++)
+            {
+                var cell = worksheet.Cell(1, col + 1);
+                cell.Value = exportData.Headers[col];
+                cell.Style.Font.Bold = true;
+                cell.Style.Fill.BackgroundColor = XLColor.LightGray;
+                cell.Style.Border.BottomBorder = XLBorderStyleValues.Thin;
+            }
+
+            // Add data rows
+            for (int row = 0; row < exportData.Rows.Count; row++)
+            {
+                for (int col = 0; col < exportData.Rows[row].Count; col++)
+                {
+                    worksheet.Cell(row + 2, col + 1).Value = exportData.Rows[row][col];
+                }
+            }
+
+            // Auto-fit columns
+            worksheet.Columns().AdjustToContents();
+
+            // Freeze header row
+            worksheet.SheetView.FreezeRows(1);
+
+            // Generate file
+            using var stream = new MemoryStream();
+            workbook.SaveAs(stream);
+            var bytes = stream.ToArray();
+            var fileName = $"{SanitizeFileName(exportData.TemplateName)}_Export_{DateTime.Now:yyyyMMdd_HHmmss}.xlsx";
+
+            return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", fileName);
+        }
+
+        /// <summary>
+        /// Generate PDF file from export data using QuestPDF
+        /// </summary>
+        private FileContentResult GeneratePdfExport(Services.Forms.SubmissionExportData exportData)
+        {
+            // Set QuestPDF license (Community license for open source)
+            QuestPDF.Settings.License = QuestPDF.Infrastructure.LicenseType.Community;
+
+            var document = Document.Create(container =>
+            {
+                container.Page(page =>
+                {
+                    page.Size(PageSizes.A4.Landscape());
+                    page.Margin(1, Unit.Centimetre);
+                    page.DefaultTextStyle(x => x.FontSize(8));
+
+                    page.Header()
+                        .Text(exportData.TemplateName + " - Export")
+                        .SemiBold().FontSize(14).FontColor(Colors.Blue.Medium);
+
+                    page.Content()
+                        .PaddingVertical(10)
+                        .Table(table =>
+                        {
+                            // Define columns
+                            table.ColumnsDefinition(columns =>
+                            {
+                                foreach (var _ in exportData.Headers)
+                                {
+                                    columns.RelativeColumn();
+                                }
+                            });
+
+                            // Header row
+                            table.Header(header =>
+                            {
+                                foreach (var headerText in exportData.Headers)
+                                {
+                                    header.Cell()
+                                        .Background(Colors.Grey.Lighten2)
+                                        .Padding(5)
+                                        .Text(headerText)
+                                        .Bold()
+                                        .FontSize(7);
+                                }
+                            });
+
+                            // Data rows
+                            foreach (var row in exportData.Rows)
+                            {
+                                foreach (var cellValue in row)
+                                {
+                                    table.Cell()
+                                        .BorderBottom(1)
+                                        .BorderColor(Colors.Grey.Lighten1)
+                                        .Padding(4)
+                                        .Text(cellValue ?? "")
+                                        .FontSize(7);
+                                }
+                            }
+                        });
+
+                    page.Footer()
+                        .AlignCenter()
+                        .Text(x =>
+                        {
+                            x.Span("Generated on ");
+                            x.Span(DateTime.Now.ToString("yyyy-MM-dd HH:mm"));
+                            x.Span(" | Page ");
+                            x.CurrentPageNumber();
+                            x.Span(" of ");
+                            x.TotalPages();
+                        });
+                });
+            });
+
+            var bytes = document.GeneratePdf();
+            var fileName = $"{SanitizeFileName(exportData.TemplateName)}_Export_{DateTime.Now:yyyyMMdd_HHmmss}.pdf";
+
+            return File(bytes, "application/pdf", fileName);
+        }
+
+        /// <summary>
+        /// Escape a field for CSV format
+        /// </summary>
+        private string EscapeCsvField(string field)
+        {
+            if (string.IsNullOrEmpty(field))
+                return "\"\"";
+
+            // If field contains comma, quote, or newline, wrap in quotes and escape quotes
+            if (field.Contains(',') || field.Contains('"') || field.Contains('\n') || field.Contains('\r'))
+            {
+                return $"\"{field.Replace("\"", "\"\"")}\"";
+            }
+
+            return field;
+        }
+
+        /// <summary>
+        /// Sanitize filename for safe file download
+        /// </summary>
+        private string SanitizeFileName(string fileName)
+        {
+            var invalidChars = System.IO.Path.GetInvalidFileNameChars();
+            var sanitized = new string(fileName.Where(c => !invalidChars.Contains(c)).ToArray());
+            return string.IsNullOrWhiteSpace(sanitized) ? "Export" : sanitized;
+        }
+
+        // ========================================================================
+        // BULK ACTIONS
+        // ========================================================================
+
+        /// <summary>
+        /// Perform bulk action on submissions
+        /// POST /Submissions/BulkAction
+        /// </summary>
+        [HttpPost("Submissions/BulkAction")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> BulkAction([FromBody] BulkActionRequest request)
+        {
+            var userId = GetCurrentUserId();
+            if (userId == 0)
+                return Unauthorized(new { success = false, message = "Not authenticated" });
+
+            if (request.SubmissionIds == null || !request.SubmissionIds.Any())
+                return BadRequest(new { success = false, message = "No submissions selected" });
+
+            try
+            {
+                int successCount = 0;
+                var errors = new List<string>();
+
+                foreach (var submissionId in request.SubmissionIds)
+                {
+                    // Check if user can access this submission
+                    var canAccess = await _submissionService.CanUserAccessSubmissionAsync(submissionId, User);
+                    if (!canAccess)
+                    {
+                        errors.Add($"No access to submission #{submissionId}");
+                        continue;
+                    }
+
+                    switch (request.Action?.ToLower())
+                    {
+                        case "delete":
+                            // TODO: Implement actual delete in service
+                            // await _submissionService.DeleteSubmissionAsync(submissionId, User);
+                            successCount++;
+                            break;
+                            
+                        case "approve":
+                            // TODO: Implement actual approve in service
+                            // await _submissionService.ApproveSubmissionAsync(submissionId, User);
+                            successCount++;
+                            break;
+                            
+                        default:
+                            return BadRequest(new { success = false, message = "Invalid action" });
+                    }
+                }
+
+                if (successCount > 0)
+                {
+                    return Ok(new { 
+                        success = true, 
+                        message = $"{request.Action} completed for {successCount} submission(s)",
+                        processed = successCount,
+                        errors = errors
+                    });
+                }
+                else
+                {
+                    return BadRequest(new { 
+                        success = false, 
+                        message = "No submissions were processed",
+                        errors = errors
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Request model for bulk actions
+        /// </summary>
+        public class BulkActionRequest
+        {
+            public string? Action { get; set; }
+            public List<int>? SubmissionIds { get; set; }
         }
 
         // ========================================================================

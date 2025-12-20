@@ -1,0 +1,105 @@
+@using FormReporting.Models.ViewModels.Forms
+@model TemplateSubmissionsViewModel
+
+@{
+    ViewData["Title"] = $"{Model.TemplateName} - Submissions";
+    Layout = "~/Views/Shared/_BUilderLayout.cshtml";
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header border-bottom pb-0">
+                <ul class="nav nav-tabs-custom rounded card-header-tabs border-bottom-0 mb-0" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link @(Model.ActiveTab == "responses" ? "active" : "")" 
+                           data-bs-toggle="tab" href="#responses-tab" role="tab">
+                            <i class="ri-file-list-3-line me-1"></i>Responses
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link @(Model.ActiveTab == "summary" ? "active" : "")" 
+                           data-bs-toggle="tab" href="#summary-tab" role="tab">
+                            <i class="ri-bar-chart-box-line me-1"></i>Summary
+                        </a>
+                    </li>
+                </ul>
+            </div>
+            <div class="card-body">
+                <div class="tab-content">
+                    <div class="tab-pane fade @(Model.ActiveTab == "responses" ? "show active" : "")" id="responses-tab" role="tabpanel">
+                        @await Html.PartialAsync("Partials/_SubmissionsTable", Model)
+                    </div>
+                    <div class="tab-pane fade @(Model.ActiveTab == "summary" ? "show active" : "")" id="summary-tab" role="tabpanel">
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Submission Detail Offcanvas -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="submissionDetailOffcanvas" style="width: 480px;">
+    <div class="offcanvas-header border-bottom py-3">
+        <h5 class="offcanvas-title" id="submissionDetailTitle">
+            <span id="offcanvasSubmissionTitle">Response Details</span>
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-0" id="submissionDetailContent">
+        <!-- Content loaded via AJAX -->
+        <div class="d-flex justify-content-center align-items-center py-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Load submission detail into offcanvas
+        function loadSubmissionDetail(submissionId, submissionNumber, submissionDate) {
+            const offcanvas = new bootstrap.Offcanvas(document.getElementById('submissionDetailOffcanvas'));
+            const titleEl = document.getElementById('offcanvasSubmissionTitle');
+            const contentEl = document.getElementById('submissionDetailContent');
+            
+            // Update title
+            titleEl.textContent = `Response #${submissionNumber}, ${submissionDate}`;
+            
+            // Show loading
+            contentEl.innerHTML = `
+                <div class="d-flex justify-content-center align-items-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            `;
+            
+            // Show offcanvas
+            offcanvas.show();
+            
+            // Load content via AJAX
+            fetch(`/Submissions/Detail/${submissionId}`)
+                .then(response => {
+                    if (!response.ok) throw new Error('Failed to load');
+                    return response.text();
+                })
+                .then(html => {
+                    contentEl.innerHTML = html;
+                })
+                .catch(error => {
+                    contentEl.innerHTML = `
+                        <div class="text-center py-5">
+                            <i class="ri-error-warning-line fs-1 text-danger"></i>
+                            <p class="text-muted mt-2">Failed to load submission details</p>
+                            <button class="btn btn-sm btn-primary" onclick="loadSubmissionDetail(${submissionId}, '${submissionNumber}', '${submissionDate}')">
+                                <i class="ri-refresh-line me-1"></i>Retry
+                            </button>
+                        </div>
+                    `;
+                });
+        }
+    </script>
+}

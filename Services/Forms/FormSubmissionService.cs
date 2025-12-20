@@ -2,8 +2,12 @@ using Microsoft.EntityFrameworkCore;
 using FormReporting.Data;
 using FormReporting.Models.Entities.Forms;
 using FormReporting.Models.ViewModels.Components;
+using FormReporting.Models.ViewModels.Forms;
 using FormReporting.Models.Common;
+using FormReporting.Services.Identity;
+using System.Security.Claims;
 using System.Text.Json;
+using System.Globalization;
 
 namespace FormReporting.Services.Forms
 {
@@ -14,10 +18,12 @@ namespace FormReporting.Services.Forms
     public class FormSubmissionService : IFormSubmissionService
     {
         private readonly ApplicationDbContext _context;
+        private readonly IScopeService _scopeService;
 
-        public FormSubmissionService(ApplicationDbContext context)
+        public FormSubmissionService(ApplicationDbContext context, IScopeService scopeService)
         {
             _context = context;
+            _scopeService = scopeService;
         }
 
         /// <inheritdoc />
@@ -798,6 +804,1213 @@ namespace FormReporting.Services.Forms
             }
 
             return stats;
+        }
+
+        // ========================================================================
+        // SCOPE-AWARE METHODS
+        // ========================================================================
+
+        /// <inheritdoc />
+        public async Task<TemplateSubmissionsViewModel> GetScopedTemplateSubmissionsAsync(
+            int templateId,
+            ClaimsPrincipal user,
+            SubmissionFilters? filters = null,
+            int page = 1,
+            int pageSize = 10)
+        {
+            // Get template with sections, items, and options
+            var template = await _context.FormTemplates
+                .Include(t => t.Category)
+                .Include(t => t.Sections.OrderBy(s => s.DisplayOrder))
+                    .ThenInclude(s => s.Items.Where(i => i.IsActive).OrderBy(i => i.DisplayOrder))
+                        .ThenInclude(i => i.Options.Where(o => o.IsActive).OrderBy(o => o.DisplayOrder))
+                .AsNoTracking()
+                .FirstOrDefaultAsync(t => t.TemplateId == templateId);
+
+            if (template == null)
+            {
+                throw new InvalidOperationException($"Template with ID {templateId} not found.");
+            }
+
+            // Get user scope
+            var userScope = await _scopeService.GetUserScopeAsync(user);
+            var accessibleTenantIds = await _scopeService.GetAccessibleTenantIdsAsync(user);
+
+            // Build base query with scope filtering
+            var query = _context.FormTemplateSubmissions
+                .Include(s => s.Submitter)
+                .Include(s => s.Tenant)
+                .Include(s => s.Responses)
+                    .ThenInclude(r => r.SelectedOption)
+                .Include(s => s.Responses)
+                    .ThenInclude(r => r.Item)
+                        .ThenInclude(i => i.Options)
+                .Where(s => s.TemplateId == templateId)
+                .AsQueryable();
+
+            // Apply scope filtering
+            query = ApplyScopeFilter(query, userScope, accessibleTenantIds);
+
+            // Apply additional filters
+            if (filters != null)
+            {
+                query = ApplySubmissionFilters(query, filters);
+            }
+
+            // Get total count before pagination
+            var totalCount = await query.CountAsync();
+
+            // Get all submissions for stats (before pagination)
+            var allSubmissions = await query.Select(s => s.Status).ToListAsync();
+            var summaryStats = new SubmissionSummaryStats
+            {
+                TotalCount = totalCount,
+                DraftCount = allSubmissions.Count(s => s == "Draft"),
+                SubmittedCount = allSubmissions.Count(s => s == "Submitted"),
+                InApprovalCount = allSubmissions.Count(s => s == "InApproval"),
+                ApprovedCount = allSubmissions.Count(s => s == "Approved"),
+                RejectedCount = allSubmissions.Count(s => s == "Rejected")
+            };
+
+            // Calculate pagination
+            var totalPages = (int)Math.Ceiling(totalCount / (double)pageSize);
+            if (page < 1) page = 1;
+            if (page > totalPages && totalPages > 0) page = totalPages;
+
+            // Get paginated submissions
+            var submissions = await query
+                .OrderByDescending(s => s.SubmittedDate ?? s.ModifiedDate)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            // Get field columns with section info for table display
+            var allFields = template.Sections
+                .OrderBy(s => s.DisplayOrder)
+                .SelectMany(s => s.Items
+                    .Where(i => i.IsActive)
+                    .OrderBy(i => i.DisplayOrder)
+                    .Select(i => new { Section = s, Item = i }))
+                .ToList();
+
+            var fieldColumns = new List<FormFieldColumnInfo>();
+            int? lastSectionId = null;
+            
+            foreach (var field in allFields)
+            {
+                fieldColumns.Add(new FormFieldColumnInfo
+                {
+                    ItemId = field.Item.ItemId,
+                    SectionId = field.Section.SectionId,
+                    SectionName = field.Section.SectionName,
+                    IsFirstInSection = lastSectionId != field.Section.SectionId,
+                    FieldName = field.Item.ItemName,
+                    ShortName = field.Item.ItemName.Length > 20 ? field.Item.ItemName.Substring(0, 17) + "..." : field.Item.ItemName,
+                    DataType = field.Item.DataType ?? "Text",
+                    DisplayOrder = field.Item.DisplayOrder,
+                    Options = field.Item.Options?
+                        .Select(o => new FieldOptionInfo
+                        {
+                            OptionId = o.OptionId,
+                            OptionValue = o.OptionValue,
+                            OptionLabel = o.OptionLabel
+                        })
+                        .ToList() ?? new List<FieldOptionInfo>()
+                });
+                lastSectionId = field.Section.SectionId;
+            }
+
+            // Get total field count for completion percentage
+            var totalFields = template.Sections.SelectMany(s => s.Items).Count(i => i.IsActive);
+
+            // Build submission rows
+            var submissionRows = new List<SubmissionRowViewModel>();
+            int rowNumber = (page - 1) * pageSize + 1;
+
+            foreach (var submission in submissions)
+            {
+                var row = BuildSubmissionRow(submission, fieldColumns, totalFields, rowNumber++);
+                submissionRows.Add(row);
+            }
+
+            // Get available tenants for filter dropdown (within scope)
+            var availableTenants = await GetAvailableTenantsForFilter(templateId, accessibleTenantIds);
+
+            // Get available submitters for filter dropdown
+            var availableSubmitters = await GetAvailableSubmittersForFilter(templateId, accessibleTenantIds);
+
+            // Build scope display text
+            var scopeDisplayText = BuildScopeDisplayText(userScope, totalCount);
+
+            // Build the ViewModel
+            return new TemplateSubmissionsViewModel
+            {
+                TemplateId = template.TemplateId,
+                TemplateName = template.TemplateName,
+                TemplateCode = template.TemplateCode,
+                Description = template.Description,
+                CategoryName = template.Category?.CategoryName ?? "Uncategorized",
+                CategoryIcon = template.Category?.IconClass ?? "ri-file-list-3-line",
+                Version = template.Version.ToString(),
+                TemplateType = template.TemplateType ?? "Form",
+                PublishedDate = template.PublishedDate,
+                RequiresApproval = template.RequiresApproval,
+                ScopeCode = userScope.ScopeCode,
+                ScopeDisplayText = scopeDisplayText,
+                TotalSubmissions = totalCount,
+                FieldColumns = fieldColumns,
+                Submissions = submissionRows,
+                Summary = summaryStats,
+                Filters = filters ?? new SubmissionFilters(),
+                AvailableTenants = availableTenants,
+                AvailableSubmitters = availableSubmitters,
+                CurrentPage = page,
+                TotalPages = totalPages,
+                PageSize = pageSize,
+                TotalRecords = totalCount
+            };
+        }
+
+        /// <inheritdoc />
+        public async Task<SubmissionDetailViewModel?> GetSubmissionDetailAsync(int submissionId, ClaimsPrincipal user)
+        {
+            // Get submission with all related data
+            var submission = await _context.FormTemplateSubmissions
+                .Include(s => s.Template)
+                    .ThenInclude(t => t.Sections.OrderBy(sec => sec.DisplayOrder))
+                        .ThenInclude(sec => sec.Items.Where(i => i.IsActive).OrderBy(i => i.DisplayOrder))
+                            .ThenInclude(i => i.Options)
+                .Include(s => s.Responses)
+                .Include(s => s.Submitter)
+                .Include(s => s.Tenant)
+                .Include(s => s.Reviewer)
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.SubmissionId == submissionId);
+
+            if (submission == null)
+            {
+                return null;
+            }
+
+            // Check if user can access this submission
+            if (!await CanUserAccessSubmissionAsync(submissionId, user))
+            {
+                return null;
+            }
+
+            // Build responses dictionary for quick lookup
+            var responsesByItemId = submission.Responses.ToDictionary(r => r.ItemId);
+
+            // Get total field count
+            var totalFields = submission.Template.Sections
+                .SelectMany(s => s.Items)
+                .Count(i => i.IsActive);
+
+            var answeredCount = submission.Responses.Count(r => HasResponseValue(r));
+
+            // Build section response groups
+            var sections = new List<SectionResponseGroup>();
+            foreach (var section in submission.Template.Sections.OrderBy(s => s.DisplayOrder))
+            {
+                var sectionGroup = new SectionResponseGroup
+                {
+                    SectionId = section.SectionId,
+                    SectionName = section.SectionName,
+                    SectionDescription = section.SectionDescription,
+                    IconClass = section.IconClass ?? "ri-list-check",
+                    DisplayOrder = section.DisplayOrder,
+                    Responses = new List<ResponseDetailViewModel>()
+                };
+
+                foreach (var item in section.Items.Where(i => i.IsActive).OrderBy(i => i.DisplayOrder))
+                {
+                    responsesByItemId.TryGetValue(item.ItemId, out var response);
+                    var responseDetail = BuildResponseDetail(item, response);
+                    sectionGroup.Responses.Add(responseDetail);
+                }
+
+                sections.Add(sectionGroup);
+            }
+
+            // Build the ViewModel
+            return new SubmissionDetailViewModel
+            {
+                SubmissionId = submission.SubmissionId,
+                SubmissionNumber = submission.SubmissionId, // Could be sequential per template
+                TemplateId = submission.TemplateId,
+                TemplateName = submission.Template.TemplateName,
+                SubmitterName = submission.Submitter?.FullName ?? "Unknown",
+                SubmitterEmail = submission.Submitter?.Email ?? "",
+                SubmittedBy = submission.SubmittedBy,
+                TenantName = submission.Tenant?.TenantName,
+                TenantId = submission.TenantId,
+                ReportingPeriod = FormatReportingPeriod(submission.ReportingYear, submission.ReportingMonth),
+                ReportingYear = submission.ReportingYear,
+                ReportingMonth = submission.ReportingMonth,
+                Status = submission.Status,
+                StatusBadgeClass = GetStatusBadgeClass(submission.Status),
+                SubmittedDate = submission.SubmittedDate,
+                FormattedSubmittedDate = FormatDate(submission.SubmittedDate ?? submission.ModifiedDate),
+                CreatedDate = submission.CreatedDate,
+                ModifiedDate = submission.ModifiedDate,
+                ReviewerName = submission.Reviewer?.FullName,
+                ReviewedDate = submission.ReviewedDate,
+                FormattedReviewedDate = submission.ReviewedDate.HasValue ? FormatDate(submission.ReviewedDate.Value) : null,
+                ApprovalComments = submission.ApprovalComments,
+                AnsweredCount = answeredCount,
+                TotalFields = totalFields,
+                CompletionPercentage = totalFields > 0 ? Math.Round((decimal)answeredCount / totalFields * 100, 1) : 0,
+                Sections = sections,
+                CommentsCount = 0, // TODO: Implement comments feature
+                HasWorkflowProgress = false // TODO: Check workflow progress
+            };
+        }
+
+        /// <inheritdoc />
+        public async Task<Dictionary<int, TemplateSubmissionStats>> GetScopedTemplateStatsAsync(
+            ClaimsPrincipal user,
+            List<int> templateIds)
+        {
+            if (templateIds == null || !templateIds.Any())
+            {
+                return new Dictionary<int, TemplateSubmissionStats>();
+            }
+
+            // Get user scope
+            var userScope = await _scopeService.GetUserScopeAsync(user);
+            var accessibleTenantIds = await _scopeService.GetAccessibleTenantIdsAsync(user);
+
+            // Build query with scope filtering
+            var query = _context.FormTemplateSubmissions
+                .Where(s => templateIds.Contains(s.TemplateId))
+                .AsQueryable();
+
+            // Apply scope filtering
+            query = ApplyScopeFilter(query, userScope, accessibleTenantIds);
+
+            // Get submissions and group by template
+            var submissions = await query
+                .Select(s => new { s.TemplateId, s.Status })
+                .ToListAsync();
+
+            var stats = submissions
+                .GroupBy(s => s.TemplateId)
+                .ToDictionary(
+                    g => g.Key,
+                    g => new TemplateSubmissionStats
+                    {
+                        TotalResponses = g.Count(),
+                        SubmittedCount = g.Count(s => s.Status == "Submitted" || s.Status == "Approved" || s.Status == "InApproval"),
+                        DraftCount = g.Count(s => s.Status == "Draft")
+                    }
+                );
+
+            // Ensure all requested templates have an entry
+            foreach (var templateId in templateIds)
+            {
+                if (!stats.ContainsKey(templateId))
+                {
+                    stats[templateId] = new TemplateSubmissionStats
+                    {
+                        TotalResponses = 0,
+                        SubmittedCount = 0,
+                        DraftCount = 0
+                    };
+                }
+            }
+
+            return stats;
+        }
+
+        /// <inheritdoc />
+        public async Task<bool> CanUserAccessSubmissionAsync(int submissionId, ClaimsPrincipal user)
+        {
+            var submission = await _context.FormTemplateSubmissions
+                .AsNoTracking()
+                .FirstOrDefaultAsync(s => s.SubmissionId == submissionId);
+
+            if (submission == null)
+            {
+                return false;
+            }
+
+            var userScope = await _scopeService.GetUserScopeAsync(user);
+
+            // INDIVIDUAL scope: only own submissions
+            if (userScope.ScopeCode == "INDIVIDUAL")
+            {
+                return submission.SubmittedBy == userScope.UserId;
+            }
+
+            // GLOBAL scope: access to all
+            if (userScope.ScopeCode == "GLOBAL")
+            {
+                return true;
+            }
+
+            // For other scopes, check tenant access
+            if (submission.TenantId.HasValue)
+            {
+                return await _scopeService.HasAccessToTenantAsync(user, submission.TenantId.Value);
+            }
+
+            // Non-tenant submissions: check if user submitted it or has global/regional access
+            return submission.SubmittedBy == userScope.UserId ||
+                   userScope.ScopeCode == "REGIONAL" ||
+                   userScope.ScopeCode == "GLOBAL";
+        }
+
+        // ========================================================================
+        // PRIVATE HELPER METHODS FOR SCOPE-AWARE OPERATIONS
+        // ========================================================================
+
+        /// <summary>
+        /// Apply scope-based filtering to a submissions query
+        /// </summary>
+        private IQueryable<FormTemplateSubmission> ApplyScopeFilter(
+            IQueryable<FormTemplateSubmission> query,
+            UserScope userScope,
+            List<int> accessibleTenantIds)
+        {
+            switch (userScope.ScopeCode?.ToUpper())
+            {
+                case "GLOBAL":
+                    // No filtering - see all submissions
+                    break;
+
+                case "INDIVIDUAL":
+                    // Only own submissions
+                    query = query.Where(s => s.SubmittedBy == userScope.UserId);
+                    break;
+
+                default:
+                    // REGIONAL, TENANT, DEPARTMENT, TEAM - filter by accessible tenants
+                    if (accessibleTenantIds.Any())
+                    {
+                        query = query.Where(s =>
+                            s.TenantId == null || // Non-tenant submissions visible
+                            accessibleTenantIds.Contains(s.TenantId.Value));
+                    }
+                    else
+                    {
+                        // No accessible tenants - only show own submissions
+                        query = query.Where(s => s.SubmittedBy == userScope.UserId);
+                    }
+                    break;
+            }
+
+            return query;
+        }
+
+        /// <summary>
+        /// Apply additional filters to submissions query
+        /// </summary>
+        private IQueryable<FormTemplateSubmission> ApplySubmissionFilters(
+            IQueryable<FormTemplateSubmission> query,
+            SubmissionFilters filters)
+        {
+            // Status filter
+            if (!string.IsNullOrEmpty(filters.Status))
+            {
+                query = query.Where(s => s.Status == filters.Status);
+            }
+
+            // Tenant filter
+            if (filters.TenantId.HasValue)
+            {
+                query = query.Where(s => s.TenantId == filters.TenantId.Value);
+            }
+
+            // Period filter
+            if (!string.IsNullOrEmpty(filters.Period))
+            {
+                var now = DateTime.Now;
+                switch (filters.Period.ToLower())
+                {
+                    case "thismonth":
+                        query = query.Where(s => s.ReportingYear == now.Year && s.ReportingMonth == now.Month);
+                        break;
+                    case "lastmonth":
+                        var lastMonth = now.AddMonths(-1);
+                        query = query.Where(s => s.ReportingYear == lastMonth.Year && s.ReportingMonth == lastMonth.Month);
+                        break;
+                    case "thisquarter":
+                        var quarterStart = new DateTime(now.Year, ((now.Month - 1) / 3) * 3 + 1, 1);
+                        query = query.Where(s => s.ReportingPeriod >= quarterStart);
+                        break;
+                    case "thisyear":
+                        query = query.Where(s => s.ReportingYear == now.Year);
+                        break;
+                }
+            }
+
+            // Custom date range
+            if (filters.DateFrom.HasValue)
+            {
+                query = query.Where(s => s.ReportingPeriod >= filters.DateFrom.Value);
+            }
+            if (filters.DateTo.HasValue)
+            {
+                query = query.Where(s => s.ReportingPeriod <= filters.DateTo.Value);
+            }
+
+            // Submitter filter
+            if (filters.SubmitterId.HasValue)
+            {
+                query = query.Where(s => s.SubmittedBy == filters.SubmitterId.Value);
+            }
+
+            // Search filter
+            if (!string.IsNullOrWhiteSpace(filters.Search))
+            {
+                var searchLower = filters.Search.ToLower();
+                query = query.Where(s =>
+                    (s.Submitter != null && (
+                        s.Submitter.Email.ToLower().Contains(searchLower) ||
+                        (s.Submitter.FirstName + " " + s.Submitter.LastName).ToLower().Contains(searchLower)
+                    )) ||
+                    (s.Tenant != null && s.Tenant.TenantName.ToLower().Contains(searchLower))
+                );
+            }
+
+            return query;
+        }
+
+        /// <summary>
+        /// Build a submission row ViewModel
+        /// </summary>
+        private SubmissionRowViewModel BuildSubmissionRow(
+            FormTemplateSubmission submission,
+            List<FormFieldColumnInfo> fieldColumns,
+            int totalFields,
+            int rowNumber)
+        {
+            var responsesByItemId = submission.Responses.ToDictionary(r => r.ItemId);
+            var answeredCount = submission.Responses.Count(r => HasResponseValue(r));
+
+            var row = new SubmissionRowViewModel
+            {
+                SubmissionId = submission.SubmissionId,
+                SubmissionNumber = rowNumber,
+                SubmissionDate = submission.SubmittedDate ?? submission.ModifiedDate,
+                FormattedDate = FormatDateRelative(submission.SubmittedDate ?? submission.ModifiedDate),
+                SubmitterName = submission.Submitter?.FullName ?? "Unknown",
+                SubmitterEmail = submission.Submitter?.Email ?? "",
+                TenantName = submission.Tenant?.TenantName,
+                TenantId = submission.TenantId,
+                ReportingPeriod = FormatReportingPeriod(submission.ReportingYear, submission.ReportingMonth),
+                Status = submission.Status,
+                StatusBadgeClass = GetStatusBadgeClass(submission.Status),
+                AnsweredCount = answeredCount,
+                TotalFields = totalFields,
+                CompletionPercentage = totalFields > 0 ? Math.Round((decimal)answeredCount / totalFields * 100, 1) : 0,
+                IsFlagged = false, // TODO: Implement flagging
+                ResponsePreviews = new List<ResponsePreview>()
+            };
+
+            // Build response previews for each field column
+            foreach (var fieldColumn in fieldColumns)
+            {
+                responsesByItemId.TryGetValue(fieldColumn.ItemId, out var response);
+                var preview = BuildResponsePreview(fieldColumn, response);
+                row.ResponsePreviews.Add(preview);
+            }
+
+            return row;
+        }
+
+        /// <summary>
+        /// Build a response preview for table display
+        /// </summary>
+        private ResponsePreview BuildResponsePreview(FormFieldColumnInfo fieldColumn, FormTemplateResponse? response)
+        {
+            var preview = new ResponsePreview
+            {
+                ItemId = fieldColumn.ItemId,
+                DataType = fieldColumn.DataType,
+                HasValue = response != null && HasResponseValue(response)
+            };
+
+            if (response == null || !preview.HasValue)
+            {
+                preview.DisplayValue = "—";
+                return preview;
+            }
+
+            // Get options from fieldColumn, or fallback to response.Item.Options if available
+            var options = fieldColumn.Options;
+            if (!options.Any() && response.Item?.Options != null && response.Item.Options.Any())
+            {
+                options = response.Item.Options
+                    .Where(o => o.IsActive)
+                    .Select(o => new FieldOptionInfo
+                    {
+                        OptionId = o.OptionId,
+                        OptionValue = o.OptionValue,
+                        OptionLabel = o.OptionLabel
+                    })
+                    .ToList();
+            }
+
+            // Get DataType from fieldColumn, or fallback to response.Item.DataType
+            var dataType = !string.IsNullOrEmpty(fieldColumn.DataType) 
+                ? fieldColumn.DataType 
+                : (response.Item?.DataType ?? "Text");
+
+            // Format based on data type
+            switch (dataType.ToLower())
+            {
+                case "rating":
+                case "slider":
+                    preview.NumericValue = response.NumericValue ?? response.SelectedScoreValue;
+                    preview.MaxValue = 10; // Default max, could be from configuration
+                    preview.DisplayValue = preview.NumericValue.HasValue
+                        ? $"{preview.NumericValue:0.#}"
+                        : "—";
+                    break;
+
+                case "number":
+                case "decimal":
+                    preview.NumericValue = response.NumericValue;
+                    preview.DisplayValue = response.NumericValue.HasValue
+                        ? response.NumericValue.Value.ToString("N2")
+                        : "—";
+                    break;
+
+                case "currency":
+                    preview.NumericValue = response.NumericValue;
+                    preview.DisplayValue = response.NumericValue.HasValue
+                        ? response.NumericValue.Value.ToString("C2")
+                        : "—";
+                    break;
+
+                case "percentage":
+                    preview.NumericValue = response.NumericValue;
+                    preview.DisplayValue = response.NumericValue.HasValue
+                        ? $"{response.NumericValue.Value:N2}%"
+                        : "—";
+                    break;
+
+                case "date":
+                    preview.DisplayValue = response.DateValue.HasValue
+                        ? response.DateValue.Value.ToString("MMM dd, yyyy")
+                        : "—";
+                    break;
+
+                case "datetime":
+                    preview.DisplayValue = response.DateValue.HasValue
+                        ? response.DateValue.Value.ToString("MMM dd, yyyy h:mm tt")
+                        : "—";
+                    break;
+
+                case "time":
+                    preview.DisplayValue = !string.IsNullOrEmpty(response.TextValue)
+                        ? response.TextValue
+                        : (response.DateValue.HasValue ? response.DateValue.Value.ToString("h:mm tt") : "—");
+                    break;
+
+                case "boolean":
+                case "toggle":
+                    preview.DisplayValue = response.BooleanValue == true ? "Yes" : "No";
+                    break;
+
+                case "checkbox":
+                    // Single checkbox (boolean) vs checkbox with options
+                    if (options.Any())
+                    {
+                        // Checkbox with options - treat like multiselect
+                        goto case "checkboxgroup";
+                    }
+                    else
+                    {
+                        // Single boolean checkbox
+                        preview.DisplayValue = response.BooleanValue == true ? "Yes" : "No";
+                    }
+                    break;
+
+                case "dropdown":
+                case "radio":
+                case "select":
+                case "singlechoice":
+                case "single-choice":
+                    // Use SelectedOption if loaded, otherwise lookup by SelectedOptionId or TextValue
+                    if (response.SelectedOption != null)
+                    {
+                        preview.DisplayValue = response.SelectedOption.OptionLabel;
+                    }
+                    else if (response.SelectedOptionId.HasValue && options.Any())
+                    {
+                        var option = options.FirstOrDefault(o => o.OptionId == response.SelectedOptionId.Value);
+                        preview.DisplayValue = option?.OptionLabel ?? response.TextValue ?? "—";
+                    }
+                    else if (!string.IsNullOrEmpty(response.TextValue) && options.Any())
+                    {
+                        // Lookup by OptionValue (the stored code)
+                        var option = options.FirstOrDefault(o => 
+                            o.OptionValue.Equals(response.TextValue, StringComparison.OrdinalIgnoreCase));
+                        preview.DisplayValue = option?.OptionLabel ?? response.TextValue;
+                    }
+                    else
+                    {
+                        preview.DisplayValue = response.TextValue ?? "—";
+                    }
+                    break;
+
+                case "multiselect":
+                case "multi-select":
+                case "multiplechoice":
+                case "multiple-choice":
+                case "checkboxgroup":
+                case "checkbox-group":
+                case "checkboxlist":
+                case "checkbox-list":
+                    // TextValue contains comma-separated option IDs or values
+                    if (!string.IsNullOrEmpty(response.TextValue) && options.Any())
+                    {
+                        var selectedValues = response.TextValue.Split(',', StringSplitOptions.RemoveEmptyEntries)
+                            .Select(v => v.Trim())
+                            .ToList();
+                        
+                        var labels = new List<string>();
+                        foreach (var val in selectedValues)
+                        {
+                            // Try to parse as ID first
+                            if (int.TryParse(val, out int optionId))
+                            {
+                                var option = options.FirstOrDefault(o => o.OptionId == optionId);
+                                if (option != null)
+                                {
+                                    labels.Add(option.OptionLabel);
+                                    continue;
+                                }
+                            }
+                            // Otherwise lookup by OptionValue
+                            var optionByValue = options.FirstOrDefault(o => 
+                                o.OptionValue.Equals(val, StringComparison.OrdinalIgnoreCase));
+                            labels.Add(optionByValue?.OptionLabel ?? val);
+                        }
+                        
+                        var joined = string.Join(", ", labels);
+                        preview.DisplayValue = joined.Length > 30 ? joined.Substring(0, 27) + "..." : joined;
+                    }
+                    else
+                    {
+                        preview.DisplayValue = response.TextValue ?? "—";
+                    }
+                    break;
+
+                case "fileupload":
+                case "file":
+                case "image":
+                    preview.DisplayValue = !string.IsNullOrEmpty(response.TextValue) ? "📎 View" : "—";
+                    break;
+
+                case "signature":
+                    preview.DisplayValue = !string.IsNullOrEmpty(response.TextValue) ? "✓ Signed" : "—";
+                    break;
+
+                case "email":
+                    preview.DisplayValue = response.TextValue ?? "—";
+                    break;
+
+                case "phone":
+                case "tel":
+                    preview.DisplayValue = response.TextValue ?? "—";
+                    break;
+
+                case "url":
+                case "link":
+                    var url = response.TextValue ?? "";
+                    preview.DisplayValue = url.Length > 30 ? url.Substring(0, 27) + "..." : (url.Length > 0 ? url : "—");
+                    break;
+
+                case "textarea":
+                case "longtext":
+                case "richtext":
+                    var longText = response.TextValue ?? "";
+                    preview.DisplayValue = longText.Length > 50 
+                        ? longText.Substring(0, 47) + "..." 
+                        : (longText.Length > 0 ? longText : "—");
+                    break;
+
+                default:
+                    // Check if this field has options - if so, treat as selection field
+                    if (options.Any())
+                    {
+                        // Field has options but unknown DataType - try to resolve option label
+                        if (response.SelectedOption != null)
+                        {
+                            preview.DisplayValue = response.SelectedOption.OptionLabel;
+                        }
+                        else if (response.SelectedOptionId.HasValue)
+                        {
+                            var option = options.FirstOrDefault(o => o.OptionId == response.SelectedOptionId.Value);
+                            preview.DisplayValue = option?.OptionLabel ?? response.TextValue ?? "—";
+                        }
+                        else if (!string.IsNullOrEmpty(response.TextValue))
+                        {
+                            // Try to lookup by OptionValue
+                            var option = options.FirstOrDefault(o => 
+                                o.OptionValue.Equals(response.TextValue, StringComparison.OrdinalIgnoreCase));
+                            preview.DisplayValue = option?.OptionLabel ?? response.TextValue;
+                        }
+                        else
+                        {
+                            preview.DisplayValue = "—";
+                        }
+                    }
+                    else
+                    {
+                        // Text and any other types without options
+                        var textValue = response.TextValue ?? "";
+                        preview.DisplayValue = textValue.Length > 30
+                            ? textValue.Substring(0, 27) + "..."
+                            : textValue;
+                        if (string.IsNullOrEmpty(preview.DisplayValue))
+                            preview.DisplayValue = "—";
+                    }
+                    break;
+            }
+
+            return preview;
+        }
+
+        /// <summary>
+        /// Build detailed response view for offcanvas
+        /// </summary>
+        private ResponseDetailViewModel BuildResponseDetail(FormTemplateItem item, FormTemplateResponse? response)
+        {
+            var detail = new ResponseDetailViewModel
+            {
+                ItemId = item.ItemId,
+                FieldName = item.ItemName,
+                FieldDescription = item.ItemDescription,
+                DataType = item.DataType ?? "Text",
+                IsRequired = item.IsRequired,
+                DisplayOrder = item.DisplayOrder,
+                HasValue = response != null && HasResponseValue(response)
+            };
+
+            if (response == null)
+            {
+                detail.DisplayValue = "No response";
+                return detail;
+            }
+
+            // Store raw values
+            detail.TextValue = response.TextValue;
+            detail.NumericValue = response.NumericValue;
+            detail.DateValue = response.DateValue;
+            detail.BooleanValue = response.BooleanValue;
+            detail.Remarks = response.Remarks;
+            detail.RatingValue = response.SelectedScoreValue ?? response.NumericValue;
+            detail.ScoreWeight = response.SelectedScoreWeight;
+            detail.WeightedScore = response.WeightedScore;
+
+            // Get selected option label if applicable
+            if (response.SelectedOptionId.HasValue && item.Options != null)
+            {
+                var selectedOption = item.Options.FirstOrDefault(o => o.OptionId == response.SelectedOptionId);
+                detail.SelectedOptionLabel = selectedOption?.OptionLabel;
+            }
+
+            // Format display value based on data type
+            detail.DisplayValue = FormatResponseDisplayValue(item, response);
+
+            // Handle rating max value
+            if (item.DataType?.ToLower() == "rating")
+            {
+                detail.RatingMax = 5; // Default, could come from configuration
+            }
+
+            return detail;
+        }
+
+        /// <summary>
+        /// Format response value for display
+        /// </summary>
+        private string FormatResponseDisplayValue(FormTemplateItem item, FormTemplateResponse response)
+        {
+            var dataType = item.DataType?.ToLower() ?? "text";
+
+            switch (dataType)
+            {
+                case "rating":
+                    var rating = response.SelectedScoreValue ?? response.NumericValue;
+                    return rating.HasValue ? $"{rating:0.#} out of 5" : "No rating";
+
+                case "slider":
+                    return response.NumericValue.HasValue
+                        ? response.NumericValue.Value.ToString("N1")
+                        : "No value";
+
+                case "number":
+                case "decimal":
+                    return response.NumericValue.HasValue
+                        ? response.NumericValue.Value.ToString("N2")
+                        : "No value";
+
+                case "currency":
+                    return response.NumericValue.HasValue
+                        ? response.NumericValue.Value.ToString("C2")
+                        : "No value";
+
+                case "percentage":
+                    return response.NumericValue.HasValue
+                        ? response.NumericValue.Value.ToString("P1")
+                        : "No value";
+
+                case "date":
+                    return response.DateValue.HasValue
+                        ? response.DateValue.Value.ToString("MMMM dd, yyyy")
+                        : "No date";
+
+                case "datetime":
+                    return response.DateValue.HasValue
+                        ? response.DateValue.Value.ToString("MMMM dd, yyyy 'at' h:mm tt")
+                        : "No date";
+
+                case "time":
+                    return response.DateValue.HasValue
+                        ? response.DateValue.Value.ToString("h:mm tt")
+                        : "No time";
+
+                case "checkbox":
+                case "boolean":
+                    return response.BooleanValue == true ? "Yes" : "No";
+
+                case "select":
+                case "dropdown":
+                case "radio":
+                case "singlechoice":
+                case "single-choice":
+                    // Prefer selected option label, fall back to text value
+                    if (response.SelectedOptionId.HasValue && item.Options != null)
+                    {
+                        var option = item.Options.FirstOrDefault(o => o.OptionId == response.SelectedOptionId);
+                        if (option != null) return option.OptionLabel;
+                    }
+                    return response.TextValue ?? "No selection";
+
+                case "multiselect":
+                case "checkboxgroup":
+                case "checkbox-group":
+                case "multi-choice":
+                case "multichoice":
+                    // For multi-select, TextValue contains comma-separated option IDs or labels
+                    if (!string.IsNullOrEmpty(response.TextValue) && item.Options != null && item.Options.Any())
+                    {
+                        // Try to parse as option IDs first
+                        var selectedIds = response.TextValue.Split(',')
+                            .Select(s => int.TryParse(s.Trim(), out var id) ? id : (int?)null)
+                            .Where(id => id.HasValue)
+                            .Select(id => id!.Value)
+                            .ToList();
+                        
+                        if (selectedIds.Any())
+                        {
+                            var labels = item.Options
+                                .Where(o => selectedIds.Contains(o.OptionId))
+                                .Select(o => o.OptionLabel)
+                                .ToList();
+                            if (labels.Any()) return string.Join(", ", labels);
+                        }
+                    }
+                    return response.TextValue ?? "No selections";
+
+                case "fileupload":
+                case "image":
+                    return !string.IsNullOrEmpty(response.TextValue)
+                        ? "File attached"
+                        : "No file";
+
+                case "signature":
+                    return !string.IsNullOrEmpty(response.TextValue)
+                        ? "Signature captured"
+                        : "No signature";
+
+                default:
+                    return response.TextValue ?? "No response";
+            }
+        }
+
+        /// <summary>
+        /// Check if a response has a value
+        /// </summary>
+        private bool HasResponseValue(FormTemplateResponse response)
+        {
+            return !string.IsNullOrEmpty(response.TextValue) ||
+                   response.NumericValue.HasValue ||
+                   response.DateValue.HasValue ||
+                   response.BooleanValue.HasValue ||
+                   response.SelectedOptionId.HasValue;
+        }
+
+        /// <summary>
+        /// Get available tenants for filter dropdown
+        /// </summary>
+        private async Task<List<TenantFilterOption>> GetAvailableTenantsForFilter(
+            int templateId,
+            List<int> accessibleTenantIds)
+        {
+            if (!accessibleTenantIds.Any())
+            {
+                return new List<TenantFilterOption>();
+            }
+
+            var tenantCounts = await _context.FormTemplateSubmissions
+                .Where(s => s.TemplateId == templateId &&
+                           s.TenantId.HasValue &&
+                           accessibleTenantIds.Contains(s.TenantId.Value))
+                .GroupBy(s => s.TenantId)
+                .Select(g => new { TenantId = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            var tenantIds = tenantCounts.Select(t => t.TenantId!.Value).ToList();
+            var tenants = await _context.Tenants
+                .Where(t => tenantIds.Contains(t.TenantId))
+                .ToListAsync();
+
+            return tenants.Select(t => new TenantFilterOption
+            {
+                TenantId = t.TenantId,
+                TenantName = t.TenantName,
+                SubmissionCount = tenantCounts.FirstOrDefault(c => c.TenantId == t.TenantId)?.Count ?? 0
+            })
+            .OrderBy(t => t.TenantName)
+            .ToList();
+        }
+
+        /// <summary>
+        /// Get available submitters for filter dropdown
+        /// </summary>
+        private async Task<List<SubmitterFilterOption>> GetAvailableSubmittersForFilter(
+            int templateId,
+            List<int> accessibleTenantIds)
+        {
+            var query = _context.FormTemplateSubmissions
+                .Where(s => s.TemplateId == templateId && s.SubmittedBy > 0);
+
+            // Apply tenant scope if not global
+            if (accessibleTenantIds.Any())
+            {
+                query = query.Where(s => !s.TenantId.HasValue || accessibleTenantIds.Contains(s.TenantId.Value));
+            }
+
+            var submitterCounts = await query
+                .GroupBy(s => s.SubmittedBy)
+                .Select(g => new { SubmitterId = g.Key, Count = g.Count() })
+                .ToListAsync();
+
+            var submitterIds = submitterCounts.Select(s => s.SubmitterId).ToList();
+            var submitters = await _context.Users
+                .Where(u => submitterIds.Contains(u.UserId))
+                .ToListAsync();
+
+            return submitters.Select(u => new SubmitterFilterOption
+            {
+                UserId = u.UserId,
+                FullName = u.FullName ?? $"{u.FirstName} {u.LastName}".Trim(),
+                Email = u.Email,
+                SubmissionCount = submitterCounts.FirstOrDefault(c => c.SubmitterId == u.UserId)?.Count ?? 0
+            })
+            .OrderBy(s => s.FullName)
+            .ToList();
+        }
+
+        /// <summary>
+        /// Build scope display text for UI
+        /// </summary>
+        private string BuildScopeDisplayText(UserScope userScope, int totalCount)
+        {
+            var scopeLabel = userScope.ScopeCode?.ToUpper() switch
+            {
+                "GLOBAL" => "All Submissions",
+                "REGIONAL" => $"{userScope.ScopeName} Region Submissions",
+                "TENANT" => "Your Location's Submissions",
+                "DEPARTMENT" => "Your Department's Submissions",
+                "TEAM" => "Your Team's Submissions",
+                "INDIVIDUAL" => "Your Submissions Only",
+                _ => "Submissions"
+            };
+
+            return $"Viewing: {scopeLabel} ({totalCount} total)";
+        }
+
+        /// <summary>
+        /// Get CSS class for status badge
+        /// </summary>
+        private string GetStatusBadgeClass(string status)
+        {
+            return status switch
+            {
+                "Draft" => "bg-warning",
+                "Submitted" => "bg-primary",
+                "InApproval" => "bg-info",
+                "Approved" => "bg-success",
+                "Rejected" => "bg-danger",
+                "Cancelled" => "bg-secondary",
+                _ => "bg-secondary"
+            };
+        }
+
+        /// <summary>
+        /// Format date for display
+        /// </summary>
+        private string FormatDate(DateTime date)
+        {
+            return date.ToString("MMM dd, yyyy 'at' h:mm tt");
+        }
+
+        /// <summary>
+        /// Format date with relative display for recent dates
+        /// </summary>
+        private string FormatDateRelative(DateTime date)
+        {
+            var now = DateTime.Now;
+            var diff = now - date;
+
+            if (diff.TotalMinutes < 1)
+                return "Just now";
+            if (diff.TotalMinutes < 60)
+                return $"{(int)diff.TotalMinutes}m ago";
+            if (diff.TotalHours < 24 && date.Date == now.Date)
+                return date.ToString("h:mm tt");
+            if (diff.TotalDays < 7)
+                return date.ToString("ddd h:mm tt");
+
+            return date.ToString("MMM dd");
+        }
+
+        /// <summary>
+        /// Format reporting period for display
+        /// </summary>
+        private string FormatReportingPeriod(int year, int month)
+        {
+            var date = new DateTime(year, month, 1);
+            return date.ToString("MMMM yyyy");
+        }
+
+        // ========================================================================
+        // EXPORT METHODS
+        // ========================================================================
+
+        /// <inheritdoc />
+        public async Task<SubmissionExportData> GetSubmissionsForExportAsync(
+            int templateId,
+            ClaimsPrincipal user,
+            SubmissionFilters? filters = null)
+        {
+            var exportData = new SubmissionExportData();
+
+            // Get user scope
+            var userScope = await _scopeService.GetUserScopeAsync(user);
+            var accessibleTenantIds = userScope.AccessibleTenantIds;
+
+            // Get template with sections and items
+            var template = await _context.FormTemplates
+                .Include(t => t.Sections.OrderBy(s => s.DisplayOrder))
+                    .ThenInclude(s => s.Items.Where(i => i.IsActive).OrderBy(i => i.DisplayOrder))
+                        .ThenInclude(i => i.Options.Where(o => o.IsActive).OrderBy(o => o.DisplayOrder))
+                .AsNoTracking()
+                .FirstOrDefaultAsync(t => t.TemplateId == templateId);
+
+            if (template == null)
+            {
+                return exportData;
+            }
+
+            exportData.TemplateName = template.TemplateName;
+
+            // Build headers: Fixed columns + Field columns
+            exportData.Headers.Add("#");
+            exportData.Headers.Add("Submission Date");
+            exportData.Headers.Add("Submitter");
+            exportData.Headers.Add("Location");
+            exportData.Headers.Add("Status");
+            exportData.Headers.Add("Reporting Period");
+
+            // Add field columns
+            var fieldColumns = new List<FormFieldColumnInfo>();
+            foreach (var section in template.Sections)
+            {
+                foreach (var item in section.Items)
+                {
+                    exportData.Headers.Add(item.ItemName);
+                    fieldColumns.Add(new FormFieldColumnInfo
+                    {
+                        ItemId = item.ItemId,
+                        FieldName = item.ItemName,
+                        DataType = item.DataType ?? "Text",
+                        Options = item.Options?
+                            .Select(o => new FieldOptionInfo
+                            {
+                                OptionId = o.OptionId,
+                                OptionValue = o.OptionValue,
+                                OptionLabel = o.OptionLabel
+                            })
+                            .ToList() ?? new List<FieldOptionInfo>()
+                    });
+                }
+            }
+
+            // Build query for submissions
+            var query = _context.FormTemplateSubmissions
+                .Include(s => s.Submitter)
+                .Include(s => s.Tenant)
+                .Include(s => s.Responses)
+                    .ThenInclude(r => r.SelectedOption)
+                .Include(s => s.Responses)
+                    .ThenInclude(r => r.Item)
+                        .ThenInclude(i => i.Options)
+                .Where(s => s.TemplateId == templateId)
+                .AsQueryable();
+
+            // Apply scope filter
+            if (accessibleTenantIds.Any())
+            {
+                query = query.Where(s => !s.TenantId.HasValue || accessibleTenantIds.Contains(s.TenantId.Value));
+            }
+
+            // Apply additional filters
+            if (filters != null)
+            {
+                query = ApplySubmissionFilters(query, filters);
+            }
+
+            // Get all submissions (no pagination for export)
+            var submissions = await query
+                .OrderByDescending(s => s.SubmittedDate ?? s.ModifiedDate)
+                .ToListAsync();
+
+            // Build rows
+            int rowNumber = 1;
+            foreach (var submission in submissions)
+            {
+                var row = new List<string>
+                {
+                    rowNumber.ToString(),
+                    (submission.SubmittedDate ?? submission.ModifiedDate).ToString("yyyy-MM-dd HH:mm"),
+                    submission.Submitter?.FullName ?? "Unknown",
+                    submission.Tenant?.TenantName ?? "—",
+                    submission.Status,
+                    $"{submission.ReportingMonth:D2}/{submission.ReportingYear}"
+                };
+
+                // Add response values
+                var responsesByItemId = submission.Responses.ToDictionary(r => r.ItemId);
+                foreach (var fieldColumn in fieldColumns)
+                {
+                    responsesByItemId.TryGetValue(fieldColumn.ItemId, out var response);
+                    var preview = BuildResponsePreview(fieldColumn, response);
+                    row.Add(preview.DisplayValue);
+                }
+
+                exportData.Rows.Add(row);
+                rowNumber++;
+            }
+
+            return exportData;
         }
     }
 }

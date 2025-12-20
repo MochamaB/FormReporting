@@ -1,0 +1,125 @@
+@using FormReporting.Models.ViewModels.Forms
+@model SubmissionDetailViewModel
+
+<style>
+    #sectionsAccordion-@Model.SubmissionId .accordion-button {
+        padding: 0.75rem 0.5rem;
+        background-color: transparent !important;
+        box-shadow: none !important;
+    }
+    #sectionsAccordion-@Model.SubmissionId .accordion-button:not(.collapsed) {
+        background-color: transparent !important;
+    }
+    #sectionsAccordion-@Model.SubmissionId .accordion-item {
+        border: none;
+        border-bottom: 2px solid #c6c6c6;
+    }
+    #sectionsAccordion-@Model.SubmissionId .accordion-item:last-child {
+        border-bottom: 2px solid #c6c6c6;
+    }
+</style>
+
+<!-- Tabs -->
+ <ul class="nav nav-tabs-custom rounded card-header-tabs border-bottom-0 mb-0" role="tablist">
+    <li class="nav-item">
+        <a class="nav-link active" data-bs-toggle="tab" href="#answers-tab-@Model.SubmissionId" role="tab">
+            <span class="fw-semibold">Answers</span>
+        </a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" data-bs-toggle="tab" href="#comments-tab-@Model.SubmissionId" role="tab">
+            <span class="fw-semibold">Comments</span>
+            @if (Model.CommentsCount > 0)
+            {
+                <span class="ms-1">(@Model.CommentsCount)</span>
+            }
+        </a>
+    </li>
+</ul>
+
+<div class="tab-content">
+    <!-- Answers Tab -->
+    <div class="tab-pane fade show active" id="answers-tab-@Model.SubmissionId" role="tabpanel">
+        <div class="accordion accordion-flush" id="sectionsAccordion-@Model.SubmissionId">
+            @{
+                int sectionIndex = 0;
+                int globalQuestionNumber = 0;
+            }
+            @foreach (var formSection in Model.Sections)
+            {
+                sectionIndex++;
+                var sectionId = $"section-{Model.SubmissionId}-{sectionIndex}";
+                var isFirstSection = sectionIndex == 1;
+                
+                <div class="accordion-item">
+                    <!-- Section Header (Collapsible) -->
+                    <h2 class="accordion-header">
+                        <button class="accordion-button @(isFirstSection ? "" : "collapsed")" 
+                                type="button" 
+                                data-bs-toggle="collapse" 
+                                data-bs-target="#@sectionId"
+                                aria-expanded="@(isFirstSection ? "true" : "false")">
+                            <span class="fw-semibold">@formSection.SectionName</span>
+                            <span class="text-danger ms-1">*</span>
+                        </button>
+                    </h2>
+                    @if (!string.IsNullOrEmpty(formSection.SectionDescription))
+                    {
+                        <div class="px-2 pb-2 small text-muted">@formSection.SectionDescription</div>
+                    }
+                    
+                    <!-- Section Content -->
+                    <div id="@sectionId" 
+                         class="accordion-collapse collapse @(isFirstSection ? "show" : "")"
+                         data-bs-parent="#sectionsAccordion-@Model.SubmissionId">
+                        <div class="accordion-body p-0">
+                            @{
+                                int questionInSection = 0;
+                            }
+                            @foreach (var response in formSection.Responses)
+                            {
+                                globalQuestionNumber++;
+                                questionInSection++;
+                                
+                                <div class="py-3 px-3 border-bottom">
+                                    <!-- Question number and label -->
+                                    <label class="form-label mb-2">
+                                        <span class="text-warning fw-bold me-2">Q@(globalQuestionNumber)</span>
+                                        <span>@response.FieldName</span>
+                                    </label>
+                                    
+                                    <!-- Response value -->
+                                    <div class="ps-4 text-muted">
+                                        @if (!response.HasValue)
+                                        {
+                                            <span class="fst-italic">No response</span>
+                                        }
+                                        else
+                                        {
+                                            @await Html.PartialAsync("Partials/_ResponseValue", response)
+                                        }
+                                    </div>
+                                    
+                                    @if (!string.IsNullOrEmpty(response.Remarks))
+                                    {
+                                        <div class="mt-2 ps-4 small text-secondary">
+                                            <i class="ri-chat-quote-line me-1"></i>@response.Remarks
+                                        </div>
+                                    }
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+    
+    <!-- Comments Tab -->
+    <div class="tab-pane fade" id="comments-tab-@Model.SubmissionId" role="tabpanel">
+        <div class="text-center py-5">
+            <i class="ri-chat-3-line fs-1 text-muted opacity-50"></i>
+            <p class="text-muted mb-0 mt-2">No comments yet</p>
+        </div>
+    </div>
+</div>

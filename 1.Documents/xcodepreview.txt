@@ -1,37 +1,47 @@
- FormReporting.Controllers.API.AssignmentsApiController[0]
-      Error getting target options for type SpecificUser
-      System.InvalidOperationException: The LINQ expression 'DbSet<User>()
-          .Where(u => u.IsActive && __accessibleTenantIds_0
-              .Contains(u.TenantId))
-          .Join(
-              inner: DbSet<Tenant>(),
-              outerKeySelector: u => EF.Property<int?>(u, "TenantId"),
-              innerKeySelector: t => EF.Property<int?>(t, "TenantId"),
-              resultSelector: (o, i) => new TransparentIdentifier<User, Tenant>(
-                  Outer = o,
-                  Inner = i
-              ))
-          .OrderBy(u => u.Inner.TenantName)
-          .ThenBy(u => u.Outer.FullName)' could not be translated. Additional information: Translation of member 'FullName' on entity type 'User' failed. This commonly occurs when the specified member is unmapped. Either rewrite the query in a form that can be translated, or switch to client evaluation explicitly by inserting a call to 'AsEnumerable', 'AsAsyncEnumerable', 'ToList', or 'ToListAsync'. See https://go.microsoft.com/fwlink/?linkid=2101038 for more information.
-         at Microsoft.EntityFrameworkCore.Query.QueryableMethodTranslatingExpressionVisitor.Translate(Expression expression)
-         at Microsoft.EntityFrameworkCore.Query.QueryCompilationContext.CreateQueryExecutorExpression[TResult](Expression query)
-         at Microsoft.EntityFrameworkCore.Query.QueryCompilationContext.CreateQueryExecutor[TResult](Expression query)
-         at Microsoft.EntityFrameworkCore.Storage.Database.CompileQuery[TResult](Expression query, Boolean async)
-         at Microsoft.EntityFrameworkCore.Query.Internal.QueryCompiler.CompileQueryCore[TResult](IDatabase database, Expression query, IModel model, Boolean async)
-         at Microsoft.EntityFrameworkCore.Query.Internal.QueryCompiler.<>c__DisplayClass11_0`1.<ExecuteCore>b__0()
-         at Microsoft.EntityFrameworkCore.Query.Internal.CompiledQueryCache.GetOrAddQuery[TResult](Object cacheKey, Func`1 compiler)
-         at Microsoft.EntityFrameworkCore.Query.Internal.QueryCompiler.ExecuteCore[TResult](Expression query, Boolean async, CancellationToken cancellationToken)
-         at Microsoft.EntityFrameworkCore.Query.Internal.QueryCompiler.ExecuteAsync[TResult](Expression query, CancellationToken cancellationToken)
-         at Microsoft.EntityFrameworkCore.Query.Internal.EntityQueryProvider.ExecuteAsync[TResult](Expression expression, CancellationToken cancellationToken)
-         at Microsoft.EntityFrameworkCore.Query.Internal.EntityQueryable`1.GetAsyncEnumerator(CancellationToken cancellationToken)
-         at System.Runtime.CompilerServices.ConfiguredCancelableAsyncEnumerable`1.GetAsyncEnumerator()
-         at Microsoft.EntityFrameworkCore.EntityFrameworkQueryableExtensions.ToListAsync[TSource](IQueryable`1 source, CancellationToken cancellationToken)
-         at FormReporting.Services.Forms.FormAssignmentService.GetTargetOptionsAsync(ClaimsPrincipal user, String assignmentType) in C:\Users\KTDA\source\repos\MochamaB\FormReporting\Services\Forms\FormAssignmentService.cs:line 633
-         at FormReporting.Controllers.API.AssignmentsApiController.GetTargetOptions(String assignmentType) in C:\Users\KTDA\source\repos\MochamaB\FormReporting\Controllers\API\AssignmentsApiController.cs:line 462
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (167ms) [Parameters=[], CommandType='Text', CommandTimeout='120']
-      SELECT [t].[TenantId]
-      FROM [Tenants] AS [t]
-      WHERE [t].[IsActive] = CAST(1 AS bit)
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbComma
+<div class="container">
+  <div class="row">
+    <div class="col-sm-12">
+      <table class="table table-bordered table-responsive">
+        <thead>
+          <tr>
+            <th rowspan="2">Number</th>
+            <th rowspan="2">Competitor</th>
+            <th rowspan="2">Keywords</th>
+             <th rowspan="2">Vicinity</th>
+             <th colspan="3">Contact</th>
+          </tr>
+          <tr>
+            <th>Title</th>
+            <th>Email</th>
+            <th>Phone Number</th>
+          </tr>
+        </thead>
+        <tbody id="rows">
+          <tr>
+            <td>
+              One
+            </td>
+            <td>
+              Two
+            </td>
+            <td>
+              Three
+            </td>
+            <td>
+              Four
+            </td>
+            <td>
+              Five
+            </td>
+            <td>
+              Six
+            </td>
+            <td>
+              Seven
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

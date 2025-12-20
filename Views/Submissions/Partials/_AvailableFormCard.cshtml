@@ -193,7 +193,7 @@
     <div class="card-footer bg-transparent border-top">
         <div class="d-flex justify-content-end">
             <div class="dropdown">
-                <button class="btn btn-primary btn-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <i class="ri-play-line me-1"></i>Actions
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
@@ -216,8 +216,8 @@
                     
                     <!-- View Actions -->
                     <li>
-                        <a class="dropdown-item" href="@Url.Action("Submissions", "Submissions", new { templateId = Model.TemplateId })">
-                            <i class="ri-file-list-3-line me-2 text-info"></i>View Submissions
+                        <a class="dropdown-item" href="@Url.Action("TemplateSubmissions", "Submissions", new { templateId = Model.TemplateId })">
+                            <i class="ri-file-list-3-line me-2 text-info"></i>View Responses
                         </a>
                     </li>
                     <li>

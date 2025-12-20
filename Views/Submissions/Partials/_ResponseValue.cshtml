@@ -1,0 +1,273 @@
+@using FormReporting.Models.ViewModels.Forms
+@model ResponseDetailViewModel
+
+@{
+    var dataType = Model.DataType?.ToLower() ?? "text";
+}
+
+@switch (dataType)
+{
+    case "rating":
+    case "slider":
+        <div class="d-flex align-items-center gap-1">
+            @if (Model.RatingValue.HasValue && Model.RatingMax.HasValue)
+            {
+                @for (int i = 1; i <= Model.RatingMax; i++)
+                {
+                    if (i <= Model.RatingValue)
+                    {
+                        <i class="ri-star-fill text-warning"></i>
+                    }
+                    else
+                    {
+                        <i class="ri-star-line text-muted opacity-50"></i>
+                    }
+                }
+                <span class="ms-2">(@Model.RatingValue/@Model.RatingMax)</span>
+            }
+            else
+            {
+                @Model.DisplayValue
+            }
+        </div>
+        break;
+        
+    case "boolean":
+        @if (Model.BooleanValue == true)
+        {
+            <span class="text-success"><i class="ri-check-line me-1"></i>Yes</span>
+        }
+        else
+        {
+            <span class="text-danger"><i class="ri-close-line me-1"></i>No</span>
+        }
+        break;
+        
+    case "checkbox":
+        @if (Model.BooleanValue == true)
+        {
+            <span class="text-success"><i class="ri-checkbox-circle-line me-1"></i>Yes</span>
+        }
+        else
+        {
+            <span class="text-danger"><i class="ri-close-circle-line me-1"></i>No</span>
+        }
+        break;
+        
+    case "checkboxgroup":
+    case "multiselect":
+        @if (!string.IsNullOrEmpty(Model.DisplayValue))
+        {
+            var items = Model.DisplayValue.Split(new[] { ", ", "," }, StringSplitOptions.RemoveEmptyEntries);
+            <ul class="list-unstyled mb-0">
+                @foreach (var item in items)
+                {
+                    <li><i class="ri-checkbox-circle-fill text-success me-1"></i>@item.Trim()</li>
+                }
+            </ul>
+        }
+        else
+        {
+            <span class="fst-italic">None selected</span>
+        }
+        break;
+        
+    case "select":
+    case "dropdown":
+    case "radio":
+    case "radiogroup":
+        @Model.DisplayValue
+        break;
+        
+    case "date":
+        @if (Model.DateValue.HasValue)
+        {
+            @Model.DateValue.Value.ToString("dd MMM yyyy")
+        }
+        else
+        {
+            @Model.DisplayValue
+        }
+        break;
+        
+    case "datetime":
+        @if (Model.DateValue.HasValue)
+        {
+            @Model.DateValue.Value.ToString("dd MMM yyyy, h:mm tt")
+        }
+        else
+        {
+            @Model.DisplayValue
+        }
+        break;
+        
+    case "time":
+        @Model.DisplayValue
+        break;
+        
+    case "number":
+    case "integer":
+    case "decimal":
+    case "currency":
+        @if (Model.NumericValue.HasValue)
+        {
+            @if (dataType == "currency")
+            {
+                @Model.NumericValue.Value.ToString("N2")
+            }
+            else if (dataType == "integer")
+            {
+                @Model.NumericValue.Value.ToString("N0")
+            }
+            else
+            {
+                @Model.NumericValue.Value.ToString("N2")
+            }
+        }
+        else
+        {
+            @Model.DisplayValue
+        }
+        break;
+        
+    case "percentage":
+        @if (Model.NumericValue.HasValue)
+        {
+            @($"{Model.NumericValue.Value:N1}%")
+        }
+        else
+        {
+            @Model.DisplayValue
+        }
+        break;
+        
+    case "textarea":
+    case "longtext":
+        <div style="white-space: pre-wrap;">@Model.DisplayValue</div>
+        break;
+        
+    case "email":
+        @if (!string.IsNullOrEmpty(Model.TextValue))
+        {
+            <a href="mailto:@Model.TextValue" class="text-muted">@Model.TextValue</a>
+        }
+        else
+        {
+            @Model.DisplayValue
+        }
+        break;
+        
+    case "phone":
+    case "tel":
+        @if (!string.IsNullOrEmpty(Model.TextValue))
+        {
+            <a href="tel:@Model.TextValue" class="text-muted">@Model.TextValue</a>
+        }
+        else
+        {
+            @Model.DisplayValue
+        }
+        break;
+        
+    case "url":
+    case "link":
+        @if (!string.IsNullOrEmpty(Model.TextValue))
+        {
+            <a href="@Model.TextValue" target="_blank" class="text-muted">
+                @Model.TextValue <i class="ri-external-link-line"></i>
+            </a>
+        }
+        else
+        {
+            @Model.DisplayValue
+        }
+        break;
+        
+    case "fileupload":
+    case "file":
+        @if (Model.Files != null && Model.Files.Any())
+        {
+            <div class="d-flex flex-wrap gap-2">
+                @foreach (var file in Model.Files)
+                {
+                    <a href="@file.Url" target="_blank" class="text-muted text-decoration-none">
+                        <i class="ri-file-line me-1"></i>@file.FileName
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            @Model.DisplayValue
+        }
+        break;
+        
+    case "image":
+        @if (Model.Files != null && Model.Files.Any())
+        {
+            <div class="d-flex flex-wrap gap-2">
+                @foreach (var file in Model.Files)
+                {
+                    <a href="@file.Url" target="_blank">
+                        <img src="@(file.ThumbnailUrl ?? file.Url)" alt="@file.FileName" 
+                             class="rounded border" style="max-width: 80px; max-height: 80px; object-fit: cover;" />
+                    </a>
+                }
+            </div>
+        }
+        else
+        {
+            @Model.DisplayValue
+        }
+        break;
+        
+    case "signature":
+        @if (!string.IsNullOrEmpty(Model.TextValue))
+        {
+            <div class="border rounded p-2 bg-light d-inline-block">
+                <img src="@Model.TextValue" alt="Signature" style="max-width: 150px; max-height: 60px;" />
+            </div>
+        }
+        else
+        {
+            @Model.DisplayValue
+        }
+        break;
+        
+    case "location":
+    case "gps":
+        @if (!string.IsNullOrEmpty(Model.TextValue))
+        {
+            <a href="https://maps.google.com/?q=@Model.TextValue" target="_blank" class="text-muted">
+                <i class="ri-map-pin-line me-1"></i>@Model.TextValue
+            </a>
+        }
+        else
+        {
+            @Model.DisplayValue
+        }
+        break;
+        
+    case "color":
+        @if (!string.IsNullOrEmpty(Model.TextValue))
+        {
+            <div class="d-flex align-items-center gap-2">
+                <span class="rounded-circle border" style="width: 20px; height: 20px; background-color: @Model.TextValue;"></span>
+                <span>@Model.TextValue</span>
+            </div>
+        }
+        else
+        {
+            @Model.DisplayValue
+        }
+        break;
+        
+    case "json":
+    case "code":
+        <pre class="bg-light p-2 rounded mb-0 small"><code>@Model.DisplayValue</code></pre>
+        break;
+        
+    default:
+        @Model.DisplayValue
+        break;
+}
