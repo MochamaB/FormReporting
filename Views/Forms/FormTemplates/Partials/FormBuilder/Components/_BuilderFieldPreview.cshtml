@@ -189,25 +189,25 @@
 
             <!-- Duplicate Button -->
             <button type="button"
-                    class="btn btn-soft-secondary btn-sm"
+                    class="btn btn-secondary btn-sm"
                     onclick="duplicateField(@Model.ItemId)"
                     title="Duplicate Field">
                 <i class="ri-file-copy-line"></i>
-                 <span class="d-none d-md-inline ms-1">Duplicate</span>
+                 <span class="d-none d-md-inline ms-1"></span>
             </button>
 
             <!-- Delete Button -->
             <button type="button"
-                    class="btn btn-soft-danger btn-sm"
+                    class="btn btn-danger btn-sm"
                     onclick="deleteField(@Model.ItemId)"
                     title="Delete Field">
                 <i class="ri-delete-bin-line"></i>
-                 <span class="d-none d-md-inline ms-1">Delete</span>
+                 <span class="d-none d-md-inline ms-1"></span>
             </button>
 
             <!-- Collapse/Expand Button -->
             <button type="button"
-                    class="btn btn-soft-primary btn-sm"
+                    class="btn btn-primary btn-sm"
                     onclick="event.stopPropagation(); toggleFieldCollapse(@Model.ItemId)"
                     title="Collapse/Expand">
                 <i class="ri-subtract-line" id="field-collapse-icon-@Model.ItemId"></i>

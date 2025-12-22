@@ -44,6 +44,11 @@ namespace FormReporting.Models.ViewModels.Forms
         public string? CategoryName { get; set; }
 
         /// <summary>
+        /// Template description
+        /// </summary>
+        public string? Description { get; set; }
+
+        /// <summary>
         /// List of sections in this template
         /// </summary>
         public List<SectionDto> Sections { get; set; } = new();

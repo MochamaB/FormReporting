@@ -1,47 +1,9 @@
-<div class="container">
-  <div class="row">
-    <div class="col-sm-12">
-      <table class="table table-bordered table-responsive">
-        <thead>
-          <tr>
-            <th rowspan="2">Number</th>
-            <th rowspan="2">Competitor</th>
-            <th rowspan="2">Keywords</th>
-             <th rowspan="2">Vicinity</th>
-             <th colspan="3">Contact</th>
-          </tr>
-          <tr>
-            <th>Title</th>
-            <th>Email</th>
-            <th>Phone Number</th>
-          </tr>
-        </thead>
-        <tbody id="rows">
-          <tr>
-            <td>
-              One
-            </td>
-            <td>
-              Two
-            </td>
-            <td>
-              Three
-            </td>
-            <td>
-              Four
-            </td>
-            <td>
-              Five
-            </td>
-            <td>
-              Six
-            </td>
-            <td>
-              Seven
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
+NotificationContent.js:2  next state Object
+NotificationContent.js:2  action SET_STORAGE_DATA @ 20:13:03.233
+NotificationContent.js:2  prev state Object
+NotificationContent.js:2  action     Object
+NotificationContent.js:2  next state Object
+Create:2117 Draft auto-saved successfully
+Create:2016 Saving draft with data: ObjectCategoryId: 3Description: "This is used to grant a new user rights to the ICT systems"TemplateCode: "TPL_NEW_USER_ACCESS_REQUEST"TemplateId: 23TemplateName: "New User Access Request"TemplateType: "OnDemand"[[Prototype]]: Object
+Create:2016 Saving draft with data: Object
+Create:2016 Saving draft with data: 

@@ -686,35 +686,33 @@ const FormBuilderProperties = {
      */
     saveSectionConfiguration: async function() {
         // Get selected values
-        const columnLayout = document.querySelector('input[name="config_columnLayout"]:checked')?.value || '1';
+        const columnLayout = parseInt(document.querySelector('input[name="config_columnLayout"]:checked')?.value || '1');
         const sectionWidth = document.querySelector('input[name="config_sectionWidth"]:checked')?.value || '100';
         const backgroundStyle = document.querySelector('input[name="config_backgroundStyle"]:checked')?.value || 'transparent';
-        const showSectionNumber = document.getElementById('config_showSectionNumber').checked;
-        const topPadding = document.getElementById('config_topPadding').value;
-        const bottomPadding = document.getElementById('config_bottomPadding').value;
+        const showSectionNumber = document.getElementById('config_showSectionNumber')?.checked || false;
+        const topPadding = document.getElementById('config_topPadding')?.value || 0;
+        const bottomPadding = document.getElementById('config_bottomPadding')?.value || 0;
 
         // Prepare configuration data
         const configData = {
-            sectionId: this.currentElementId,
-            configuration: {
-                columnLayout,
-                sectionWidth,
-                backgroundStyle,
-                showSectionNumber,
-                topPadding,
-                bottomPadding
-            }
+            columnLayout,
+            sectionWidth,
+            backgroundStyle,
+            showSectionNumber,
+            topPadding: parseInt(topPadding),
+            bottomPadding: parseInt(bottomPadding)
         };
 
         // Show saving state
-        const saveBtn = event.target;
-        const originalBtnHtml = saveBtn.innerHTML;
-        saveBtn.disabled = true;
-        saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
+        const saveBtn = event?.target;
+        let originalBtnHtml = '';
+        if (saveBtn) {
+            originalBtnHtml = saveBtn.innerHTML;
+            saveBtn.disabled = true;
+            saveBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Saving...';
+        }
 
         try {
-            // For now, we'll just store this in the session/localStorage
-            // In the future, this would be saved to FormItemConfiguration table
             const response = await fetch(`/api/formbuilder/sections/${this.currentElementId}/configuration`, {
                 method: 'PUT',
                 headers: {
@@ -726,11 +724,21 @@ const FormBuilderProperties = {
             const result = await response.json();
 
             if (result.success) {
-                // Apply visual changes to the canvas (future enhancement)
-                this.applySectionConfigurationToCanvas(configData);
+                // Apply column layout to the canvas immediately
+                const sectionElement = document.querySelector(`[data-section-id="${this.currentElementId}"]`);
+                if (sectionElement) {
+                    const fieldsContainer = sectionElement.querySelector('.fields-container');
+                    if (fieldsContainer) {
+                        fieldsContainer.setAttribute('data-column-layout', columnLayout);
+                        fieldsContainer.style.gridTemplateColumns = `repeat(${columnLayout}, 1fr)`;
+                        console.log(`[SaveConfig] Applied ${columnLayout}-column layout to section ${this.currentElementId}`);
+                    }
+                }
 
                 // Show success feedback
-                this.showSaveSuccess(saveBtn, originalBtnHtml);
+                if (saveBtn) {
+                    this.showSaveSuccess(saveBtn, originalBtnHtml);
+                }
             } else {
                 console.error('Save failed:', result.message);
                 alert('Failed to save configuration: ' + (result.message || 'Unknown error'));

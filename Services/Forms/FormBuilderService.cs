@@ -45,6 +45,7 @@ namespace FormReporting.Services.Forms
                 PublishStatus = template.PublishStatus,
                 CategoryId = template.CategoryId,
                 CategoryName = template.Category?.CategoryName,
+                Description = template.Description,
                 Sections = template.Sections.Select(MapToSectionDto).ToList(),
                 AvailableFieldTypes = GetAvailableFieldTypes()
             };
@@ -66,6 +67,7 @@ namespace FormReporting.Services.Forms
                 IsCollapsible = section.IsCollapsible,
                 IsCollapsedByDefault = section.IsCollapsedByDefault,
                 IconClass = section.IconClass,
+                ColumnLayout = section.ColumnLayout,
                 FieldCount = section.Items?.Count ?? 0,
                 Fields = section.Items?.Select(MapToFieldDto).ToList() ?? new List<FieldDto>()
             };
@@ -404,6 +406,7 @@ namespace FormReporting.Services.Forms
                 IsCollapsible = dto.IsCollapsible,
                 IsCollapsedByDefault = dto.IsCollapsedByDefault,
                 IconClass = dto.IconClass,
+                ColumnLayout = dto.ColumnLayout,
                 CreatedDate = DateTime.UtcNow
             };
 

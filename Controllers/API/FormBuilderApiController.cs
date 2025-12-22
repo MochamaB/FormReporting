@@ -149,20 +149,27 @@ namespace FormReporting.Controllers.API
 
         /// <summary>
         /// Update section configuration (layout, spacing, etc.)
-        /// TODO: Implement FormItemConfiguration table to store key-value pairs
         /// </summary>
         [HttpPut("sections/{sectionId}/configuration")]
-        public async Task<IActionResult> UpdateSectionConfiguration(int sectionId, [FromBody] dynamic configData)
+        public async Task<IActionResult> UpdateSectionConfiguration(int sectionId, [FromBody] SectionConfigDto config)
         {
-            // TODO: Implement configuration storage using FormItemConfiguration table
-            // For now, return success to allow frontend testing
-            // Configuration will be stored as key-value pairs:
-            // - columnLayout, sectionWidth, backgroundStyle, showSectionNumber, topPadding, bottomPadding
-
+            var section = await _context.FormTemplateSections
+                .FirstOrDefaultAsync(s => s.SectionId == sectionId);
+            
+            if (section == null)
+                return NotFound(new { success = false, message = "Section not found" });
+            
+            // Update column layout
+            section.ColumnLayout = config.ColumnLayout;
+            section.ModifiedDate = DateTime.UtcNow;
+            
+            await _context.SaveChangesAsync();
+            
             return Ok(new
             {
                 success = true,
-                message = "Configuration saved (placeholder - will be implemented with FormItemConfiguration table)"
+                message = "Section configuration saved",
+                columnLayout = section.ColumnLayout
             });
         }
 

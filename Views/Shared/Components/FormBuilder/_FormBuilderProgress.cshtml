@@ -14,18 +14,13 @@
         background: #fff;
         border-bottom: 2px solid #f3f3f9;
         padding: 0;
-        position: -webkit-sticky;
-        position: sticky;
-        top: 0;
-        z-index: 99;
+        /* Fixed positioning below navbar */
+        position: fixed;
+        top: 70px;
+        left: 70px;  /* Account for sidebar */
+        right: 0;
+        z-index: 1000;
         box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-
-        /* Extend to edges of container-fluid */
-        width: calc(100% + 3rem);
-        margin-left: -1.5rem;
-        margin-right: -1.5rem;
-        margin-top: -1.3rem;
-        margin-bottom: 1.2rem;
         
         display: block !important;
         visibility: visible !important;

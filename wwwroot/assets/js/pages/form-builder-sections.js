@@ -44,6 +44,7 @@ const FormBuilderSections = {
         const name = document.getElementById('sectionName').value.trim();
         const description = document.getElementById('sectionDescription').value.trim();
         const icon = document.getElementById('sectionIcon').value.trim();
+        const columnLayout = parseInt(document.getElementById('sectionColumnLayout').value) || 1;
         const isCollapsible = document.getElementById('isCollapsible').checked;
         const isCollapsedByDefault = document.getElementById('isCollapsedByDefault').checked;
 
@@ -67,6 +68,7 @@ const FormBuilderSections = {
                         sectionName: name,
                         sectionDescription: description || null,
                         iconClass: icon || null,
+                        columnLayout: columnLayout,
                         isCollapsible: isCollapsible,
                         isCollapsedByDefault: isCollapsedByDefault
                     }
@@ -90,6 +92,14 @@ const FormBuilderSections = {
                 // Dynamically add section to canvas without page reload
                 if (newSectionId) {
                     try {
+                        // Hide empty state placeholder if it exists
+                        const sectionsContainer = document.getElementById('sectionsContainer');
+                        const emptyState = sectionsContainer?.querySelector('.text-center.py-5');
+                        if (emptyState) {
+                            emptyState.remove();
+                            console.log('[AddSection] Empty state placeholder removed');
+                        }
+
                         // Render and insert the new section
                         const newSectionCard = await FormBuilder.renderAndInsertSection(newSectionId, 'append');
                         console.log(`[AddSection] ✅ Section ${newSectionId} added to DOM`);

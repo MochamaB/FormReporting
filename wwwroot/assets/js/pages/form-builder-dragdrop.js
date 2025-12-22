@@ -55,12 +55,24 @@ const FormBuilderDragDrop = {
             onEnd: (evt) => {
                 // When cloned to canvas
                 if (evt.to.id === 'sectionsContainer' && evt.pullMode === 'clone') {
+                    // Get column layout from dragged item
+                    const columnLayout = evt.clone?.dataset?.columnLayout || '1';
+                    
                     // Remove the cloned element immediately
                     if (evt.item && evt.item.parentNode) {
                         evt.item.remove();
                     }
-                    // Show add section modal
+                    
+                    // Show add section modal and pre-populate column layout
                     FormBuilderSections.showAddSectionModal();
+                    
+                    // Set column layout dropdown after modal is shown
+                    setTimeout(() => {
+                        const columnLayoutSelect = document.getElementById('sectionColumnLayout');
+                        if (columnLayoutSelect) {
+                            columnLayoutSelect.value = columnLayout;
+                        }
+                    }, 100);
                 }
             }
         });
@@ -429,18 +441,18 @@ const FormBuilderDragDrop = {
      * Initializes SortableJS on each field-category individually
      */
     initializeFieldPaletteDragDrop: function() {
-        // Find all field-category containers
-        const fieldCategories = document.querySelectorAll('.field-palette-container .field-category');
+        // Find all accordion bodies that contain field items
+        const accordionBodies = document.querySelectorAll('.field-palette-container .accordion-body');
 
-        if (fieldCategories.length === 0) {
-            console.warn('No field categories found - field palette drag-drop not initialized');
+        if (accordionBodies.length === 0) {
+            console.warn('No field accordion bodies found - field palette drag-drop not initialized');
             return;
         }
 
-        // Initialize SortableJS on each field category
+        // Initialize SortableJS on each accordion body
         // This allows individual field items to be dragged from their categories
-        fieldCategories.forEach((category) => {
-            new Sortable(category, {
+        accordionBodies.forEach((body) => {
+            new Sortable(body, {
                 group: {
                     name: 'fields',
                     pull: 'clone',    // Clone items from toolbox
@@ -451,9 +463,6 @@ const FormBuilderDragDrop = {
                 animation: 150,
                 ghostClass: 'sortable-ghost-field',
 
-                // Filter out category headers
-                filter: 'h6',
-
                 onEnd: (evt) => {
                     // Remove the cloned element after drag ends
                     if (evt.item && evt.pullMode === 'clone') {
@@ -463,7 +472,7 @@ const FormBuilderDragDrop = {
             });
         });
 
-        console.log(`Field palette drag-drop initialized for ${fieldCategories.length} categories`);
+        console.log(`Field palette drag-drop initialized for ${accordionBodies.length} categories`);
     },
 
     /**
@@ -546,11 +555,12 @@ const FormBuilderDragDrop = {
                         // EXISTING field being moved from another section
                         console.log(`Field ${fieldId} moved to section ${sectionId}`);
 
-                        // Remove empty state message if it exists
+                        // Remove empty state messages and placeholders
                         const emptyMessage = container.querySelector('.empty-fields-message');
                         if (emptyMessage) {
                             emptyMessage.remove();
                         }
+                        container.querySelectorAll('.empty-column-placeholder').forEach(el => el.remove());
 
                         // Update the field's section in database and reorder both sections
                         this.moveFieldToSection(parseInt(fieldId), parseInt(sectionId), evt.from, evt.to);
@@ -561,11 +571,12 @@ const FormBuilderDragDrop = {
                         // Remove the dropped clone element
                         evt.item.remove();
 
-                        // Remove empty state message if it exists
+                        // Remove empty state messages and placeholders
                         const emptyMessage = container.querySelector('.empty-fields-message');
                         if (emptyMessage) {
                             emptyMessage.remove();
                         }
+                        container.querySelectorAll('.empty-column-placeholder').forEach(el => el.remove());
 
                         // Open modal to configure the field
                         console.log(`New field ${fieldType} dropped into section ${sectionId}`);

@@ -439,10 +439,12 @@
             // templateId already declared above - reuse it
             // isSaving already declared above - reuse it
             
-            // Auto-save every 30 seconds if form has changes
+            // Auto-save every 30 seconds if form has changes and required fields are valid
             function startAutosave() {
                 autosaveTimer = setInterval(function() {
-                    if (formChanged && !isSaving) {
+                    var categoryId = parseInt($('#CategoryId').val()) || 0;
+                    // Only auto-save if category is selected (prevents saving invalid data)
+                    if (formChanged && !isSaving && categoryId > 0) {
                         saveDraft(false); // false = autosave (silent)
                     }
                 }, 30000); // 30 seconds
@@ -451,6 +453,14 @@
             // Save draft (manual or auto)
             function saveDraft(isManual = false) {
                 if (isSaving) return;
+                
+                var categoryId = parseInt($('#CategoryId').val()) || 0;
+                
+                // Don't auto-save without a valid category (prevents invalid data)
+                if (!isManual && categoryId <= 0) {
+                    console.log('Auto-save skipped: No category selected');
+                    return;
+                }
                 
                 isSaving = true;
                 

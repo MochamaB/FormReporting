@@ -24,6 +24,7 @@ namespace FormReporting.Data.Configurations.Forms
             builder.Property(fts => fts.DisplayOrder).HasDefaultValue(0);
             builder.Property(fts => fts.IsCollapsible).HasDefaultValue(true);
             builder.Property(fts => fts.IsCollapsedByDefault).HasDefaultValue(false);
+            builder.Property(fts => fts.ColumnLayout).HasDefaultValue(1);
             builder.Property(fts => fts.CreatedDate).HasDefaultValueSql("GETDATE()");
             builder.Property(fts => fts.ModifiedDate).HasDefaultValueSql("GETDATE()");
 

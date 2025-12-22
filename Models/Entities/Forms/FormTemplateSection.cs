@@ -32,6 +32,9 @@ namespace FormReporting.Models.Entities.Forms
         [StringLength(50)]
         public string? IconClass { get; set; } // e.g., 'fa-desktop', 'fa-network-wired', 'fa-cube'
 
+        [Range(1, 3)]
+        public int ColumnLayout { get; set; } = 1; // 1 = Single Column, 2 = Two Columns, 3 = Three Columns
+
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
         public DateTime ModifiedDate { get; set; } = DateTime.Now;

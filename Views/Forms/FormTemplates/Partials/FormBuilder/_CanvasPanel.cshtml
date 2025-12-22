@@ -14,12 +14,9 @@
             </div>
             <div class="flex-grow-1">
                 <h3 class="form-title mb-2">@Model.TemplateName</h3>
-                @if (!string.IsNullOrEmpty(Model.CategoryName))
+                @if (!string.IsNullOrEmpty(Model.Description))
                 {
-                    <p class="text-muted mb-0 form-description">
-                        <span class="badge bg-soft-primary text-primary me-2">@Model.CategoryName</span>
-                        
-                    </p>
+                    <p class="text-muted mb-0 form-description">@Model.Description</p>
                 }
             </div>
         </div>

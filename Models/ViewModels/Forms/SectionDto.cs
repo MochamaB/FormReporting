@@ -42,6 +42,11 @@ namespace FormReporting.Models.ViewModels.Forms
         public string? IconClass { get; set; }
 
         /// <summary>
+        /// Column layout (1 = Single, 2 = Two Columns, 3 = Three Columns)
+        /// </summary>
+        public int ColumnLayout { get; set; } = 1;
+
+        /// <summary>
         /// Number of fields in this section
         /// </summary>
         public int FieldCount { get; set; }
@@ -60,6 +65,7 @@ namespace FormReporting.Models.ViewModels.Forms
         public string SectionName { get; set; } = string.Empty;
         public string? SectionDescription { get; set; }
         public string? IconClass { get; set; }
+        public int ColumnLayout { get; set; } = 1;
         public bool IsCollapsible { get; set; } = true;
         public bool IsCollapsedByDefault { get; set; } = false;
     }
@@ -74,5 +80,18 @@ namespace FormReporting.Models.ViewModels.Forms
         public string? IconClass { get; set; }
         public bool IsCollapsible { get; set; }
         public bool IsCollapsedByDefault { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for section configuration (layout, styling, etc.)
+    /// </summary>
+    public class SectionConfigDto
+    {
+        public int ColumnLayout { get; set; } = 1;
+        public string? SectionWidth { get; set; }
+        public string? BackgroundStyle { get; set; }
+        public bool? ShowSectionNumber { get; set; }
+        public int? TopPadding { get; set; }
+        public int? BottomPadding { get; set; }
     }
 }

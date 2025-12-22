@@ -7,34 +7,73 @@
 
 <div class="card" style="margin:-1rem">
 
-    <!-- Card Header -->
-    <div class="card-header">
-        <h6 class="mb-0">
-            <i class="ri-list-check"></i>
-            Form Elements
-        </h6>
+    <!-- Card Header with Search -->
+    <div class="card-header pb-2">
+        <div class="search-box">
+            <input type="text" 
+                   class="form-control" 
+                   id="toolboxSearch" 
+                   placeholder="Search elements..."
+                   oninput="filterToolboxElements(this.value)">
+            <i class="ri-search-line search-icon"></i>
+        </div>
     </div>
 
     <!-- Card Body -->
-    <div class="card-body pt-0">
+    <div class="card-body pt-2">
 
         <!-- ========================= -->
-        <!--   SECTION TITLE           -->
+        <!--   SECTIONS ACCORDION      -->
         <!-- ========================= -->
-        <li class="menu-title">
-            <span>Section</span>
-        </li>
 
-        <!-- Draggable Section Template -->
-        <div class="toolbox-item draggable-section mt-2"
-             data-type="section">
-            <div class="d-flex align-items-center p-2 border rounded bg-light" style="cursor: move;">
-                <i class="ri-drag-move-line me-2 text-muted"></i>
-                <div class="flex-grow-1">
-                    <strong>Section</strong>
-                    <p class="mb-0 small text-muted">Drag to canvas</p>
+
+        <div class="accordion field-palette-accordion mt-2" id="sectionPaletteAccordion">
+            <div class="accordion-item section-category mt-1 mb-1" data-category="sections">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed text-uppercase small" type="button" 
+                            data-bs-toggle="collapse" data-bs-target="#collapseSections" aria-expanded="false">
+                        <i class="ri-layout-line me-1"></i> Section Layouts
+                    </button>
+                </h2>
+                <div id="collapseSections" class="accordion-collapse collapse" data-bs-parent="#sectionPaletteAccordion">
+                    <div class="accordion-body">
+                        <!-- Single Column Section -->
+                        <div class="toolbox-item draggable-section section-item" data-type="section" data-column-layout="1">
+                            <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
+                                <i class="ri-drag-move-line me-1 text-muted"></i>
+                                <i class="ri-layout-line fs-5 me-2 text-primary"></i>
+                                <div class="flex-grow-1">
+                                    <strong class="small">Single Column</strong>
+                                    <p class="mb-0 text-muted" style="font-size: 0.7rem;">Full width section</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Two Column Section -->
+                        <div class="toolbox-item draggable-section section-item" data-type="section" data-column-layout="2">
+                            <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
+                                <i class="ri-drag-move-line me-1 text-muted"></i>
+                                <i class="ri-layout-column-line fs-5 me-2 text-info"></i>
+                                <div class="flex-grow-1">
+                                    <strong class="small">Two Columns</strong>
+                                    <p class="mb-0 text-muted" style="font-size: 0.7rem;">Side-by-side layout</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Three Column Section -->
+                        <div class="toolbox-item draggable-section section-item" data-type="section" data-column-layout="3">
+                            <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
+                                <i class="ri-drag-move-line me-1 text-muted"></i>
+                                <i class="ri-layout-grid-line fs-5 me-2 text-success"></i>
+                                <div class="flex-grow-1">
+                                    <strong class="small">Three Columns</strong>
+                                    <p class="mb-0 text-muted" style="font-size: 0.7rem;">Grid layout</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <i class="ri-add-box-line fs-4 text-primary"></i>
             </div>
         </div>
 
@@ -43,9 +82,7 @@
         <!-- ========================= -->
         <!--   FIELDS PALETTE          -->
         <!-- ========================= -->
-        <li class="menu-title">
-            <span>Fields</span>
-        </li>
+    
 
         <!-- Field Palette Component - Wrapped in dedicated container for SortableJS -->
         <div class="mt-3 field-palette-container">
@@ -55,3 +92,100 @@
     </div>
 </div>
 
+<script>
+    /**
+     * Filter toolbox elements based on search query
+     * Searches section and field items by name and description
+     */
+    function filterToolboxElements(query) {
+        const searchTerm = query.toLowerCase().trim();
+        const sectionAccordion = document.querySelector('#sectionPaletteAccordion');
+        const sectionItems = document.querySelectorAll('.section-item');
+        const fieldCategories = document.querySelectorAll('.field-palette-accordion .accordion-item:not(.section-category)');
+        const sectionTitle = document.querySelector('.menu-title');
+        const fieldsTitle = document.querySelectorAll('.menu-title')[1];
+        const hrElement = document.querySelector('.card-body hr');
+
+        // If search is empty, reset everything
+        if (!searchTerm) {
+            // Show sections accordion
+            if (sectionAccordion) sectionAccordion.style.display = '';
+            if (sectionTitle) sectionTitle.style.display = '';
+            if (hrElement) hrElement.style.display = '';
+            if (fieldsTitle) fieldsTitle.style.display = '';
+
+            // Collapse all accordions and show all items
+            sectionItems.forEach(item => item.style.display = '');
+            const sectionCollapseEl = document.querySelector('#collapseSections');
+            if (sectionCollapseEl) sectionCollapseEl.classList.remove('show');
+
+            fieldCategories.forEach(category => {
+                category.style.display = '';
+                const collapseEl = category.querySelector('.accordion-collapse');
+                if (collapseEl) collapseEl.classList.remove('show');
+                category.querySelectorAll('.field-item').forEach(item => item.style.display = '');
+            });
+            return;
+        }
+
+        // Search through section items
+        let anySectionMatch = false;
+        sectionItems.forEach(item => {
+            const sectionName = item.querySelector('strong')?.textContent.toLowerCase() || '';
+            const sectionDesc = item.querySelector('p')?.textContent.toLowerCase() || '';
+            const matches = sectionName.includes(searchTerm) || 
+                           sectionDesc.includes(searchTerm) ||
+                           'section'.includes(searchTerm);
+            
+            item.style.display = matches ? '' : 'none';
+            if (matches) anySectionMatch = true;
+        });
+
+        // Show/hide section accordion and expand if matches
+        if (sectionAccordion) sectionAccordion.style.display = anySectionMatch ? '' : 'none';
+        if (sectionTitle) sectionTitle.style.display = anySectionMatch ? '' : 'none';
+        const sectionCollapseEl = document.querySelector('#collapseSections');
+        if (sectionCollapseEl && anySectionMatch) {
+            sectionCollapseEl.classList.add('show');
+        } else if (sectionCollapseEl) {
+            sectionCollapseEl.classList.remove('show');
+        }
+
+        // Search through field categories and items
+        let anyFieldMatch = false;
+        fieldCategories.forEach(category => {
+            const categoryName = category.querySelector('.accordion-button')?.textContent.toLowerCase() || '';
+            const fieldItems = category.querySelectorAll('.field-item');
+            let categoryHasMatch = false;
+
+            fieldItems.forEach(item => {
+                const fieldName = item.querySelector('strong')?.textContent.toLowerCase() || '';
+                const fieldDesc = item.querySelector('p')?.textContent.toLowerCase() || '';
+                const fieldType = item.dataset.fieldType?.toLowerCase() || '';
+
+                const matches = fieldName.includes(searchTerm) || 
+                               fieldDesc.includes(searchTerm) || 
+                               fieldType.includes(searchTerm) ||
+                               categoryName.includes(searchTerm);
+
+                item.style.display = matches ? '' : 'none';
+                if (matches) {
+                    categoryHasMatch = true;
+                    anyFieldMatch = true;
+                }
+            });
+
+            category.style.display = categoryHasMatch ? '' : 'none';
+            const collapseEl = category.querySelector('.accordion-collapse');
+            if (collapseEl && categoryHasMatch) {
+                collapseEl.classList.add('show');
+            } else if (collapseEl) {
+                collapseEl.classList.remove('show');
+            }
+        });
+
+        // Show/hide titles and hr based on matches
+        if (fieldsTitle) fieldsTitle.style.display = anyFieldMatch ? '' : 'none';
+        if (hrElement) hrElement.style.display = (anySectionMatch || anyFieldMatch) ? '' : 'none';
+    }
+</script>

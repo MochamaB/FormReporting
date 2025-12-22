@@ -1,285 +1,346 @@
 @*
     Field Palette Component
-    Displays all 21 field types organized by category
+    Displays all 21 field types organized by category in collapsible accordions
     Used in: Toolbox (draggable) and Section dropdown (clickable)
 *@
 
-<!-- INPUT FIELDS -->
-<div class="field-category mb-3">
-    <h6 class="text-muted text-uppercase small mb-2">
-        <i class="ri-text me-1"></i> Input Fields
-    </h6>
+<style>
+    .field-palette-accordion .accordion-button {
+        background-color: transparent !important;
+        padding: 0.5rem 0;
+        border: none;
+        border-bottom: 1px solid #e9ebec;
+        box-shadow: none !important;
+    }
+    .field-palette-accordion .accordion-button:not(.collapsed) {
+        background-color: transparent !important;
+        color: inherit;
+    }
+    .field-palette-accordion .accordion-button::after {
+        width: 0.8rem;
+        height: 0.8rem;
+        background-size: 0.8rem;
+    }
+    .field-palette-accordion .accordion-item {
+        border: none;
+        background-color: transparent;
+    }
+    .field-palette-accordion .accordion-body {
+        padding: 1.2rem 0;
+    }
+    .field-palette-accordion .accordion-header {
+        background-color: transparent;
+    }
+</style>
 
-    <div class="field-item draggable-field" data-field-type="Text">
-        <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
-            <i class="ri-drag-move-line me-1 text-muted"></i>
-            <i class="ri-text fs-5 me-2 text-primary"></i>
-            <div class="flex-grow-1">
-                <strong class="small">Text</strong>
-                <p class="mb-0 text-muted" style="font-size: 0.7rem;">Single line text input</p>
+<div class="accordion field-palette-accordion" id="fieldPaletteAccordion">
+
+    <!-- INPUT FIELDS -->
+    <div class="accordion-item field-category" data-category="input">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed text-uppercase small" type="button" 
+                    data-bs-toggle="collapse" data-bs-target="#collapseInput" aria-expanded="false">
+                <i class="ri-text me-1"></i> Input Fields
+            </button>
+        </h2>
+        <div id="collapseInput" class="accordion-collapse collapse" data-bs-parent="#fieldPaletteAccordion">
+            <div class="accordion-body">
+                <div class="field-item draggable-field" data-field-type="Text">
+                    <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
+                        <i class="ri-drag-move-line me-1 text-muted"></i>
+                        <i class="ri-text fs-5 me-2 text-primary"></i>
+                        <div class="flex-grow-1">
+                            <strong class="small">Text</strong>
+                            <p class="mb-0 text-muted" style="font-size: 0.7rem;">Single line text input</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="field-item draggable-field" data-field-type="TextArea">
+                    <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
+                        <i class="ri-drag-move-line me-1 text-muted"></i>
+                        <i class="ri-file-text-line fs-5 me-2 text-primary"></i>
+                        <div class="flex-grow-1">
+                            <strong class="small">Text Area</strong>
+                            <p class="mb-0 text-muted" style="font-size: 0.7rem;">Multi-line text input</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="field-item draggable-field" data-field-type="Number">
+                    <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
+                        <i class="ri-drag-move-line me-1 text-muted"></i>
+                        <i class="ri-hashtag fs-5 me-2 text-primary"></i>
+                        <div class="flex-grow-1">
+                            <strong class="small">Number</strong>
+                            <p class="mb-0 text-muted" style="font-size: 0.7rem;">Integer numbers</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="field-item draggable-field" data-field-type="Decimal">
+                    <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
+                        <i class="ri-drag-move-line me-1 text-muted"></i>
+                        <i class="ri-function-line fs-5 me-2 text-primary"></i>
+                        <div class="flex-grow-1">
+                            <strong class="small">Decimal</strong>
+                            <p class="mb-0 text-muted" style="font-size: 0.7rem;">Decimal numbers</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="field-item draggable-field" data-field-type="TextArea">
-        <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
-            <i class="ri-drag-move-line me-1 text-muted"></i>
-            <i class="ri-file-text-line fs-5 me-2 text-primary"></i>
-            <div class="flex-grow-1">
-                <strong class="small">Text Area</strong>
-                <p class="mb-0 text-muted" style="font-size: 0.7rem;">Multi-line text input</p>
+    <!-- DATE/TIME FIELDS -->
+    <div class="accordion-item field-category" data-category="datetime">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed text-uppercase small" type="button" 
+                    data-bs-toggle="collapse" data-bs-target="#collapseDateTime" aria-expanded="false">
+                <i class="ri-calendar-line me-1"></i> Date & Time
+            </button>
+        </h2>
+        <div id="collapseDateTime" class="accordion-collapse collapse" data-bs-parent="#fieldPaletteAccordion">
+            <div class="accordion-body">
+                <div class="field-item draggable-field" data-field-type="Date">
+                    <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
+                        <i class="ri-drag-move-line me-1 text-muted"></i>
+                        <i class="ri-calendar-line fs-5 me-2 text-success"></i>
+                        <div class="flex-grow-1">
+                            <strong class="small">Date</strong>
+                            <p class="mb-0 text-muted" style="font-size: 0.7rem;">Date picker</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="field-item draggable-field" data-field-type="Time">
+                    <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
+                        <i class="ri-drag-move-line me-1 text-muted"></i>
+                        <i class="ri-time-line fs-5 me-2 text-success"></i>
+                        <div class="flex-grow-1">
+                            <strong class="small">Time</strong>
+                            <p class="mb-0 text-muted" style="font-size: 0.7rem;">Time picker</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="field-item draggable-field" data-field-type="DateTime">
+                    <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
+                        <i class="ri-drag-move-line me-1 text-muted"></i>
+                        <i class="ri-calendar-event-line fs-5 me-2 text-success"></i>
+                        <div class="flex-grow-1">
+                            <strong class="small">Date & Time</strong>
+                            <p class="mb-0 text-muted" style="font-size: 0.7rem;">Date and time picker</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="field-item draggable-field" data-field-type="Number">
-        <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
-            <i class="ri-drag-move-line me-1 text-muted"></i>
-            <i class="ri-hashtag fs-5 me-2 text-primary"></i>
-            <div class="flex-grow-1">
-                <strong class="small">Number</strong>
-                <p class="mb-0 text-muted" style="font-size: 0.7rem;">Integer numbers</p>
+    <!-- SELECTION FIELDS -->
+    <div class="accordion-item field-category" data-category="selection">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed text-uppercase small" type="button" 
+                    data-bs-toggle="collapse" data-bs-target="#collapseSelection" aria-expanded="false">
+                <i class="ri-list-check me-1"></i> Selection
+            </button>
+        </h2>
+        <div id="collapseSelection" class="accordion-collapse collapse" data-bs-parent="#fieldPaletteAccordion">
+            <div class="accordion-body">
+                <div class="field-item draggable-field" data-field-type="Dropdown">
+                    <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
+                        <i class="ri-drag-move-line me-1 text-muted"></i>
+                        <i class="ri-arrow-down-s-line fs-5 me-2 text-info"></i>
+                        <div class="flex-grow-1">
+                            <strong class="small">Dropdown</strong>
+                            <p class="mb-0 text-muted" style="font-size: 0.7rem;">Single select dropdown</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="field-item draggable-field" data-field-type="Radio">
+                    <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
+                        <i class="ri-drag-move-line me-1 text-muted"></i>
+                        <i class="ri-radio-button-line fs-5 me-2 text-info"></i>
+                        <div class="flex-grow-1">
+                            <strong class="small">Radio Buttons</strong>
+                            <p class="mb-0 text-muted" style="font-size: 0.7rem;">Radio button group</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="field-item draggable-field" data-field-type="Checkbox">
+                    <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
+                        <i class="ri-drag-move-line me-1 text-muted"></i>
+                        <i class="ri-checkbox-line fs-5 me-2 text-info"></i>
+                        <div class="flex-grow-1">
+                            <strong class="small">Checkbox</strong>
+                            <p class="mb-0 text-muted" style="font-size: 0.7rem;">Single or multiple checkboxes</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="field-item draggable-field" data-field-type="MultiSelect">
+                    <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
+                        <i class="ri-drag-move-line me-1 text-muted"></i>
+                        <i class="ri-list-check fs-5 me-2 text-info"></i>
+                        <div class="flex-grow-1">
+                            <strong class="small">Multi-Select</strong>
+                            <p class="mb-0 text-muted" style="font-size: 0.7rem;">Multiple selection dropdown</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="field-item draggable-field" data-field-type="Decimal">
-        <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
-            <i class="ri-drag-move-line me-1 text-muted"></i>
-            <i class="ri-function-line fs-5 me-2 text-primary"></i>
-            <div class="flex-grow-1">
-                <strong class="small">Decimal</strong>
-                <p class="mb-0 text-muted" style="font-size: 0.7rem;">Decimal numbers</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- DATE/TIME FIELDS -->
-<div class="field-category mb-3">
-    <h6 class="text-muted text-uppercase small mb-2">
-        <i class="ri-calendar-line me-1"></i> Date & Time
-    </h6>
-
-    <div class="field-item draggable-field" data-field-type="Date">
-        <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
-            <i class="ri-drag-move-line me-1 text-muted"></i>
-            <i class="ri-calendar-line fs-5 me-2 text-success"></i>
-            <div class="flex-grow-1">
-                <strong class="small">Date</strong>
-                <p class="mb-0 text-muted" style="font-size: 0.7rem;">Date picker</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="field-item draggable-field" data-field-type="Time">
-        <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
-            <i class="ri-drag-move-line me-1 text-muted"></i>
-            <i class="ri-time-line fs-5 me-2 text-success"></i>
-            <div class="flex-grow-1">
-                <strong class="small">Time</strong>
-                <p class="mb-0 text-muted" style="font-size: 0.7rem;">Time picker</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="field-item draggable-field" data-field-type="DateTime">
-        <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
-            <i class="ri-drag-move-line me-1 text-muted"></i>
-            <i class="ri-calendar-event-line fs-5 me-2 text-success"></i>
-            <div class="flex-grow-1">
-                <strong class="small">Date & Time</strong>
-                <p class="mb-0 text-muted" style="font-size: 0.7rem;">Date and time picker</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- SELECTION FIELDS -->
-<div class="field-category mb-3">
-    <h6 class="text-muted text-uppercase small mb-2">
-        <i class="ri-list-check me-1"></i> Selection
-    </h6>
-
-    <div class="field-item draggable-field" data-field-type="Dropdown">
-        <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
-            <i class="ri-drag-move-line me-1 text-muted"></i>
-            <i class="ri-arrow-down-s-line fs-5 me-2 text-info"></i>
-            <div class="flex-grow-1">
-                <strong class="small">Dropdown</strong>
-                <p class="mb-0 text-muted" style="font-size: 0.7rem;">Single select dropdown</p>
+    <!-- MEDIA FIELDS -->
+    <div class="accordion-item field-category" data-category="media">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed text-uppercase small" type="button" 
+                    data-bs-toggle="collapse" data-bs-target="#collapseMedia" aria-expanded="false">
+                <i class="ri-image-line me-1"></i> Media
+            </button>
+        </h2>
+        <div id="collapseMedia" class="accordion-collapse collapse" data-bs-parent="#fieldPaletteAccordion">
+            <div class="accordion-body">
+                <div class="field-item draggable-field" data-field-type="FileUpload">
+                    <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
+                        <i class="ri-drag-move-line me-1 text-muted"></i>
+                        <i class="ri-file-upload-line fs-5 me-2 text-warning"></i>
+                        <div class="flex-grow-1">
+                            <strong class="small">File Upload</strong>
+                            <p class="mb-0 text-muted" style="font-size: 0.7rem;">File upload field</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="field-item draggable-field" data-field-type="Image">
+                    <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
+                        <i class="ri-drag-move-line me-1 text-muted"></i>
+                        <i class="ri-image-line fs-5 me-2 text-warning"></i>
+                        <div class="flex-grow-1">
+                            <strong class="small">Image</strong>
+                            <p class="mb-0 text-muted" style="font-size: 0.7rem;">Image upload field</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="field-item draggable-field" data-field-type="Signature">
+                    <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
+                        <i class="ri-drag-move-line me-1 text-muted"></i>
+                        <i class="ri-quill-pen-line fs-5 me-2 text-warning"></i>
+                        <div class="flex-grow-1">
+                            <strong class="small">Signature</strong>
+                            <p class="mb-0 text-muted" style="font-size: 0.7rem;">Digital signature pad</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="field-item draggable-field" data-field-type="Radio">
-        <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
-            <i class="ri-drag-move-line me-1 text-muted"></i>
-            <i class="ri-radio-button-line fs-5 me-2 text-info"></i>
-            <div class="flex-grow-1">
-                <strong class="small">Radio Buttons</strong>
-                <p class="mb-0 text-muted" style="font-size: 0.7rem;">Radio button group</p>
+    <!-- RATING FIELDS -->
+    <div class="accordion-item field-category" data-category="rating">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed text-uppercase small" type="button" 
+                    data-bs-toggle="collapse" data-bs-target="#collapseRating" aria-expanded="false">
+                <i class="ri-star-line me-1"></i> Rating
+            </button>
+        </h2>
+        <div id="collapseRating" class="accordion-collapse collapse" data-bs-parent="#fieldPaletteAccordion">
+            <div class="accordion-body">
+                <div class="field-item draggable-field" data-field-type="Rating">
+                    <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
+                        <i class="ri-drag-move-line me-1 text-muted"></i>
+                        <i class="ri-star-line fs-5 me-2 text-danger"></i>
+                        <div class="flex-grow-1">
+                            <strong class="small">Rating</strong>
+                            <p class="mb-0 text-muted" style="font-size: 0.7rem;">Star/heart rating</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="field-item draggable-field" data-field-type="Slider">
+                    <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
+                        <i class="ri-drag-move-line me-1 text-muted"></i>
+                        <i class="ri-contrast-2-line fs-5 me-2 text-danger"></i>
+                        <div class="flex-grow-1">
+                            <strong class="small">Slider</strong>
+                            <p class="mb-0 text-muted" style="font-size: 0.7rem;">Slider input</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="field-item draggable-field" data-field-type="Checkbox">
-        <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
-            <i class="ri-drag-move-line me-1 text-muted"></i>
-            <i class="ri-checkbox-line fs-5 me-2 text-info"></i>
-            <div class="flex-grow-1">
-                <strong class="small">Checkbox</strong>
-                <p class="mb-0 text-muted" style="font-size: 0.7rem;">Single or multiple checkboxes</p>
+    <!-- CONTACT FIELDS -->
+    <div class="accordion-item field-category" data-category="contact">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed text-uppercase small" type="button" 
+                    data-bs-toggle="collapse" data-bs-target="#collapseContact" aria-expanded="false">
+                <i class="ri-contacts-line me-1"></i> Contact
+            </button>
+        </h2>
+        <div id="collapseContact" class="accordion-collapse collapse" data-bs-parent="#fieldPaletteAccordion">
+            <div class="accordion-body">
+                <div class="field-item draggable-field" data-field-type="Email">
+                    <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
+                        <i class="ri-drag-move-line me-1 text-muted"></i>
+                        <i class="ri-mail-line fs-5 me-2 text-secondary"></i>
+                        <div class="flex-grow-1">
+                            <strong class="small">Email</strong>
+                            <p class="mb-0 text-muted" style="font-size: 0.7rem;">Email input with validation</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="field-item draggable-field" data-field-type="Phone">
+                    <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
+                        <i class="ri-drag-move-line me-1 text-muted"></i>
+                        <i class="ri-phone-line fs-5 me-2 text-secondary"></i>
+                        <div class="flex-grow-1">
+                            <strong class="small">Phone</strong>
+                            <p class="mb-0 text-muted" style="font-size: 0.7rem;">Phone number input</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="field-item draggable-field" data-field-type="Url">
+                    <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
+                        <i class="ri-drag-move-line me-1 text-muted"></i>
+                        <i class="ri-links-line fs-5 me-2 text-secondary"></i>
+                        <div class="flex-grow-1">
+                            <strong class="small">URL</strong>
+                            <p class="mb-0 text-muted" style="font-size: 0.7rem;">URL input</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="field-item draggable-field" data-field-type="MultiSelect">
-        <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
-            <i class="ri-drag-move-line me-1 text-muted"></i>
-            <i class="ri-list-check fs-5 me-2 text-info"></i>
-            <div class="flex-grow-1">
-                <strong class="small">Multi-Select</strong>
-                <p class="mb-0 text-muted" style="font-size: 0.7rem;">Multiple selection dropdown</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- MEDIA FIELDS -->
-<div class="field-category mb-3">
-    <h6 class="text-muted text-uppercase small mb-2">
-        <i class="ri-image-line me-1"></i> Media
-    </h6>
-
-    <div class="field-item draggable-field" data-field-type="FileUpload">
-        <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
-            <i class="ri-drag-move-line me-1 text-muted"></i>
-            <i class="ri-file-upload-line fs-5 me-2 text-warning"></i>
-            <div class="flex-grow-1">
-                <strong class="small">File Upload</strong>
-                <p class="mb-0 text-muted" style="font-size: 0.7rem;">File upload field</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="field-item draggable-field" data-field-type="Image">
-        <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
-            <i class="ri-drag-move-line me-1 text-muted"></i>
-            <i class="ri-image-line fs-5 me-2 text-warning"></i>
-            <div class="flex-grow-1">
-                <strong class="small">Image</strong>
-                <p class="mb-0 text-muted" style="font-size: 0.7rem;">Image upload field</p>
+    <!-- SPECIALIZED FIELDS -->
+    <div class="accordion-item field-category" data-category="specialized">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed text-uppercase small" type="button" 
+                    data-bs-toggle="collapse" data-bs-target="#collapseSpecialized" aria-expanded="false">
+                <i class="ri-tools-line me-1"></i> Specialized
+            </button>
+        </h2>
+        <div id="collapseSpecialized" class="accordion-collapse collapse" data-bs-parent="#fieldPaletteAccordion">
+            <div class="accordion-body">
+                <div class="field-item draggable-field" data-field-type="Currency">
+                    <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
+                        <i class="ri-drag-move-line me-1 text-muted"></i>
+                        <i class="ri-money-dollar-circle-line fs-5 me-2 text-success"></i>
+                        <div class="flex-grow-1">
+                            <strong class="small">Currency</strong>
+                            <p class="mb-0 text-muted" style="font-size: 0.7rem;">Money input with formatting</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="field-item draggable-field" data-field-type="Percentage">
+                    <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
+                        <i class="ri-drag-move-line me-1 text-muted"></i>
+                        <i class="ri-percent-line fs-5 me-2 text-success"></i>
+                        <div class="flex-grow-1">
+                            <strong class="small">Percentage</strong>
+                            <p class="mb-0 text-muted" style="font-size: 0.7rem;">Percentage input</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="field-item draggable-field" data-field-type="Signature">
-        <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
-            <i class="ri-drag-move-line me-1 text-muted"></i>
-            <i class="ri-quill-pen-line fs-5 me-2 text-warning"></i>
-            <div class="flex-grow-1">
-                <strong class="small">Signature</strong>
-                <p class="mb-0 text-muted" style="font-size: 0.7rem;">Digital signature pad</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- RATING FIELDS -->
-<div class="field-category mb-3">
-    <h6 class="text-muted text-uppercase small mb-2">
-        <i class="ri-star-line me-1"></i> Rating
-    </h6>
-
-    <div class="field-item draggable-field" data-field-type="Rating">
-        <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
-            <i class="ri-drag-move-line me-1 text-muted"></i>
-            <i class="ri-star-line fs-5 me-2 text-danger"></i>
-            <div class="flex-grow-1">
-                <strong class="small">Rating</strong>
-                <p class="mb-0 text-muted" style="font-size: 0.7rem;">Star/heart rating</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="field-item draggable-field" data-field-type="Slider">
-        <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
-            <i class="ri-drag-move-line me-1 text-muted"></i>
-            <i class="ri-contrast-2-line fs-5 me-2 text-danger"></i>
-            <div class="flex-grow-1">
-                <strong class="small">Slider</strong>
-                <p class="mb-0 text-muted" style="font-size: 0.7rem;">Slider input</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- CONTACT FIELDS -->
-<div class="field-category mb-3">
-    <h6 class="text-muted text-uppercase small mb-2">
-        <i class="ri-contacts-line me-1"></i> Contact
-    </h6>
-
-    <div class="field-item draggable-field" data-field-type="Email">
-        <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
-            <i class="ri-drag-move-line me-1 text-muted"></i>
-            <i class="ri-mail-line fs-5 me-2 text-secondary"></i>
-            <div class="flex-grow-1">
-                <strong class="small">Email</strong>
-                <p class="mb-0 text-muted" style="font-size: 0.7rem;">Email input with validation</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="field-item draggable-field" data-field-type="Phone">
-        <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
-            <i class="ri-drag-move-line me-1 text-muted"></i>
-            <i class="ri-phone-line fs-5 me-2 text-secondary"></i>
-            <div class="flex-grow-1">
-                <strong class="small">Phone</strong>
-                <p class="mb-0 text-muted" style="font-size: 0.7rem;">Phone number input</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="field-item draggable-field" data-field-type="Url">
-        <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
-            <i class="ri-drag-move-line me-1 text-muted"></i>
-            <i class="ri-links-line fs-5 me-2 text-secondary"></i>
-            <div class="flex-grow-1">
-                <strong class="small">URL</strong>
-                <p class="mb-0 text-muted" style="font-size: 0.7rem;">URL input</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- SPECIALIZED FIELDS -->
-<div class="field-category mb-3">
-    <h6 class="text-muted text-uppercase small mb-2">
-        <i class="ri-tools-line me-1"></i> Specialized
-    </h6>
-
-    <div class="field-item draggable-field" data-field-type="Currency">
-        <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
-            <i class="ri-drag-move-line me-1 text-muted"></i>
-            <i class="ri-money-dollar-circle-line fs-5 me-2 text-success"></i>
-            <div class="flex-grow-1">
-                <strong class="small">Currency</strong>
-                <p class="mb-0 text-muted" style="font-size: 0.7rem;">Money input with formatting</p>
-            </div>
-        </div>
-    </div>
-
-    <div class="field-item draggable-field" data-field-type="Percentage">
-        <div class="d-flex align-items-center p-2 border rounded bg-light mb-2" style="cursor: move;">
-            <i class="ri-drag-move-line me-1 text-muted"></i>
-            <i class="ri-percent-line fs-5 me-2 text-success"></i>
-            <div class="flex-grow-1">
-                <strong class="small">Percentage</strong>
-                <p class="mb-0 text-muted" style="font-size: 0.7rem;">Percentage input</p>
-            </div>
-        </div>
-    </div>
 </div>
