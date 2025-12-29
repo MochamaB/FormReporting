@@ -29,7 +29,7 @@
 
 /* Adjust position when properties panel is collapsed */
 .design-grid.properties-collapsed .canvas-toolbar {
-    right: 12px;
+    right: 72px;  /* 60px collapsed properties + 12px gap */
 }
 
 /* ============================================================================

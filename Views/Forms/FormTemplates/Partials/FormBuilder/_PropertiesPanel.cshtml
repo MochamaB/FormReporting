@@ -5,6 +5,23 @@
     Shows properties of selected field or section
 *@
 
+<!-- Collapsed Icon Strip (visible when panel is collapsed) -->
+<div class="properties-icon-strip">
+    <div class="icon-tab" data-tab="general" title="General" onclick="expandToTab('general')">
+        <i class="ri-settings-3-line"></i>
+    </div>
+    <div class="icon-tab active" data-tab="configuration" title="Configuration" onclick="expandToTab('configuration')">
+        <i class="ri-tools-line"></i>
+    </div>
+    <div class="icon-tab" data-tab="validation" title="Validation" onclick="expandToTab('validation')">
+        <i class="ri-checkbox-circle-line"></i>
+    </div>
+    <div class="icon-tab" data-tab="advanced" title="Advanced" onclick="expandToTab('advanced')">
+        <i class="ri-code-s-slash-line"></i>
+    </div>
+</div>
+
+<!-- Full Properties Content (visible when panel is expanded) -->
 <div class="properties-content">
     <!-- Properties Tabs -->
     <ul class="nav nav-tabs nav-tabs-custom nav-justified border-bottom" role="tablist">

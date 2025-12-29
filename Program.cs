@@ -74,8 +74,17 @@ builder.Services.AddScoped<FormReporting.Services.Organizational.IDepartmentServ
 // Register authentication services
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();
 builder.Services.AddScoped<IClaimsService, ClaimsService>();
-// TODO: Register remaining services (Step 6)
-// builder.Services.AddScoped<INotificationService, NotificationService>();
+
+// Notification services
+builder.Services.AddMemoryCache(); // For template caching
+builder.Services.AddScoped<FormReporting.Services.Notifications.INotificationTemplateService, FormReporting.Services.Notifications.NotificationTemplateService>();
+builder.Services.AddScoped<FormReporting.Services.Notifications.INotificationService, FormReporting.Services.Notifications.NotificationService>();
+builder.Services.AddScoped<FormReporting.Services.Notifications.INotificationDeliveryService, FormReporting.Services.Notifications.NotificationDeliveryService>();
+
+// Notification providers (registered as INotificationProvider for factory pattern)
+builder.Services.AddScoped<FormReporting.Services.Notifications.Providers.INotificationProvider, FormReporting.Services.Notifications.Providers.EmailProvider>();
+builder.Services.AddScoped<FormReporting.Services.Notifications.Providers.INotificationProvider, FormReporting.Services.Notifications.Providers.InAppProvider>();
+// Future providers can be added here: SmsProvider, PushProvider, WhatsAppProvider, etc.
 
 var app = builder.Build();
 
@@ -114,7 +123,10 @@ using (var scope = app.Services.CreateScope())
        // MetricDefinitionSeeder.SeedMetricDefinitions(context);
 
         // 8. Seed Workflow Actions (no dependencies)
-         WorkflowActionSeeder.SeedWorkflowActions(context);
+        // WorkflowActionSeeder.SeedWorkflowActions(context);
+
+        // 9. Seed Notification System (depends on Users)
+       // NotificationSeeder.SeedNotificationData(context);
         
     }
     catch (Exception ex)

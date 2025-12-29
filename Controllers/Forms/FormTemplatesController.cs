@@ -156,6 +156,9 @@ namespace FormReporting.Controllers.Forms
                     CreatedBy = t.Creator.FullName ?? "Unknown",
                     ModifiedDate = t.ModifiedDate,
                     Description = t.Description,
+                    // Submission mode & access
+                    SubmissionMode = t.SubmissionMode,
+                    AllowAnonymousAccess = t.AllowAnonymousAccess,
                     // Configuration status
                     SectionCount = t.Sections.Count,
                     FieldCount = t.Sections.SelectMany(s => s.Items).Count(),
@@ -237,6 +240,16 @@ namespace FormReporting.Controllers.Forms
                     .ThenInclude(a => a.User)
                 .Include(t => t.Workflow)
                     .ThenInclude(w => w!.Steps)
+                        .ThenInclude(s => s.Action)
+                .Include(t => t.Workflow)
+                    .ThenInclude(w => w!.Steps)
+                        .ThenInclude(s => s.ApproverRole)
+                .Include(t => t.Workflow)
+                    .ThenInclude(w => w!.Steps)
+                        .ThenInclude(s => s.ApproverUser)
+                .Include(t => t.Workflow)
+                    .ThenInclude(w => w!.Steps)
+                        .ThenInclude(s => s.AssigneeDepartment)
                 .FirstOrDefaultAsync(t => t.TemplateId == id);
 
             if (template == null)
@@ -318,8 +331,11 @@ namespace FormReporting.Controllers.Forms
                 }
             };
 
-            // DEBUG: Pass assignments directly to view for server-side rendering
+            // Pass assignments directly to view for server-side rendering
             ViewData["Assignments"] = template.Assignments.ToList();
+            
+            // Pass workflow directly to view for server-side rendering
+            ViewData["Workflow"] = template.Workflow;
 
             return View("~/Views/Forms/FormTemplates/Details.cshtml", viewModel);
         }
@@ -1004,6 +1020,8 @@ namespace FormReporting.Controllers.Forms
                         Description = dto.Description,
                         CategoryId = dto.CategoryId,
                         TemplateType = dto.TemplateType ?? "Monthly",
+                        SubmissionMode = dto.SubmissionMode,
+                        AllowAnonymousAccess = dto.AllowAnonymousAccess,
                         Version = 1,
                         PublishStatus = "Draft", // ✅ Save as Draft
                         IsActive = true,
@@ -1048,13 +1066,17 @@ namespace FormReporting.Controllers.Forms
                     
                     // Description can be null/empty - always update
                     template.Description = dto.Description;
-                    
+
                     if (dto.CategoryId > 0)
                         template.CategoryId = dto.CategoryId;
-                    
+
                     // TemplateType can be null/empty - always update
                     template.TemplateType = dto.TemplateType;
-                    
+
+                    // Submission Mode and Anonymous Access - always update
+                    template.SubmissionMode = dto.SubmissionMode;
+                    template.AllowAnonymousAccess = dto.AllowAnonymousAccess;
+
                     template.ModifiedDate = DateTime.UtcNow;
                     template.ModifiedBy = 1; // TODO: Get from current user context
 

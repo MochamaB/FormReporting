@@ -1,4 +1,5 @@
 using FormReporting.Models.ViewModels.Forms;
+using FormReporting.Models.Entities.Forms;
 
 namespace FormReporting.Services.Forms
 {
@@ -77,5 +78,37 @@ namespace FormReporting.Services.Forms
         /// Check if workflow can be deleted (not in use)
         /// </summary>
         Task<bool> CanDeleteWorkflowAsync(int workflowId);
+
+        // ===== Dual-Mode Validation =====
+
+        /// <summary>
+        /// Validate workflow against specific submission mode requirements
+        /// </summary>
+        Task<WorkflowValidationResultDto> ValidateWorkflowForModeAsync(int workflowId, int templateId);
+
+        /// <summary>
+        /// Validate workflow steps for Individual mode (no Fill actions, submission-level only)
+        /// </summary>
+        Task<WorkflowValidationResultDto> ValidateIndividualModeWorkflowAsync(int workflowId);
+
+        /// <summary>
+        /// Validate workflow steps for Collaborative mode (must have Fill steps, proper sequence)
+        /// </summary>
+        Task<WorkflowValidationResultDto> ValidateCollaborativeModeWorkflowAsync(int workflowId, int templateId);
+
+        /// <summary>
+        /// Check if all Fill steps have valid assignee resolution
+        /// </summary>
+        Task<(bool IsValid, List<string> Errors)> ValidateWorkflowAssigneeResolutionAsync(int workflowId);
+
+        /// <summary>
+        /// Validate step data for real-time wizard validation (no database save)
+        /// </summary>
+        Task<StepValidationResultDto> ValidateStepDataAsync(StepValidationDto dto, int templateId);
+
+        /// <summary>
+        /// Full validation before creating workflow (prevents invalid data from being saved)
+        /// </summary>
+        Task<StepValidationResultDto> ValidateBeforeCreateAsync(WorkflowStepCreateDto stepDto, int templateId);
     }
 }

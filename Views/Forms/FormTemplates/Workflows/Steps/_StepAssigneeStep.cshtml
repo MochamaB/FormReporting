@@ -1,0 +1,286 @@
+@*
+    Step 2: Select Assignee
+    Choose who will perform this workflow step
+*@
+
+<div class="step-assignee-content">
+    <!-- Assignee Type Selection -->
+    <div class="mb-4">
+        <label class="form-label">Assignee Type <span class="text-danger">*</span></label>
+
+        <!-- Workflow-Specific Assignees -->
+        <div class="mb-3">
+            <h6 class="text-muted mb-2">Workflow-Specific Assignees</h6>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="assignee-card" data-assignee-type="Submitter" data-requires-picker="false" data-mode-restriction="individual">
+                        <div class="assignee-card-icon" style="background-color: #0d6efd20; color: #0d6efd;">
+                            <i class="ri-user-add-line"></i>
+                        </div>
+                        <h6 class="assignee-card-title">Submitter</h6>
+                        <p class="assignee-card-description">The person who created this submission</p>
+                        <div class="assignee-card-check">
+                            <i class="ri-check-line"></i>
+                        </div>
+                        <div class="mode-restriction-overlay">
+                            <i class="ri-alert-line"></i>
+                            <p><strong>Not available in Individual mode</strong><br>Cannot assign to submitter (conflict of interest)</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="assignee-card" data-assignee-type="PreviousActor" data-requires-picker="false">
+                        <div class="assignee-card-icon" style="background-color: #6f42c120; color: #6f42c1;">
+                            <i class="ri-arrow-left-circle-line"></i>
+                        </div>
+                        <h6 class="assignee-card-title">Previous Actor</h6>
+                        <p class="assignee-card-description">Person who completed the previous step</p>
+                        <div class="assignee-card-check">
+                            <i class="ri-check-line"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="assignee-card" data-assignee-type="FieldValue" data-requires-picker="true" data-picker-type="field" data-mode-restriction="individual">
+                        <div class="assignee-card-icon" style="background-color: #0dcaf020; color: #0dcaf0;">
+                            <i class="ri-code-s-slash-line"></i>
+                        </div>
+                        <h6 class="assignee-card-title">Field Value</h6>
+                        <p class="assignee-card-description">User ID from a form field</p>
+                        <div class="assignee-card-check">
+                            <i class="ri-check-line"></i>
+                        </div>
+                        <div class="mode-restriction-overlay">
+                            <i class="ri-alert-line"></i>
+                            <p><strong>Not available in Individual mode</strong><br>Field-based assignment is for collaborative workflows</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- User-Based Assignees -->
+        <div class="mb-3">
+            <h6 class="text-muted mb-2">User-Based Assignees</h6>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <div class="assignee-card" data-assignee-type="Role" data-requires-picker="true" data-picker-type="role">
+                        <div class="assignee-card-icon" style="background-color: #19875420; color: #198754;">
+                            <i class="ri-shield-user-line"></i>
+                        </div>
+                        <h6 class="assignee-card-title">Role</h6>
+                        <p class="assignee-card-description">Any user with a specific role</p>
+                        <div class="assignee-card-check">
+                            <i class="ri-check-line"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="assignee-card" data-assignee-type="User" data-requires-picker="true" data-picker-type="user">
+                        <div class="assignee-card-icon" style="background-color: #ffc10720; color: #ffc107;">
+                            <i class="ri-user-line"></i>
+                        </div>
+                        <h6 class="assignee-card-title">Specific User</h6>
+                        <p class="assignee-card-description">Assign to a specific individual</p>
+                        <div class="assignee-card-check">
+                            <i class="ri-check-line"></i>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="assignee-card" data-assignee-type="Department" data-requires-picker="true" data-picker-type="department">
+                        <div class="assignee-card-icon" style="background-color: #dc354520; color: #dc3545;">
+                            <i class="ri-building-line"></i>
+                        </div>
+                        <h6 class="assignee-card-title">Department</h6>
+                        <p class="assignee-card-description">Any user in a department</p>
+                        <div class="assignee-card-check">
+                            <i class="ri-check-line"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Hidden input for selected assignee type -->
+        <input type="hidden" id="assignee-type" name="AssigneeType" required>
+    </div>
+
+    <!-- Role Picker (shown when Role is selected) -->
+    <div id="role-picker" class="mb-4 d-none">
+        <label for="approver-role" class="form-label">Select Role <span class="text-danger">*</span></label>
+        <select class="form-select" id="approver-role" name="ApproverRoleId">
+            <option value="">Loading roles...</option>
+        </select>
+    </div>
+
+    <!-- User Picker (shown when User is selected) -->
+    <div id="user-picker" class="mb-4 d-none">
+        <label for="approver-user" class="form-label">Select User <span class="text-danger">*</span></label>
+        <select class="form-select" id="approver-user" name="ApproverUserId">
+            <option value="">Loading users...</option>
+        </select>
+    </div>
+
+    <!-- Department Picker (shown when Department is selected) -->
+    <div id="department-picker" class="mb-4 d-none">
+        <label for="assignee-department" class="form-label">Select Department <span class="text-danger">*</span></label>
+        <select class="form-select" id="assignee-department" name="AssigneeDepartmentId">
+            <option value="">Loading departments...</option>
+        </select>
+    </div>
+
+    <!-- Field Picker (shown when FieldValue is selected) -->
+    <div id="field-picker" class="mb-4 d-none">
+        <label for="assignee-field" class="form-label">Select Field <span class="text-danger">*</span></label>
+        <select class="form-select" id="assignee-field" name="AssigneeFieldId">
+            <option value="">Loading fields...</option>
+        </select>
+        <div class="form-text">Select a field that contains a user ID</div>
+    </div>
+
+    <!-- Assignee Info -->
+    <div id="assignee-info" class="alert alert-info d-none">
+        <h6 class="alert-heading mb-2"><i class="ri-information-line me-1"></i> Assignee Information</h6>
+        <p class="mb-0" id="assignee-info-text"></p>
+    </div>
+</div>
+
+
+    <style>
+        .assignee-card {
+            position: relative;
+            border: 2px solid #e9ecef;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            height: 100%;
+            background-color: #fff;
+        }
+
+        .assignee-card:hover {
+            border-color: var(--vz-primary);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+
+        .assignee-card.active {
+            border-color: var(--vz-primary);
+            background-color: var(--vz-primary-bg-subtle);
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+        }
+
+        .assignee-card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            background-color: #f8f9fa;
+        }
+
+        .assignee-card.disabled:hover {
+            border-color: #e9ecef;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .assignee-card-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 28px;
+        }
+
+        .assignee-card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #212529;
+        }
+
+        .assignee-card-description {
+            font-size: 13px;
+            color: #878a99;
+            margin: 0;
+        }
+
+        .assignee-card-check {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background-color: var(--vz-primary);
+            color: white;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+        }
+
+        .assignee-card.active .assignee-card-check {
+            display: flex;
+        }
+
+        .assignee-card .mode-restriction-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 0.5rem;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 1rem;
+        }
+
+        .assignee-card.disabled .mode-restriction-overlay {
+            display: flex;
+        }
+
+        .mode-restriction-overlay i {
+            font-size: 32px;
+            color: #dc3545;
+            margin-bottom: 0.5rem;
+        }
+
+        .mode-restriction-overlay p {
+            margin: 0;
+            font-size: 12px;
+            color: #6c757d;
+            text-align: center;
+        }
+    </style>
+
+<!-- Step Validation Feedback -->
+<div class="step-validation-feedback mt-3" id="validation-assignee">
+    <div class="validation-errors d-none">
+        <div class="alert alert-danger">
+            <i class="ri-error-warning-line me-2"></i>
+            <strong>Validation Issues:</strong>
+            <ul class="validation-error-list mb-0 mt-2"></ul>
+        </div>
+    </div>
+    <div class="validation-warnings d-none">
+        <div class="alert alert-warning">
+            <i class="ri-alert-line me-2"></i>
+            <strong>Recommendations:</strong>
+            <ul class="validation-warning-list mb-0 mt-2"></ul>
+        </div>
+    </div>
+    <div class="validation-success d-none">
+        <div class="alert alert-success">
+            <i class="ri-check-line me-2"></i>
+            <strong>Assignee configuration is valid</strong>
+        </div>
+    </div>
+</div>
+

@@ -27,6 +27,9 @@
 <!-- DataTable Component (Sorting, Bulk Actions, AJAX Loading) -->
 <script src="~/js/components/datatable.js"></script>
 
+<!-- App Loader - Universal Progress Bar -->
+<script src="~/js/app-loader.js"></script>
+
 <!-- App js - Wrapped to handle missing DOM elements gracefully -->
 <script>
     // Suppress non-critical errors from app.js when DOM elements are missing
@@ -36,6 +39,15 @@
             e.preventDefault();
             return true;
         }
+    });
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+        tooltipTriggerList.forEach(el => new bootstrap.Tooltip(el));
+    });
+    document.addEventListener("DOMContentLoaded", function () {
+        const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
+        popoverTriggerList.forEach(el => new bootstrap.Popover(el));
     });
 </script>
 <script src="~/assets/js/app.js"></script>

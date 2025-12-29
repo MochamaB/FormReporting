@@ -43,6 +43,39 @@ const FormBuilderLayout = {
     },
 
     /**
+     * Expand properties panel and switch to specific tab
+     * @param {string} tabName - Tab name to activate (general, configuration, validation, advanced)
+     */
+    expandToTab: function(tabName) {
+        const panel = document.getElementById('propertiesPanel');
+        const grid = document.getElementById('designGrid');
+        const icon = document.getElementById('propertiesToggleIcon');
+        
+        if (!panel || !grid || !icon) {
+            console.error('Properties panel elements not found');
+            return;
+        }
+        
+        // Expand if collapsed
+        if (this.propertiesCollapsed) {
+            panel.classList.remove('collapsed');
+            grid.classList.remove('properties-collapsed');
+            icon.classList.remove('ri-arrow-right-s-line');
+            icon.classList.add('ri-arrow-left-s-line');
+            this.propertiesCollapsed = false;
+        }
+        
+        // Activate the clicked tab
+        const tabLink = document.querySelector(`a[href="#prop-${tabName}"]`);
+        if (tabLink) {
+            const tab = new bootstrap.Tab(tabLink);
+            tab.show();
+        }
+        
+        console.log(`Expanded properties panel to ${tabName} tab`);
+    },
+
+    /**
      * Select a section (highlight and show properties)
      * @param {number} sectionId - Section ID to select
      */
@@ -98,6 +131,10 @@ const FormBuilderLayout = {
 // Expose functions globally for inline onclick handlers
 window.toggleProperties = function() {
     FormBuilderLayout.toggleProperties();
+};
+
+window.expandToTab = function(tabName) {
+    FormBuilderLayout.expandToTab(tabName);
 };
 
 window.selectSection = function(sectionId) {

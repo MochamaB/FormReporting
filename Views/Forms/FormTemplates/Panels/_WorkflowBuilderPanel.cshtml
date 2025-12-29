@@ -1,9 +1,272 @@
 @using FormReporting.Models.ViewModels.Forms
+@using FormReporting.Models.Entities.Forms
 @{
     var model = ViewData["TemplateDetails"] as TemplateDetailsViewModel;
+    if (model == null) return;
+    
+    // Get workflow directly from ViewData (passed from controller)
+    var workflow = ViewData["Workflow"] as WorkflowDefinition;
+    
+    // Helper to get action icon
+    string GetActionIcon(string actionCode) => actionCode switch
+    {
+        "Fill" => "ri-pencil-line",
+        "Sign" => "ri-pen-nib-line",
+        "Approve" => "ri-check-line",
+        "Reject" => "ri-close-line",
+        "Review" => "ri-eye-line",
+        "Verify" => "ri-shield-check-line",
+        _ => "ri-flashlight-line"
+    };
+    
+    // Helper to get action color
+    string GetActionColor(string actionCode) => actionCode switch
+    {
+        "Fill" => "primary",
+        "Sign" => "purple",
+        "Approve" => "success",
+        "Reject" => "danger",
+        "Review" => "warning",
+        "Verify" => "info",
+        _ => "secondary"
+    };
+    
+    // Helper to get assignee label
+    string GetAssigneeLabel(WorkflowStep step)
+    {
+        if (step.AssigneeType == "Submitter") return "Submitter";
+        if (step.AssigneeType == "PreviousActor") return "Previous Actor";
+        if (step.AssigneeType == "Role") return $"Role: {step.ApproverRole?.RoleName ?? "Unknown"}";
+        if (step.AssigneeType == "User") return $"User: {step.ApproverUser?.FullName ?? "Unknown"}";
+        if (step.AssigneeType == "Department") return $"Dept: {step.AssigneeDepartment?.DepartmentName ?? "Unknown"}";
+        if (step.AssigneeType == "FieldValue") return "Field Value";
+        return "Unknown";
+    }
+    
+    // Helper to get target label
+    string GetTargetLabel(WorkflowStep step)
+    {
+        var targetType = step.TargetType ?? "Submission";
+        if (targetType == "Submission") return "Entire Form";
+        if (targetType == "Section") return "Section";
+        if (targetType == "Field") return "Field";
+        return "All";
+    }
 }
 
-<!-- Workflow Panel: Visual workflow designer -->
+<!-- Workflow Panel -->
 <div id="workflow-panel">
-    <!-- TODO: Implement workflow builder panel -->
+    @if (workflow == null)
+    {
+        <!-- Empty State (No Workflow) -->
+        <div class="card border-dashed border-2">
+            <div class="card-body text-center py-5">
+                <div class="mb-4">
+                    <i class="ri-flow-chart text-muted" style="font-size: 64px;"></i>
+                </div>
+                <h5 class="mb-3">No Workflow Configured</h5>
+                <p class="text-muted mb-4">
+                    This template has no approval workflow.<br>
+                    Submissions will be saved directly without approval steps.
+                </p>
+                <div class="d-flex gap-2 justify-content-center">
+                    <button type="button" class="btn btn-primary" id="select-workflow-btn">
+                        <i class="ri-list-check me-1"></i> Select Existing Workflow
+                    </button>
+                    <a href="/FormTemplates/@(model.TemplateId)/Workflows/Create" class="btn btn-success">
+                        <i class="ri-add-line me-1"></i> Create New Workflow
+                    </a>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        var steps = workflow.Steps?.OrderBy(s => s.StepOrder).ToList() ?? new List<WorkflowStep>();
+        
+        <!-- Header -->
+        <div class="card mb-3">
+            <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div class="flex-grow-1">
+                        <h5 class="mb-1">@workflow.WorkflowName</h5>
+                        <p class="text-muted mb-0">
+                            @steps.Count steps • 
+                            Last modified: @workflow.ModifiedDate.ToString("MMM d, yyyy")
+                        </p>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="@Url.Action("Edit", "Workflow", new { id = workflow.WorkflowId })" class="btn btn-soft-primary btn-sm">
+                            <i class="ri-edit-line me-1"></i> Edit
+                        </a>
+                        <button type="button" class="btn btn-soft-danger btn-sm" onclick="confirmDeleteWorkflow(@workflow.WorkflowId, '@workflow.WorkflowName')">
+                            <i class="ri-delete-bin-line me-1"></i> Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @if (steps.Any())
+        {
+            <!-- Visual Timeline -->
+            <div class="card mb-3">
+                <div class="card-body">
+                    <h6 class="card-title mb-3">Workflow Timeline</h6>
+                    <div class="workflow-timeline">
+                        @foreach (var step in steps)
+                        {
+                            var actionCode = step.Action?.ActionCode ?? "Unknown";
+                            var actionColor = GetActionColor(actionCode);
+                            var assigneeLabel = GetAssigneeLabel(step);
+                            
+                            <div class="workflow-timeline-step">
+                                <div class="timeline-step-icon" style="background-color: var(--vz-@actionColor); border-color: var(--vz-@actionColor);">
+                                    <div class="timeline-step-number">@step.StepOrder</div>
+                                    <div class="timeline-step-action">@actionCode</div>
+                                </div>
+                                <div class="timeline-step-label">
+                                    @step.StepName
+                                    <div class="timeline-step-assignee">@assigneeLabel</div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Steps List -->
+            <div class="card">
+                <div class="card-header d-flex align-items-center justify-content-between">
+                    <h6 class="card-title mb-0">Workflow Steps</h6>
+                    <a href="/FormTemplates/@(model.TemplateId)/Workflows/Create" class="btn btn-success">
+                        <i class="ri-add-line me-1"></i> Add Step
+                    </a>
+                </div>
+                <div class="card-body">
+                    <div class="workflow-steps-list">
+                        @foreach (var step in steps)
+                        {
+                            var actionCode = step.Action?.ActionCode ?? "Unknown";
+                            var actionName = step.Action?.ActionName ?? "Unknown";
+                            var actionIcon = GetActionIcon(actionCode);
+                            var actionColor = GetActionColor(actionCode);
+                            var assigneeLabel = GetAssigneeLabel(step);
+                            var targetLabel = GetTargetLabel(step);
+                            
+                            <div class="workflow-step-card" data-step-id="@step.StepId" data-step-order="@step.StepOrder">
+                                <div class="step-card-header">
+                                    <i class="ri-draggable step-drag-handle"></i>
+                                    <div class="step-order-badge" style="background-color: var(--vz-@actionColor);">@step.StepOrder</div>
+                                    <h6 class="step-card-title">@step.StepName</h6>
+                                    <div class="step-card-actions">
+                                        <a href="/api/workflows/steps/@step.StepId/edit" class="btn btn-sm btn-soft-primary">
+                                            <i class="ri-edit-line"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-sm btn-soft-danger" onclick="deleteStep(@step.StepId, '@step.StepName')">
+                                            <i class="ri-delete-bin-line"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div class="step-card-body">
+                                    <div class="step-detail-row">
+                                        <div class="step-detail-item">
+                                            <span class="action-icon action-@actionCode.ToLower()">
+                                                <i class="@actionIcon"></i>
+                                            </span>
+                                            <span><span class="step-detail-label">Action:</span> <span class="step-detail-value">@actionName</span></span>
+                                        </div>
+                                        <div class="step-detail-item">
+                                            <i class="ri-user-star-line"></i>
+                                            <span><span class="step-detail-label">Assignee:</span> <span class="step-detail-value">@assigneeLabel</span></span>
+                                        </div>
+                                        <div class="step-detail-item">
+                                            <i class="ri-focus-3-line"></i>
+                                            <span><span class="step-detail-label">Target:</span> <span class="step-detail-value">@targetLabel</span></span>
+                                        </div>
+                                        @if (step.DueDays.HasValue)
+                                        {
+                                            <div class="step-detail-item">
+                                                <i class="ri-time-line"></i>
+                                                <span><span class="step-detail-label">Due:</span> <span class="step-detail-value">@step.DueDays days</span></span>
+                                            </div>
+                                        }
+                                        @if (step.IsMandatory)
+                                        {
+                                            <div class="step-detail-item">
+                                                <i class="ri-checkbox-circle-line"></i>
+                                                <span class="step-detail-value">Mandatory</span>
+                                            </div>
+                                        }
+                                        @if (step.Action?.RequiresSignature == true)
+                                        {
+                                            <div class="step-detail-item">
+                                                <i class="ri-pen-nib-line"></i>
+                                                <span class="step-detail-value">Requires Signature</span>
+                                            </div>
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="card">
+                <div class="card-body text-center py-5">
+                    <i class="ri-information-line fs-20 text-muted"></i>
+                    <p class="mb-3 mt-2 text-muted">No steps defined yet. Click "Add Step" to create your first workflow step.</p>
+                    <a href="/api/workflows/@workflow.WorkflowId/steps/create" class="btn btn-success">
+                        <i class="ri-add-line me-1"></i> Add First Step
+                    </a>
+                </div>
+            </div>
+        }
+    }
 </div>
+
+<script>
+    function deleteStep(stepId, stepName) {
+        if (confirm(`Are you sure you want to delete step "${stepName}"?`)) {
+            fetch(`/api/workflows/steps/${stepId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.message || 'Failed to delete step'));
+                }
+            })
+            .catch(err => alert('Error deleting step'));
+        }
+    }
+    
+    function confirmDeleteWorkflow(workflowId, workflowName) {
+        if (confirm(`Are you sure you want to delete the workflow "${workflowName}"? This will remove all workflow steps and cannot be undone.`)) {
+            fetch(`/api/workflows/${workflowId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();
+                } else {
+                    alert('Error: ' + (data.message || 'Failed to delete workflow'));
+                }
+            })
+            .catch(err => alert('Error deleting workflow'));
+        }
+    }
+</script>

@@ -1,0 +1,187 @@
+@{
+    ViewData["Title"] = "Create Workflow";
+}
+
+@section Styles {
+    <link href="~/css/workflow-builder.css" rel="stylesheet" asp-append-version="true" />
+}
+
+<div class="container-fluid">
+
+
+    <!-- Workflow Creation Wizard -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <div class="d-flex align-items-center justify-content-between">
+                        <div>
+                            <div class="d-flex align-items-center">
+                                <i class="ri-flow-chart text-primary fs-22 me-2"></i>
+                                @if (ViewData["WorkflowName"] != null)
+                                {
+                                    <h5 class="card-title mb-0">@ViewData["WorkflowName"]</h5>
+                                    <span class="badge bg-info-subtle text-info ms-2">Adding Step @((int)(ViewData["ExistingStepCount"] ?? 0) + 1)</span>
+                                }
+                                else
+                                {
+                                    <h5 class="card-title mb-0">New Workflow Wizard</h5>
+                                }
+                            </div>
+                            <p class="text-muted mb-0 mt-2">
+                                @if (ViewData["WorkflowDescription"] != null)
+                                {
+                                    @ViewData["WorkflowDescription"]
+                                }
+                                else
+                                {
+                                    <text>Follow these steps to create a new workflow. You'll define the target scope, name and action, assignee, and settings.</text>
+                                }
+                            </p>
+                        </div>
+                        @if (ViewData["SubmissionModeDisplay"] != null)
+                        {
+                            <span class="badge @(ViewData["SubmissionMode"]?.ToString() == "1" ? "bg-primary-subtle text-primary" : "bg-success-subtle text-success") fs-14 px-3 py-2">
+                                <i class="ri-@(ViewData["SubmissionMode"]?.ToString() == "1" ? "user" : "team")-line me-1"></i>
+                                @ViewData["SubmissionModeDisplay"] Mode
+                            </span>
+                        }
+                    </div>
+                </div>
+                <div class="card-body">
+                    @* Form wrapper for workflow creation *@
+                    <form id="create-workflow-form" 
+                          action="@Url.Action("Store", "Workflow")" 
+                          method="post">
+                        @Html.AntiForgeryToken()
+                        
+                        @* Hidden field for template ID *@
+                        @if (ViewData["TemplateId"] is int templateId)
+                        {
+                            <input type="hidden" name="templateId" value="@templateId" />
+                        }
+                        
+                        @* Render the workflow creation wizard partial *@
+                        <partial name="~/Views/Forms/FormTemplates/Workflows/_CreateWorkflowForm.cshtml" />
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/workflow-wizard.js" asp-append-version="true"></script>
+    <script src="~/js/workflow-wizard-steps.js" asp-append-version="true"></script>
+    <script src="~/js/workflow-wizard-validation.js" asp-append-version="true"></script>
+    @if (ViewData["TemplateId"] is int templateId)
+    {
+        <script>
+            // Initialize WorkflowWizard with proper execution sequence
+            document.addEventListener('DOMContentLoaded', function() {
+                const submissionMode = @(ViewData["SubmissionMode"] ?? 1); // 1=Individual, 2=Collaborative
+                
+                console.log('[Create Workflow] Starting initialization sequence');
+                
+                // Step 1: Initialize core WorkflowWizard
+                WorkflowWizard.init(@templateId, submissionMode);
+                console.log('[Create Workflow] ✓ WorkflowWizard initialized with templateId:', @templateId, 'mode:', submissionMode);
+
+                // Step 2: Initialize all step handlers
+                WorkflowWizardSteps.initializeAllSteps();
+                console.log('[Create Workflow] ✓ All step handlers initialized');
+
+                // Step 3: Initialize step-by-step validation
+                WorkflowStepValidation.initializeValidation(@templateId);
+                console.log('[Create Workflow] ✓ Step validation initialized');
+
+                // Step 4: Apply mode restrictions after everything is ready
+                setTimeout(function() {
+                    WorkflowWizard.applyModeRestrictions();
+                    console.log('[Create Workflow] ✓ Mode restrictions applied');
+
+                    // Apply assignee mode restrictions
+                    if (typeof WorkflowWizardSteps.applyAssigneeModeRestrictions === 'function') {
+                        WorkflowWizardSteps.applyAssigneeModeRestrictions();
+                        console.log('[Create Workflow] ✓ Assignee mode restrictions applied');
+                    }
+                    
+                    console.log('[Create Workflow] 🎉 Initialization sequence complete');
+                }, 200);
+
+                // Event delegation for validation triggers
+                document.addEventListener('change', function(e) {
+                    if (e.target.closest('.wizard-step-content')) {
+                        const stepElement = e.target.closest('[data-step]');
+                        if (stepElement) {
+                            const stepId = stepElement.dataset.step;
+                            console.log('[Create Workflow] Field changed in step:', stepId);
+                            
+                            // Debounce validation calls
+                            clearTimeout(window.validationTimeout);
+                            window.validationTimeout = setTimeout(() => {
+                                WorkflowStepValidation.validateCurrentStep(stepId, @templateId);
+                            }, 500);
+                        }
+                    }
+                });
+
+                // Event delegation for navigation validation
+                document.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('btn-next') || e.target.closest('.btn-next')) {
+                        const stepElement = e.target.closest('[data-step]') || 
+                                          document.querySelector('.wizard-step.active[data-step]');
+                        
+                        if (stepElement) {
+                            const stepId = stepElement.dataset.step;
+                            console.log('[Create Workflow] Validating before navigation from step:', stepId);
+                            
+                            e.preventDefault();
+                            
+                            WorkflowStepValidation.validateBeforeNavigation(stepId, @templateId)
+                                .then(isValid => {
+                                    if (isValid) {
+                                        console.log('[Create Workflow] Validation passed, allowing navigation');
+                                        // Allow navigation to proceed
+                                        const originalBtn = e.target.classList.contains('btn-next') ? e.target : e.target.closest('.btn-next');
+                                        if (originalBtn) {
+                                            originalBtn.style.pointerEvents = 'none';
+                                            setTimeout(() => {
+                                                originalBtn.style.pointerEvents = '';
+                                                originalBtn.click();
+                                            }, 100);
+                                        }
+                                    } else {
+                                        console.log('[Create Workflow] Validation failed, preventing navigation');
+                                    }
+                                });
+                        }
+                    }
+                });
+
+                // Form submission validation
+                document.getElementById('create-workflow-form')?.addEventListener('submit', function(e) {
+                    console.log('[Create Workflow] Form submission triggered');
+                    
+                    const activeStep = document.querySelector('.wizard-step.active[data-step]');
+                    if (activeStep) {
+                        const stepId = activeStep.dataset.step;
+                        
+                        e.preventDefault();
+                        
+                        WorkflowStepValidation.validateCurrentStep(stepId, @templateId)
+                            .then(isValid => {
+                                if (isValid) {
+                                    console.log('[Create Workflow] Final validation passed, submitting form');
+                                    this.removeEventListener('submit', arguments.callee);
+                                    this.submit();
+                                } else {
+                                    console.log('[Create Workflow] Final validation failed, preventing submission');
+                                }
+                            });
+                    }
+                });
+            });
+        </script>
+    }
+}

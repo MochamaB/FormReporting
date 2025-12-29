@@ -1,4 +1,5 @@
 using System;
+using FormReporting.Models.Common;
 
 namespace FormReporting.Models.ViewModels.Forms
 {
@@ -20,6 +21,13 @@ namespace FormReporting.Models.ViewModels.Forms
         public string CreatedBy { get; set; } = string.Empty;
         public DateTime ModifiedDate { get; set; }
         public string? Description { get; set; }
+
+        // ============================================================================
+        // SUBMISSION MODE & ACCESS CONTROL
+        // ============================================================================
+
+        public SubmissionMode SubmissionMode { get; set; } = SubmissionMode.Individual;
+        public bool AllowAnonymousAccess { get; set; } = false;
 
         // ============================================================================
         // CONFIGURATION STATUS - Shows what has been configured for this template
@@ -101,6 +109,33 @@ namespace FormReporting.Models.ViewModels.Forms
             "Annual" => "<span class='badge bg-success-subtle text-success'>Annual</span>",
             "OnDemand" => "<span class='badge bg-warning-subtle text-warning'>On Demand</span>",
             _ => $"<span class='badge bg-light text-dark'>{TemplateType}</span>"
+        };
+
+        /// <summary>
+        /// HTML badge for submission mode
+        /// </summary>
+        public string SubmissionModeBadge => SubmissionMode switch
+        {
+            SubmissionMode.Individual => "<span class='badge bg-primary-subtle text-primary'><i class='ri-user-line me-1'></i>Individual</span>",
+            SubmissionMode.Collaborative => "<span class='badge bg-success-subtle text-success'><i class='ri-team-line me-1'></i>Collaborative</span>",
+            _ => "<span class='badge bg-secondary-subtle text-secondary'>Unknown</span>"
+        };
+
+        /// <summary>
+        /// HTML badge for anonymous access
+        /// </summary>
+        public string AnonymousAccessBadge => AllowAnonymousAccess
+            ? "<span class='badge bg-warning-subtle text-warning'><i class='ri-global-line me-1'></i>Public</span>"
+            : "<span class='badge bg-secondary-subtle text-secondary'><i class='ri-lock-line me-1'></i>Private</span>";
+
+        /// <summary>
+        /// Text-only display for submission mode
+        /// </summary>
+        public string SubmissionModeDisplay => SubmissionMode switch
+        {
+            SubmissionMode.Individual => "Individual",
+            SubmissionMode.Collaborative => "Collaborative",
+            _ => "Unknown"
         };
     }
 }

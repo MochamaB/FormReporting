@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 using FormReporting.Models.Entities.Identity;
+using FormReporting.Models.Common;
 
 namespace FormReporting.Models.Entities.Forms
 {
@@ -38,6 +39,19 @@ namespace FormReporting.Models.Entities.Forms
         public bool RequiresApproval { get; set; } = true;
 
         public int? WorkflowId { get; set; } // Link to approval workflow
+
+        // ===== SUBMISSION MODE & ACCESS =====
+        /// <summary>
+        /// Submission mode: Individual (one user fills entire form) or Collaborative (multi-user workflow)
+        /// </summary>
+        [Required]
+        public SubmissionMode SubmissionMode { get; set; } = SubmissionMode.Individual;
+
+        /// <summary>
+        /// Allow anonymous access (no authentication required)
+        /// If true, anyone with the link can view/submit the form
+        /// </summary>
+        public bool AllowAnonymousAccess { get; set; } = false;
 
         // Publish Status Workflow
         [Required]

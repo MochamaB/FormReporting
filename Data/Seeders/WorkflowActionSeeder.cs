@@ -40,41 +40,15 @@ namespace FormReporting.Data.Seeders
                 },
                 new()
                 {
-                    ActionCode = "Approve",
-                    ActionName = "Approve",
-                    Description = "Approve the form submission",
-                    RequiresSignature = false,
-                    RequiresComment = false,
-                    AllowDelegate = true,
-                    IconClass = "bi-check-circle",
-                    CssClass = "text-success",
-                    DisplayOrder = 3,
-                    IsActive = true
-                },
-                new()
-                {
-                    ActionCode = "Reject",
-                    ActionName = "Reject",
-                    Description = "Reject the form submission with reason",
-                    RequiresSignature = false,
-                    RequiresComment = true,
-                    AllowDelegate = true,
-                    IconClass = "bi-x-circle",
-                    CssClass = "text-danger",
-                    DisplayOrder = 4,
-                    IsActive = true
-                },
-                new()
-                {
                     ActionCode = "Review",
-                    ActionName = "Review",
-                    Description = "Review the form without final approval",
+                    ActionName = "Review & Approve",
+                    Description = "Review the submission and approve or reject",
                     RequiresSignature = false,
                     RequiresComment = false,
                     AllowDelegate = true,
-                    IconClass = "bi-eye",
-                    CssClass = "text-secondary",
-                    DisplayOrder = 5,
+                    IconClass = "bi-clipboard-check",
+                    CssClass = "text-info",
+                    DisplayOrder = 3,
                     IsActive = true
                 },
                 new()
@@ -87,7 +61,7 @@ namespace FormReporting.Data.Seeders
                     AllowDelegate = true,
                     IconClass = "bi-shield-check",
                     CssClass = "text-warning",
-                    DisplayOrder = 6,
+                    DisplayOrder = 4,
                     IsActive = true
                 }
             };

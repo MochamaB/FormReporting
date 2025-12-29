@@ -14,6 +14,8 @@ namespace FormReporting.Models.ViewModels.Forms
         [StringLength(500)]
         public string? Description { get; set; }
 
+        public int? TemplateId { get; set; }
+
         public List<WorkflowStepCreateDto> Steps { get; set; } = new();
     }
 
@@ -36,8 +38,7 @@ namespace FormReporting.Models.ViewModels.Forms
     /// </summary>
     public class WorkflowStepCreateDto
     {
-        [Required]
-        public int StepOrder { get; set; }
+        public int? StepOrder { get; set; }
 
         [Required]
         [StringLength(100)]
@@ -73,34 +74,85 @@ namespace FormReporting.Models.ViewModels.Forms
     /// </summary>
     public class WorkflowStepUpdateDto
     {
+        public int StepId { get; set; }
         public int? StepOrder { get; set; }
-
-        [StringLength(100)]
-        public string? StepName { get; set; }
-
+        public string StepName { get; set; } = string.Empty;
         public int? ActionId { get; set; }
+        public string TargetType { get; set; } = string.Empty;
+        public int? TargetId { get; set; }
+        public string AssigneeType { get; set; } = string.Empty;
+        public int? ApproverRoleId { get; set; }
+        public int? ApproverUserId { get; set; }
+        public int? AssigneeDepartmentId { get; set; }
+        public int? AssigneeFieldId { get; set; }
+        public bool? IsMandatory { get; set; }
+        public bool? IsParallel { get; set; }
+        public int? DueDays { get; set; }
+        public int? EscalationRoleId { get; set; }
+        public string? ConditionLogic { get; set; }
+        public string? AutoApproveCondition { get; set; }
+        public string? DependsOnStepIds { get; set; }
+    }
 
-        [StringLength(20)]
+    public class StepValidationDto
+    {
+        public int TemplateId { get; set; }
+        public string StepId { get; set; } = string.Empty; // "target", "action", "assignee", "settings"
+
+        // Target Step Data
         public string? TargetType { get; set; }
-
         public int? TargetId { get; set; }
 
-        [StringLength(20)]
-        public string? AssigneeType { get; set; }
+        // Action Step Data
+        public int? ActionId { get; set; }
+        public string? StepName { get; set; }
 
+        // Assignee Step Data
+        public string? AssigneeType { get; set; }
         public int? ApproverRoleId { get; set; }
         public int? ApproverUserId { get; set; }
         public int? AssigneeDepartmentId { get; set; }
         public int? AssigneeFieldId { get; set; }
 
-        public bool? IsMandatory { get; set; }
-        public bool? IsParallel { get; set; }
+        // Settings Step Data
+        public bool IsMandatory { get; set; }
+        public bool IsParallel { get; set; }
         public int? DueDays { get; set; }
         public int? EscalationRoleId { get; set; }
-
         public string? ConditionLogic { get; set; }
         public string? AutoApproveCondition { get; set; }
         public string? DependsOnStepIds { get; set; }
+    }
+
+    /// <summary>
+    /// Result of step-by-step validation for wizard
+    /// </summary>
+    public class StepValidationResultDto
+    {
+        public bool IsValid { get; set; }
+        public string StepId { get; set; } = string.Empty;
+        public List<string> Errors { get; set; } = new();
+        public List<string> Warnings { get; set; } = new();
+    }
+
+    /// <summary>
+    /// ViewModel for editing workflow basic details
+    /// </summary>
+    public class WorkflowEditViewModel
+    {
+        public int WorkflowId { get; set; }
+        
+        [Required]
+        [StringLength(100)]
+        [Display(Name = "Workflow Name")]
+        public string WorkflowName { get; set; } = string.Empty;
+        
+        [StringLength(500)]
+        [Display(Name = "Description")]
+        public string? Description { get; set; }
+        
+        [Display(Name = "Active")]
+        public bool IsActive { get; set; } = true;
     }
 
     /// <summary>
@@ -354,5 +406,50 @@ namespace FormReporting.Models.ViewModels.Forms
         public bool IsValid { get; set; }
         public List<string> Errors { get; set; } = new();
         public List<string> Warnings { get; set; } = new();
+    }
+
+    /// <summary>
+    /// DTO for template readiness validation
+    /// </summary>
+    public class TemplateReadinessDto
+    {
+        public int TemplateId { get; set; }
+        public bool IsReady { get; set; }
+        public string SubmissionMode { get; set; } = string.Empty;
+        public List<string> BlockingIssues { get; set; } = new();
+        public List<string> Warnings { get; set; } = new();
+        public TemplateConfigurationStatusDto Configuration { get; set; } = new();
+    }
+
+    /// <summary>
+    /// DTO for detailed template configuration status
+    /// </summary>
+    public class TemplateConfigurationStatusDto
+    {
+        // Form Structure
+        public bool HasFormStructure { get; set; }
+        public int SectionCount { get; set; }
+        public int FieldCount { get; set; }
+        
+        // Assignments
+        public bool HasAssignments { get; set; }
+        public int ActiveAssignmentCount { get; set; }
+        public bool AssignmentsCoverUsers { get; set; }
+        
+        // Workflow
+        public bool HasWorkflow { get; set; }
+        public string? WorkflowName { get; set; }
+        public int WorkflowStepCount { get; set; }
+        public bool WorkflowValidForMode { get; set; }
+        public List<string> WorkflowIssues { get; set; } = new();
+        
+        // Submission Rules (if applicable)
+        public bool HasSubmissionRules { get; set; }
+        public bool SubmissionRulesValid { get; set; }
+        
+        // Overall Status
+        public string TemplateStatus { get; set; } = string.Empty; // Draft, Published, etc.
+        public bool ReadyForSubmissions { get; set; }
+        public DateTime? LastValidated { get; set; }
     }
 }

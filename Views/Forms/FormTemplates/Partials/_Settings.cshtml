@@ -1,9 +1,128 @@
 @*
     Wizard Step: Settings (Tab 1.2)
-    Contains: Template Type/Schedule, Description
+    Contains: Submission Mode, Anonymous Access, Template Type/Schedule, Description
     Note: Approval workflow in Step 4, Assignments in Step 5, Metrics in Step 3
 *@
 
+@* ===== SUBMISSION MODE SELECTION ===== *@
+<div class="row">
+    <div class="col-12">
+        <div class="mb-4">
+            <label class="form-label">
+                Form Submission Mode <span class="text-danger">*</span>
+                    <i class="ri-question-fill ms-1"
+                    style="font-size: 1.5rem; color: var(--bs-primary); padding: 0.5rem;"
+                        tabindex="0"
+                        role="button"
+                        data-bs-toggle="popover"
+                        data-bs-trigger="focus"
+                        data-bs-placement="right"
+                        data-bs-html="true"
+                        data-bs-custom-class="warning-popover"
+                        title=""
+                        data-bs-content="
+                                <div class='alert border-0 alert-warning material-shadow mb-0'>
+                                    <strong>Choose a submission mode</strong>
+                                    <p class='mt-1 mb-1'>Select how users will fill this form.</p>
+
+                                    <ul class='mb-2'>
+                                        <li><b>Individual:</b> One user fills the whole form.</li>
+                                        <li><b>Collaborative:</b> Multiple users fill different sections.</li>
+                                    </ul>
+
+                                    <a href='#' class='text-primary'>Learn more</a>
+                                </div>
+                        ">
+                    </i>
+
+
+            </label>
+
+            <div class="row g-3">
+                @* Individual Mode Option *@
+                <div class="col-md-6">
+                    <div class="form-check card-radio">
+                        <input class="form-check-input submission-mode-radio" type="radio" name="SubmissionModeRadio" id="modeIndividual" value="1" checked>
+                        <label class="form-check-label" for="modeIndividual">
+                            <div class="d-flex align-items-start">
+                                <div class="flex-shrink-0">
+                                    <div class="avatar-sm">
+                                        <div class="avatar-title bg-primary-subtle text-primary rounded fs-18">
+                                            <i class="ri-user-line"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-1">Individual Submission</h6>
+                                    <p class="text-muted mb-2 fs-13 text-wrap">One user fills the entire form, then it goes through approval workflow</p>
+                                    <p class="text-muted mb-0 fs-12 text-wrap"><strong>Example:</strong> Monthly reports, leave requests, expense claims</p>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
+                @* Collaborative Mode Option *@
+                <div class="col-md-6">
+                    <div class="form-check card-radio">
+                        <input class="form-check-input submission-mode-radio" type="radio" name="SubmissionModeRadio" id="modeCollaborative" value="2">
+                        <label class="form-check-label" for="modeCollaborative">
+                            <div class="d-flex align-items-start">
+                                <div class="flex-shrink-0">
+                                    <div class="avatar-sm">
+                                        <div class="avatar-title bg-success-subtle text-success rounded fs-18">
+                                            <i class="ri-team-line"></i>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex-grow-1 ms-3">
+                                    <h6 class="mb-1">Collaborative Submission</h6>
+                                    <p class="text-muted mb-2 fs-13 text-wrap">Multiple users fill different sections as part of the workflow</p>
+                                    <p class="text-muted mb-0 fs-12 text-wrap"><strong>Example:</strong> Budget proposals where Finance, HR, and Management each fill their sections</p>
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+            @* Hidden input to store selected value *@
+            <input type="hidden" id="SubmissionMode" name="SubmissionMode" value="1" />
+        </div>
+    </div>
+</div>
+
+@* ===== ANONYMOUS ACCESS TOGGLE ===== *@
+<div class="row">
+    <div class="col-12">
+        <div class="mb-4">
+            <label class="form-label">Access Control</label>
+            <div class="form-check form-switch form-check-lg">
+                <input class="form-check-input" type="checkbox" id="AllowAnonymousAccess" name="AllowAnonymousAccess">
+                <label class="form-check-label" for="AllowAnonymousAccess">
+                    Allow anonymous access (no login required)
+                </label>
+            </div>
+            <div class="form-text">If checked, anyone with the link can view/submit this form without logging in</div>
+
+            @* Warning message (hidden by default, shown when checkbox is checked) *@
+            <div class="alert alert-warning border-0 mt-2 d-none" id="anonymousWarning">
+                <div class="d-flex align-items-start">
+                    <div class="flex-shrink-0">
+                        <i class="ri-alert-line fs-16"></i>
+                    </div>
+                    <div class="flex-grow-1 ms-2">
+                        <strong>Public Form Warning:</strong> This form will not require authentication. Ensure no sensitive data is collected.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<hr class="my-4" />
+
+@* ===== TEMPLATE TYPE/SCHEDULE ===== *@
 <div class="row">
     <div class="col-md-6">
         <div class="mb-3">
@@ -58,3 +177,29 @@
         </div>
     </div>
 </div>
+
+<script>
+    $(document).ready(function() {
+        // ===== Submission Mode Radio Button Handler =====
+        $('.submission-mode-radio').on('change', function() {
+            if ($(this).is(':checked')) {
+                $('#SubmissionMode').val($(this).val());
+            }
+        });
+
+        // ===== Anonymous Access Toggle Handler =====
+        $('#AllowAnonymousAccess').on('change', function() {
+            if ($(this).is(':checked')) {
+                $('#anonymousWarning').removeClass('d-none');
+            } else {
+                $('#anonymousWarning').addClass('d-none');
+            }
+        });
+
+        // ===== Initialize Tooltips =====
+        var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+        var tooltipList = tooltipTriggerList.map(function (tooltipTriggerEl) {
+            return new bootstrap.Tooltip(tooltipTriggerEl);
+        });
+    });
+</script>

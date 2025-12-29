@@ -1,3 +1,5 @@
+using FormReporting.Models.Common;
+
 namespace FormReporting.Models.ViewModels.Forms
 {
     /// <summary>
@@ -11,5 +13,7 @@ namespace FormReporting.Models.ViewModels.Forms
         public string? Description { get; set; }
         public int CategoryId { get; set; }
         public string? TemplateType { get; set; }
+        public SubmissionMode SubmissionMode { get; set; } = SubmissionMode.Individual;
+        public bool AllowAnonymousAccess { get; set; } = false;
     }
 }

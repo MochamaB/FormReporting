@@ -1,0 +1,145 @@
+@*
+    Step 3: Select Target
+    Define what part of the form this step applies to
+*@
+
+<div class="step-target-content">
+    <!-- Target Type Selection -->
+    <div class="mb-4">
+        <label class="form-label">Target Type <span class="text-danger">*</span></label>
+        <div class="row g-3">
+            <div class="col-md-4">
+                <div class="target-type-card" data-target-type="Submission">
+                    <div class="target-type-icon" style="background-color: rgba(13, 110, 253, 0.1); color: #0d6efd;">
+                        <i class="ri-file-list-line"></i>
+                    </div>
+                    <h6 class="target-type-title">Entire Submission</h6>
+                    <p class="target-type-description">Apply to the whole form</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="target-type-card" data-target-type="Section">
+                    <div class="target-type-icon" style="background-color: rgba(111, 66, 193, 0.1); color: #6f42c1;">
+                        <i class="ri-layout-line"></i>
+                    </div>
+                    <h6 class="target-type-title">Specific Section</h6>
+                    <p class="target-type-description">Apply to one section</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="target-type-card" data-target-type="Field">
+                    <div class="target-type-icon" style="background-color: rgba(255, 193, 7, 0.1); color: #ffc107;">
+                        <i class="ri-input-field"></i>
+                    </div>
+                    <h6 class="target-type-title">Specific Field</h6>
+                    <p class="target-type-description">Apply to one field</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section Picker (shown when Section is selected) -->
+    <div id="section-picker" class="mb-4 d-none">
+        <label for="target-section" class="form-label">Select Section <span class="text-danger">*</span></label>
+        <select class="form-select" id="target-section" name="TargetSectionId">
+            <option value="">Loading sections...</option>
+        </select>
+        <div class="form-text">Choose which section this step applies to</div>
+    </div>
+
+    <!-- Field Picker (shown when Field is selected) -->
+    <div id="field-picker" class="mb-4 d-none">
+        <label for="target-section-for-field" class="form-label">Section</label>
+        <select class="form-select mb-2" id="target-section-for-field">
+            <option value="">-- All sections --</option>
+        </select>
+        
+        <label for="target-field" class="form-label">Select Field <span class="text-danger">*</span></label>
+        <select class="form-select" id="target-field" name="TargetFieldId">
+            <option value="">Loading fields...</option>
+        </select>
+        <div class="form-text">Choose which field this step applies to</div>
+    </div>
+
+    <!-- Target Info -->
+    <div id="target-info" class="alert alert-info d-none">
+        <h6 class="alert-heading mb-2"><i class="ri-information-line me-1"></i> Target Information</h6>
+        <p class="mb-0" id="target-info-text"></p>
+    </div>
+
+    <!-- Hidden fields -->
+    <input type="hidden" id="target-type" name="TargetType" required>
+    <input type="hidden" id="target-id" name="TargetId">
+</div>
+
+<!-- Step Validation Feedback -->
+<div class="step-validation-feedback mt-3" id="validation-target">
+    <div class="validation-errors d-none">
+        <div class="alert alert-danger">
+            <i class="ri-error-warning-line me-2"></i>
+            <strong>Validation Issues:</strong>
+            <ul class="validation-error-list mb-0 mt-2"></ul>
+        </div>
+    </div>
+    <div class="validation-warnings d-none">
+        <div class="alert alert-warning">
+            <i class="ri-alert-line me-2"></i>
+            <strong>Recommendations:</strong>
+            <ul class="validation-warning-list mb-0 mt-2"></ul>
+        </div>
+    </div>
+    <div class="validation-success d-none">
+        <div class="alert alert-success">
+            <i class="ri-check-line me-2"></i>
+            <strong>Target configuration is valid</strong>
+        </div>
+    </div>
+</div>
+
+<style>
+        .target-type-card {
+            border: 2px solid #e9ecef;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            height: 100%;
+        }
+        
+        .target-type-card:hover {
+            border-color: var(--vz-primary);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        
+        .target-type-card.active {
+            border-color: var(--vz-primary);
+            background-color: var(--vz-primary-bg-subtle);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .target-type-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 1rem;
+            font-size: 28px;
+        }
+        
+        .target-type-title {
+            font-size: 15px;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+        
+        .target-type-description {
+            font-size: 13px;
+            color: #878a99;
+            margin: 0;
+        }
+    </style>
+

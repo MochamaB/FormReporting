@@ -71,8 +71,8 @@ const FormBuilder = {
      */
     validateStageCompletion: async function(templateId, currentStage) {
         try {
-            // Note: ValidateStageCompletion uses attribute routing, not conventional routing
-            const response = await fetch(`/Forms/FormTemplates/ValidateStageCompletion?id=${templateId}&currentStage=${currentStage}`);
+            // Note: ValidateStageCompletion uses attribute routing at /FormTemplates/ValidateStageCompletion
+            const response = await fetch(`/FormTemplates/ValidateStageCompletion?id=${templateId}&currentStage=${currentStage}`);
             const result = await response.json();
             return result;
         } catch (error) {

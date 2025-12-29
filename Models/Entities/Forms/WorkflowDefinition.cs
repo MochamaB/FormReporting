@@ -31,7 +31,7 @@ namespace FormReporting.Models.Entities.Forms
 
         // Navigation properties
         [ForeignKey(nameof(CreatedBy))]
-        public virtual User Creator { get; set; } = null!;
+        public virtual User? Creator { get; set; }
 
         public virtual ICollection<WorkflowStep> Steps { get; set; } = new List<WorkflowStep>();
         public virtual ICollection<FormTemplate> FormTemplates { get; set; } = new List<FormTemplate>();

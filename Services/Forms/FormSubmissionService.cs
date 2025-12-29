@@ -19,11 +19,19 @@ namespace FormReporting.Services.Forms
     {
         private readonly ApplicationDbContext _context;
         private readonly IScopeService _scopeService;
+        private readonly IFormTemplateService _templateService;
+        private readonly IFormAssignmentService _assignmentService;
 
-        public FormSubmissionService(ApplicationDbContext context, IScopeService scopeService)
+        public FormSubmissionService(
+            ApplicationDbContext context, 
+            IScopeService scopeService,
+            IFormTemplateService templateService,
+            IFormAssignmentService assignmentService)
         {
             _context = context;
             _scopeService = scopeService;
+            _templateService = templateService;
+            _assignmentService = assignmentService;
         }
 
         /// <inheritdoc />
@@ -2012,5 +2020,194 @@ namespace FormReporting.Services.Forms
 
             return exportData;
         }
+
+        #region Dual-Mode Submission Access Validation Methods
+
+        public async Task<bool> CanUserCreateSubmissionAsync(int userId, int templateId)
+        {
+            // Get template to check submission mode
+            var template = await _context.FormTemplates.FindAsync(templateId);
+            if (template?.SubmissionMode != Models.Common.SubmissionMode.Individual)
+            {
+                return false; // Only Individual mode uses user-based submission access
+            }
+
+            // Check template readiness
+            var readiness = await ValidateSubmissionAccessAsync(userId, templateId);
+            return readiness.CanCreateSubmission;
+        }
+
+        public async Task<bool> CanCreateCollaborativeSubmissionAsync(int templateId)
+        {
+            var template = await _context.FormTemplates.FindAsync(templateId);
+            if (template?.SubmissionMode != Models.Common.SubmissionMode.Collaborative)
+            {
+                return false; // Only Collaborative mode supports system-initiated submissions
+            }
+
+            // Check if template is ready for collaborative workflow
+            return await _templateService.IsReadyForCollaborativeWorkflowAsync(templateId);
+        }
+
+        public async Task<SubmissionAccessValidationDto> ValidateSubmissionAccessAsync(int userId, int templateId)
+        {
+            var result = new SubmissionAccessValidationDto();
+
+            var template = await _context.FormTemplates.FindAsync(templateId);
+            if (template == null)
+            {
+                result.BlockingIssues.Add("Template not found");
+                return result;
+            }
+
+            result.SubmissionMode = template.SubmissionMode.ToString();
+            result.TemplateStatus = template.PublishStatus;
+
+            // Check basic template readiness
+            var templateReadiness = await _templateService.ValidateTemplateReadinessAsync(templateId);
+            result.TemplateReady = templateReadiness.IsReady;
+            result.WorkflowConfigured = template.WorkflowId.HasValue;
+
+            if (!templateReadiness.IsReady)
+            {
+                result.BlockingIssues.AddRange(templateReadiness.BlockingIssues);
+                result.Warnings.AddRange(templateReadiness.Warnings);
+                result.CanCreateSubmission = false;
+                return result;
+            }
+
+            // Mode-specific validation
+            if (template.SubmissionMode == Models.Common.SubmissionMode.Individual)
+            {
+                // Anonymous access bypasses assignment checks
+                if (template.AllowAnonymousAccess)
+                {
+                    result.HasAssignmentAccess = true;
+                    result.CanCreateSubmission = true;
+                    result.Warnings.Add("Anonymous access enabled - no assignment validation required");
+                }
+                else
+                {
+                    // Check assignment access for authenticated Individual mode
+                    result.HasAssignmentAccess = await _assignmentService.CanUserCreateSubmissionAsync(templateId, userId);
+                    
+                    if (!result.HasAssignmentAccess)
+                    {
+                        result.BlockingIssues.Add("You do not have assignment access to create submissions for this template");
+                    }
+
+                    result.CanCreateSubmission = result.HasAssignmentAccess;
+                }
+            }
+            else if (template.SubmissionMode == Models.Common.SubmissionMode.Collaborative)
+            {
+                // Collaborative mode is system-initiated, individual users don't create submissions
+                result.HasAssignmentAccess = false;
+                result.BlockingIssues.Add("Collaborative mode submissions are system-initiated, not user-created");
+                result.CanCreateSubmission = false;
+            }
+
+            return result;
+        }
+
+        public async Task<List<TemplateSubmissionAccessDto>> GetTemplatesWithSubmissionAccessAsync(int userId)
+        {
+            var result = new List<TemplateSubmissionAccessDto>();
+
+            // Get all published Individual mode templates
+            var templates = await _context.FormTemplates
+                .Include(t => t.Category)
+                .Include(t => t.Assignments.Where(a => a.Status == "Active"))
+                .Include(t => t.Workflow)
+                .Where(t => t.PublishStatus == "Published" && 
+                           t.SubmissionMode == Models.Common.SubmissionMode.Individual)
+                .ToListAsync();
+
+            // Use injected services
+
+            foreach (var template in templates)
+            {
+                var accessDto = new TemplateSubmissionAccessDto
+                {
+                    TemplateId = template.TemplateId,
+                    TemplateName = template.TemplateName,
+                    TemplateCode = template.TemplateCode,
+                    SubmissionMode = template.SubmissionMode.ToString(),
+                    CategoryName = template.Category?.CategoryName ?? "Uncategorized",
+                    ActiveAssignmentCount = template.Assignments.Count,
+                    HasWorkflow = template.WorkflowId.HasValue
+                };
+
+                // Check if user can create submission
+                accessDto.CanCreateSubmission = await _assignmentService.CanUserCreateSubmissionAsync(template.TemplateId, userId);
+                
+                // Check template readiness
+                accessDto.IsReady = await _templateService.CanAcceptSubmissionsAsync(template.TemplateId);
+
+                // Add access issues if any
+                if (!accessDto.CanCreateSubmission)
+                {
+                    accessDto.AccessIssues.Add("No assignment access");
+                }
+                if (!accessDto.IsReady)
+                {
+                    accessDto.AccessIssues.Add("Template not ready");
+                }
+
+                result.Add(accessDto);
+            }
+
+            return result.OrderBy(t => t.TemplateName).ToList();
+        }
+
+        public async Task<List<TemplateSubmissionAccessDto>> GetTemplatesReadyForCollaborativeWorkflowAsync()
+        {
+            var result = new List<TemplateSubmissionAccessDto>();
+
+            // Get all published Collaborative mode templates
+            var templates = await _context.FormTemplates
+                .Include(t => t.Category)
+                .Include(t => t.Assignments.Where(a => a.Status == "Active"))
+                .Include(t => t.Workflow)
+                    .ThenInclude(w => w.Steps)
+                .Where(t => t.PublishStatus == "Published" && 
+                           t.SubmissionMode == Models.Common.SubmissionMode.Collaborative)
+                .ToListAsync();
+
+            // Use injected template service
+
+            foreach (var template in templates)
+            {
+                var accessDto = new TemplateSubmissionAccessDto
+                {
+                    TemplateId = template.TemplateId,
+                    TemplateName = template.TemplateName,
+                    TemplateCode = template.TemplateCode,
+                    SubmissionMode = template.SubmissionMode.ToString(),
+                    CategoryName = template.Category?.CategoryName ?? "Uncategorized",
+                    ActiveAssignmentCount = template.Assignments.Count,
+                    HasWorkflow = template.WorkflowId.HasValue
+                };
+
+                // Check if template is ready for collaborative workflow
+                accessDto.IsReady = await _templateService.IsReadyForCollaborativeWorkflowAsync(template.TemplateId);
+                accessDto.CanCreateSubmission = accessDto.IsReady; // System can create if ready
+
+                // Add access issues if any
+                if (!accessDto.IsReady)
+                {
+                    var readiness = await _templateService.ValidateTemplateReadinessAsync(template.TemplateId);
+                    accessDto.AccessIssues.AddRange(readiness.BlockingIssues);
+                }
+
+                result.Add(accessDto);
+            }
+
+            return result.OrderBy(t => t.TemplateName).ToList();
+        }
+
+        // Services are now properly injected via constructor
+
+        #endregion
     }
 }

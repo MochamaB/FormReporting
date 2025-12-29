@@ -93,6 +93,8 @@ namespace FormReporting.Controllers.Forms
             ViewData["TemplateName"] = template.TemplateName;
             ViewData["TemplateCode"] = template.TemplateCode;
             ViewData["CategoryName"] = template.Category?.CategoryName;
+            ViewData["SubmissionMode"] = template.SubmissionMode.ToString();
+            ViewData["SubmissionModeValue"] = (int)template.SubmissionMode;
 
             // Set breadcrumb
             ViewData["BreadcrumbItems"] = new List<(string Text, string? Url)>

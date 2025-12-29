@@ -90,7 +90,8 @@
                 loadAssignments();
                 break;
             case 'workflow':
-                loadWorkflow();
+                // Workflow panel is now server-side rendered, no client-side loading needed
+                console.log('[TemplateDetails] Workflow panel loaded via server-side rendering');
                 break;
             case 'submissions':
                 loadSubmissions();
@@ -273,7 +274,7 @@
                         <i class="ri-list-check me-1"></i> Select Existing Workflow
                     </button>
                     <button class="btn btn-primary" onclick="TemplateDetails.createNewWorkflow()">
-                        <i class="ri-add-line me-1"></i> Create New Workflow
+                        <i class="ri-add-line me-1"></i> Create New Workflowss
                     </button>
                 </div>
             </div>

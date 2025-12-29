@@ -1,0 +1,50 @@
+/**
+ * App Loader - Universal Progress Bar
+ * A thin progress bar at the top of the page for loading feedback
+ */
+
+.app-loader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 3px;
+    z-index: 99999;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.app-loader.active {
+    opacity: 1;
+}
+
+.app-loader-bar {
+    height: 100%;
+    width: 0%;
+    background: var(--vz-secondary, #6c757d);
+    background: linear-gradient(90deg, var(--vz-secondary, #6c757d), var(--vz-secondary-rgb, #5a6268));
+    box-shadow: 0 0 10px var(--vz-secondary, #6c757d), 0 0 5px var(--vz-secondary, #6c757d);
+    transition: width 0.2s ease-out;
+}
+
+/* Pulsing glow effect while loading */
+.app-loader.active .app-loader-bar {
+    animation: loader-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes loader-pulse {
+    0%, 100% {
+        box-shadow: 0 0 5px var(--vz-secondary, #6c757d);
+    }
+    50% {
+        box-shadow: 0 0 15px var(--vz-secondary, #6c757d), 0 0 8px var(--vz-secondary, #6c757d);
+    }
+}
+
+/* Completion flash effect */
+.app-loader.completing .app-loader-bar {
+    animation: none;
+    box-shadow: 0 0 20px var(--vz-success, #0ab39c);
+    background: var(--vz-success, #0ab39c);
+}

@@ -975,6 +975,11 @@ namespace FormReporting.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("TemplateId"));
 
+                    b.Property<bool>("AllowAnonymousAccess")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(false);
+
                     b.Property<int?>("ArchivedBy")
                         .HasColumnType("int");
 
@@ -1031,6 +1036,11 @@ namespace FormReporting.Data.Migrations
                         .HasColumnType("bit")
                         .HasDefaultValue(true);
 
+                    b.Property<int>("SubmissionMode")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
                     b.Property<string>("TemplateCode")
                         .IsRequired()
                         .HasMaxLength(50)
@@ -1056,6 +1066,9 @@ namespace FormReporting.Data.Migrations
 
                     b.HasKey("TemplateId");
 
+                    b.HasIndex("AllowAnonymousAccess")
+                        .HasDatabaseName("IX_Templates_AnonymousAccess");
+
                     b.HasIndex("ArchivedBy");
 
                     b.HasIndex("CreatedBy");
@@ -1063,6 +1076,9 @@ namespace FormReporting.Data.Migrations
                     b.HasIndex("ModifiedBy");
 
                     b.HasIndex("PublishedBy");
+
+                    b.HasIndex("SubmissionMode")
+                        .HasDatabaseName("IX_Templates_SubmissionMode");
 
                     b.HasIndex("TemplateCode")
                         .IsUnique();

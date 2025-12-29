@@ -1,0 +1,123 @@
+@*
+    Step 4: Settings
+    Configure additional settings for this workflow step
+*@
+
+<div class="step-settings-content">
+
+    <!-- Hidden Step Order (auto-calculated by service based on existing steps) -->
+    <input type="hidden" id="step-order" name="StepOrder">
+
+    <!-- Due Days -->
+    <div class="mb-4">
+        <label for="due-days" class="form-label">Due Days</label>
+        <input type="number" class="form-control" id="due-days" name="DueDays" min="0" placeholder="e.g., 3">
+        <div class="form-text">Number of days to complete this step (leave empty for no deadline)</div>
+    </div>
+
+    <!-- Mandatory -->
+    <div class="mb-4">
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="is-mandatory" name="IsMandatory" checked>
+            <label class="form-check-label" for="is-mandatory">
+                <strong>Mandatory Step</strong>
+                <div class="form-text">This step must be completed for the workflow to proceed</div>
+            </label>
+        </div>
+    </div>
+
+    <!-- Parallel Execution -->
+    <div class="mb-4">
+        <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="is-parallel" name="IsParallel">
+            <label class="form-check-label" for="is-parallel">
+                <strong>Parallel Execution</strong>
+                <div class="form-text">This step can be executed in parallel with other steps at the same order</div>
+            </label>
+        </div>
+    </div>
+
+    <!-- Advanced Settings (Collapsible) -->
+    <div class="accordion" id="advanced-settings-accordion">
+        <div class="accordion-item">
+            <h2 class="accordion-header">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#advanced-settings">
+                    <i class="ri-settings-3-line me-2"></i> Advanced Settings
+                </button>
+            </h2>
+            <div id="advanced-settings" class="accordion-collapse collapse" data-bs-parent="#advanced-settings-accordion">
+                <div class="accordion-body">
+                    
+                    <!-- Escalation Role -->
+                    <div class="mb-3">
+                        <label for="escalation-role" class="form-label">Escalation Role</label>
+                        <select class="form-select" id="escalation-role" name="EscalationRoleId">
+                            <option value="">-- No escalation --</option>
+                        </select>
+                        <div class="form-text">Escalate to this role if step is overdue</div>
+                    </div>
+
+                    <!-- Dependencies -->
+                    <div class="mb-3">
+                        <label for="depends-on-steps" class="form-label">Depends On Steps</label>
+                        <input type="text" class="form-control" id="depends-on-steps" name="DependsOnStepIds" placeholder="e.g., [1,2,3]">
+                        <div class="form-text">JSON array of step IDs that must be completed first</div>
+                    </div>
+
+                    <!-- Condition Logic -->
+                    <div class="mb-3">
+                        <label for="condition-logic" class="form-label">Condition Logic</label>
+                        <textarea class="form-control" id="condition-logic" name="ConditionLogic" rows="3" placeholder='e.g., {"field": "amount", "operator": ">", "value": 1000}'></textarea>
+                        <div class="form-text">JSON condition for when this step should be activated</div>
+                    </div>
+
+                    <!-- Auto-Approve Condition -->
+                    <div class="mb-3">
+                        <label for="auto-approve-condition" class="form-label">Auto-Approve Condition</label>
+                        <textarea class="form-control" id="auto-approve-condition" name="AutoApproveCondition" rows="3" placeholder='e.g., {"field": "amount", "operator": "<", "value": 10000}'></textarea>
+                        <div class="form-text">JSON condition for automatic approval</div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Summary -->
+    <div class="mt-4">
+        <div class="alert alert-secondary">
+            <h6 class="alert-heading mb-2"><i class="ri-information-line me-1"></i> Step Summary</h6>
+            <p class="mb-1"><strong>Order:</strong> <span id="summary-order">1</span></p>
+            <p class="mb-1"><strong>Due:</strong> <span id="summary-due">No deadline</span></p>
+            <p class="mb-1"><strong>Mandatory:</strong> <span id="summary-mandatory">Yes</span></p>
+            <p class="mb-0"><strong>Parallel:</strong> <span id="summary-parallel">No</span></p>
+        </div>
+    </div>
+</div>
+
+<!-- Step Validation Feedback -->
+<div class="step-validation-feedback mt-3" id="validation-settings">
+    <div class="validation-errors d-none">
+        <div class="alert alert-danger">
+            <i class="ri-error-warning-line me-2"></i>
+            <strong>Validation Issues:</strong>
+            <ul class="validation-error-list mb-0 mt-2"></ul>
+        </div>
+    </div>
+    <div class="validation-warnings d-none">
+        <div class="alert alert-warning">
+            <i class="ri-alert-line me-2"></i>
+            <strong>Recommendations:</strong>
+            <ul class="validation-warning-list mb-0 mt-2"></ul>
+        </div>
+    </div>
+    <div class="validation-success d-none">
+        <div class="alert alert-success">
+            <i class="ri-check-line me-2"></i>
+            <strong>Settings configuration is valid</strong>
+        </div>
+    </div>
+</div>
+
+
+

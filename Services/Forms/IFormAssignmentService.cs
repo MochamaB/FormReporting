@@ -131,5 +131,36 @@ namespace FormReporting.Services.Forms
         /// Due date validation will be handled by FormTemplateSubmissionRule.
         /// </summary>
         Task<SubmissionValidationResult> ValidateSubmissionAsync(int assignmentId, DateTime submissionDate);
+
+        // ===== Dual-Mode Assignment Validation =====
+
+        /// <summary>
+        /// Check if user has assignment access to template for submission creation (Individual mode)
+        /// </summary>
+        /// <param name="templateId">Template ID</param>
+        /// <param name="userId">User ID</param>
+        /// <returns>True if user can create submissions</returns>
+        Task<bool> CanUserCreateSubmissionAsync(int templateId, int userId);
+
+        /// <summary>
+        /// Validate assignment coverage for template based on submission mode
+        /// </summary>
+        /// <param name="templateId">Template ID</param>
+        /// <returns>Validation result with coverage details</returns>
+        Task<AssignmentCoverageValidationDto> ValidateAssignmentCoverageAsync(int templateId);
+
+        /// <summary>
+        /// Check if template has sufficient active assignments for its submission mode
+        /// </summary>
+        /// <param name="templateId">Template ID</param>
+        /// <returns>True if assignments are sufficient</returns>
+        Task<bool> HasSufficientAssignmentsAsync(int templateId);
+
+        /// <summary>
+        /// Get all users who can create submissions for this template (Individual mode)
+        /// </summary>
+        /// <param name="templateId">Template ID</param>
+        /// <returns>List of user IDs with submission access</returns>
+        Task<List<int>> GetUsersWithSubmissionAccessAsync(int templateId);
     }
 }

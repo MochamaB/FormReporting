@@ -1,0 +1,332 @@
+/* ============================================
+   Workflow Builder Panel Styles
+   ============================================ */
+
+/* Timeline Visualization */
+.workflow-timeline {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0;
+    padding: 2rem 1rem;
+    overflow-x: auto;
+    min-height: 150px;
+}
+
+.workflow-timeline-step {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    min-width: 120px;
+    flex-shrink: 0;
+}
+
+.workflow-timeline-step:not(:last-child)::after {
+    content: '';
+    position: absolute;
+    left: 60px;
+    top: 30px;
+    width: calc(100% - 60px);
+    height: 3px;
+    background: linear-gradient(to right, var(--vz-primary) 0%, var(--vz-primary) 50%, #e9ecef 50%, #e9ecef 100%);
+    background-size: 20px 3px;
+    background-repeat: repeat-x;
+    z-index: 0;
+}
+
+.timeline-step-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background-color: var(--vz-primary);
+    border: 3px solid var(--vz-primary);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    position: relative;
+    z-index: 1;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.timeline-step-icon:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+}
+
+.timeline-step-number {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 2px;
+}
+
+.timeline-step-action {
+    font-size: 10px;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.timeline-step-icon i {
+    font-size: 24px;
+}
+
+.timeline-step-label {
+    margin-top: 0.75rem;
+    text-align: center;
+    font-size: 13px;
+    color: #495057;
+    font-weight: 500;
+    max-width: 120px;
+    word-wrap: break-word;
+}
+
+.timeline-step-assignee {
+    font-size: 11px;
+    color: #878a99;
+    margin-top: 0.25rem;
+}
+
+/* Empty Timeline */
+.workflow-timeline-empty {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #878a99;
+}
+
+/* Steps List */
+.workflow-steps-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.workflow-step-card {
+    border: 1px solid #e9ecef;
+    border-radius: 0.375rem;
+    padding: 1rem;
+    background-color: #fff;
+    transition: all 0.2s ease;
+    cursor: move;
+}
+
+.workflow-step-card:hover {
+    border-color: var(--vz-primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.workflow-step-card.sortable-ghost {
+    opacity: 0.4;
+    background-color: #f3f6f9;
+}
+
+.workflow-step-card.sortable-drag {
+    opacity: 1;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.step-drag-handle {
+    cursor: move;
+    color: #878a99;
+    font-size: 20px;
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+}
+
+.step-drag-handle:hover {
+    color: var(--vz-primary);
+}
+
+.step-card-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+.step-order-badge {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background-color: var(--vz-primary);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 14px;
+    margin-right: 0.75rem;
+    flex-shrink: 0;
+}
+
+.step-card-title {
+    flex-grow: 1;
+    font-size: 15px;
+    font-weight: 600;
+    color: #495057;
+    margin: 0;
+}
+
+.step-card-actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.step-card-body {
+    padding-left: 3.5rem;
+}
+
+.step-detail-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+    font-size: 13px;
+    color: #495057;
+}
+
+.step-detail-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.step-detail-item i {
+    color: var(--vz-primary);
+    font-size: 16px;
+}
+
+.step-detail-label {
+    font-weight: 500;
+    color: #878a99;
+}
+
+.step-detail-value {
+    font-weight: 600;
+}
+
+/* Action Icons */
+.action-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+.action-icon.action-fill {
+    background-color: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+}
+
+.action-icon.action-sign {
+    background-color: rgba(111, 66, 193, 0.1);
+    color: #6f42c1;
+}
+
+.action-icon.action-approve {
+    background-color: rgba(25, 135, 84, 0.1);
+    color: #198754;
+}
+
+.action-icon.action-reject {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: #dc3545;
+}
+
+.action-icon.action-review {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+}
+
+.action-icon.action-verify {
+    background-color: rgba(13, 202, 240, 0.1);
+    color: #0dcaf0;
+}
+
+/* Target Badge */
+.target-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.target-badge.target-submission {
+    background-color: rgba(13, 110, 253, 0.1);
+    color: #0d6efd;
+}
+
+.target-badge.target-section {
+    background-color: rgba(111, 66, 193, 0.1);
+    color: #6f42c1;
+}
+
+.target-badge.target-field {
+    background-color: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .workflow-timeline {
+        padding: 1rem 0.5rem;
+    }
+
+    .workflow-timeline-step {
+        min-width: 100px;
+    }
+
+    .timeline-step-icon {
+        width: 50px;
+        height: 50px;
+    }
+
+    .timeline-step-icon i {
+        font-size: 20px;
+    }
+
+    .step-card-body {
+        padding-left: 0;
+        margin-top: 0.75rem;
+    }
+
+    .step-detail-row {
+        flex-direction: column;
+        gap: 0.75rem;
+    }
+}
+
+/* ============================================
+   Mode Restriction Overlays
+   ============================================ */
+
+.mode-restriction-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(to top, rgba(108, 117, 125, 0.95), rgba(108, 117, 125, 0.7));
+    color: white;
+    padding: 0.5rem;
+    font-size: 11px;
+    font-weight: 500;
+    text-align: center;
+    border-bottom-left-radius: 0.5rem;
+    border-bottom-right-radius: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.25rem;
+}
+
+.mode-restriction-overlay i {
+    font-size: 13px;
+}

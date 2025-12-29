@@ -171,6 +171,28 @@ namespace FormReporting.Models.Common
         Inline = 4
     }
 
+    /// <summary>
+    /// Submission mode for form templates
+    /// Defines HOW the form is filled (single user vs multi-user workflow)
+    /// </summary>
+    public enum SubmissionMode
+    {
+        /// <summary>
+        /// Individual mode: One user fills entire form, then workflow happens (approval/review)
+        /// FormTemplateAssignment controls who can access and submit
+        /// Workflow steps (Approve/Reject/Sign/Review/Verify) execute AFTER submission
+        /// </summary>
+        Individual = 1,
+
+        /// <summary>
+        /// Collaborative mode: Multiple users fill different sections AS PART OF workflow
+        /// Workflow Fill steps assign sections/fields to different users
+        /// System initiates submission, users fill their assigned sections
+        /// Approval steps happen after all Fill steps are complete
+        /// </summary>
+        Collaborative = 2
+    }
+
     // ============================================================================
     // TICKET ENUMS
     // ============================================================================

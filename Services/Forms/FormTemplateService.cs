@@ -14,12 +14,14 @@ namespace FormReporting.Services.Forms
     public class FormTemplateService : IFormTemplateService
     {
         private readonly ApplicationDbContext _context;
+        private readonly IWorkflowService _workflowService;
         private const int MAX_CODE_LENGTH = 50;
         private const string CODE_PREFIX = "TPL_";
 
-        public FormTemplateService(ApplicationDbContext context)
+        public FormTemplateService(ApplicationDbContext context, IWorkflowService workflowService)
         {
             _context = context;
+            _workflowService = workflowService;
         }
 
         /// <summary>
@@ -206,17 +208,17 @@ namespace FormReporting.Services.Forms
                 StepStatus.Active;
 
             // ═══════════════════════════════════════════════════════════
-            // DETERMINE CURRENT STEP (First incomplete step)
+            // DETERMINE CURRENT STEP FOR RESUME
             // Order: Setup → Build → Publish
+            // Note: Always resume to FormBuilder if Step 1 is complete.
+            // ReviewPublish should only be accessed via "Continue" button.
             // ═══════════════════════════════════════════════════════════
             FormBuilderStep currentStep = FormBuilderStep.TemplateSetup;
 
             if (!step1Complete)
                 currentStep = FormBuilderStep.TemplateSetup;
-            else if (!step2Complete)
-                currentStep = FormBuilderStep.FormBuilder;
             else
-                currentStep = FormBuilderStep.ReviewPublish;
+                currentStep = FormBuilderStep.FormBuilder; // Always go to FormBuilder, never auto-advance to ReviewPublish
 
             // ═══════════════════════════════════════════════════════════
             // CALCULATE COMPLETION PERCENTAGE
@@ -368,7 +370,7 @@ namespace FormReporting.Services.Forms
             await _context.SaveChangesAsync();
 
             // Reload the new template with all relationships
-            return await LoadTemplateForEditingAsync(newVersion.TemplateId) 
+            return await LoadTemplateForEditingAsync(newVersion.TemplateId)
                 ?? throw new InvalidOperationException("Failed to reload new version after creation.");
         }
 
@@ -380,5 +382,359 @@ namespace FormReporting.Services.Forms
         {
             return template.PublishStatus == "Published";
         }
+
+        // ===== Template Readiness Validation Methods =====
+
+        public async Task<TemplateReadinessDto> ValidateTemplateReadinessAsync(int templateId)
+        {
+            var result = new TemplateReadinessDto();
+
+            // Load template with all necessary relationships
+            var template = await _context.FormTemplates
+                .Include(t => t.Sections)
+                    .ThenInclude(s => s.Items.Where(i => i.IsActive))
+                .Include(t => t.Assignments.Where(a => a.Status == "Active"))
+                .Include(t => t.Workflow)
+                    .ThenInclude(w => w.Steps.OrderBy(s => s.StepOrder))
+                        .ThenInclude(s => s.Action)
+                .FirstOrDefaultAsync(t => t.TemplateId == templateId);
+
+            if (template == null)
+            {
+                result.BlockingIssues.Add("Template not found");
+                return result;
+            }
+
+            result.SubmissionMode = template.SubmissionMode.ToString();
+            result.Configuration = await GetTemplateConfigurationStatusAsync(templateId);
+
+            // Validate based on submission mode
+            switch (template.SubmissionMode)
+            {
+                case Models.Common.SubmissionMode.Individual:
+                    await ValidateIndividualModeReadiness(template, result);
+                    break;
+
+                case Models.Common.SubmissionMode.Collaborative:
+                    await ValidateCollaborativeModeReadiness(template, result);
+                    break;
+
+                default:
+                    result.BlockingIssues.Add("Invalid submission mode");
+                    break;
+            }
+
+            result.IsReady = !result.BlockingIssues.Any();
+            return result;
+        }
+
+        public async Task<bool> CanAcceptSubmissionsAsync(int templateId)
+        {
+            var readiness = await ValidateTemplateReadinessAsync(templateId);
+            return readiness.IsReady;
+        }
+
+        public async Task<bool> IsReadyForCollaborativeWorkflowAsync(int templateId)
+        {
+            var template = await _context.FormTemplates.FindAsync(templateId);
+            if (template?.SubmissionMode != Models.Common.SubmissionMode.Collaborative)
+            {
+                return false;
+            }
+
+            var readiness = await ValidateTemplateReadinessAsync(templateId);
+            return readiness.IsReady;
+        }
+
+        public async Task<TemplateConfigurationStatusDto> GetTemplateConfigurationStatusAsync(int templateId)
+        {
+            var status = new TemplateConfigurationStatusDto
+            {
+                LastValidated = DateTime.UtcNow
+            };
+
+            var template = await _context.FormTemplates
+                .Include(t => t.Sections)
+                    .ThenInclude(s => s.Items.Where(i => i.IsActive))
+                .Include(t => t.Assignments.Where(a => a.Status == "Active"))
+                .Include(t => t.Workflow)
+                    .ThenInclude(w => w.Steps)
+                .FirstOrDefaultAsync(t => t.TemplateId == templateId);
+
+            if (template == null) return status;
+
+            // Form Structure
+            status.SectionCount = template.Sections.Count;
+            status.FieldCount = template.Sections.SelectMany(s => s.Items).Count();
+            status.HasFormStructure = status.SectionCount > 0 && status.FieldCount > 0;
+
+            // Assignments
+            var activeAssignments = template.Assignments.Where(a =>
+                a.Status == "Active" &&
+                a.EffectiveFrom <= DateTime.UtcNow &&
+                (a.EffectiveUntil == null || a.EffectiveUntil >= DateTime.UtcNow)).ToList();
+
+            status.ActiveAssignmentCount = activeAssignments.Count;
+            status.HasAssignments = status.ActiveAssignmentCount > 0;
+            status.AssignmentsCoverUsers = await CheckAssignmentCoverageAsync(activeAssignments);
+
+            // Workflow
+            status.HasWorkflow = template.WorkflowId.HasValue && template.Workflow != null;
+            if (status.HasWorkflow)
+            {
+                status.WorkflowName = template.Workflow!.WorkflowName;
+                status.WorkflowStepCount = template.Workflow.Steps.Count;
+
+                // Validate workflow for current template mode
+                var workflowValidation = await ValidateWorkflowForTemplateMode(template);
+                status.WorkflowValidForMode = workflowValidation.IsValid;
+                status.WorkflowIssues = workflowValidation.Errors;
+            }
+
+            // Template Status
+            status.TemplateStatus = template.PublishStatus;
+
+            // Overall readiness
+            status.ReadyForSubmissions = await DetermineOverallReadiness(template, status);
+
+            return status;
+        }
+
+        #region Private Validation Helper Methods
+
+        private async Task ValidateIndividualModeReadiness(FormTemplate template, TemplateReadinessDto result)
+        {
+            var individualResult = await ValidateIndividualModeReadiness(template);
+            result.BlockingIssues.AddRange(individualResult.BlockingIssues);
+            result.Warnings.AddRange(individualResult.Warnings);
+            result.IsReady = individualResult.IsReady;
+        }
+
+        private async Task<TemplateReadinessDto> ValidateIndividualModeReadiness(FormTemplate template)
+        {
+            var result = new TemplateReadinessDto
+            {
+                TemplateId = template.TemplateId,
+                SubmissionMode = "Individual",
+                IsReady = false
+            };
+
+            // 1. Check basic template requirements
+            if (template.PublishStatus != "Published")
+            {
+                result.BlockingIssues.Add("Template must be published");
+            }
+
+            // 2. Check form structure
+            var hasStructure = await HasFormStructure(template.TemplateId);
+            if (!hasStructure)
+            {
+                result.BlockingIssues.Add("Template must have form structure (sections with fields)");
+            }
+
+            // 3. Handle Anonymous Access - no workflow or assignments required
+            if (template.AllowAnonymousAccess)
+            {
+                result.Warnings.Add("Anonymous access enabled - no workflow or assignments required");
+                // Skip assignment and workflow validation for anonymous forms
+                result.IsReady = !result.BlockingIssues.Any();
+                return result;
+            }
+
+            // 4. Check assignments - Individual mode requires assignments for access control (except anonymous)
+            var hasAssignments = await HasActiveAssignments(template.TemplateId);
+            if (!hasAssignments)
+            {
+                result.BlockingIssues.Add("Individual mode requires active assignments for user access control");
+            }
+
+            // 5. Check workflow based on RequiresApproval flag
+            if (template.RequiresApproval)
+            {
+                if (!template.WorkflowId.HasValue)
+                {
+                    result.BlockingIssues.Add("Template requires approval workflow but none is assigned");
+                }
+                else
+                {
+                    // Validate workflow is compatible with Individual mode
+                    var workflowValidation = await _workflowService.ValidateIndividualModeWorkflowAsync(template.WorkflowId.Value);
+                    if (!workflowValidation.IsValid)
+                    {
+                        result.BlockingIssues.AddRange(workflowValidation.Errors.Select(e => $"Workflow issue: {e}"));
+                    }
+                }
+            }
+            else
+            {
+                // RequiresApproval = false, workflow is optional
+                if (template.WorkflowId.HasValue)
+                {
+                    result.Warnings.Add("Workflow assigned but RequiresApproval is false - workflow will be ignored");
+                }
+                else
+                {
+                    result.Warnings.Add("No approval workflow required for this template");
+                }
+            }
+
+            // Set overall readiness
+            result.IsReady = !result.BlockingIssues.Any();
+            return result;
+        }
+
+        private async Task ValidateCollaborativeModeReadiness(FormTemplate template, TemplateReadinessDto result)
+        {
+            // Collaborative Mode Requirements:
+            // 1. Must be published
+            if (template.PublishStatus != "Published")
+            {
+                result.BlockingIssues.Add("Template must be published before collaborative workflow can begin");
+            }
+
+            // 2. Must have form structure
+            if (!template.Sections.Any() || !template.Sections.SelectMany(s => s.Items).Any())
+            {
+                result.BlockingIssues.Add("Template must have at least one section with fields");
+            }
+
+            // 3. Check if anonymous access is enabled - collaborative + anonymous is invalid
+            if (template.AllowAnonymousAccess)
+            {
+                result.BlockingIssues.Add("Collaborative mode cannot be used with anonymous access - collaborative workflows require authenticated users");
+                return; // No point checking further if this fundamental conflict exists
+            }
+
+            // 4. Collaborative mode ALWAYS requires workflows (ignore RequiresApproval flag)
+            if (!template.WorkflowId.HasValue || template.Workflow == null)
+            {
+                result.BlockingIssues.Add("Collaborative mode always requires a workflow with Fill steps");
+            }
+            else
+            {
+                var fillSteps = template.Workflow.Steps.Where(s => s.Action?.ActionCode == "FILL").ToList();
+                if (!fillSteps.Any())
+                {
+                    result.BlockingIssues.Add("Collaborative mode workflow must have at least one Fill step");
+                }
+
+                // 5. Workflow must be valid for Collaborative mode  
+                var workflowValidation = await ValidateWorkflowForTemplateMode(template);
+                if (!workflowValidation.IsValid)
+                {
+                    result.BlockingIssues.AddRange(workflowValidation.Errors.Select(e => $"Workflow error: {e}"));
+                }
+
+                // Note: RequiresApproval flag is ignored for Collaborative mode
+                if (!template.RequiresApproval)
+                {
+                    result.Warnings.Add("RequiresApproval is false but Collaborative mode always uses workflows");
+                }
+            }
+
+            // 6. Assignments are optional but warn if missing
+            var activeAssignments = template.Assignments.Where(a =>
+                a.Status == "Active" &&
+                a.EffectiveFrom <= DateTime.UtcNow &&
+                (a.EffectiveUntil == null || a.EffectiveUntil >= DateTime.UtcNow)).ToList();
+
+            if (!activeAssignments.Any())
+            {
+                result.Warnings.Add("No assignments found. Users may not be able to view submissions unless workflow assignees cover viewing permissions");
+            }
+        }
+
+        private async Task<WorkflowValidationResultDto> ValidateWorkflowForTemplateMode(FormTemplate template)
+        {
+            if (!template.WorkflowId.HasValue)
+            {
+                return new WorkflowValidationResultDto { IsValid = false, Errors = new List<string> { "No workflow assigned" } };
+            }
+
+            // Use WorkflowService validation methods
+            return await _workflowService.ValidateWorkflowForModeAsync(template.WorkflowId.Value, template.TemplateId);
+        }
+
+        private async Task<bool> CheckAssignmentCoverageAsync(List<FormTemplateAssignment> assignments)
+        {
+            // Simple check - if we have at least one assignment that could resolve to users
+            return assignments.Any(a =>
+                a.AssignmentType == "All" ||
+                a.AssignmentType == "Role" ||
+                a.AssignmentType == "Department" ||
+                a.AssignmentType == "UserGroup" ||
+                a.AssignmentType == "SpecificUser");
+        }
+
+        private async Task<bool> DetermineOverallReadiness(FormTemplate template, TemplateConfigurationStatusDto status)
+        {
+            bool basicRequirements = status.HasFormStructure && status.TemplateStatus == "Published";
+
+            return template.SubmissionMode switch
+            {
+                Models.Common.SubmissionMode.Individual =>
+                    await DetermineIndividualModeReadiness(template, basicRequirements, status),
+
+                Models.Common.SubmissionMode.Collaborative =>
+                    await DetermineCollaborativeModeReadiness(template, basicRequirements, status),
+
+                _ => false
+            };
+        }
+
+        private async Task<bool> DetermineIndividualModeReadiness(FormTemplate template, bool basicRequirements, TemplateConfigurationStatusDto status)
+        {
+            if (!basicRequirements) return false;
+
+            // Anonymous access bypasses assignment and workflow requirements
+            if (template.AllowAnonymousAccess)
+            {
+                return true; // Only needs basic requirements (published + form structure)
+            }
+
+            // Non-anonymous Individual mode requirements
+            bool hasAssignments = status.HasAssignments;
+            bool workflowRequired = template.RequiresApproval;
+            bool workflowValid = workflowRequired ? (status.HasWorkflow && status.WorkflowValidForMode) : true;
+
+            return hasAssignments && workflowValid;
+        }
+
+        private async Task<bool> DetermineCollaborativeModeReadiness(FormTemplate template, bool basicRequirements, TemplateConfigurationStatusDto status)
+        {
+            if (!basicRequirements) return false;
+
+            // Collaborative mode cannot work with anonymous access
+            if (template.AllowAnonymousAccess)
+            {
+                return false;
+            }
+
+            // Collaborative mode ALWAYS requires workflows (ignores RequiresApproval flag)
+            return status.HasWorkflow && status.WorkflowValidForMode;
+        }
+
+        private async Task<bool> HasFormStructure(int templateId)
+        {
+            var hasStructure = await _context.FormTemplateSections
+                .Where(s => s.TemplateId == templateId)
+                .SelectMany(s => s.Items)
+                .Where(i => i.IsActive)
+                .AnyAsync();
+
+            return hasStructure;
+        }
+
+        private async Task<bool> HasActiveAssignments(int templateId)
+        {
+            var now = DateTime.UtcNow;
+            return await _context.FormTemplateAssignments
+                .AnyAsync(a => a.TemplateId == templateId &&
+                              a.Status == "Active" &&
+                              a.EffectiveFrom <= now &&
+                              (a.EffectiveUntil == null || a.EffectiveUntil >= now));
+        }
+
+        #endregion
     }
 }

@@ -30,6 +30,11 @@
 
 <body>
 
+    <!-- App Loader - Universal Progress Bar -->
+    <div id="app-loader" class="app-loader">
+        <div class="app-loader-bar"></div>
+    </div>
+
     <!-- Begin page -->
     <div id="layout-wrapper">
 
@@ -69,6 +74,9 @@
 
     @* Include JavaScript *@
     <partial name="_Scripts" />
+
+    @* Centralized App Modal *@
+    <partial name="~/Views/Shared/Components/_AppModal.cshtml" />
     
     @* Page-specific JavaScript *@
     @await RenderSectionAsync("Scripts", required: false)

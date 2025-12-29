@@ -1062,5 +1062,291 @@ namespace FormReporting.Services.Forms
         }
 
         #endregion
+
+        #region Dual-Mode Assignment Validation Methods
+
+        public async Task<bool> CanUserCreateSubmissionAsync(int templateId, int userId)
+        {
+            var template = await _context.FormTemplates.FindAsync(templateId);
+            if (template?.SubmissionMode != Models.Common.SubmissionMode.Individual)
+            {
+                return false; // Only Individual mode uses assignment-based access control
+            }
+
+            // Anonymous access overrides all assignment checks
+            if (template.AllowAnonymousAccess)
+            {
+                return true; // Anonymous forms allow anyone to create submissions
+            }
+
+            // Get active assignments for this template
+            var activeAssignments = await GetActiveAssignmentsForTemplateAsync(templateId);
+            if (!activeAssignments.Any())
+            {
+                return false; // No assignments = no access (except for anonymous)
+            }
+
+            // Check if user matches any assignment
+            foreach (var assignment in activeAssignments)
+            {
+                if (await CheckUserMatchesAssignmentAsync(userId, null, assignment))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        public async Task<AssignmentCoverageValidationDto> ValidateAssignmentCoverageAsync(int templateId)
+        {
+            var result = new AssignmentCoverageValidationDto();
+            
+            var template = await _context.FormTemplates.FindAsync(templateId);
+            if (template == null)
+            {
+                result.CoverageIssues.Add("Template not found");
+                return result;
+            }
+
+            result.SubmissionMode = template.SubmissionMode.ToString();
+            
+            var activeAssignments = await GetActiveAssignmentsForTemplateAsync(templateId);
+            result.ActiveAssignmentCount = activeAssignments.Count;
+
+            // Build assignment details
+            foreach (var assignment in activeAssignments)
+            {
+                var detail = new AssignmentCoverageDetailDto
+                {
+                    AssignmentId = assignment.AssignmentId,
+                    AssignmentType = assignment.AssignmentType,
+                    TargetName = GetAssignmentTargetName(assignment),
+                    EstimatedUserCount = await EstimateUserCountForAssignmentAsync(assignment),
+                    IsActive = assignment.Status == "Active",
+                    EffectiveFrom = assignment.EffectiveFrom,
+                    EffectiveUntil = assignment.EffectiveUntil
+                };
+                result.AssignmentDetails.Add(detail);
+                result.PotentialUserCount += detail.EstimatedUserCount;
+            }
+
+            // Validate based on submission mode
+            if (template.SubmissionMode == Models.Common.SubmissionMode.Individual)
+            {
+                // Individual mode REQUIRES assignments
+                if (!activeAssignments.Any())
+                {
+                    result.CoverageIssues.Add("Individual mode requires at least one active assignment to control who can create submissions");
+                }
+                else if (result.PotentialUserCount == 0)
+                {
+                    result.CoverageIssues.Add("Active assignments do not resolve to any users");
+                }
+
+                result.HasSufficientCoverage = !result.CoverageIssues.Any();
+            }
+            else if (template.SubmissionMode == Models.Common.SubmissionMode.Collaborative)
+            {
+                // Collaborative mode: assignments are optional
+                if (!activeAssignments.Any())
+                {
+                    result.Warnings.Add("No assignments found. Users may not be able to view submissions unless workflow assignees provide viewing permissions");
+                }
+
+                result.HasSufficientCoverage = true; // Always sufficient for Collaborative mode
+            }
+
+            return result;
+        }
+
+        public async Task<bool> HasSufficientAssignmentsAsync(int templateId)
+        {
+            var validation = await ValidateAssignmentCoverageAsync(templateId);
+            return validation.HasSufficientCoverage;
+        }
+
+        public async Task<List<int>> GetUsersWithSubmissionAccessAsync(int templateId)
+        {
+            var template = await _context.FormTemplates.FindAsync(templateId);
+            if (template?.SubmissionMode != Models.Common.SubmissionMode.Individual)
+            {
+                return new List<int>(); // Only Individual mode uses assignment-based access
+            }
+
+            var activeAssignments = await GetActiveAssignmentsForTemplateAsync(templateId);
+            var userIds = new HashSet<int>();
+
+            foreach (var assignment in activeAssignments)
+            {
+                var assignmentUserIds = await ResolveAssignmentToUserIdsAsync(assignment);
+                foreach (var userId in assignmentUserIds)
+                {
+                    userIds.Add(userId);
+                }
+            }
+
+            return userIds.ToList();
+        }
+
+        #region Private Helper Methods for Assignment Validation
+
+        private async Task<List<FormTemplateAssignment>> GetActiveAssignmentsForTemplateAsync(int templateId)
+        {
+            var now = DateTime.UtcNow;
+            return await _context.FormTemplateAssignments
+                .Where(a => a.TemplateId == templateId &&
+                           a.Status == "Active" &&
+                           a.EffectiveFrom <= now &&
+                           (a.EffectiveUntil == null || a.EffectiveUntil >= now))
+                .ToListAsync();
+        }
+
+        private async Task<bool> CheckUserMatchesAnyAssignmentAsync(int userId, object userScope, List<FormTemplateAssignment> assignments)
+        {
+            foreach (var assignment in assignments)
+            {
+                if (await CheckUserMatchesAssignmentAsync(userId, userScope, assignment))
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        private async Task<bool> CheckUserMatchesAssignmentAsync(int userId, object userScope, FormTemplateAssignment assignment)
+        {
+            return assignment.AssignmentType switch
+            {
+                "All" => true,
+                "SpecificUser" => assignment.UserId == userId,
+                "Role" => assignment.RoleId.HasValue && await _context.UserRoles.AnyAsync(ur => ur.UserId == userId && ur.RoleId == assignment.RoleId.Value),
+                "Department" => assignment.DepartmentId.HasValue && await _context.Users.AnyAsync(u => u.UserId == userId && u.DepartmentId == assignment.DepartmentId.Value),
+                "UserGroup" => assignment.UserGroupId.HasValue && await _context.UserGroupMembers.AnyAsync(ugm => ugm.UserId == userId && ugm.UserGroupId == assignment.UserGroupId.Value),
+                "SpecificTenant" => assignment.TenantId.HasValue && await CheckUserBelongsToTenantAsync(userId, assignment.TenantId.Value),
+                "TenantGroup" => assignment.TenantGroupId.HasValue && await CheckUserBelongsToTenantGroupAsync(userId, assignment.TenantGroupId.Value),
+                "TenantType" => !string.IsNullOrEmpty(assignment.TenantType) && await CheckUserBelongsToTenantTypeAsync(userId, assignment.TenantType),
+                _ => false
+            };
+        }
+
+        private async Task<int> EstimateUserCountForAssignmentAsync(FormTemplateAssignment assignment)
+        {
+            return assignment.AssignmentType switch
+            {
+                "All" => await _context.Users.CountAsync(u => u.IsActive),
+                "SpecificUser" => assignment.UserId.HasValue ? 1 : 0,
+                "Role" => assignment.RoleId.HasValue ? await _context.UserRoles.CountAsync(ur => ur.RoleId == assignment.RoleId.Value) : 0,
+                "Department" => assignment.DepartmentId.HasValue ? await _context.Users.CountAsync(u => u.DepartmentId == assignment.DepartmentId.Value && u.IsActive) : 0,
+                "UserGroup" => assignment.UserGroupId.HasValue ? await _context.UserGroupMembers.CountAsync(ugm => ugm.UserGroupId == assignment.UserGroupId.Value) : 0,
+                "SpecificTenant" => assignment.TenantId.HasValue ? await _context.Users.CountAsync(u => u.TenantId == assignment.TenantId.Value && u.IsActive) : 0,
+                "TenantGroup" => assignment.TenantGroupId.HasValue ? await CountUsersInTenantGroupAsync(assignment.TenantGroupId.Value) : 0,
+                "TenantType" => !string.IsNullOrEmpty(assignment.TenantType) ? await CountUsersInTenantTypeAsync(assignment.TenantType) : 0,
+                _ => 0
+            };
+        }
+
+        private async Task<List<int>> ResolveAssignmentToUserIdsAsync(FormTemplateAssignment assignment)
+        {
+            return assignment.AssignmentType switch
+            {
+                "All" => await _context.Users.Where(u => u.IsActive).Select(u => u.UserId).ToListAsync(),
+                "SpecificUser" => assignment.UserId.HasValue ? new List<int> { assignment.UserId.Value } : new List<int>(),
+                "Role" => assignment.RoleId.HasValue ? await _context.UserRoles.Where(ur => ur.RoleId == assignment.RoleId.Value).Select(ur => ur.UserId).ToListAsync() : new List<int>(),
+                "Department" => assignment.DepartmentId.HasValue ? await _context.Users.Where(u => u.DepartmentId == assignment.DepartmentId.Value && u.IsActive).Select(u => u.UserId).ToListAsync() : new List<int>(),
+                "UserGroup" => assignment.UserGroupId.HasValue ? await _context.UserGroupMembers.Where(ugm => ugm.UserGroupId == assignment.UserGroupId.Value).Select(ugm => ugm.UserId).ToListAsync() : new List<int>(),
+                "SpecificTenant" => assignment.TenantId.HasValue ? await _context.Users.Where(u => u.TenantId == assignment.TenantId.Value && u.IsActive).Select(u => u.UserId).ToListAsync() : new List<int>(),
+                "TenantGroup" => assignment.TenantGroupId.HasValue ? await GetUsersInTenantGroupAsync(assignment.TenantGroupId.Value) : new List<int>(),
+                "TenantType" => !string.IsNullOrEmpty(assignment.TenantType) ? await GetUsersInTenantTypeAsync(assignment.TenantType) : new List<int>(),
+                _ => new List<int>()
+            };
+        }
+
+        private async Task<bool> CheckUserBelongsToTenantAsync(int userId, int tenantId)
+        {
+            return await _context.Users.AnyAsync(u => u.UserId == userId && u.TenantId == tenantId);
+        }
+
+        private async Task<bool> CheckUserBelongsToTenantGroupAsync(int userId, int tenantGroupId)
+        {
+            return await _context.Users
+                .Where(u => u.UserId == userId)
+                .Join(_context.TenantGroupMembers, u => u.TenantId, tgm => tgm.TenantId, (u, tgm) => tgm)
+                .AnyAsync(tgm => tgm.TenantGroupId == tenantGroupId);
+        }
+
+        private async Task<bool> CheckUserBelongsToTenantTypeAsync(int userId, string tenantType)
+        {
+            return await _context.Users
+                .Where(u => u.UserId == userId)
+                .Join(_context.Tenants, u => u.TenantId, t => t.TenantId, (u, t) => t)
+                .AnyAsync(t => t.TenantType == tenantType);
+        }
+
+        private async Task<int> CountUsersInTenantGroupAsync(int tenantGroupId)
+        {
+            return await _context.Users
+                .Where(u => u.IsActive)
+                .Join(_context.TenantGroupMembers, u => u.TenantId, tgm => tgm.TenantId, (u, tgm) => tgm)
+                .CountAsync(tgm => tgm.TenantGroupId == tenantGroupId);
+        }
+
+        private async Task<int> CountUsersInTenantTypeAsync(string tenantType)
+        {
+            return await _context.Users
+                .Where(u => u.IsActive)
+                .Join(_context.Tenants, u => u.TenantId, t => t.TenantId, (u, t) => t)
+                .CountAsync(t => t.TenantType == tenantType);
+        }
+
+        private async Task<List<int>> GetUsersInTenantGroupAsync(int tenantGroupId)
+        {
+            return await _context.Users
+                .Where(u => u.IsActive)
+                .Join(_context.TenantGroupMembers, u => u.TenantId, tgm => tgm.TenantId, (u, tgm) => new { u.UserId, tgm.TenantGroupId })
+                .Where(x => x.TenantGroupId == tenantGroupId)
+                .Select(x => x.UserId)
+                .ToListAsync();
+        }
+
+        private async Task<List<int>> GetUsersInTenantTypeAsync(string tenantType)
+        {
+            return await _context.Users
+                .Where(u => u.IsActive)
+                .Join(_context.Tenants, u => u.TenantId, t => t.TenantId, (u, t) => new { u.UserId, t.TenantType })
+                .Where(x => x.TenantType == tenantType)
+                .Select(x => x.UserId)
+                .ToListAsync();
+        }
+
+        private string GetAssignmentTargetName(FormTemplateAssignment assignment)
+        {
+            return assignment.AssignmentType switch
+            {
+                "All" => "All Users",
+                "SpecificUser" => assignment.User?.FullName ?? "Unknown User",
+                "Role" => assignment.Role?.RoleName ?? "Unknown Role",
+                "Department" => assignment.Department?.DepartmentName ?? "Unknown Department",
+                "UserGroup" => assignment.UserGroup?.GroupName ?? "Unknown User Group",
+                "SpecificTenant" => assignment.Tenant?.TenantName ?? "Unknown Tenant",
+                "TenantGroup" => assignment.TenantGroup?.GroupName ?? "Unknown Tenant Group",
+                "TenantType" => assignment.TenantType ?? "Unknown Tenant Type",
+                _ => "Unknown Target"
+            };
+        }
+
+        private System.Security.Claims.ClaimsPrincipal GetUserClaimsPrincipal(int userId)
+        {
+            // This is a simplified version - in real implementation, you'd need to build proper claims
+            var claims = new List<System.Security.Claims.Claim>
+            {
+                new System.Security.Claims.Claim("UserId", userId.ToString())
+            };
+            return new System.Security.Claims.ClaimsPrincipal(new System.Security.Claims.ClaimsIdentity(claims));
+        }
+
+        #endregion
+
+        #endregion
     }
 }

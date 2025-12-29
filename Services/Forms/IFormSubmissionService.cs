@@ -78,6 +78,44 @@ namespace FormReporting.Services.Forms
         /// <returns>List of published templates user can access</returns>
         Task<List<FormTemplate>> GetAvailableTemplatesAsync(int userId);
 
+        // ===== Dual-Mode Submission Access Validation =====
+
+        /// <summary>
+        /// Check if user can create a new submission for template (Individual mode)
+        /// </summary>
+        /// <param name="userId">User ID</param>
+        /// <param name="templateId">Template ID</param>
+        /// <returns>True if user can create submission</returns>
+        Task<bool> CanUserCreateSubmissionAsync(int userId, int templateId);
+
+        /// <summary>
+        /// Check if system/admin can create collaborative submission for template (Collaborative mode)
+        /// </summary>
+        /// <param name="templateId">Template ID</param>
+        /// <returns>True if collaborative submission can be created</returns>
+        Task<bool> CanCreateCollaborativeSubmissionAsync(int templateId);
+
+        /// <summary>
+        /// Get submission access validation result with detailed information
+        /// </summary>
+        /// <param name="userId">User ID</param>
+        /// <param name="templateId">Template ID</param>
+        /// <returns>Detailed validation result</returns>
+        Task<SubmissionAccessValidationDto> ValidateSubmissionAccessAsync(int userId, int templateId);
+
+        /// <summary>
+        /// Get list of templates user can create submissions for (Individual mode only)
+        /// </summary>
+        /// <param name="userId">User ID</param>
+        /// <returns>List of templates with submission access</returns>
+        Task<List<TemplateSubmissionAccessDto>> GetTemplatesWithSubmissionAccessAsync(int userId);
+
+        /// <summary>
+        /// Get list of templates ready for collaborative workflow
+        /// </summary>
+        /// <returns>List of templates ready for collaborative submissions</returns>
+        Task<List<TemplateSubmissionAccessDto>> GetTemplatesReadyForCollaborativeWorkflowAsync();
+
         /// <summary>
         /// Check if user has an existing draft for a template/period combination
         /// </summary>

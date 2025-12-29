@@ -100,4 +100,36 @@ namespace FormReporting.Services.Forms
         public int ValidFields { get; set; }
         public int InvalidFields { get; set; }
     }
+
+    /// <summary>
+    /// DTO for submission access validation result
+    /// </summary>
+    public class SubmissionAccessValidationDto
+    {
+        public bool CanCreateSubmission { get; set; }
+        public string SubmissionMode { get; set; } = string.Empty;
+        public List<string> BlockingIssues { get; set; } = new();
+        public List<string> Warnings { get; set; } = new();
+        public string TemplateStatus { get; set; } = string.Empty;
+        public bool HasAssignmentAccess { get; set; }
+        public bool TemplateReady { get; set; }
+        public bool WorkflowConfigured { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for template submission access information
+    /// </summary>
+    public class TemplateSubmissionAccessDto
+    {
+        public int TemplateId { get; set; }
+        public string TemplateName { get; set; } = string.Empty;
+        public string TemplateCode { get; set; } = string.Empty;
+        public string SubmissionMode { get; set; } = string.Empty;
+        public string CategoryName { get; set; } = string.Empty;
+        public bool CanCreateSubmission { get; set; }
+        public bool IsReady { get; set; }
+        public int ActiveAssignmentCount { get; set; }
+        public bool HasWorkflow { get; set; }
+        public List<string> AccessIssues { get; set; } = new();
+    }
 }

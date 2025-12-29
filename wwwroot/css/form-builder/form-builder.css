@@ -112,7 +112,7 @@
     }
 
     .design-grid.properties-collapsed {
-        grid-template-columns: 250px 1fr 0;
+        grid-template-columns: 250px 1fr 60px;
     }
 
     .design-toolbox {
@@ -234,10 +234,71 @@
     }
 
     .design-properties.collapsed {
-        width: 0;
-        opacity: 0;
-        overflow: hidden;
-        border-left: none;
+        width: 60px;
+        opacity: 1;
+        overflow: visible;
+        border-left: 2px solid var(--vz-secondary);
+    }
+    
+    /* Hide full content when collapsed */
+    .design-properties.collapsed .properties-content {
+        display: none;
+    }
+
+    /* Icon strip - vertical layout (visible when collapsed) */
+    .properties-icon-strip {
+        display: none;
+        flex-direction: column;
+        width: 60px;
+        height: 100%;
+        background: var(--vz-secondary-subtle);
+        padding: 1rem 0;
+        gap: 0.5rem;
+    }
+    
+    .design-properties.collapsed .properties-icon-strip {
+        display: flex;
+    }
+    
+    /* Icon tab styling */
+    .icon-tab {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 100%;
+        height: 50px;
+        cursor: pointer;
+        color: #7c7f90;
+        transition: all 0.3s ease;
+        position: relative;
+        border-radius: 4px;
+    }
+    
+    .icon-tab:hover {
+        background: #f8f9fa;
+        color: var(--vz-primary);
+    }
+    
+    .icon-tab i {
+        font-size: 1.5rem;
+    }
+    
+    /* Active indicator */
+    .icon-tab.active {
+        color: var(--vz-primary);
+        background: rgba(var(--vz-primary-rgb), 0.1);
+    }
+    
+    .icon-tab.active::before {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 3px;
+        height: 30px;
+        background: var(--vz-primary);
+        border-radius: 0 2px 2px 0;
     }
 
     .properties-content {

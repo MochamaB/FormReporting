@@ -271,13 +271,40 @@ namespace FormReporting.Models.ViewModels.Forms
     /// </summary>
     public class SubmissionValidationResult
     {
+        public bool IsValid { get; set; }
         public bool CanSubmit { get; set; }
         public bool IsLate { get; set; }
-        public bool IsInGracePeriod { get; set; }
+        public string? ErrorMessage { get; set; }
         public string? BlockReason { get; set; }
-        public DateTime? DueDate { get; set; }
-        public DateTime? GraceDeadline { get; set; }
-        public string? WarningMessage { get; set; }
+        public DateTime? AllowedSubmissionDate { get; set; }
+    }
+
+    /// <summary>
+    /// DTO for assignment coverage validation results
+    /// </summary>
+    public class AssignmentCoverageValidationDto
+    {
+        public bool HasSufficientCoverage { get; set; }
+        public string SubmissionMode { get; set; } = string.Empty;
+        public int ActiveAssignmentCount { get; set; }
+        public int PotentialUserCount { get; set; }
+        public List<string> CoverageIssues { get; set; } = new();
+        public List<string> Warnings { get; set; } = new();
+        public List<AssignmentCoverageDetailDto> AssignmentDetails { get; set; } = new();
+    }
+
+    /// <summary>
+    /// DTO for individual assignment coverage details
+    /// </summary>
+    public class AssignmentCoverageDetailDto
+    {
+        public int AssignmentId { get; set; }
+        public string AssignmentType { get; set; } = string.Empty;
+        public string TargetName { get; set; } = string.Empty;
+        public int EstimatedUserCount { get; set; }
+        public bool IsActive { get; set; }
+        public DateTime EffectiveFrom { get; set; }
+        public DateTime? EffectiveUntil { get; set; }
     }
 
     /// <summary>

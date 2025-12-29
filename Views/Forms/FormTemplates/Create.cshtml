@@ -379,7 +379,9 @@
                     TemplateCode: $('#TemplateCode').val(),
                     Description: $('#Description').val(),
                     CategoryId: parseInt($('#CategoryId').val()) || 0,
-                    TemplateType: $('#TemplateType').val()
+                    TemplateType: $('#TemplateType').val(),
+                    SubmissionMode: parseInt($('#SubmissionMode').val()) || 1,
+                    AllowAnonymousAccess: $('#AllowAnonymousAccess').is(':checked')
                 };
                 
                 // Debug: Log form data being sent
@@ -474,7 +476,9 @@
                     TemplateCode: $('#TemplateCode').val(),
                     Description: $('#Description').val(),
                     CategoryId: parseInt($('#CategoryId').val()) || 0,
-                    TemplateType: $('#TemplateType').val()
+                    TemplateType: $('#TemplateType').val(),
+                    SubmissionMode: parseInt($('#SubmissionMode').val()) || 1,
+                    AllowAnonymousAccess: $('#AllowAnonymousAccess').is(':checked')
                 };
                 
                 $.ajax({

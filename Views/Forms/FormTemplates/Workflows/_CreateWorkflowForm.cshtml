@@ -1,0 +1,89 @@
+@using FormReporting.Models.ViewModels.Components
+@using FormReporting.Extensions
+
+@*
+    Create Workflow Form (Wizard Partial)
+    
+    A standalone partial that uses the _VerticalWizard component.
+    Used for creating new workflows with their first step.
+    
+    Steps:
+    1. Target - What to act on (Submission/Section/Field)
+    2. Name & Action - Workflow name and action type
+    3. Assignee - Who performs the action
+    4. Settings - Rules, timing, conditions
+*@
+
+@{
+    // Get data from ViewData
+    var templateId = ViewData["TemplateId"] as int?;
+    var isEdit = ViewData["IsEdit"] as bool? ?? false;
+    
+    // Configure the workflow creation wizard
+    var workflowWizard = new WizardConfig
+    {
+        Layout = WizardLayout.Vertical,
+        ContainerCssClass = "workflow-creation-wizard",
+        Steps = new List<WizardStep>
+        {
+            new WizardStep
+            {
+                StepId = "target",
+                Title = "Target Scope",
+                Description = "What to act on",
+                Instructions = "First, define what part of the form this workflow will apply to. You can target the entire submission, specific sections, or individual fields.",
+                Icon = "ri-focus-3-line",
+                ContentPartialPath = "~/Views/Forms/FormTemplates/Workflows/Steps/_StepTargetStep.cshtml",
+                State = WizardStepState.Active,
+                ShowPrevious = false,
+                NextButtonText = "Continue to Workflow Details"
+            },
+            new WizardStep
+            {
+                StepId = "action",
+                Title = "Workflow Details",
+                Description = "Name & action type",
+                Instructions = "Name your workflow and choose the primary action type. You can add more steps later.",
+                Icon = "ri-flashlight-line",
+                ContentPartialPath = "~/Views/Forms/FormTemplates/Workflows/Steps/_StepActionStep.cshtml",
+                NextButtonText = "Continue to Assignee"
+            },
+            new WizardStep
+            {
+                StepId = "assignee",
+                Title = "Assignee",
+                Description = "Who performs it",
+                Instructions = "Select who will be responsible for completing this workflow step. You can assign to roles, specific users, departments, or use dynamic assignment.",
+                Icon = "ri-user-star-line",
+                ContentPartialPath = "~/Views/Forms/FormTemplates/Workflows/Steps/_StepAssigneeStep.cshtml",
+                NextButtonText = "Continue to Settings"
+            },
+            new WizardStep
+            {
+                StepId = "settings",
+                Title = "Settings",
+                Description = "Rules & timing",
+                Instructions = "Configure additional settings like due dates, mandatory requirements, and other workflow rules.",
+                Icon = "ri-settings-3-line",
+                ContentPartialPath = "~/Views/Forms/FormTemplates/Workflows/Steps/_StepSettingsStep.cshtml",
+                ShowNext = false,
+                CustomButtonHtml = "<button type='submit' class='btn btn-success ms-auto'><i class='ri-save-line me-1'></i>Create Workflow</button>"
+            }
+        }
+    }.BuildWizard();
+}
+
+@* Pass template data to wizard *@
+@{
+    ViewData["ParentModel"] = new
+    {
+        TemplateId = templateId,
+        IsEdit = isEdit
+    };
+}
+
+@* Render the vertical wizard *@
+<partial name="~/Views/Shared/Components/Wizards/_VerticalWizard.cshtml" model="workflowWizard" />
+
+
+

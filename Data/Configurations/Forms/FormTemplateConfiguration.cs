@@ -1,4 +1,5 @@
 using FormReporting.Models.Entities.Forms;
+using FormReporting.Models.Common;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -24,6 +25,12 @@ namespace FormReporting.Data.Configurations.Forms
             builder.HasIndex(ft => new { ft.PublishStatus, ft.IsActive })
                 .HasDatabaseName("IX_Templates_PublishStatus");
 
+            builder.HasIndex(ft => ft.SubmissionMode)
+                .HasDatabaseName("IX_Templates_SubmissionMode");
+
+            builder.HasIndex(ft => ft.AllowAnonymousAccess)
+                .HasDatabaseName("IX_Templates_AnonymousAccess");
+
             // Check Constraints
             builder.ToTable(t => t.HasCheckConstraint(
                 "CK_Template_Approval",
@@ -42,6 +49,14 @@ namespace FormReporting.Data.Configurations.Forms
             builder.Property(ft => ft.PublishStatus).HasDefaultValue("Draft");
             builder.Property(ft => ft.CreatedDate).HasDefaultValueSql("GETDATE()");
             builder.Property(ft => ft.ModifiedDate).HasDefaultValueSql("GETDATE()");
+
+            // Enum Conversions and Defaults
+            builder.Property(ft => ft.SubmissionMode)
+                .HasConversion<int>()
+                .HasDefaultValue(SubmissionMode.Individual);
+
+            builder.Property(ft => ft.AllowAnonymousAccess)
+                .HasDefaultValue(false);
 
             // Relationships
             builder.HasOne(ft => ft.Category)

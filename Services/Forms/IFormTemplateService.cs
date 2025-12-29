@@ -69,5 +69,35 @@ namespace FormReporting.Services.Forms
         /// <param name="template">Template to check</param>
         /// <returns>True if can create version, false otherwise</returns>
         bool CanCreateVersion(FormTemplate template);
+
+        // ===== Template Readiness Validation =====
+
+        /// <summary>
+        /// Validate if template is ready to accept submissions based on submission mode
+        /// </summary>
+        /// <param name="templateId">Template ID to validate</param>
+        /// <returns>Validation result with readiness status and errors</returns>
+        Task<TemplateReadinessDto> ValidateTemplateReadinessAsync(int templateId);
+
+        /// <summary>
+        /// Check if template can accept new submissions (Individual mode)
+        /// </summary>
+        /// <param name="templateId">Template ID</param>
+        /// <returns>True if ready for submissions</returns>
+        Task<bool> CanAcceptSubmissionsAsync(int templateId);
+
+        /// <summary>
+        /// Check if template is ready for collaborative workflow (Collaborative mode)
+        /// </summary>
+        /// <param name="templateId">Template ID</param>
+        /// <returns>True if ready for collaborative workflow</returns>
+        Task<bool> IsReadyForCollaborativeWorkflowAsync(int templateId);
+
+        /// <summary>
+        /// Get detailed validation status for template configuration
+        /// </summary>
+        /// <param name="templateId">Template ID</param>
+        /// <returns>Detailed validation status with component-wise checks</returns>
+        Task<TemplateConfigurationStatusDto> GetTemplateConfigurationStatusAsync(int templateId);
     }
 }

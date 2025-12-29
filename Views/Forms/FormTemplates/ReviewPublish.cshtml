@@ -1,7 +1,7 @@
 @model FormReporting.Models.ViewModels.Forms.ReviewPublishViewModel
 @{
     ViewData["Title"] = "Review & Publish";
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    Layout = "~/Views/Shared/_BuilderLayout.cshtml";
     var progress = ViewData["Progress"] as FormReporting.Models.ViewModels.Components.FormBuilderProgressViewModel;
 }
 
@@ -11,7 +11,7 @@
     <partial name="~/Views/Shared/Components/FormBuilder/_FormBuilderProgress.cshtml" model="progress" />
 }
 
-<div class="row">
+<div class="row mt-5">
     <!-- Left Column: Validation Checklist -->
     <div class="col-lg-4">
         <div class="card">
