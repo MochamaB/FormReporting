@@ -16,8 +16,7 @@ namespace FormReporting.Models.Entities.Metrics
         [Required]
         public int TenantId { get; set; }
 
-        [Required]
-        public int MetricId { get; set; }
+        public int? MetricId { get; set; }
 
         [Required]
         [Column(TypeName = "date")]
@@ -34,6 +33,12 @@ namespace FormReporting.Models.Entities.Metrics
 
         public int? SourceReferenceId { get; set; } // SubmissionId if from form, LogId if from SystemMetricLogs
 
+        // Hierarchy support
+        [StringLength(30)]
+        public string? MetricScope { get; set; } // Field, Section, Template
+
+        public int? SourceMappingId { get; set; } // Polymorphic - the mapping that produced this value
+
         public DateTime CapturedDate { get; set; } = DateTime.Now;
 
         public int? CapturedBy { get; set; }
@@ -43,6 +48,6 @@ namespace FormReporting.Models.Entities.Metrics
         public virtual Tenant Tenant { get; set; } = null!;
 
         [ForeignKey(nameof(MetricId))]
-        public virtual MetricDefinition MetricDefinition { get; set; } = null!;
+        public virtual MetricDefinition? MetricDefinition { get; set; }
     }
 }

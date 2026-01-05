@@ -25,7 +25,7 @@ namespace FormReporting.Services.Metrics
         /// <summary>
         /// Create new field-to-metric mapping
         /// </summary>
-        Task<MetricMappingViewModel> CreateMappingAsync(CreateMappingDto dto);
+        Task<MetricMappingViewModel> CreateFieldMappingAsync(CreateFieldMappingDto dto);
 
         /// <summary>
         /// Update existing mapping
@@ -38,9 +38,9 @@ namespace FormReporting.Services.Metrics
         Task<bool> DeleteMappingAsync(int mappingId);
 
         /// <summary>
-        /// Validate mapping configuration (test formula, check field compatibility)
+        /// Validate field mapping configuration (test formula, check field compatibility)
         /// </summary>
-        Task<(bool IsValid, List<string> Errors)> ValidateMappingAsync(CreateMappingDto dto);
+        Task<(bool IsValid, List<string> Errors)> ValidateFieldMappingAsync(CreateFieldMappingDto dto);
 
         /// <summary>
         /// Test mapping with sample values

@@ -1,0 +1,179 @@
+@model FormReporting.Models.ViewModels.Metrics.FieldMappingWizardViewModel
+
+@{
+    var parentModel = ViewData["ParentModel"] as FormReporting.Models.ViewModels.Metrics.FieldMappingWizardViewModel ?? Model;
+    var existingMapping = parentModel?.ExistingMapping;
+    var recommendedType = parentModel?.RecommendedMappingType ?? "Direct";
+    
+    // Default mapping name suggestion
+    var defaultMappingName = existingMapping?.MappingName ?? $"{parentModel?.FieldName} Mapping";
+    var selectedMappingType = existingMapping?.MappingType ?? recommendedType;
+    var selectedAggregationType = existingMapping?.AggregationType ?? "Sum";
+}
+
+<!-- Step 1: Configure Mapping -->
+<div class="configure-step">
+    
+    <!-- Recommendation Alert -->
+    @if (parentModel?.ValidMappingTypes?.Any(t => t.IsRecommended) == true)
+    {
+        var recommended = parentModel.ValidMappingTypes.First(t => t.IsRecommended);
+        <div class="alert alert-info alert-dismissible fade show mb-4" role="alert">
+            <div class="d-flex align-items-start">
+                <i class="ri-lightbulb-line fs-4 me-3"></i>
+                <div>
+                    <h6 class="alert-heading mb-1">Recommendation</h6>
+                    <p class="mb-0">
+                        Based on the field type <strong>@parentModel.DataType</strong>, 
+                        we recommend using <strong>@recommended.Text</strong> mapping.
+                    </p>
+                </div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Mapping Name -->
+    <div class="mb-4">
+        <label for="MappingName" class="form-label">
+            Mapping Name <span class="text-danger">*</span>
+        </label>
+        <input type="text" 
+               class="form-control" 
+               id="MappingName" 
+               name="MappingName" 
+               value="@defaultMappingName"
+               placeholder="Enter a descriptive name for this mapping"
+               required />
+        <div class="form-text">A descriptive name to identify this mapping in reports.</div>
+    </div>
+
+    <!-- Mapping Type -->
+    <div class="mb-4">
+        <label for="MappingType" class="form-label">
+            Mapping Type <span class="text-danger">*</span>
+        </label>
+        <select class="form-select" id="MappingType" name="MappingType" required>
+            <option value="">Select mapping type...</option>
+            @if (parentModel?.ValidMappingTypes != null)
+            {
+                @foreach (var mappingType in parentModel.ValidMappingTypes)
+                {
+                    var isSelected = mappingType.Value == selectedMappingType;
+                    <option value="@mappingType.Value" 
+                            data-description="@mappingType.Description"
+                            selected="@isSelected">
+                        @mappingType.Text
+                        @if (mappingType.IsRecommended)
+                        {
+                            @: (Recommended)
+                        }
+                    </option>
+                }
+            }
+        </select>
+        <div class="form-text" id="mappingTypeDescription">
+            @{
+                var selectedTypeInfo = parentModel?.ValidMappingTypes?.FirstOrDefault(t => t.Value == selectedMappingType);
+                @(selectedTypeInfo?.Description ?? "Select a mapping type to see its description.")
+            }
+        </div>
+    </div>
+
+    <!-- Aggregation Type -->
+    <div class="mb-4">
+        <label for="AggregationType" class="form-label">
+            Aggregation Type <span class="text-danger">*</span>
+        </label>
+        <select class="form-select" id="AggregationType" name="AggregationType" required>
+            <option value="">Select aggregation type...</option>
+            <option value="Sum" selected="@(selectedAggregationType == "Sum")">Sum - Total of all values</option>
+            <option value="Average" selected="@(selectedAggregationType == "Average")">Average - Mean of all values</option>
+            <option value="Count" selected="@(selectedAggregationType == "Count")">Count - Number of responses</option>
+            <option value="Min" selected="@(selectedAggregationType == "Min")">Minimum - Lowest value</option>
+            <option value="Max" selected="@(selectedAggregationType == "Max")">Maximum - Highest value</option>
+            <option value="Latest" selected="@(selectedAggregationType == "Latest")">Latest - Most recent value</option>
+        </select>
+        <div class="form-text">How values should be aggregated when multiple submissions exist.</div>
+    </div>
+
+    <!-- Expected Value (for Binary Compliance) -->
+    <div class="mb-4" id="expectedValueSection" style="display: @(selectedMappingType == "BinaryCompliance" ? "block" : "none");">
+        <label for="ExpectedValue" class="form-label">
+            Expected Value <span class="text-danger">*</span>
+        </label>
+        <input type="text" 
+               class="form-control" 
+               id="ExpectedValue" 
+               name="ExpectedValue" 
+               value="@existingMapping?.ExpectedValue"
+               placeholder="e.g., Yes, Compliant, True" />
+        <div class="form-text">The value that indicates compliance (case-insensitive match).</div>
+    </div>
+
+    <!-- Configuration Summary -->
+    <div class="card bg-light border-0 mt-4">
+        <div class="card-body">
+            <h6 class="card-title">
+                <i class="ri-file-list-3-line me-2"></i>Configuration Summary
+            </h6>
+            <div class="row">
+                <div class="col-md-4">
+                    <small class="text-muted">Mapping Name</small>
+                    <div id="summaryMappingName" class="fw-medium">@defaultMappingName</div>
+                </div>
+                <div class="col-md-4">
+                    <small class="text-muted">Mapping Type</small>
+                    <div id="summaryMappingType" class="fw-medium">@(selectedTypeInfo?.Text ?? "-")</div>
+                </div>
+                <div class="col-md-4">
+                    <small class="text-muted">Aggregation</small>
+                    <div id="summaryAggregationType" class="fw-medium">@selectedAggregationType</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Update mapping type description on change
+    const mappingTypeSelect = document.getElementById('MappingType');
+    const descriptionDiv = document.getElementById('mappingTypeDescription');
+    const expectedValueSection = document.getElementById('expectedValueSection');
+    
+    if (mappingTypeSelect) {
+        mappingTypeSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            const description = selectedOption.getAttribute('data-description') || 'Select a mapping type to see its description.';
+            descriptionDiv.textContent = description;
+            
+            // Show/hide expected value for BinaryCompliance
+            if (this.value === 'BinaryCompliance') {
+                expectedValueSection.style.display = 'block';
+            } else {
+                expectedValueSection.style.display = 'none';
+            }
+            
+            // Update summary
+            document.getElementById('summaryMappingType').textContent = selectedOption.text || '-';
+        });
+    }
+    
+    // Update summary on input changes
+    const mappingNameInput = document.getElementById('MappingName');
+    if (mappingNameInput) {
+        mappingNameInput.addEventListener('input', function() {
+            document.getElementById('summaryMappingName').textContent = this.value || '-';
+        });
+    }
+    
+    const aggregationSelect = document.getElementById('AggregationType');
+    if (aggregationSelect) {
+        aggregationSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            document.getElementById('summaryAggregationType').textContent = selectedOption.text.split(' - ')[0] || '-';
+        });
+    }
+});
+</script>

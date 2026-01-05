@@ -1,0 +1,143 @@
+<!-- Email Details Offcanvas -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="emailOffcanvas" aria-labelledby="emailOffcanvasLabel" style="width: 600px;">
+    <div class="offcanvas-header bg-light">
+        <h5 class="offcanvas-title" id="emailOffcanvasLabel">Email Details</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+        <!-- Loading State -->
+        <div id="emailDetailLoading" class="text-center p-5">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="mt-3 text-muted">Loading email...</p>
+        </div>
+
+        <!-- Error State -->
+        <div id="emailDetailError" class="alert alert-danger m-3" style="display:none;">
+            <i class="ri-error-warning-line me-2"></i>
+            <span id="emailDetailErrorMessage">Failed to load email</span>
+        </div>
+
+        <!-- Email Content -->
+        <div id="emailDetailContent" style="display:none;">
+            <!-- Email Header -->
+            <div class="p-3 border-bottom bg-light">
+                <h5 id="emailSubject" class="mb-3"></h5>
+
+                <div class="d-flex align-items-start mb-2">
+                    <div class="flex-shrink-0">
+                        <div class="avatar-xs">
+                            <div class="avatar-title rounded-circle bg-primary-subtle text-primary">
+                                <i class="ri-mail-line"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-2">
+                        <p class="mb-1"><strong>From:</strong> <span id="emailFrom"></span></p>
+                        <p class="mb-1"><strong>To:</strong> <span id="emailTo"></span></p>
+                        <p class="mb-0 text-muted"><small id="emailDate"></small></p>
+                    </div>
+                </div>
+
+                <div class="d-flex gap-2 mt-2">
+                    <span id="emailStatusBadge" class="badge"></span>
+                    <span id="emailPriorityBadge" class="badge"></span>
+                    <span id="emailReadBadge" class="badge"></span>
+                </div>
+            </div>
+
+            <!-- Email Body -->
+            <div class="p-3">
+                <div id="emailBody" class="email-body">
+                    <!-- HTML content will be inserted here -->
+                </div>
+            </div>
+
+            <!-- Delivery Information -->
+            <div class="p-3 border-top bg-light">
+                <h6 class="text-muted mb-3">Delivery Information</h6>
+                <div class="table-responsive">
+                    <table class="table table-sm table-borderless mb-0">
+                        <tbody>
+                            <tr>
+                                <td class="text-muted" style="width: 140px;">Status:</td>
+                                <td><span id="emailDeliveryStatus"></span></td>
+                            </tr>
+                            <tr id="emailSentDateRow" style="display:none;">
+                                <td class="text-muted">Sent Date:</td>
+                                <td><span id="emailSentDate"></span></td>
+                            </tr>
+                            <tr id="emailErrorRow" style="display:none;">
+                                <td class="text-muted">Error:</td>
+                                <td><span id="emailError" class="text-danger"></span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Source Information -->
+            <div id="emailSourceWrapper" class="p-3 border-top" style="display:none;">
+                <h6 class="text-muted mb-2">Related To</h6>
+                <p class="mb-0">
+                    <i class="ri-links-line me-2"></i>
+                    <span id="emailSource"></span>
+                </p>
+            </div>
+
+            <!-- Action Button -->
+            <div id="emailActionWrapper" class="p-3 border-top" style="display:none;">
+                <a id="emailActionButton" href="#" class="btn btn-primary w-100" target="_blank">
+                    <i class="ri-external-link-line me-2"></i>
+                    <span id="emailActionText">View</span>
+                </a>
+            </div>
+
+            <!-- Actions Footer -->
+            <div class="offcanvas-footer border-top p-3 bg-light">
+                <div class="d-grid gap-2">
+                    <button type="button" id="markEmailAsReadBtn" class="btn btn-soft-success">
+                        <i class="ri-check-line me-2"></i>
+                        Mark as Read
+                    </button>
+                    <button type="button" id="markEmailAsUnreadBtn" class="btn btn-soft-secondary" style="display:none;">
+                        <i class="ri-mail-unread-line me-2"></i>
+                        Mark as Unread
+                    </button>
+                    <button type="button" id="deleteEmailBtn" class="btn btn-soft-danger">
+                        <i class="ri-delete-bin-line me-2"></i>
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+/* Email Body Styling */
+.email-body {
+    line-height: 1.6;
+    color: #495057;
+}
+
+.email-body p {
+    margin-bottom: 1rem;
+}
+
+.email-body ul {
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.email-body strong {
+    font-weight: 600;
+    color: #212529;
+}
+
+.email-body a {
+    color: #0d6efd;
+    text-decoration: underline;
+}
+</style>

@@ -1,0 +1,366 @@
+@model FormReporting.Models.ViewModels.Metrics.MetricConfigurationViewModel
+
+<!-- Template-Level Metrics Step -->
+<div class="template-level-step">
+    <!-- Step Actions -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <span class="badge bg-success-subtle text-success">Step 3 of 3</span>
+        </div>
+        <div>
+            <button type="button" class="btn btn-outline-secondary btn-sm me-2" id="refreshFromSections">
+                <i class="ri-refresh-line me-1"></i>Refresh from Sections
+            </button>
+            <button type="button" class="btn btn-success btn-sm" id="addTemplateMapping">
+                <i class="ri-add-line me-1"></i>Add Template KPI
+            </button>
+        </div>
+    </div>
+
+    <!-- Progress Overview -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 bg-success-subtle">
+                <div class="card-body text-center py-3">
+                    <div class="fw-bold text-success">@Model.ConfiguredTemplateKPIs</div>
+                    <small class="text-muted">Template KPIs</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 bg-info-subtle">
+                <div class="card-body text-center py-3">
+                    <div class="fw-bold text-info">@Model.Sections.Count(s => s.HasMapping)</div>
+                    <small class="text-muted">Available Section Sources</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 bg-primary-subtle">
+                <div class="card-body text-center py-3">
+                    <div class="fw-bold text-primary">@((Model.ConfiguredTemplateKPIs > 0 ? 100 : 0))%</div>
+                    <small class="text-muted">Configuration Complete</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Template KPIs -->
+    @if (Model.TemplateMappings.Any())
+    {
+        @foreach (var mapping in Model.TemplateMappings)
+        {
+            <div class="card mb-3">
+                <div class="card-header">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0">
+                            <i class="ri-bar-chart-box-line me-2 text-success"></i>@mapping.MappingName
+                        </h6>
+                        <div class="d-flex align-items-center">
+                            <span class="badge bg-success-subtle text-success me-2">
+                                <i class="ri-check-line me-1"></i>Active
+                            </span>
+                            <small class="text-muted">@mapping.Sources.Count section sources</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-2">
+                                <strong>Metric:</strong> 
+                                @if (mapping.Metric != null)
+                                {
+                                    <span>@mapping.Metric.MetricName</span>
+                                    <small class="text-muted">(@mapping.Metric.MetricCode)</small>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Standalone KPI</span>
+                                }
+                            </div>
+                            <div class="mb-2">
+                                <strong>Type:</strong> 
+                                <span class="badge bg-info-subtle text-info">@mapping.MappingType</span>
+                            </div>
+                            <div class="mb-2">
+                                <strong>Aggregation:</strong> 
+                                <span class="badge bg-primary-subtle text-primary">@mapping.AggregationType</span>
+                            </div>
+                            <div class="mb-2">
+                                <strong>Created:</strong> 
+                                <small class="text-muted">@mapping.CreatedDate.ToString("MMM dd, yyyy")</small>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">Source Sections (@mapping.Sources.Count)</h6>
+                            @if (mapping.Sources.Any())
+                            {
+                                <div class="list-group list-group-flush">
+                                    @foreach (var source in mapping.Sources.OrderBy(s => s.DisplayOrder))
+                                    {
+                                        <div class="list-group-item px-0 py-2 border-0">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <strong>@source.SectionMapping.Section.SectionName</strong>
+                                                    @if (source.Weight.HasValue)
+                                                    {
+                                                        <small class="text-muted">(Weight: @source.Weight.Value.ToString("P1"))</small>
+                                                    }
+                                                </div>
+                                                <span class="badge bg-light text-dark">@source.SectionMapping.AggregationType</span>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-muted mb-0">No source sections configured</p>
+                            }
+                        </div>
+                    </div>
+                    
+                    <!-- Preview/Sample Calculation -->
+                    <div class="mt-3 p-3 bg-light rounded">
+                        <h6 class="text-muted mb-2">
+                            <i class="ri-eye-line me-1"></i>Sample Calculation Preview
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-8">
+                                <small class="text-muted">
+                                    @if (mapping.AggregationType == "WeightedAverage")
+                                    {
+                                        <span>Weighted Average: </span>
+                                        @foreach (var source in mapping.Sources.Take(2))
+                                        {
+                                            <span>@source.SectionMapping.Section.SectionName (@(source.Weight?.ToString("P0") ?? "25%")) + </span>
+                                        }
+                                        <span>...</span>
+                                    }
+                                    else if (mapping.AggregationType == "Average")
+                                    {
+                                        <span>Average of @mapping.Sources.Count section scores</span>
+                                    }
+                                    else if (mapping.AggregationType == "Sum")
+                                    {
+                                        <span>Sum of @mapping.Sources.Count section values</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Custom aggregation formula</span>
+                                    }
+                                </small>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <strong class="text-success">Sample: 91.04%</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-outline-success btn-sm btn-edit-template-mapping" 
+                                data-template-id="@Model.TemplateId" 
+                                data-mapping-id="@mapping.MappingId">
+                            <i class="ri-edit-line me-1"></i>Edit KPI
+                        </button>
+                        <button type="button" class="btn btn-outline-info btn-sm btn-view-drilldown" 
+                                data-mapping-id="@mapping.MappingId">
+                            <i class="ri-eye-line me-1"></i>View Drill-down
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm btn-delete-template-mapping" 
+                                data-template-id="@Model.TemplateId" 
+                                data-mapping-id="@mapping.MappingId">
+                            <i class="ri-delete-bin-line me-1"></i>Delete KPI
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <!-- No Template KPIs -->
+        <div class="card">
+            <div class="card-body text-center py-5">
+                @{
+                    var configuredSections = Model.Sections.Count(s => s.HasMapping);
+                }
+                @if (configuredSections > 0)
+                {
+                    <i class="ri-add-circle-line text-success" style="font-size: 3rem;"></i>
+                    <h6 class="text-success mt-3">Ready to Create Template KPIs</h6>
+                    <p class="text-muted mb-3">
+                        You have @configuredSections configured section mappings that can be aggregated into template-level KPIs.
+                    </p>
+                    <button type="button" class="btn btn-success btn-add-template-mapping" 
+                            data-template-id="@Model.TemplateId">
+                        <i class="ri-add-line me-1"></i>Create First Template KPI
+                    </button>
+                }
+                else
+                {
+                    <i class="ri-information-line text-muted" style="font-size: 3rem;"></i>
+                    <h6 class="text-muted mt-3">No Section Mappings</h6>
+                    <p class="text-muted mb-3">
+                        Configure section-level mappings first before creating template KPIs.
+                    </p>
+                    <button type="button" class="btn btn-outline-primary" onclick="document.querySelector('[data-bs-target=&quot;#section-level&quot;]').click()">
+                        <i class="ri-arrow-left-line me-1"></i>Go to Section Level
+                    </button>
+                }
+            </div>
+        </div>
+    }
+
+    <!-- Template KPI Suggestions -->
+    @if (Model.Sections.Any(s => s.HasMapping))
+    {
+        <div class="card border-success">
+            <div class="card-header bg-success-subtle">
+                <h6 class="mb-0 text-success">
+                    <i class="ri-lightbulb-line me-2"></i>Suggested Template KPIs
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="p-3 border rounded">
+                            <h6 class="text-success">Overall Form Score</h6>
+                            <p class="text-muted small mb-2">Weighted average of all section scores</p>
+                            <button type="button" class="btn btn-outline-success btn-sm btn-create-suggested" 
+                                    data-suggestion="overall-score">
+                                <i class="ri-add-line me-1"></i>Create
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 border rounded">
+                            <h6 class="text-success">Completion Index</h6>
+                            <p class="text-muted small mb-2">Percentage of required fields completed</p>
+                            <button type="button" class="btn btn-outline-success btn-sm btn-create-suggested" 
+                                    data-suggestion="completion-index">
+                                <i class="ri-add-line me-1"></i>Create
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 border rounded">
+                            <h6 class="text-success">Quality Rating</h6>
+                            <p class="text-muted small mb-2">Data quality assessment across sections</p>
+                            <button type="button" class="btn btn-outline-success btn-sm btn-create-suggested" 
+                                    data-suggestion="quality-rating">
+                                <i class="ri-add-line me-1"></i>Create
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+
+    <!-- Final Summary -->
+    <div class="card border-success mt-4">
+        <div class="card-header bg-success-subtle">
+            <h6 class="mb-0 text-success">
+                <i class="ri-checkbox-circle-line me-2"></i>Configuration Summary
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <div class="text-primary fw-bold fs-4">@Model.ConfiguredFields</div>
+                        <div class="text-muted">Field Mappings</div>
+                        <div class="progress mt-2" style="height: 4px;">
+                            <div class="progress-bar bg-primary" role="progressbar" style="width: @(Model.FieldProgress)%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <div class="text-info fw-bold fs-4">@Model.ConfiguredSections</div>
+                        <div class="text-muted">Section Aggregations</div>
+                        <div class="progress mt-2" style="height: 4px;">
+                            <div class="progress-bar bg-info" role="progressbar" style="width: @(Model.SectionProgress)%"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="text-center">
+                        <div class="text-success fw-bold fs-4">@Model.ConfiguredTemplateKPIs</div>
+                        <div class="text-muted">Template KPIs</div>
+                        <div class="progress mt-2" style="height: 4px;">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: @(Model.ConfiguredTemplateKPIs > 0 ? 100 : 0)%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="text-center mt-3">
+                @{
+                    var totalProgress = (Model.FieldProgress + Model.SectionProgress + (Model.ConfiguredTemplateKPIs > 0 ? 100 : 0)) / 3;
+                }
+                <div class="text-muted mb-2">Overall Configuration Progress</div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar bg-gradient" role="progressbar" style="width: @(totalProgress)%"></div>
+                </div>
+                <small class="text-muted">@totalProgress.ToString("F0")% Complete</small>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Template Mapping Modal -->
+<div class="modal fade" id="templateMappingModal" tabindex="-1" aria-labelledby="templateMappingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="templateMappingModalLabel">
+                    <i class="ri-settings-3-line me-2"></i>Configure Template KPI
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Modal content will be loaded dynamically -->
+                <div id="templateMappingContent">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-success" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success" id="saveTemplateMapping">
+                    <i class="ri-save-line me-1"></i>Save KPI
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Drill-down Modal -->
+<div class="modal fade" id="drilldownModal" tabindex="-1" aria-labelledby="drilldownModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="drilldownModalLabel">
+                    <i class="ri-eye-line me-2"></i>KPI Drill-down Analysis
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Drill-down content will be loaded dynamically -->
+                <div id="drilldownContent">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-success" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

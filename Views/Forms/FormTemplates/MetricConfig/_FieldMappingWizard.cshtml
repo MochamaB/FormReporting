@@ -1,0 +1,171 @@
+@model FormReporting.Models.ViewModels.Metrics.FieldMappingWizardViewModel
+@using FormReporting.Extensions
+@using FormReporting.Models.ViewModels.Components
+
+@{
+    // Store field data for JavaScript access (with null safety)
+    var fieldDataJson = System.Text.Json.JsonSerializer.Serialize(new
+    {
+        itemId = Model.FieldId,
+        itemName = Model.FieldName ?? "",
+        itemCode = Model.FieldCode ?? "",
+        dataType = Model.DataType ?? "Text",
+        sectionName = Model.SectionName ?? "",
+        templateId = Model.TemplateId,
+        templateName = Model.TemplateName ?? "",
+        isRequired = Model.IsRequired,
+        hasOptions = Model.HasOptions,
+        options = (Model.Options ?? new List<FormReporting.Models.ViewModels.Metrics.FieldOptionViewModel>())
+            .Select(o => new { optionId = o.OptionId, optionText = o.OptionText ?? "", scoreValue = o.ScoreValue })
+    });
+
+    // Create wizard configuration for field mapping
+    var wizardConfig = new WizardConfig
+    {
+        FormId = "fieldMappingWizard",
+        Layout = WizardLayout.Horizontal,
+        Steps = new List<WizardStep>
+        {
+            new WizardStep
+            {
+                StepId = "field-configuration",
+                StepNumber = 1,
+                Title = "Configure Mapping",
+                Label = "Configure Mapping",
+                Description = "Set up how this field should be tracked and measured",
+                Icon = "ri-settings-3-line",
+                State = WizardStepState.Active,
+                ContentPartialPath = "~/Views/Forms/FormTemplates/MetricConfig/_Step1_FormItemConfiguration.cshtml",
+                ShowPrevious = false,
+                ShowNext = true,
+                NextButtonText = "Next: Choose Metric"
+            },
+            new WizardStep
+            {
+                StepId = "metric-choice",
+                StepNumber = 2,
+                Title = "Choose Metric",
+                Label = "Choose Metric",
+                Description = "Decide how to handle the metric definition for reporting",
+                Icon = "ri-bar-chart-line",
+                State = WizardStepState.Pending,
+                ContentPartialPath = "~/Views/Forms/FormTemplates/MetricConfig/_Step2_MetricChoice.cshtml",
+                ShowPrevious = true,
+                ShowNext = false,
+                CustomButtonHtml = "<button type='button' class='btn btn-success ms-auto' id='saveFieldMapping'><i class='ri-save-line me-1'></i>Save Mapping</button>"
+            }
+        }
+    };
+
+    // Build the wizard view model
+    var wizardViewModel = wizardConfig.BuildWizard();
+    ViewData["WizardViewModel"] = wizardViewModel;
+    ViewData["ParentModel"] = Model;
+}
+
+<!-- Hidden field data for JavaScript -->
+<input type="hidden" id="fieldDataJson" value='@fieldDataJson' />
+
+<div class="row">
+    <!-- Left: Field Information Panel (35%) -->
+    <div class="col-md-4">
+        <partial name="~/Views/Forms/FormTemplates/MetricConfig/_FieldInformationPanel.cshtml" model="Model" />
+    </div>
+    
+    <!-- Right: Wizard Steps (65%) -->
+    <div class="col-md-8">
+        <partial name="~/Views/Shared/Components/Wizards/_HorizontalWizard.cshtml" model="wizardViewModel" />
+    </div>
+</div>
+
+<script>
+// Initialize wizard when loaded
+$(document).ready(function() {
+    // Get field data from hidden input
+    var fieldDataJson = $('#fieldDataJson').val();
+    var fieldData = JSON.parse(fieldDataJson);
+    
+    // Initialize wizard with field data
+    if (typeof FieldMappingWizard !== 'undefined') {
+        FieldMappingWizard.initialize(fieldData);
+    }
+    
+    // Setup wizard navigation handlers
+    setupWizardNavigation();
+});
+
+function setupWizardNavigation() {
+    // Next button handler (Step 1 -> Step 2)
+    $(document).on('click', '.nexttab', function() {
+        var nextTabId = $(this).data('nexttab');
+        if (nextTabId) {
+            // Validate Step 1 before proceeding
+            if (typeof FieldMappingWizard !== 'undefined' && !FieldMappingWizard.validateStep1()) {
+                return false;
+            }
+            
+            // Store Step 1 data in memory (don't save to API yet)
+            FieldMappingWizard.storeStep1Data();
+            
+            // Navigate to next step
+            navigateToStep(nextTabId);
+        }
+    });
+    
+    // Helper function to navigate between steps
+    function navigateToStep(tabId) {
+        var stepId = tabId.replace('-tab', '');
+        
+        // Update stepper visual states
+        $('.horizontal-wizard-step').each(function() {
+            var $step = $(this);
+            var stepTarget = $step.data('bs-target');
+            
+            if (stepTarget === '#' + stepId) {
+                // This is the target step - make it active
+                $step.removeClass('done pending').addClass('active');
+            } else {
+                // Check if this step comes before or after target
+                var stepIndex = $step.index();
+                var targetIndex = $('[data-bs-target="#' + stepId + '"]').index();
+                
+                if (stepIndex < targetIndex) {
+                    // Previous steps are done
+                    $step.removeClass('active pending').addClass('done');
+                } else {
+                    // Future steps are pending
+                    $step.removeClass('active done').addClass('pending');
+                }
+            }
+        });
+        
+        // Show target content
+        $('.tab-pane').removeClass('show active');
+        $('#' + stepId).addClass('show active');
+    }
+    
+    // Previous button handler (Step 2 -> Step 1)
+    $(document).on('click', '.previestab', function() {
+        var prevTabId = $(this).data('previous');
+        if (prevTabId) {
+            // Navigate back to previous step
+            navigateToStep(prevTabId);
+        }
+    });
+    
+    // Save button handler
+    $(document).on('click', '#saveFieldMapping', function() {
+        if (typeof FieldMappingWizard !== 'undefined') {
+            FieldMappingWizard.saveStep2();
+        }
+    });
+    
+    // Metric option chooser change handler
+    $(document).on('change', '#metricOptionChooser', function() {
+        var selectedOption = $(this).val();
+        if (typeof FieldMappingWizard !== 'undefined') {
+            FieldMappingWizard.handleMetricOptionChange(selectedOption);
+        }
+    });
+}
+</script>

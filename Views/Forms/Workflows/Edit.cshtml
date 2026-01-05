@@ -1,17 +1,21 @@
 @model WorkflowEditViewModel
 @using FormReporting.Models.ViewModels.Components
+@using FormReporting.Models.ViewModels.Forms
+@using FormReporting.Extensions
 
 @{
     ViewData["Title"] = "Edit Workflow";
     
     var formConfig = new SimpleFormConfig
     {
-        Title = "Edit Workflow",
+        FormId = "editWorkflowForm",
         FormAction = Url.Action("Update", "Workflow", new { id = Model.WorkflowId }),
         FormMethod = "POST",
         SubmitButtonText = "Update Workflow",
-        CancelUrl = Url.Action("Index", "Workflow"),
-        FormStyle = SimpleFormStyle.Card,
+        CancelButtonUrl = Url.Action("Index", "Workflow"),
+        CardTitle = "Edit Workflow",
+        StyleType = FormStyleType.Standard,
+        WrapInCard = true,
         Fields = new List<SimpleFormFieldConfig>
         {
             new SimpleFormFieldConfig

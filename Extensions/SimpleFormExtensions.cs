@@ -297,6 +297,34 @@ public static class SimpleFormExtensions
     }
 
     /// <summary>
+    /// Adds a time field
+    /// </summary>
+    public static SimpleFormConfig WithTimeField(this SimpleFormConfig config,
+        string propertyName,
+        string label,
+        TimeSpan? value = null,
+        bool isRequired = false,
+        string? helpText = null,
+        string columnClass = "col-12")
+    {
+        // Format TimeSpan for HTML5 time input (HH:mm format)
+        string? timeValue = value?.ToString(@"hh\:mm");
+        
+        config.Fields.Add(new SimpleFormFieldConfig
+        {
+            PropertyName = propertyName,
+            Label = label,
+            FieldType = SimpleFieldType.Time,
+            Value = timeValue,
+            IsRequired = isRequired,
+            HelpText = helpText,
+            ColumnClass = columnClass,
+            DisplayOrder = config.Fields.Count + 1
+        });
+        return config;
+    }
+
+    /// <summary>
     /// Adds a checkbox field
     /// </summary>
     public static SimpleFormConfig WithCheckboxField(this SimpleFormConfig config,

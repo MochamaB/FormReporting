@@ -80,6 +80,28 @@ namespace FormReporting.Models.ViewModels.Notifications
         public DateTime CreatedDate { get; set; }
         public string Status { get; set; } = string.Empty;
         public string? ActionUrl { get; set; }
+
+        // Badge colors for DataTable component
+        public string PriorityColor => Priority switch
+        {
+            "Urgent" => "danger",
+            "High" => "warning",
+            "Normal" => "info",
+            "Low" => "secondary",
+            _ => "info"
+        };
+
+        public string ChannelColor => ChannelType switch
+        {
+            "Email" => "primary",
+            "InApp" => "success",
+            "SMS" => "warning",
+            _ => "secondary"
+        };
+
+        public string StatusColor => IsRead ? "success" : "warning";
+
+        public string IconClass { get; set; } = "ri-notification-line";
     }
 
     /// <summary>
@@ -89,6 +111,8 @@ namespace FormReporting.Models.ViewModels.Notifications
     {
         public int TotalCount { get; set; }
         public int UnreadCount { get; set; }
+        public int EmailCount { get; set; }
+        public int InAppCount { get; set; }
         public int TodayCount { get; set; }
         public int ThisWeekCount { get; set; }
     }
@@ -222,6 +246,7 @@ namespace FormReporting.Models.ViewModels.Notifications
         public NotificationStatsDto Stats { get; set; } = new();
         public PaginatedResult<NotificationListDto> Notifications { get; set; } = new();
         public string? SearchTerm { get; set; }
+        public string? SearchFilter => SearchTerm; // Alias for view compatibility
         public string? CategoryFilter { get; set; }
         public string? PriorityFilter { get; set; }
         public string? StatusFilter { get; set; }

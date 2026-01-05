@@ -1,9 +1,11 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using FormReporting.Data;
-using FormReporting.Services.Metrics;
-using FormReporting.Models.ViewModels.Metrics;
+using FormReporting.Models.Common;
 using FormReporting.Models.Entities.Forms;
+using FormReporting.Models.Entities.Metrics;
+using FormReporting.Models.ViewModels.Metrics;
+using FormReporting.Services.Metrics;
 
 namespace FormReporting.Controllers.API
 {
@@ -16,13 +18,16 @@ namespace FormReporting.Controllers.API
     public class MetricMappingApiController : ControllerBase
     {
         private readonly IMetricMappingService _mappingService;
+        private readonly IFieldMappingValidationService _validationService;
         private readonly ApplicationDbContext _context;
 
         public MetricMappingApiController(
             IMetricMappingService mappingService,
+            IFieldMappingValidationService validationService,
             ApplicationDbContext context)
         {
             _mappingService = mappingService;
+            _validationService = validationService;
             _context = context;
         }
 
@@ -208,15 +213,221 @@ namespace FormReporting.Controllers.API
             }
         }
 
+        /// <summary>
+        /// Get valid mapping types for a specific field type
+        /// </summary>
+        [HttpGet("field-type/{fieldType}/mapping-types")]
+        public IActionResult GetValidMappingTypes(FormFieldType fieldType)
+        {
+            try
+            {
+                var validTypes = _validationService.GetValidMappingTypes(fieldType);
+                var recommendedType = _validationService.GetRecommendedMappingType(fieldType);
+
+                return Ok(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        fieldType = fieldType.ToString(),
+                        validMappingTypes = validTypes,
+                        recommendedMappingType = recommendedType,
+                        mappingTypeDescriptions = new Dictionary<string, string>
+                        {
+                            ["Direct"] = "Direct 1:1 value mapping from field response",
+                            ["BinaryCompliance"] = "Check if field value matches expected value",
+                            ["Calculated"] = "Calculate value using formula or aggregation",
+                            ["Derived"] = "Value derived from other mappings or external sources"
+                        }
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Get filtered metrics for field mapping based on field type and hierarchy
+        /// </summary>
+        [HttpGet("field/{fieldId}/compatible-metrics")]
+        public async Task<IActionResult> GetCompatibleMetrics(int fieldId)
+        {
+            try
+            {
+                // Get field details
+                var field = await _context.FormTemplateItems
+                    .FirstOrDefaultAsync(i => i.ItemId == fieldId);
+
+                if (field == null)
+                    return NotFound(new { success = false, message = "Field not found" });
+
+                // Get compatible metrics based on field type and hierarchy
+                var metrics = await _context.MetricDefinitions
+                    .Where(m => m.IsActive && 
+                               m.MetricScope == "Field" && 
+                               m.SourceType == "UserInput")
+                    .OrderBy(m => m.Category)
+                    .ThenBy(m => m.MetricName)
+                    .Select(m => new
+                    {
+                        metricId = m.MetricId,
+                        metricCode = m.MetricCode,
+                        metricName = m.MetricName,
+                        category = m.Category,
+                        dataType = m.DataType,
+                        unit = m.Unit,
+                        description = m.Description,
+                        thresholdGreen = m.ThresholdGreen,
+                        thresholdYellow = m.ThresholdYellow,
+                        thresholdRed = m.ThresholdRed
+                    })
+                    .ToListAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        fieldType = field.DataType,
+                        compatibleMetrics = metrics,
+                        count = metrics.Count
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Get field data for wizard (data only, no HTML - wizard rendering is handled by MVC controller)
+        /// </summary>
+        [HttpGet("field/{fieldId}/data")]
+        public async Task<IActionResult> GetFieldDataForWizard(int fieldId)
+        {
+            try
+            {
+                // Get field information with all related data
+                var field = await _context.FormTemplateItems
+                    .Include(i => i.Section)
+                    .Include(i => i.Options)
+                    .Include(i => i.Template)
+                    .FirstOrDefaultAsync(i => i.ItemId == fieldId);
+
+                if (field == null)
+                    return NotFound(new { success = false, message = "Field not found" });
+
+                // Create field data object
+                var fieldData = new
+                {
+                    itemId = field.ItemId,
+                    itemName = field.ItemName,
+                    itemCode = field.ItemCode,
+                    dataType = field.DataType.ToString(),
+                    sectionName = field.Section?.SectionName,
+                    templateId = field.TemplateId,
+                    templateName = field.Template?.TemplateName,
+                    isRequired = field.IsRequired,
+                    hasOptions = field.Options.Any(),
+                    options = field.Options.Select(o => new
+                    {
+                        optionId = o.OptionId,
+                        optionText = o.OptionLabel,
+                        scoreValue = o.ScoreValue
+                    }).ToList()
+                };
+
+                return Ok(new
+                {
+                    success = true,
+                    data = fieldData
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
         // ===================================================================
         // POST ENDPOINTS - Create Operations
         // ===================================================================
 
         /// <summary>
-        /// Create a new metric mapping
+        /// Create a new MetricDefinition from field mapping modal
         /// </summary>
-        [HttpPost("create")]
-        public async Task<IActionResult> CreateMapping([FromBody] CreateMappingDto dto)
+        [HttpPost("create-metric")]
+        public async Task<IActionResult> CreateMetricDefinition([FromBody] CreateMetricDefinitionDto dto)
+        {
+            try
+            {
+                // Validate required fields
+                if (string.IsNullOrWhiteSpace(dto.MetricName))
+                    return BadRequest(new { success = false, message = "Metric name is required" });
+
+                // Generate metric code if not provided - include template context if available
+                var metricCode = !string.IsNullOrWhiteSpace(dto.MetricCode) 
+                    ? dto.MetricCode 
+                    : GenerateMetricCode(dto.MetricName, dto.TemplateId);
+
+                // Check if metric code already exists
+                var existingMetric = await _context.MetricDefinitions
+                    .FirstOrDefaultAsync(m => m.MetricCode == metricCode);
+
+                if (existingMetric != null)
+                    return BadRequest(new { success = false, message = $"Metric code '{metricCode}' already exists" });
+
+                // Create new metric definition
+                var metric = new MetricDefinition
+                {
+                    MetricCode = metricCode,
+                    MetricName = dto.MetricName,
+                    Description = dto.Description,
+                    DataType = dto.DataType ?? "Decimal",
+                    Unit = dto.Unit,
+                    Category = dto.Category ?? "Performance",
+                    MetricScope = "Field", // Always Field for field mappings
+                    SourceType = "UserInput", // Always UserInput for field mappings
+                    HierarchyLevel = 0, // Field level is 0
+                    ThresholdGreen = dto.ThresholdGreen,
+                    ThresholdYellow = dto.ThresholdYellow,
+                    ThresholdRed = dto.ThresholdRed,
+                    IsActive = true,
+                    CreatedDate = DateTime.UtcNow
+                };
+
+                _context.MetricDefinitions.Add(metric);
+                await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Metric definition created successfully",
+                    data = new
+                    {
+                        metricId = metric.MetricId,
+                        metricCode = metric.MetricCode,
+                        metricName = metric.MetricName,
+                        category = metric.Category,
+                        dataType = metric.DataType,
+                        unit = metric.Unit
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Create a new field metric mapping
+        /// </summary>
+        [HttpPost("field/create")]
+        public async Task<IActionResult> CreateFieldMapping([FromBody] CreateFieldMappingDto dto)
         {
             try
             {
@@ -230,17 +441,17 @@ namespace FormReporting.Controllers.API
                 }
 
                 // Validate mapping
-                var (isValid, validationErrors) = await _mappingService.ValidateMappingAsync(dto);
+                var (isValid, validationErrors) = await _mappingService.ValidateFieldMappingAsync(dto);
                 if (!isValid)
                     return BadRequest(new { success = false, message = "Validation failed", errors = validationErrors });
 
                 // Create mapping
-                var mapping = await _mappingService.CreateMappingAsync(dto);
+                var mapping = await _mappingService.CreateFieldMappingAsync(dto);
 
                 return Ok(new
                 {
                     success = true,
-                    message = "Mapping created successfully",
+                    message = "Field mapping created successfully",
                     mappingId = mapping.MappingId,
                     data = new
                     {
@@ -284,6 +495,243 @@ namespace FormReporting.Controllers.API
                     return NotFound(new { success = false, message = "Mapping not found" });
 
                 return Ok(new { success = true, message = "Mapping updated successfully" });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        // ===================================================================
+        // SECTION LEVEL ENDPOINTS
+        // ===================================================================
+
+        /// <summary>
+        /// Get all section mappings for a template
+        /// </summary>
+        [HttpGet("template/{templateId}/sections")]
+        public async Task<IActionResult> GetTemplateSections(int templateId)
+        {
+            try
+            {
+                var sections = await _context.FormTemplateSections
+                    .Include(s => s.Items)
+                        .ThenInclude(i => i.MetricMappings.Where(m => m.IsActive))
+                    .Where(s => s.TemplateId == templateId)
+                    .OrderBy(s => s.DisplayOrder)
+                    .ToListAsync();
+
+                var sectionMappings = await _context.FormSectionMetricMappings
+                    .Include(m => m.Metric)
+                    .Include(m => m.Sources)
+                        .ThenInclude(s => s.ItemMapping)
+                            .ThenInclude(im => im.Item)
+                    .Where(m => m.Section.TemplateId == templateId && m.IsActive)
+                    .ToListAsync();
+
+                var result = sections.Select(s => new
+                {
+                    sectionId = s.SectionId,
+                    sectionName = s.SectionName,
+                    displayOrder = s.DisplayOrder,
+                    totalFields = s.Items.Count,
+                    mappedFields = s.Items.Count(i => i.MetricMappings.Any()),
+                    hasMapping = sectionMappings.Any(m => m.SectionId == s.SectionId),
+                    mapping = sectionMappings.FirstOrDefault(m => m.SectionId == s.SectionId) is var mapping && mapping != null
+                        ? new
+                        {
+                            mappingId = mapping.MappingId,
+                            mappingName = mapping.MappingName,
+                            aggregationType = mapping.AggregationType,
+                            metricName = mapping.Metric?.MetricName,
+                            metricCode = mapping.Metric?.MetricCode,
+                            sourceCount = mapping.Sources.Count
+                        }
+                        : null
+                }).ToList();
+
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Get section mapping details
+        /// </summary>
+        [HttpGet("section/{sectionId}")]
+        public async Task<IActionResult> GetSectionMapping(int sectionId)
+        {
+            try
+            {
+                var section = await _context.FormTemplateSections
+                    .Include(s => s.Items)
+                        .ThenInclude(i => i.MetricMappings.Where(m => m.IsActive))
+                            .ThenInclude(m => m.Metric)
+                    .FirstOrDefaultAsync(s => s.SectionId == sectionId);
+
+                if (section == null)
+                    return NotFound(new { success = false, message = "Section not found" });
+
+                var mapping = await _context.FormSectionMetricMappings
+                    .Include(m => m.Metric)
+                    .Include(m => m.Sources)
+                        .ThenInclude(s => s.ItemMapping)
+                            .ThenInclude(im => im.Item)
+                    .FirstOrDefaultAsync(m => m.SectionId == sectionId && m.IsActive);
+
+                var availableFieldMappings = section.Items
+                    .SelectMany(i => i.MetricMappings)
+                    .Select(m => new
+                    {
+                        mappingId = m.MappingId,
+                        itemId = m.ItemId,
+                        itemName = m.Item?.ItemName,
+                        metricName = m.Metric?.MetricName,
+                        mappingType = m.MappingType
+                    }).ToList();
+
+                return Ok(new
+                {
+                    success = true,
+                    section = new
+                    {
+                        sectionId = section.SectionId,
+                        sectionName = section.SectionName,
+                        totalFields = section.Items.Count,
+                        mappedFields = section.Items.Count(i => i.MetricMappings.Any())
+                    },
+                    mapping = mapping != null ? new
+                    {
+                        mappingId = mapping.MappingId,
+                        mappingName = mapping.MappingName,
+                        aggregationType = mapping.AggregationType,
+                        metricId = mapping.MetricId,
+                        metricName = mapping.Metric?.MetricName,
+                        sources = mapping.Sources.Select(s => new
+                        {
+                            sourceId = s.Id,
+                            itemMappingId = s.ItemMappingId,
+                            itemName = s.ItemMapping?.Item?.ItemName,
+                            weight = s.Weight,
+                            displayOrder = s.DisplayOrder
+                        }).ToList()
+                    } : null,
+                    availableFieldMappings = availableFieldMappings,
+                    hasMapping = mapping != null
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        // ===================================================================
+        // TEMPLATE LEVEL ENDPOINTS
+        // ===================================================================
+
+        /// <summary>
+        /// Get all template KPIs for a template
+        /// </summary>
+        [HttpGet("template/{templateId}/kpis")]
+        public async Task<IActionResult> GetTemplateKpis(int templateId)
+        {
+            try
+            {
+                var templateMappings = await _context.FormTemplateMetricMappings
+                    .Include(m => m.Metric)
+                    .Include(m => m.Sources)
+                        .ThenInclude(s => s.SectionMapping)
+                            .ThenInclude(sm => sm.Section)
+                    .Where(m => m.TemplateId == templateId && m.IsActive)
+                    .ToListAsync();
+
+                var sectionMappings = await _context.FormSectionMetricMappings
+                    .Include(m => m.Section)
+                    .Include(m => m.Metric)
+                    .Where(m => m.Section.TemplateId == templateId && m.IsActive)
+                    .ToListAsync();
+
+                var result = new
+                {
+                    templateKpis = templateMappings.Select(m => new
+                    {
+                        mappingId = m.MappingId,
+                        kpiName = m.MappingName,
+                        aggregationType = m.AggregationType,
+                        metricName = m.Metric?.MetricName,
+                        metricCode = m.Metric?.MetricCode,
+                        sourceCount = m.Sources.Count,
+                        sources = m.Sources.Select(s => new
+                        {
+                            sourceId = s.Id,
+                            sectionName = s.SectionMapping?.Section?.SectionName,
+                            weight = s.Weight
+                        }).ToList()
+                    }).ToList(),
+                    availableSectionMappings = sectionMappings.Select(m => new
+                    {
+                        mappingId = m.MappingId,
+                        sectionId = m.SectionId,
+                        sectionName = m.Section?.SectionName,
+                        mappingName = m.MappingName,
+                        aggregationType = m.AggregationType,
+                        metricName = m.Metric?.MetricName
+                    }).ToList()
+                };
+
+                return Ok(new { success = true, data = result });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Get template KPI details
+        /// </summary>
+        [HttpGet("template-kpi/{mappingId}")]
+        public async Task<IActionResult> GetTemplateKpiDetails(int mappingId)
+        {
+            try
+            {
+                var mapping = await _context.FormTemplateMetricMappings
+                    .Include(m => m.Template)
+                    .Include(m => m.Metric)
+                    .Include(m => m.Sources)
+                        .ThenInclude(s => s.SectionMapping)
+                            .ThenInclude(sm => sm.Section)
+                    .FirstOrDefaultAsync(m => m.MappingId == mappingId);
+
+                if (mapping == null)
+                    return NotFound(new { success = false, message = "Template KPI not found" });
+
+                return Ok(new
+                {
+                    success = true,
+                    data = new
+                    {
+                        mappingId = mapping.MappingId,
+                        templateId = mapping.TemplateId,
+                        kpiName = mapping.MappingName,
+                        aggregationType = mapping.AggregationType,
+                        metricId = mapping.MetricId,
+                        metricName = mapping.Metric?.MetricName,
+                        metricCode = mapping.Metric?.MetricCode,
+                        sources = mapping.Sources.Select(s => new
+                        {
+                            sourceId = s.Id,
+                            sectionMappingId = s.SectionMappingId,
+                            sectionName = s.SectionMapping?.Section?.SectionName,
+                            weight = s.Weight,
+                            displayOrder = s.DisplayOrder
+                        }).ToList()
+                    }
+                });
             }
             catch (Exception ex)
             {
@@ -393,9 +841,121 @@ namespace FormReporting.Controllers.API
             }
         }
 
+        /// <summary>
+        /// Save field mapping (standalone, link to metric, or create new metric)
+        /// </summary>
+        [HttpPost("field/save")]
+        public async Task<IActionResult> SaveFieldMapping([FromBody] CreateFieldMappingDto dto)
+        {
+            try
+            {
+                // Validate required fields
+                if (dto.ItemId <= 0)
+                    return BadRequest(new { success = false, message = "Invalid field ID" });
+
+                if (string.IsNullOrWhiteSpace(dto.MappingType))
+                    return BadRequest(new { success = false, message = "Mapping type is required" });
+
+                // Validate mapping type is valid for field type
+                var field = await _context.FormTemplateItems
+                    .FirstOrDefaultAsync(i => i.ItemId == dto.ItemId);
+
+                if (field == null)
+                    return NotFound(new { success = false, message = "Field not found" });
+
+                // Convert string to FormFieldType enum for validation
+                if (Enum.TryParse<FormFieldType>(field.DataType.ToString(), out var fieldType))
+                {
+                    if (!_validationService.IsValidMappingType(fieldType, dto.MappingType))
+                        return BadRequest(new { success = false, message = $"Mapping type '{dto.MappingType}' is not valid for field type '{field.DataType}'" });
+                }
+
+                // Check if mapping already exists
+                var existingMapping = await _context.FormItemMetricMappings
+                    .FirstOrDefaultAsync(m => m.ItemId == dto.ItemId && m.IsActive);
+
+                FormItemMetricMapping mapping;
+
+                if (existingMapping != null)
+                {
+                    // Update existing mapping
+                    mapping = existingMapping;
+                    mapping.MetricId = dto.MetricId;
+                    mapping.MappingName = dto.MappingName;
+                    mapping.MappingType = dto.MappingType;
+                    mapping.AggregationType = dto.AggregationType ?? "Direct";
+                    mapping.TransformationLogic = dto.TransformationLogic;
+                    mapping.ExpectedValue = dto.ExpectedValue;
+                    // Note: FormItemMetricMapping doesn't have ModifiedDate property
+                }
+                else
+                {
+                    // Create new mapping
+                    mapping = new FormItemMetricMapping
+                    {
+                        ItemId = dto.ItemId,
+                        MetricId = dto.MetricId,
+                        MappingName = dto.MappingName,
+                        MappingType = dto.MappingType,
+                        AggregationType = dto.AggregationType ?? "Direct",
+                        TransformationLogic = dto.TransformationLogic,
+                        ExpectedValue = dto.ExpectedValue,
+                        IsActive = true,
+                        CreatedDate = DateTime.UtcNow
+                    };
+
+                    _context.FormItemMetricMappings.Add(mapping);
+                }
+
+                await _context.SaveChangesAsync();
+
+                return Ok(new
+                {
+                    success = true,
+                    message = "Field mapping saved successfully",
+                    data = new
+                    {
+                        mappingId = mapping.MappingId,
+                        itemId = mapping.ItemId,
+                        metricId = mapping.MetricId,
+                        mappingName = mapping.MappingName,
+                        mappingType = mapping.MappingType
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                return BadRequest(new { success = false, message = ex.Message });
+            }
+        }
+
         // ===================================================================
         // HELPER METHODS
         // ===================================================================
+
+        /// <summary>
+        /// Generate metric code from metric name with global context
+        /// </summary>
+        private string GenerateMetricCode(string metricName, int? templateId = null)
+        {
+            // Remove special characters and convert to uppercase
+            var fieldConcept = new string(metricName
+                .Where(c => char.IsLetterOrDigit(c) || char.IsWhiteSpace(c))
+                .ToArray())
+                .Replace(" ", "_")
+                .ToUpper();
+
+            // Create global code with template context
+            var code = templateId.HasValue 
+                ? $"{fieldConcept}_TEMPLATE_{templateId.Value}"
+                : fieldConcept;
+
+            // Limit to 50 characters for global codes
+            if (code.Length > 50)
+                code = code.Substring(0, 50);
+
+            return code;
+        }
 
         /// <summary>
         /// Get status icon based on mapping type

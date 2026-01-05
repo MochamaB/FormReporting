@@ -11,27 +11,35 @@
 <div class="card h-100 template-config-card mb-0">
     <!-- Card Header -->
     <div class="card-header border-bottom">
-        <div class="d-flex align-items-center justify-content-between">
-            <div class="d-flex align-items-center overflow-hidden">
-                <div class="flex-shrink-0 me-2">
-                    <div class="avatar-xs">
-                        <div class="avatar-title bg-primary-subtle text-primary rounded">
-                            <i class="ri-file-list-3-line"></i>
-                        </div>
+        <div class="d-flex align-items-center">
+
+            <!-- Avatar / Icon -->
+            <div class="flex-shrink-0 me-3">
+                <div class="avatar-md">
+                    <div class="avatar-title bg-primary-subtle text-primary rounded fs-22">
+                        <i class="ri-file-list-3-line"></i>
                     </div>
                 </div>
-                <div class="flex-grow-1 overflow-hidden">
-                    <h6 class="card-title mb-0 text-truncate" title="@Model.TemplateName">
-                        <a href="@Url.Action("Details", "FormTemplates", new { id = Model.TemplateId })" class="text-body">
-                            @Model.TemplateName
-                        </a>
-                    </h6>
-    
+            </div>
+
+            <!-- Title + Status (stacked) -->
+            <div class="flex-grow-1 overflow-hidden">
+
+                <!-- Template Title -->
+                <h6 class="card-title mb-1 text-truncate" title="@Model.TemplateName">
+                    <a href="@Url.Action("Details", "FormTemplates", new { id = Model.TemplateId })"
+                       class="text-body">
+                        @Model.TemplateName
+                    </a>
+                </h6>
+
+                <!-- Status Badge (below title) -->
+                <div>
+                    @Html.Raw(Model.StatusBadge)
                 </div>
+
             </div>
-            <div class="flex-shrink-0 ms-2">
-                @Html.Raw(Model.StatusBadge)
-            </div>
+
         </div>
     </div>
     
@@ -197,24 +205,42 @@
 
          <!-- Info Rows -->
         <div class="border-top pt-2">
-            <div class="info-row">
-                <span class="info-label me-2">Code:</span>
-                <span class="info-value">@Model.TemplateCode</span>
+
+            <div class="d-flex flex-column">
+
+                <!-- Code (single-line with truncation + tooltip) -->
+                <div class="info-row d-flex align-items-center">
+                    <span class="info-label me-1 fw-semibold">Code:</span>
+
+                    <span class="info-value text-muted text-truncate code-ellipsis"
+                        title="@Model.TemplateCode">
+                        @Model.TemplateCode
+                    </span>
+                </div>
+
+                <!-- Version (always new line) -->
+                <div class="info-row d-flex align-items-center mt-1">
+                    <span class="info-label me-1 fw-semibold">Version:</span>
+                    <span class="info-value text-muted">@Model.Version</span>
+                </div>
+
+                <!-- Modified (always new line) -->
+                <div class="info-row d-flex align-items-center mt-1">
+                    <span class="info-label me-1 fw-semibold">Modified:</span>
+                    <span class="info-value text-muted">@Model.ModifiedDateFormatted</span>
+                </div>
+
             </div>
-            <div class="info-row">
-                <span class="info-label me-2"></i>Version:</span>
-                <span class="info-value">@Model.Version</span>
-            </div>
+
         </div>
+
     </div>
     
     <!-- Card Footer -->
     <div class="card-footer bg-transparent border-top">
         <div class="d-flex justify-content-between align-items-center">
             <div>
-                <small class="text-muted">
-                    <i class="ri-time-line me-1"></i>@Model.ModifiedDateFormatted
-                </small>
+               
             </div>
             <div class="dropdown">
                 <button class="btn btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">

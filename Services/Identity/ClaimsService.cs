@@ -274,8 +274,14 @@ namespace FormReporting.Services.Identity
         /// </summary>
         public int GetUserId()
         {
-            var userIdClaim = _httpContextAccessor.HttpContext?.User?.FindFirst("UserId");
-            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out var userId))
+            var user = _httpContextAccessor.HttpContext?.User;
+            if (user == null) return 0;
+
+            // Try standard ASP.NET Core claim first, then fallback to custom UserId claim
+            var userIdClaim = user.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value
+                           ?? user.FindFirst("UserId")?.Value;
+            
+            if (userIdClaim != null && int.TryParse(userIdClaim, out var userId))
             {
                 return userId;
             }

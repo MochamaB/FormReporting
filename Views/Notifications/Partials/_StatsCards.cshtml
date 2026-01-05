@@ -1,0 +1,124 @@
+@model FormReporting.Models.ViewModels.Notifications.NotificationStatsDto
+
+<div class="row">
+    <!-- Total Notifications -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Total Notifications</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">
+                            <span class="counter-value" data-target="@Model.TotalCount">@Model.TotalCount</span>
+                        </h4>
+                        <span class="badge bg-info-subtle text-info mb-0">
+                            <i class="ri-notification-3-line align-middle"></i> All Time
+                        </span>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-info-subtle rounded fs-3">
+                            <i class="bx bx-bell text-info"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Unread Notifications -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Unread</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">
+                            <span class="counter-value" data-target="@Model.UnreadCount">@Model.UnreadCount</span>
+                        </h4>
+                        @if (Model.UnreadCount > 0)
+                        {
+                            <span class="badge bg-warning-subtle text-warning mb-0">
+                                <i class="ri-arrow-up-line align-middle"></i> Needs Attention
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-success-subtle text-success mb-0">
+                                <i class="ri-check-line align-middle"></i> All Caught Up!
+                            </span>
+                        }
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-warning-subtle rounded fs-3">
+                            <i class="bx bx-envelope text-warning"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Email Notifications -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">Email Notifications</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">
+                            <span class="counter-value" data-target="@Model.EmailCount">@Model.EmailCount</span>
+                        </h4>
+                        <a href="@Url.Action("Email", "Notifications")" class="text-decoration-underline">
+                            View Email Inbox →
+                        </a>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-primary-subtle rounded fs-3">
+                            <i class="bx bx-mail-send text-primary"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- InApp Notifications -->
+    <div class="col-xl-3 col-md-6">
+        <div class="card card-animate">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-grow-1 overflow-hidden">
+                        <p class="text-uppercase fw-medium text-muted text-truncate mb-0">InApp Notifications</p>
+                    </div>
+                </div>
+                <div class="d-flex align-items-end justify-content-between mt-4">
+                    <div>
+                        <h4 class="fs-22 fw-semibold ff-secondary mb-4">
+                            <span class="counter-value" data-target="@Model.InAppCount">@Model.InAppCount</span>
+                        </h4>
+                        <a href="@Url.Action("InApp", "Notifications")" class="text-decoration-underline">
+                            View InApp Inbox →
+                        </a>
+                    </div>
+                    <div class="avatar-sm flex-shrink-0">
+                        <span class="avatar-title bg-success-subtle rounded fs-3">
+                            <i class="bx bx-mobile text-success"></i>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

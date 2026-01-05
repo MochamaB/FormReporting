@@ -38,6 +38,14 @@ namespace FormReporting.Models.Entities.Metrics
         [StringLength(20)]
         public string? AggregationType { get; set; } // SUM, AVG, MAX, MIN, LAST_VALUE, COUNT, NONE
 
+        // Hierarchy support
+        [StringLength(30)]
+        public string? MetricScope { get; set; } // Field, Section, Template
+
+        public int? HierarchyLevel { get; set; } // 0=Field, 1=Section, 2=Template
+
+        public int? ParentMetricId { get; set; } // Self-reference for hierarchy
+
         // KPI thresholds
         public bool IsKPI { get; set; } = false;
 
@@ -65,6 +73,10 @@ namespace FormReporting.Models.Entities.Metrics
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
         // Navigation properties
+        [ForeignKey(nameof(ParentMetricId))]
+        public virtual MetricDefinition? ParentMetric { get; set; }
+        
+        public virtual ICollection<MetricDefinition> ChildMetrics { get; set; } = new List<MetricDefinition>();
         public virtual ICollection<TenantMetric> TenantMetrics { get; set; } = new List<TenantMetric>();
         public virtual ICollection<SystemMetricLog> SystemMetricLogs { get; set; } = new List<SystemMetricLog>();
         public virtual ICollection<Forms.FormItemMetricMapping> FormItemMetricMappings { get; set; } = new List<Forms.FormItemMetricMapping>();

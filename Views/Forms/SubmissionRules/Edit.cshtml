@@ -1,0 +1,331 @@
+@model SubmissionRuleUpdateDto
+@using FormReporting.Models.ViewModels.Components
+@using FormReporting.Models.ViewModels.Forms
+@using FormReporting.Extensions
+
+@{
+    ViewData["Title"] = "Edit Submission Rule";
+    var templateId = ViewData["TemplateId"] as int? ?? 0;
+    var templateName = ViewData["TemplateName"] as string ?? "Unknown Template";
+    var ruleId = ViewData["SubmissionRuleId"] as int? ?? 0;
+    
+    var formConfig = new SimpleFormConfig
+    {
+        FormId = "editSubmissionRuleForm",
+        FormAction = Url.Action("Update", "SubmissionRule"),
+        FormMethod = "POST",
+        SubmitButtonText = "Update Rule",
+        CancelButtonUrl = Url.Action("Details", "FormTemplates", new { id = templateId }),
+        CardTitle = "Edit Submission Rule",
+        CardSubtitle = $"Modify submission schedule for {templateName}",
+        StyleType = FormStyleType.Standard,
+        WrapInCard = true,
+        Fields = new List<SimpleFormFieldConfig>
+        {
+            new SimpleFormFieldConfig
+            {
+                PropertyName = "SubmissionRuleId",
+                FieldType = SimpleFieldType.Hidden,
+                Value = Model.SubmissionRuleId,
+                DisplayOrder = 1
+            },
+            new SimpleFormFieldConfig
+            {
+                PropertyName = "RuleName",
+                Label = "Rule Name",
+                FieldType = SimpleFieldType.Text,
+                Value = Model.RuleName,
+                IsRequired = true,
+                ColumnClass = "col-12",
+                DisplayOrder = 2,
+                PlaceholderText = "e.g., Monthly Sales Report, Weekly Status Update"
+            },
+            new SimpleFormFieldConfig
+            {
+                PropertyName = "Description",
+                Label = "Description",
+                FieldType = SimpleFieldType.TextArea,
+                Value = Model.Description,
+                Rows = 3,
+                ColumnClass = "col-12",
+                DisplayOrder = 3,
+                PlaceholderText = "Optional description of this submission rule"
+            },
+            new SimpleFormFieldConfig
+            {
+                PropertyName = "Frequency",
+                Label = "Frequency",
+                FieldType = SimpleFieldType.Select,
+                Value = Model.Frequency,
+                ColumnClass = "col-md-6",
+                DisplayOrder = 4,
+                Options = new List<SelectOption>
+                {
+                    new SelectOption { Value = "", Text = "No schedule (access-only)" },
+                    new SelectOption { Value = "Daily", Text = "Daily" },
+                    new SelectOption { Value = "Weekly", Text = "Weekly" },
+                    new SelectOption { Value = "Monthly", Text = "Monthly" },
+                    new SelectOption { Value = "Quarterly", Text = "Quarterly" },
+                    new SelectOption { Value = "Annually", Text = "Annually" },
+                    new SelectOption { Value = "Once", Text = "One-time" }
+                }
+            },
+            new SimpleFormFieldConfig
+            {
+                PropertyName = "DueTime",
+                Label = "Due Time",
+                FieldType = SimpleFieldType.Time,
+                Value = Model.DueTime?.ToString(@"hh\:mm"),
+                ColumnClass = "col-md-6",
+                DisplayOrder = 5
+            },
+            new SimpleFormFieldConfig
+            {
+                PropertyName = "DueDay",
+                Label = "Due Day",
+                FieldType = SimpleFieldType.Select,
+                Value = Model.DueDay,
+                ColumnClass = "col-md-6",
+                DisplayOrder = 6,
+                Options = new List<SelectOption>()
+            },
+            new SimpleFormFieldConfig
+            {
+                PropertyName = "DueMonth",
+                Label = "Due Month",
+                FieldType = SimpleFieldType.Select,
+                Value = Model.DueMonth,
+                ColumnClass = "col-md-6",
+                DisplayOrder = 7,
+                Options = new List<SelectOption>
+                {
+                    new SelectOption { Value = "1", Text = "January" },
+                    new SelectOption { Value = "2", Text = "February" },
+                    new SelectOption { Value = "3", Text = "March" },
+                    new SelectOption { Value = "4", Text = "April" },
+                    new SelectOption { Value = "5", Text = "May" },
+                    new SelectOption { Value = "6", Text = "June" },
+                    new SelectOption { Value = "7", Text = "July" },
+                    new SelectOption { Value = "8", Text = "August" },
+                    new SelectOption { Value = "9", Text = "September" },
+                    new SelectOption { Value = "10", Text = "October" },
+                    new SelectOption { Value = "11", Text = "November" },
+                    new SelectOption { Value = "12", Text = "December" }
+                }
+            },
+            new SimpleFormFieldConfig
+            {
+                PropertyName = "SpecificDueDate",
+                Label = "Specific Due Date",
+                FieldType = SimpleFieldType.DateTime,
+                Value = Model.SpecificDueDate?.ToString("yyyy-MM-ddTHH:mm"),
+                ColumnClass = "col-12",
+                DisplayOrder = 8,
+            },
+            new SimpleFormFieldConfig
+            {
+                PropertyName = "GracePeriodDays",
+                Label = "Grace Period (Days)",
+                FieldType = SimpleFieldType.Number,
+                Value = Model.GracePeriodDays,
+                ColumnClass = "col-md-6",
+                DisplayOrder = 9,
+                PlaceholderText = "0",
+                HelpText = "Days after due date to accept submissions without penalty"
+            },
+            new SimpleFormFieldConfig
+            {
+                PropertyName = "AllowLateSubmission",
+                Label = "Allow Late Submissions",
+                FieldType = SimpleFieldType.Checkbox,
+                Value = Model.AllowLateSubmission,
+                ColumnClass = "col-md-6",
+                DisplayOrder = 10,
+                HelpText = "Allow submissions after grace period (flagged as late)"
+            },
+            new SimpleFormFieldConfig
+            {
+                PropertyName = "ReminderDaysBefore",
+                Label = "Reminder Days",
+                FieldType = SimpleFieldType.Text,
+                Value = Model.ReminderDaysBefore,
+                ColumnClass = "col-md-8",
+                DisplayOrder = 11,
+                PlaceholderText = "e.g., 7,3,1",
+                HelpText = "Comma-separated days before due date to send reminders"
+            },
+            new SimpleFormFieldConfig
+            {
+                PropertyName = "Status",
+                Label = "Status",
+                FieldType = SimpleFieldType.Select,
+                Value = Model.Status,
+                ColumnClass = "col-md-4",
+                DisplayOrder = 12,
+                Options = new List<SelectOption>
+                {
+                    new SelectOption { Value = "Active", Text = "Active" },
+                    new SelectOption { Value = "Suspended", Text = "Suspended" },
+                    new SelectOption { Value = "Archived", Text = "Archived" }
+                }
+            }
+        }
+    };
+
+    var form = formConfig.BuildForm();
+}
+
+<div class="row">
+    <div class="col-12">
+        <div class="page-title-box d-sm-flex align-items-center justify-content-between">
+            <h4 class="mb-sm-0">Edit Submission Rule</h4>
+            <div class="page-title-right">
+                <ol class="breadcrumb m-0">
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "Dashboard")">Dashboard</a></li>
+                    <li class="breadcrumb-item"><a href="@Url.Action("Index", "FormTemplates")">Templates</a></li>
+                    <li class="breadcrumb-item"><a href="@Url.Action("Details", "FormTemplates", new { id = templateId })">@templateName</a></li>
+                    <li class="breadcrumb-item active">Edit Rule</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-8 offset-lg-2">
+        <partial name="~/Views/Shared/Components/SimpleForms/_SimpleForm.cshtml" model="form" />
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const frequencySelect = document.getElementById('editSubmissionRuleForm_Frequency');
+    const dueTimeField = document.getElementById('editSubmissionRuleForm_DueTime').closest('.col-md-6');
+    const dueDayField = document.getElementById('editSubmissionRuleForm_DueDay').closest('.col-md-6');
+    const dueMonthField = document.getElementById('editSubmissionRuleForm_DueMonth').closest('.col-md-6');
+    const specificDueDateField = document.getElementById('editSubmissionRuleForm_SpecificDueDate').closest('.col-12');
+    const dueDaySelect = document.getElementById('editSubmissionRuleForm_DueDay');
+    
+    // Store current values for restoration
+    const currentDueDay = '@(Model.DueDay?.ToString() ?? "")';
+    const currentDueMonth = '@(Model.DueMonth?.ToString() ?? "")';
+
+    function updateFieldsBasedOnFrequency() {
+        const frequency = frequencySelect.value.toLowerCase();
+        
+        // Hide all conditional fields first
+        dueTimeField.style.display = 'none';
+        dueDayField.style.display = 'none';
+        dueMonthField.style.display = 'none';
+        specificDueDateField.style.display = 'none';
+        
+        // Clear due day options
+        dueDaySelect.innerHTML = '<option value="">Select...</option>';
+        
+        switch(frequency) {
+            case 'daily':
+                // Daily: Show only due time
+                dueTimeField.style.display = 'block';
+                break;
+                
+            case 'weekly':
+                // Weekly: Show due day (days of week) + due time
+                dueTimeField.style.display = 'block';
+                dueDayField.style.display = 'block';
+                dueDaySelect.innerHTML = `
+                    <option value="">Select day...</option>
+                    <option value="0">Sunday</option>
+                    <option value="1">Monday</option>
+                    <option value="2">Tuesday</option>
+                    <option value="3">Wednesday</option>
+                    <option value="4">Thursday</option>
+                    <option value="5">Friday</option>
+                    <option value="6">Saturday</option>
+                `;
+                break;
+                
+            case 'monthly':
+                // Monthly: Show due day (1-31) + due time
+                dueTimeField.style.display = 'block';
+                dueDayField.style.display = 'block';
+                dueDaySelect.innerHTML = '<option value="">Select day...</option>';
+                for (let i = 1; i <= 31; i++) {
+                    const suffix = getOrdinalSuffix(i);
+                    dueDaySelect.innerHTML += `<option value="${i}">${i}${suffix}</option>`;
+                }
+                dueDaySelect.innerHTML += '<option value="-1">Last day of month</option>';
+                break;
+                
+            case 'quarterly':
+                // Quarterly: Show enhanced quarterly options + due time
+                dueTimeField.style.display = 'block';
+                dueDayField.style.display = 'block';
+                dueDaySelect.innerHTML = `
+                    <option value="">Select option...</option>
+                    <option value="1">First day of quarter</option>
+                    <option value="15">15th of first month</option>
+                    <option value="30">30th of first month</option>
+                    <option value="-1">Last day of quarter</option>
+                    <option value="-7">1 week before quarter end</option>
+                    <option value="-15">2 weeks before quarter end</option>
+                `;
+                break;
+                
+            case 'annually':
+                // Annually: Show due day + due month + due time
+                dueTimeField.style.display = 'block';
+                dueDayField.style.display = 'block';
+                dueMonthField.style.display = 'block';
+                dueDaySelect.innerHTML = '<option value="">Select day...</option>';
+                for (let i = 1; i <= 31; i++) {
+                    const suffix = getOrdinalSuffix(i);
+                    dueDaySelect.innerHTML += `<option value="${i}">${i}${suffix}</option>`;
+                }
+                dueDaySelect.innerHTML += '<option value="-1">Last day of month</option>';
+                break;
+                
+            case 'once':
+                // Once: Show specific due date/time picker
+                specificDueDateField.style.display = 'block';
+                break;
+                
+            case '':
+                // No frequency selected - hide all
+                break;
+        }
+        
+        // Restore current values after updating options
+        if (currentDueDay && dueDaySelect.options.length > 0) {
+            // Use setTimeout to ensure DOM is fully updated
+            setTimeout(() => {
+                dueDaySelect.value = currentDueDay;
+                // If value didn't set, try to find matching option
+                if (dueDaySelect.value !== currentDueDay) {
+                    for (let option of dueDaySelect.options) {
+                        if (option.value === currentDueDay) {
+                            option.selected = true;
+                            break;
+                        }
+                    }
+                }
+            }, 10);
+        }
+    }
+    
+    function getOrdinalSuffix(number) {
+        if (number % 100 >= 11 && number % 100 <= 13) return 'th';
+        switch (number % 10) {
+            case 1: return 'st';
+            case 2: return 'nd';
+            case 3: return 'rd';
+            default: return 'th';
+        }
+    }
+    
+    // Initialize fields based on current frequency
+    updateFieldsBasedOnFrequency();
+    
+    // Update fields when frequency changes
+    frequencySelect.addEventListener('change', updateFieldsBasedOnFrequency);
+});
+</script>

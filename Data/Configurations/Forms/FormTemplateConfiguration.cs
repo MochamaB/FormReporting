@@ -53,7 +53,8 @@ namespace FormReporting.Data.Configurations.Forms
             // Enum Conversions and Defaults
             builder.Property(ft => ft.SubmissionMode)
                 .HasConversion<int>()
-                .HasDefaultValue(SubmissionMode.Individual);
+                .HasDefaultValue(SubmissionMode.Individual)
+                .HasSentinel(0); // 0 means "use database default"
 
             builder.Property(ft => ft.AllowAnonymousAccess)
                 .HasDefaultValue(false);

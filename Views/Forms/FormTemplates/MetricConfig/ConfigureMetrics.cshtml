@@ -1,0 +1,241 @@
+@model FormReporting.Models.ViewModels.Metrics.MetricConfigurationViewModel
+@using FormReporting.Models.ViewModels.Components
+@using FormReporting.Extensions
+
+@{
+    ViewData["Title"] = $"Configure Metrics - {Model.TemplateName}";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    // Determine step states based on own progress only (no dependencies between steps)
+    // Note: Only ONE step can be "Active" at a time for Bootstrap tabs to work correctly
+    // Other incomplete steps should be "Pending" (still clickable, just not the current tab)
+    var fieldState = Model.FieldProgress >= 100 ? WizardStepState.Done : WizardStepState.Active;
+    
+    var sectionState = Model.SectionProgress >= 100 ? WizardStepState.Done : WizardStepState.Pending;
+    
+    var templateState = Model.ConfiguredTemplateKPIs > 0 ? WizardStepState.Done : WizardStepState.Pending;
+
+    // Build wizard configuration using HorizontalWizard for overview navigation
+    var wizardConfig = new WizardConfig
+    {
+        FormId = "metricConfigOverview",
+        Layout = WizardLayout.Horizontal,
+        ShowSummary = false,
+        ContainerCssClass = "metric-configuration-overview",
+        Steps = new List<WizardStep>
+        {
+            new WizardStep
+            {
+                StepId = "field-level",
+                StepNumber = 1,
+                Title = "Field Mappings",
+                Label = "Field Mappings",
+                Description = $"{Model.ConfiguredFields}/{Model.TotalFields} configured",
+                Icon = "ri-focus-3-line",
+                State = fieldState,
+                ContentPartialPath = "~/Views/Forms/FormTemplates/MetricConfig/_FieldLevelStep.cshtml",
+                ShowPrevious = false,
+                ShowNext = true,
+                NextButtonText = "Continue to Sections"
+            },
+            new WizardStep
+            {
+                StepId = "section-level",
+                StepNumber = 2,
+                Title = "Section Aggregations",
+                Label = "Section Aggregations",
+                Description = $"{Model.ConfiguredSections}/{Model.TotalSections} configured",
+                Icon = "ri-layout-grid-line",
+                State = sectionState,
+                ContentPartialPath = "~/Views/Forms/FormTemplates/MetricConfig/_SectionLevelStep.cshtml",
+                ShowPrevious = true,
+                ShowNext = true,
+                PreviousButtonText = "Back to Fields",
+                NextButtonText = "Continue to Template KPIs"
+            },
+            new WizardStep
+            {
+                StepId = "template-level",
+                StepNumber = 3,
+                Title = "Template KPIs",
+                Label = "Template KPIs",
+                Description = $"{Model.ConfiguredTemplateKPIs} KPIs configured",
+                Icon = "ri-file-chart-line",
+                State = templateState,
+                ContentPartialPath = "~/Views/Forms/FormTemplates/MetricConfig/_TemplateLevelStep.cshtml",
+                ShowPrevious = true,
+                ShowNext = false,
+                PreviousButtonText = "Back to Sections",
+                CustomButtonHtml = @"<a href=""" + Url.Action("Details", "FormTemplates", new { id = Model.TemplateId }) + @""" class=""btn btn-success btn-label ms-auto"">
+                    <i class=""ri-check-line label-icon align-middle fs-16 ms-2""></i>
+                    Finish Configuration
+                </a>"
+            }
+        }
+    };
+
+    // Transform config into renderable wizard using extensions
+    var wizard = wizardConfig.BuildWizard();
+    
+    ViewData["WizardViewModel"] = wizard;
+    ViewData["ParentModel"] = Model;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/metric-configuration.css" asp-append-version="true" />
+}
+
+
+<!-- Template Info Card -->
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex align-items-center">
+                    <div class="flex-shrink-0">
+                        <div class="avatar-sm">
+                            <div class="avatar-title bg-primary-subtle text-primary rounded fs-3">
+                                <i class="ri-file-chart-line"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex-grow-1 ms-3">
+                        <h5 class="mb-1">@Model.TemplateName</h5>
+                        <p class="text-muted mb-0">Configure hierarchical metrics for this form template. Map fields to metrics, define section aggregations, and create template-level KPIs.</p>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <div class="d-flex gap-2">
+                            <div class="text-center">
+                                <div class="text-primary fw-bold">@Model.ConfiguredFields/@Model.TotalFields</div>
+                                <small class="text-muted">Fields</small>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-info fw-bold">@Model.ConfiguredSections/@Model.TotalSections</div>
+                                <small class="text-muted">Sections</small>
+                            </div>
+                            <div class="text-center">
+                                <div class="text-success fw-bold">@Model.ConfiguredTemplateKPIs</div>
+                                <small class="text-muted">KPIs</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden fields for JavaScript -->
+<input type="hidden" id="templateId" value="@Model.TemplateId" />
+
+<!-- Main Wizard Content - Wrapped in Card -->
+<div class="card">
+    <div class="card-body">
+        @await Html.PartialAsync("~/Views/Shared/Components/Wizards/_HorizontalWizard.cshtml", wizard)
+    </div>
+</div>
+
+<!-- Informational Tip -->
+<div class="alert alert-light alert-dismissible fade show mt-3" role="alert">
+    <i class="ri-lightbulb-line me-2 text-warning"></i>
+    <strong>Tip:</strong> You can configure metrics at any level independently. Field mappings are optional if you only need section or template-level KPIs.
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+
+@section Scripts {
+    <script src="~/js/pages/metric-configuration.js" asp-append-version="true"></script>
+    <script>
+    (function() {
+        'use strict';
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            setupHorizontalWizardNavigation();
+        });
+        
+        /**
+         * Setup navigation handlers for HorizontalWizard tabs
+         */
+        function setupHorizontalWizardNavigation() {
+            // Step header click handler - navigate to clicked step
+            document.querySelectorAll('.horizontal-wizard-step').forEach(function(stepElement) {
+                stepElement.addEventListener('click', function() {
+                    var targetId = this.getAttribute('data-bs-target');
+                    if (targetId) {
+                        navigateToStep(targetId.replace('#', ''));
+                    }
+                });
+            });
+            
+            // Next button handler
+            document.querySelectorAll('.nexttab').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    var nextTabId = this.getAttribute('data-nexttab');
+                    if (nextTabId) {
+                        var stepId = nextTabId.replace('-tab', '');
+                        navigateToStep(stepId);
+                    }
+                });
+            });
+            
+            // Previous button handler
+            document.querySelectorAll('.previestab').forEach(function(btn) {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    var prevTabId = this.getAttribute('data-previous');
+                    if (prevTabId) {
+                        var stepId = prevTabId.replace('-tab', '');
+                        navigateToStep(stepId);
+                    }
+                });
+            });
+        }
+        
+        /**
+         * Navigate to a specific step by ID
+         */
+        function navigateToStep(stepId) {
+            // Hide all tab panes
+            document.querySelectorAll('.tab-pane').forEach(function(pane) {
+                pane.classList.remove('show', 'active');
+            });
+            
+            // Show target tab pane
+            var targetPane = document.getElementById(stepId);
+            if (targetPane) {
+                targetPane.classList.add('show', 'active');
+            }
+            
+            // Update stepper visual states
+            var allSteps = document.querySelectorAll('.horizontal-wizard-step');
+            var targetIndex = -1;
+            
+            // Find target step index
+            allSteps.forEach(function(step, index) {
+                var stepTarget = step.getAttribute('data-bs-target');
+                if (stepTarget === '#' + stepId) {
+                    targetIndex = index;
+                }
+            });
+            
+            // Update step classes based on position relative to target
+            allSteps.forEach(function(step, index) {
+                step.classList.remove('active', 'done', 'pending');
+                step.setAttribute('aria-selected', 'false');
+                
+                if (index < targetIndex) {
+                    // Steps before target are "done"
+                    step.classList.add('done');
+                } else if (index === targetIndex) {
+                    // Target step is "active"
+                    step.classList.add('active');
+                    step.setAttribute('aria-selected', 'true');
+                } else {
+                    // Steps after target are "pending"
+                    step.classList.add('pending');
+                }
+            });
+        }
+    })();
+    </script>
+}

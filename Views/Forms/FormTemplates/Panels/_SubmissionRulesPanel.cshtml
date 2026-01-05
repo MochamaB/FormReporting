@@ -1,0 +1,447 @@
+@using FormReporting.Models.ViewModels.Forms
+@using FormReporting.Models.ViewModels.Components
+@using FormReporting.Models.Entities.Forms
+@using FormReporting.Extensions
+
+@{
+    var model = ViewData["TemplateDetails"] as TemplateDetailsViewModel;
+    if (model == null) return;
+    
+    // Get submission rules directly from ViewData (passed from controller)
+    var submissionRules = ViewData["SubmissionRules"] as List<FormTemplateSubmissionRule> ?? new List<FormTemplateSubmissionRule>();
+
+    // Helper to get frequency icon
+    string GetFrequencyIcon(string? frequency) => frequency?.ToLower() switch
+    {
+        "daily" => "ri-calendar-line",
+        "weekly" => "ri-calendar-week-line", 
+        "monthly" => "ri-calendar-month-line",
+        "quarterly" => "ri-calendar-2-line",
+        "annually" => "ri-calendar-event-line",
+        "once" => "ri-calendar-check-line",
+        _ => "ri-time-line"
+    };
+
+    // Helper to get frequency color
+    string GetFrequencyColor(string? frequency) => frequency?.ToLower() switch
+    {
+        "daily" => "primary",
+        "weekly" => "info", 
+        "monthly" => "success",
+        "quarterly" => "warning",
+        "annually" => "danger",
+        "once" => "secondary",
+        _ => "muted"
+    };
+
+    // Helper to get status color
+    string GetStatusColor(string status) => status switch
+    {
+        "Active" => "success",
+        "Suspended" => "warning",
+        "Archived" => "secondary",
+        _ => "secondary"
+    };
+
+    // Helper to format next due date
+    string FormatNextDueDate(DateTime? dueDate)
+    {
+        if (!dueDate.HasValue) return "Not calculated";
+        
+        var now = DateTime.UtcNow;
+        var diff = (dueDate.Value - now).Days;
+        
+        if (diff < 0) return $"<span class='text-danger'>Overdue by {Math.Abs(diff)} days</span>";
+        if (diff == 0) return "<span class='text-warning'>Due today</span>";
+        if (diff <= 7) return $"<span class='text-warning'>Due in {diff} days</span>";
+        
+        return $"Due in {diff} days";
+    }
+
+    // Helper to get frequency display text
+    string GetFrequencyDisplay(FormTemplateSubmissionRule rule)
+    {
+        if (string.IsNullOrEmpty(rule.Frequency)) return "No schedule";
+        
+        return rule.Frequency.ToLower() switch
+        {
+            "daily" => "Daily",
+            "weekly" => GetWeeklyDisplay(rule.DueDay),
+            "monthly" => GetMonthlyDisplay(rule.DueDay),
+            "quarterly" => GetQuarterlyDisplay(rule.DueDay),
+            "annually" => GetAnnuallyDisplay(rule.DueDay, rule.DueMonth),
+            "once" => "One-time",
+            _ => rule.Frequency
+        };
+    }
+
+    string GetWeeklyDisplay(int? dueDay)
+    {
+        if (!dueDay.HasValue || dueDay < 0 || dueDay > 6) return "Weekly";
+        var dayName = ((DayOfWeek)dueDay.Value).ToString();
+        return $"Weekly on {dayName}";
+    }
+
+    string GetMonthlyDisplay(int? dueDay)
+    {
+        if (!dueDay.HasValue) return "Monthly";
+        if (dueDay == -1) return "Monthly on last day";
+        var suffix = GetOrdinalSuffix(dueDay.Value);
+        return $"Monthly on {dueDay}{suffix}";
+    }
+
+    string GetQuarterlyDisplay(int? dueDay)
+    {
+        if (!dueDay.HasValue) return "Quarterly";
+        if (dueDay == -1) return "Quarterly on last day";
+        var suffix = GetOrdinalSuffix(dueDay.Value);
+        return $"Quarterly on {dueDay}{suffix}";
+    }
+
+    string GetAnnuallyDisplay(int? dueDay, int? dueMonth)
+    {
+        if (!dueDay.HasValue || !dueMonth.HasValue) return "Annually";
+        var monthName = System.Globalization.CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(dueMonth.Value);
+        if (dueDay == -1) return $"Annually on last day of {monthName}";
+        var suffix = GetOrdinalSuffix(dueDay.Value);
+        return $"Annually on {monthName} {dueDay}{suffix}";
+    }
+
+    string GetOrdinalSuffix(int number)
+    {
+        if (number % 100 >= 11 && number % 100 <= 13) return "th";
+        return (number % 10) switch
+        {
+            1 => "st",
+            2 => "nd", 
+            3 => "rd",
+            _ => "th"
+        };
+    }
+
+    // Helper to calculate next due date for a rule
+    DateTime? CalculateNextDueDate(FormTemplateSubmissionRule rule)
+    {
+        if (string.IsNullOrEmpty(rule.Frequency))
+            return null;
+
+        var baseDate = DateTime.UtcNow;
+        var dueTime = rule.DueTime ?? TimeSpan.Zero;
+
+        try
+        {
+            return rule.Frequency.ToLower() switch
+            {
+                "once" => rule.SpecificDueDate,
+                "daily" => CalculateDailyDueDate(baseDate, dueTime),
+                "weekly" => CalculateWeeklyDueDate(baseDate, rule.DueDay, dueTime),
+                "monthly" => CalculateMonthlyDueDate(baseDate, rule.DueDay, dueTime),
+                "quarterly" => CalculateQuarterlyDueDate(baseDate, rule.DueDay, dueTime),
+                "annually" => CalculateAnnuallyDueDate(baseDate, rule.DueDay, rule.DueMonth, dueTime),
+                _ => null
+            };
+        }
+        catch
+        {
+            return null;
+        }
+    }
+
+    DateTime CalculateDailyDueDate(DateTime baseDate, TimeSpan dueTime)
+    {
+        var today = baseDate.Date.Add(dueTime);
+        return today > baseDate ? today : today.AddDays(1);
+    }
+
+    DateTime? CalculateWeeklyDueDate(DateTime baseDate, int? dueDay, TimeSpan dueTime)
+    {
+        if (!dueDay.HasValue || dueDay < 0 || dueDay > 6)
+            return null;
+
+        var targetDayOfWeek = (DayOfWeek)dueDay.Value;
+        var daysUntilTarget = ((int)targetDayOfWeek - (int)baseDate.DayOfWeek + 7) % 7;
+        
+        if (daysUntilTarget == 0)
+        {
+            var todayDue = baseDate.Date.Add(dueTime);
+            if (todayDue > baseDate)
+                return todayDue;
+            daysUntilTarget = 7;
+        }
+
+        return baseDate.Date.AddDays(daysUntilTarget).Add(dueTime);
+    }
+
+    DateTime? CalculateMonthlyDueDate(DateTime baseDate, int? dueDay, TimeSpan dueTime)
+    {
+        if (!dueDay.HasValue)
+            return null;
+
+        var currentMonth = baseDate.Year * 12 + baseDate.Month - 1;
+        var targetDate = dueDay.Value == -1 
+            ? new DateTime(baseDate.Year, baseDate.Month, DateTime.DaysInMonth(baseDate.Year, baseDate.Month)).Add(dueTime)
+            : new DateTime(baseDate.Year, baseDate.Month, Math.Min(dueDay.Value, DateTime.DaysInMonth(baseDate.Year, baseDate.Month))).Add(dueTime);
+
+        if (targetDate <= baseDate)
+        {
+            var nextMonth = currentMonth + 1;
+            var nextYear = nextMonth / 12;
+            var nextMonthNum = (nextMonth % 12) + 1;
+            
+            targetDate = dueDay.Value == -1
+                ? new DateTime(nextYear, nextMonthNum, DateTime.DaysInMonth(nextYear, nextMonthNum)).Add(dueTime)
+                : new DateTime(nextYear, nextMonthNum, Math.Min(dueDay.Value, DateTime.DaysInMonth(nextYear, nextMonthNum))).Add(dueTime);
+        }
+
+        return targetDate;
+    }
+
+    DateTime? CalculateQuarterlyDueDate(DateTime baseDate, int? dueDay, TimeSpan dueTime)
+    {
+        if (!dueDay.HasValue)
+            return null;
+
+        // Simplified quarterly calculation - use first month of current quarter
+        var quarter = (baseDate.Month - 1) / 3;
+        var quarterStartMonth = quarter * 3 + 1;
+        
+        var targetDate = dueDay.Value == -1
+            ? new DateTime(baseDate.Year, quarterStartMonth + 2, DateTime.DaysInMonth(baseDate.Year, quarterStartMonth + 2)).Add(dueTime)
+            : new DateTime(baseDate.Year, quarterStartMonth, Math.Min(dueDay.Value, DateTime.DaysInMonth(baseDate.Year, quarterStartMonth))).Add(dueTime);
+
+        if (targetDate <= baseDate)
+        {
+            // Move to next quarter
+            quarter = (quarter + 1) % 4;
+            var nextYear = quarter == 0 ? baseDate.Year + 1 : baseDate.Year;
+            quarterStartMonth = quarter * 3 + 1;
+            
+            targetDate = dueDay.Value == -1
+                ? new DateTime(nextYear, quarterStartMonth + 2, DateTime.DaysInMonth(nextYear, quarterStartMonth + 2)).Add(dueTime)
+                : new DateTime(nextYear, quarterStartMonth, Math.Min(dueDay.Value, DateTime.DaysInMonth(nextYear, quarterStartMonth))).Add(dueTime);
+        }
+
+        return targetDate;
+    }
+
+    DateTime? CalculateAnnuallyDueDate(DateTime baseDate, int? dueDay, int? dueMonth, TimeSpan dueTime)
+    {
+        if (!dueDay.HasValue || !dueMonth.HasValue)
+            return null;
+
+        var targetDate = dueDay.Value == -1
+            ? new DateTime(baseDate.Year, dueMonth.Value, DateTime.DaysInMonth(baseDate.Year, dueMonth.Value)).Add(dueTime)
+            : new DateTime(baseDate.Year, dueMonth.Value, Math.Min(dueDay.Value, DateTime.DaysInMonth(baseDate.Year, dueMonth.Value))).Add(dueTime);
+
+        if (targetDate <= baseDate)
+        {
+            targetDate = dueDay.Value == -1
+                ? new DateTime(baseDate.Year + 1, dueMonth.Value, DateTime.DaysInMonth(baseDate.Year + 1, dueMonth.Value)).Add(dueTime)
+                : new DateTime(baseDate.Year + 1, dueMonth.Value, Math.Min(dueDay.Value, DateTime.DaysInMonth(baseDate.Year + 1, dueMonth.Value))).Add(dueTime);
+        }
+
+        return targetDate;
+    }
+
+    // Build DataTable configuration
+    var tableConfig = new DataTableConfig
+    {
+        TableId = "submissionRulesTable",
+        Columns = new List<string> { "Rule Name", "Frequency", "Next Due", "Grace Period", "Status", "Actions" },
+        EnableSearch = false,
+        CreateButtonText = "Create Submission Rule",
+        CreateButtonUrl = $"/SubmissionRules/Create/{model.TemplateId}",
+        ShowPagination = false,
+        EnableSorting = true,
+        EnableHover = true
+    };
+
+    var table = tableConfig.BuildDataTable();
+}
+
+<!-- Submission Rules Panel -->
+<div class="card">
+    <div class="card-header">
+        <div class="row align-items-center">
+            <div class="col">
+                <h5 class="card-title mb-0">
+                    <i class="ri-time-line me-2"></i>Submission Rules
+                </h5>
+                <p class="text-muted mb-0 small">Define when and how submissions should occur</p>
+            </div>
+            <div class="col-auto">
+                @if (submissionRules.Any())
+                {
+                    <span class="badge bg-info">@submissionRules.Count rule@(submissionRules.Count != 1 ? "s" : "")</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">No rules</span>
+                }
+            </div>
+        </div>
+    </div>
+    
+    <div class="card-body">
+        @if (!submissionRules.Any())
+        {
+            <!-- Empty State -->
+            <div class="text-center py-4">
+                <div class="mb-3">
+                    <i class="ri-time-line display-4 text-muted"></i>
+                </div>
+                <h6 class="text-muted">No Submission Rules Defined</h6>
+                <p class="text-muted mb-3">
+                    Submission rules define when forms should be submitted (daily, weekly, monthly, etc.) 
+                    and handle grace periods, late submissions, and reminders.
+                </p>
+                <a href="/SubmissionRules/Create/@(model.TemplateId)" class="btn btn-primary">
+                    <i class="ri-add-line me-1"></i>Create First Rule
+                </a>
+            </div>
+        }
+        else
+        {
+            <!-- Rules Table -->
+            <partial name="~/Views/Shared/Components/DataTable/_DataTable.cshtml" model="table" />
+            
+            <!-- Table Body -->
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const tableBody = document.querySelector('#submissionRulesTable tbody');
+                    if (tableBody) {
+                        tableBody.innerHTML = `
+                            @foreach (var rule in submissionRules)
+                            {
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <i class="@GetFrequencyIcon(rule.Frequency) text-@GetFrequencyColor(rule.Frequency) me-2"></i>
+                                            <div>
+                                                <div class="fw-medium">@Html.Raw(rule.RuleName)</div>
+                                                @if (!string.IsNullOrEmpty(rule.Description))
+                                                {
+                                                    <small class="text-muted">@Html.Raw(rule.Description)</small>
+                                                }
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-@GetFrequencyColor(rule.Frequency)-subtle text-@GetFrequencyColor(rule.Frequency)">
+                                            @GetFrequencyDisplay(rule)
+                                        </span>
+                                        @if (rule.DueTime.HasValue)
+                                        {
+                                            <br><small class="text-muted">at @rule.DueTime.Value.ToString(@"hh\:mm")</small>
+                                        }
+                                    </td>
+                                    <td>
+                                        @{
+                                            // Calculate next due date for this rule
+                                            var nextDue = CalculateNextDueDate(rule);
+                                        }
+                                        @Html.Raw(FormatNextDueDate(nextDue))
+                                    </td>
+                                    <td>
+                                        @if (rule.GracePeriodDays > 0)
+                                        {
+                                            <span class="text-info">@rule.GracePeriodDays day@(rule.GracePeriodDays != 1 ? "s" : "")</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">None</span>
+                                        }
+                                        @if (!rule.AllowLateSubmission)
+                                        {
+                                            <br><small class="text-danger">No late submissions</small>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-@GetStatusColor(rule.Status)">@rule.Status</span>
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <a href="/SubmissionRules/@rule.SubmissionRuleId/Edit" 
+                                               class="btn btn-outline-primary btn-sm" 
+                                               title="Edit Rule">
+                                                <i class="ri-edit-line"></i>
+                                            </a>
+                                            <button type="button" 
+                                                    class="btn btn-outline-danger btn-sm" 
+                                                    onclick="confirmDeleteSubmissionRule(@rule.SubmissionRuleId, '@Html.Raw(rule.RuleName)')"
+                                                    title="Delete Rule">
+                                                <i class="ri-delete-bin-line"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        `;
+                    }
+                });
+            </script>
+        }
+    </div>
+    
+    @if (submissionRules.Any())
+    {
+        <div class="card-footer bg-light">
+            <div class="row text-center">
+                <div class="col-4">
+                    <div class="text-muted small">Active Rules</div>
+                    <div class="fw-bold text-success">@submissionRules.Count(r => r.Status == "Active")</div>
+                </div>
+                <div class="col-4">
+                    <div class="text-muted small">With Reminders</div>
+                    <div class="fw-bold text-info">@submissionRules.Count(r => !string.IsNullOrEmpty(r.ReminderDaysBefore))</div>
+                </div>
+                <div class="col-4">
+                    <div class="text-muted small">Grace Period</div>
+                    <div class="fw-bold text-warning">@submissionRules.Count(r => r.GracePeriodDays > 0)</div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Include AppModal for delete confirmations -->
+<partial name="~/Views/Shared/Components/_AppModal.cshtml" />
+
+<script>
+    function confirmDeleteSubmissionRule(ruleId, ruleName) {
+        AppModal.delete({
+            title: 'Delete Submission Rule',
+            message: `Are you sure you want to delete the submission rule "<strong>${ruleName}</strong>"?`,
+            details: 'This will remove all scheduling and reminder configurations. This action cannot be undone.',
+            confirmText: 'Delete Rule',
+            onConfirm: function() {
+                fetch(`/api/submissionrules/${ruleId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': document.querySelector('input[name="__RequestVerificationToken"]')?.value
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        location.reload();
+                    } else {
+                        AppModal.error({
+                            title: 'Delete Failed',
+                            message: data.message || 'Failed to delete submission rule',
+                            showCancel: false
+                        });
+                    }
+                })
+                .catch(err => {
+                    AppModal.error({
+                        title: 'Error',
+                        message: 'An error occurred while deleting the submission rule',
+                        showCancel: false
+                    });
+                });
+            }
+        });
+    }
+</script>

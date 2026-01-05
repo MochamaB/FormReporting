@@ -148,35 +148,6 @@ namespace FormReporting.Controllers.Forms
             return View("~/Views/Forms/Workflows/Create.cshtml");
         }
 
-        /// <summary>
-        /// GET: /Workflows/{id}/Edit
-        /// Show the edit workflow wizard
-        /// </summary>
-        [HttpGet("{id}/Edit")]
-        public async Task<IActionResult> Edit(int id)
-        {
-            var workflow = await _workflowService.GetWorkflowByIdAsync(id);
-            if (workflow == null)
-            {
-                TempData["ErrorMessage"] = "Workflow not found.";
-                return RedirectToAction("Index");
-            }
-
-            ViewData["WorkflowId"] = id;
-            ViewData["Workflow"] = workflow;
-            ViewData["IsEdit"] = true;
-
-            // Set breadcrumb
-            ViewData["BreadcrumbItems"] = new List<(string Text, string? Url)>
-            {
-                ("Forms", null),
-                ("Workflows", Url.Action("Index", "Workflow")),
-                (workflow.WorkflowName, null),
-                ("Edit", null)
-            };
-
-            return View("~/Views/Forms/Workflows/Edit.cshtml");
-        }
 
         /// <summary>
         /// GET: /Workflows/{id}
@@ -317,7 +288,7 @@ namespace FormReporting.Controllers.Forms
                     IsActive = workflow.IsActive
                 };
 
-                return View(model);
+                return View("~/Views/Forms/Workflows/Edit.cshtml", model);
             }
             catch (Exception ex)
             {

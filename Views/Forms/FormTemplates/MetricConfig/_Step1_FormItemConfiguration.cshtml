@@ -1,0 +1,163 @@
+@{
+    // Step 1: Form Item Configuration
+    // Get parent model from ViewData
+    var parentModel = ViewData["ParentModel"] as FormReporting.Models.ViewModels.Metrics.FieldMappingWizardViewModel;
+    var existingMapping = parentModel?.ExistingMapping;
+    var validMappingTypes = parentModel?.ValidMappingTypes ?? new List<FormReporting.Models.ViewModels.Metrics.MappingTypeOption>();
+    var recommendedType = parentModel?.RecommendedMappingType;
+    
+    // Generate default mapping name if no existing mapping
+    var defaultMappingName = existingMapping?.MappingName ?? $"{parentModel?.FieldName} Mapping";
+}
+
+<div class="form-item-configuration-step">
+    <!-- Recommendation Alert (if recommended type exists) -->
+    @if (!string.IsNullOrEmpty(recommendedType))
+    {
+        var recommendedTypeInfo = validMappingTypes.FirstOrDefault(t => t.Value == recommendedType);
+        <div class="alert alert-info alert-dismissible fade show mb-3" role="alert">
+            <i class="ri-lightbulb-flash-line me-2"></i>
+            <strong>Recommendation:</strong> Based on the field type <span class="badge bg-primary">@parentModel?.DataType</span>, 
+            we recommend using <strong>@(recommendedTypeInfo?.Text ?? recommendedType)</strong> mapping type.
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <!-- Mapping Name -->
+    <div class="mb-3">
+        <label class="form-label">Mapping Name <span class="text-danger">*</span></label>
+        <input type="text" class="form-control" id="mappingName" 
+               value="@defaultMappingName">
+        <div class="form-text">
+            <i class="ri-lightbulb-line me-1"></i>
+            <span id="mappingNameHelp">Give this mapping a descriptive name for identification</span>
+        </div>
+    </div>
+
+    <!-- Mapping Configuration Row -->
+    <div class="row">
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label class="form-label">Mapping Type <span class="text-danger">*</span></label>
+                <select class="form-select" id="mappingType">
+                    <option value="">Select mapping type...</option>
+                    @foreach (var mappingType in validMappingTypes)
+                    {
+                        // Select if: existing mapping matches OR (no existing mapping AND this is recommended)
+                        var isSelected = existingMapping?.MappingType == mappingType.Value || 
+                                        (existingMapping == null && mappingType.IsRecommended);
+                        if (isSelected)
+                        {
+                            if (mappingType.IsRecommended)
+                            {
+                                <option value="@mappingType.Value" data-description="@mappingType.Description" data-recommended="true" selected>@mappingType.Text (Recommended)</option>
+                            }
+                            else
+                            {
+                                <option value="@mappingType.Value" data-description="@mappingType.Description" selected>@mappingType.Text</option>
+                            }
+                        }
+                        else
+                        {
+                            if (mappingType.IsRecommended)
+                            {
+                                <option value="@mappingType.Value" data-description="@mappingType.Description" data-recommended="true">@mappingType.Text (Recommended)</option>
+                            }
+                            else
+                            {
+                                <option value="@mappingType.Value" data-description="@mappingType.Description">@mappingType.Text</option>
+                            }
+                        }
+                    }
+                </select>
+                <div class="form-text" id="mappingTypeHelp">Choose how this field maps to metrics</div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="mb-3">
+                <label class="form-label">Aggregation Type <span class="text-danger">*</span></label>
+                <select class="form-select" id="aggregationType">
+                    @{
+                        var aggregationTypes = new[] { "Direct", "Sum", "Count", "Avg" };
+                        var aggregationLabels = new[] { "Direct - Use field value as-is", "Sum - Add up values", "Count - Count occurrences", "Average - Calculate average" };
+                    }
+                    @for (int i = 0; i < aggregationTypes.Length; i++)
+                    {
+                        var isSelected = existingMapping?.AggregationType == aggregationTypes[i];
+                        if (isSelected)
+                        {
+                            <option value="@aggregationTypes[i]" selected>@aggregationLabels[i]</option>
+                        }
+                        else
+                        {
+                            <option value="@aggregationTypes[i]">@aggregationLabels[i]</option>
+                        }
+                    }
+                </select>
+                <div class="form-text">How should multiple values be combined?</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Expected Value (for Binary Compliance) -->
+    <div class="mb-3 @(existingMapping?.MappingType != "BinaryCompliance" ? "d-none" : "")" id="expectedValueContainer">
+        <label class="form-label">Expected Value</label>
+        <input type="text" class="form-control" id="expectedValue" 
+               value="@(existingMapping?.ExpectedValue ?? "")"
+               placeholder="e.g., Yes, True, 100">
+        <div class="form-text">The value that indicates compliance/success</div>
+    </div>
+
+    <!-- Configuration Summary -->
+    @{
+        // Get pre-selected values for summary
+        var selectedMappingType = existingMapping?.MappingType ?? recommendedType ?? "-";
+        var selectedMappingTypeText = validMappingTypes.FirstOrDefault(t => t.Value == selectedMappingType)?.Text ?? selectedMappingType;
+        var selectedAggregationType = existingMapping?.AggregationType ?? "Direct";
+    }
+    <div class="card bg-light mt-4">
+        <div class="card-body">
+            <h6 class="card-title"><i class="ri-file-list-3-line me-2"></i>Configuration Summary</h6>
+            <div class="row">
+                <div class="col-md-6">
+                    <small class="text-muted">Mapping Name:</small>
+                    <div id="summaryMappingName" class="fw-medium">@defaultMappingName</div>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted">Type:</small>
+                    <div id="summaryMappingType" class="fw-medium">@selectedMappingTypeText</div>
+                </div>
+                <div class="col-md-3">
+                    <small class="text-muted">Aggregation:</small>
+                    <div id="summaryAggregationType" class="fw-medium">@selectedAggregationType</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // Update summary as user types/selects
+    $('#mappingName').on('input', function() {
+        $('#summaryMappingName').text($(this).val() || '-');
+    });
+    
+    $('#mappingType').on('change', function() {
+        const selectedText = $(this).find('option:selected').text();
+        $('#summaryMappingType').text(selectedText || '-');
+        
+        // Show/hide expected value based on mapping type
+        if ($(this).val() === 'BinaryCompliance') {
+            $('#expectedValueContainer').removeClass('d-none');
+        } else {
+            $('#expectedValueContainer').addClass('d-none');
+        }
+    });
+    
+    $('#aggregationType').on('change', function() {
+        const selectedText = $(this).find('option:selected').text().split(' - ')[0];
+        $('#summaryAggregationType').text(selectedText || '-');
+    });
+});
+</script>

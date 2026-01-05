@@ -94,6 +94,17 @@ namespace FormReporting.Models.Entities.Reporting
         /// </summary>
         public string? ConditionalFormatting { get; set; }
 
+        /// <summary>
+        /// Metric scope filter: Field, Section, Template
+        /// </summary>
+        [StringLength(30)]
+        public string? MetricScope { get; set; }
+
+        /// <summary>
+        /// Enable drill-down to component metrics
+        /// </summary>
+        public bool DrillDownEnabled { get; set; } = false;
+
         // Navigation properties
         /// <summary>
         /// The report this field belongs to

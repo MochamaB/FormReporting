@@ -1,0 +1,255 @@
+@model FormReporting.Models.ViewModels.Metrics.FieldMappingWizardViewModel
+
+<div class="field-information-panel">
+    <div class="card h-100">
+        <div class="card-header ">
+            <h6 class="card-title mb-1">
+                <i class="ri-file-list-3-line me-2"></i>Field Information
+            </h6>
+        </div>
+        <div class="card-body">
+            <!-- Field Details -->
+            <div class="mb-4">
+                <div class="mb-2">
+                    <small class="text-muted">Field Name:</small>
+                    <div class="fw-medium" id="fieldName">@Model.FieldName</div>
+                </div>
+                
+                <div class="mb-2">
+                    <small class="text-muted">Field Code:</small>
+                    <div class="fw-medium font-monospace" id="fieldCode">@Model.FieldCode</div>
+                </div>
+                
+                <div class="mb-2">
+                    <small class="text-muted">Data Type:</small>
+                    <div class="fw-medium" id="fieldDataType">
+                        <span class="badge bg-info" id="fieldTypeBadge">@Model.DataType</span>
+                    </div>
+                </div>
+                
+                <div class="mb-2">
+                    <small class="text-muted">Section:</small>
+                    <div class="fw-medium" id="fieldSection">@(Model.SectionName ?? "-")</div>
+                </div>
+                
+                <div class="mb-2">
+                    <small class="text-muted">Required:</small>
+                    <div class="fw-medium" id="fieldRequired">
+                        <span class="badge @(Model.IsRequired ? "bg-danger" : "bg-secondary")" id="requiredBadge">
+                            @(Model.IsRequired ? "Required" : "Optional")
+                        </span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Field Options (if applicable) -->
+            @if (Model.HasOptions && Model.Options.Any())
+            {
+                <div class="mb-4" id="fieldOptionsSection">
+                    <h6 class="text-success mb-3">
+                        <i class="ri-list-check me-2"></i>Available Options
+                    </h6>
+                    <div id="fieldOptionsList">
+                        @foreach (var option in Model.Options)
+                        {
+                            var scoreClass = option.ScoreValue > 7 ? "success" : option.ScoreValue > 4 ? "warning" : "danger";
+                            <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                                <span class="fw-medium">@option.OptionText</span>
+                                <span class="badge bg-@scoreClass">@option.ScoreValue</span>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+            
+            <!-- Mapping Recommendations -->
+            <div class="mb-4">
+                <h6 class="text-warning mb-3">
+                    <i class="ri-lightbulb-line me-2"></i>Recommendations
+                </h6>
+                <div class="alert alert-light border-warning" id="fieldRecommendations">
+                    <div class="d-flex align-items-start">
+                        <div class="spinner-border spinner-border-sm text-warning me-2 mt-1" role="status" id="recommendationSpinner">
+                            <span class="visually-hidden">Analyzing...</span>
+                        </div>
+                        <div id="recommendationText">Analyzing field characteristics for mapping recommendations...</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Current Mapping Status -->
+            <div class="mb-4" id="currentMappingSection" style="display: none;">
+                <h6 class="text-info mb-3">
+                    <i class="ri-link me-2"></i>Current Mapping
+                </h6>
+                <div class="alert alert-info" id="currentMappingInfo">
+                    <!-- Current mapping info populated by JavaScript -->
+                </div>
+            </div>
+            
+            <!-- Field Statistics (if available) -->
+            <div id="fieldStatsSection" style="display: none;">
+                <h6 class="text-secondary mb-3">
+                    <i class="ri-bar-chart-2-line me-2"></i>Field Statistics
+                </h6>
+                <div class="row text-center">
+                    <div class="col-4">
+                        <div class="border rounded p-2">
+                            <div class="fw-bold text-primary" id="statSubmissions">-</div>
+                            <small class="text-muted">Submissions</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="border rounded p-2">
+                            <div class="fw-bold text-success" id="statCompleted">-</div>
+                            <small class="text-muted">Completed</small>
+                        </div>
+                    </div>
+                    <div class="col-4">
+                        <div class="border rounded p-2">
+                            <div class="fw-bold text-info" id="statAvgScore">-</div>
+                            <small class="text-muted">Avg Score</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Field Information Panel JavaScript
+const FieldInfoPanel = {
+    // Update field information display
+    updateFieldInfo: function(field) {
+        $('#fieldName').text(field.itemName || '-');
+        $('#fieldCode').text(field.itemCode || '-');
+        $('#fieldDataType').find('#fieldTypeBadge').text(field.dataType || '-');
+        $('#fieldSection').text(field.sectionName || '-');
+        
+        // Update required status
+        const isRequired = field.isRequired;
+        const requiredBadge = $('#requiredBadge');
+        if (isRequired) {
+            requiredBadge.removeClass('bg-secondary').addClass('bg-danger').text('Required');
+        } else {
+            requiredBadge.removeClass('bg-danger').addClass('bg-secondary').text('Optional');
+        }
+        
+        // Update field type badge color
+        const typeBadge = $('#fieldTypeBadge');
+        switch(field.dataType?.toLowerCase()) {
+            case 'text':
+            case 'textarea':
+                typeBadge.removeClass().addClass('badge bg-primary');
+                break;
+            case 'number':
+            case 'decimal':
+                typeBadge.removeClass().addClass('badge bg-success');
+                break;
+            case 'checkbox':
+            case 'radio':
+            case 'dropdown':
+                typeBadge.removeClass().addClass('badge bg-warning');
+                break;
+            case 'date':
+            case 'datetime':
+                typeBadge.removeClass().addClass('badge bg-info');
+                break;
+            default:
+                typeBadge.removeClass().addClass('badge bg-secondary');
+        }
+        
+        // Show field options if available
+        if (field.hasOptions && field.options && field.options.length > 0) {
+            this.displayFieldOptions(field.options);
+            $('#fieldOptionsSection').show();
+        } else {
+            $('#fieldOptionsSection').hide();
+        }
+        
+        // Generate recommendations
+        this.generateRecommendations(field);
+        
+        // Check for existing mapping
+        this.checkExistingMapping(field.itemId);
+    },
+    
+    // Display field options with scores
+    displayFieldOptions: function(options) {
+        const optionsList = $('#fieldOptionsList');
+        optionsList.empty();
+        
+        options.forEach(option => {
+            const scoreValue = option.scoreValue || 0;
+            const scoreClass = scoreValue > 7 ? 'success' : scoreValue > 4 ? 'warning' : 'danger';
+            
+            const optionHtml = `
+                <div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
+                    <span class="fw-medium">${option.optionText}</span>
+                    <span class="badge bg-${scoreClass}">${scoreValue}</span>
+                </div>
+            `;
+            optionsList.append(optionHtml);
+        });
+    },
+    
+    // Generate mapping recommendations
+    generateRecommendations: function(field) {
+        setTimeout(() => {
+            $('#recommendationSpinner').hide();
+            
+            let recommendations = [];
+            
+            // Field type specific recommendations
+            switch(field.dataType?.toLowerCase()) {
+                case 'checkbox':
+                case 'radio':
+                case 'dropdown':
+                    if (field.hasOptions) {
+                        recommendations.push('This field is ideal for performance tracking with threshold-based scoring.');
+                        recommendations.push('Consider creating a metric for dashboard integration.');
+                    }
+                    break;
+                case 'number':
+                case 'decimal':
+                    recommendations.push('Numerical fields work well with direct mapping and aggregation.');
+                    recommendations.push('Perfect for KPI tracking with threshold alerts.');
+                    break;
+                case 'text':
+                case 'textarea':
+                    recommendations.push('Text fields are best for compliance tracking or categorization.');
+                    recommendations.push('Consider binary compliance mapping if tracking yes/no status.');
+                    break;
+            }
+            
+            // Section-based recommendations
+            if (field.sectionName?.toLowerCase().includes('infrastructure')) {
+                recommendations.push('Infrastructure fields often benefit from formal metric definitions.');
+            }
+            
+            if (field.sectionName?.toLowerCase().includes('security')) {
+                recommendations.push('Security fields should typically have compliance thresholds.');
+            }
+            
+            // Default recommendation
+            if (recommendations.length === 0) {
+                recommendations.push('This field can be tracked using any mapping approach based on your reporting needs.');
+            }
+            
+            const recommendationHtml = recommendations.map(rec => `<div class="mb-1">• ${rec}</div>`).join('');
+            $('#recommendationText').html(recommendationHtml);
+        }, 1500);
+    },
+    
+    // Check for existing mapping
+    checkExistingMapping: function(itemId) {
+        // This would typically make an API call to check for existing mappings
+        // For now, we'll simulate it
+        setTimeout(() => {
+            // Simulate no existing mapping for now
+            $('#currentMappingSection').hide();
+        }, 500);
+    }
+};
+</script>

@@ -68,6 +68,11 @@ namespace FormReporting.Models.ViewModels.Metrics
 
         [Display(Name = "Active")]
         public bool IsActive { get; set; } = true;
+
+        /// <summary>
+        /// Template ID for generating global metric codes
+        /// </summary>
+        public int? TemplateId { get; set; }
     }
 
     /// <summary>

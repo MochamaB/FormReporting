@@ -140,6 +140,7 @@ public enum SimpleFieldType
     Number,            // <input type="number">
     Date,              // <input type="date">
     DateTime,          // <input type="datetime-local">
+    Time,              // <input type="time">
     Checkbox,          // <input type="checkbox">
     Select,            // <select>
     Radio,             // <input type="radio">

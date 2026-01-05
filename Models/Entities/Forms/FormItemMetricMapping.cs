@@ -16,13 +16,22 @@ namespace FormReporting.Models.Entities.Forms
         [Required]
         public int ItemId { get; set; }
 
+        public int? MetricId { get; set; }
+
+        // Mapping name for identification
         [Required]
-        public int MetricId { get; set; }
+        [StringLength(100)]
+        public string MappingName { get; set; } = string.Empty;
 
         // Mapping types
         [Required]
         [StringLength(30)]
         public string MappingType { get; set; } = string.Empty; // 'Direct', 'Calculated', 'BinaryCompliance', 'Derived'
+
+        // Aggregation type
+        [Required]
+        [StringLength(20)]
+        public string AggregationType { get; set; } = string.Empty; // Direct, Sum, Count, Avg
 
         // For calculated metrics (e.g., availability% = operational/total * 100)
         public string? TransformationLogic { get; set; } // JSON: {"formula": "(item21 / item20) * 100", "items": [21, 20]}
@@ -40,7 +49,7 @@ namespace FormReporting.Models.Entities.Forms
         public virtual FormTemplateItem Item { get; set; } = null!;
 
         [ForeignKey(nameof(MetricId))]
-        public virtual MetricDefinition Metric { get; set; } = null!;
+        public virtual MetricDefinition? Metric { get; set; }
 
         public virtual ICollection<MetricPopulationLog> PopulationLogs { get; set; } = new List<MetricPopulationLog>();
     }

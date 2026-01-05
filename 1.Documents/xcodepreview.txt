@@ -1,304 +1,39 @@
-info: Microsoft.Hosting.Lifetime[14]
-      Now listening on: https://localhost:7220
-info: Microsoft.Hosting.Lifetime[14]
-      Now listening on: http://localhost:5271
-info: Microsoft.Hosting.Lifetime[0]
-      Application started. Press Ctrl+C to shut down.
-info: Microsoft.Hosting.Lifetime[0]
-      Hosting environment: Development
-info: Microsoft.Hosting.Lifetime[0]
-      Content root path: C:\Users\KTDA\source\repos\MochamaB\FormReporting
-warn: Microsoft.EntityFrameworkCore.Model.Validation[20601]
-      The 'SubmissionMode' property 'SubmissionMode' on entity type 'FormTemplate' is configured with a database-generated default, but has no configured sentinel value. The database-generated default will always be used for inserts when the property has the value '0', since this is the CLR default for the 'SubmissionMode' type. Consider using a nullable type, using a nullable backing field, or setting the sentinel value for the property to ensure the database default is used when, and only when, appropriate. See https://aka.ms/efcore-docs-default-values for more information.
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (274ms) [Parameters=[@__templateId_Value_0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='120']
-      SELECT TOP(1) [f].[TemplateId], [f].[AllowAnonymousAccess], [f].[ArchivedBy], [f].[ArchivedDate], [f].[ArchivedReason], [f].[CategoryId], [f].[CreatedBy], [f].[CreatedDate], [f].[Description], [f].[IsActive], [f].[ModifiedBy], [f].[ModifiedDate], [f].[PublishStatus], [f].[PublishedBy], [f].[PublishedDate], [f].[RequiresApproval], [f].[SubmissionMode], [f].[TemplateCode], [f].[TemplateName], [f].[TemplateType], [f].[Version], [f].[WorkflowId], [f0].[CategoryId], [f0].[CategoryCode], [f0].[CategoryName], [f0].[Color], [f0].[CreatedDate], [f0].[Description], [f0].[DisplayOrder], [f0].[IconClass], [f0].[IsActive], [f0].[ModifiedDate]
-      FROM [FormTemplates] AS [f]
-      INNER JOIN [FormCategories] AS [f0] ON [f].[CategoryId] = [f0].[CategoryId]
-      WHERE [f].[TemplateId] = @__templateId_Value_0
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (59ms) [Parameters=[@__workflowId_0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='120']
-      SELECT TOP(1) [w].[WorkflowId], [w].[CreatedBy], [w].[CreatedDate], [w].[Description], [w].[IsActive], [w].[ModifiedDate], [w].[WorkflowName], [u].[UserId], [u].[AccessFailedCount], [u].[CreatedDate], [u].[DepartmentId], [u].[Email], [u].[EmailConfirmed], [u].[EmployeeNumber], [u].[FirstName], [u].[IsActive], [u].[LastLoginDate], [u].[LastName], [u].[LockoutEnabled], [u].[LockoutEnd], [u].[ModifiedDate], [u].[NormalizedEmail], [u].[NormalizedUserName], [u].[PasswordHash], [u].[PhoneNumber], [u].[PhoneNumberConfirmed], [u].[SecurityStamp], [u].[TenantId], [u].[TwoFactorEnabled], [u].[UserName]
-      FROM [WorkflowDefinitions] AS [w]
-      INNER JOIN [Users] AS [u] ON [w].[CreatedBy] = [u].[UserId]
-      WHERE [w].[WorkflowId] = @__workflowId_0
-      ORDER BY [w].[WorkflowId], [u].[UserId]
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (26ms) [Parameters=[], CommandType='Text', CommandTimeout='120']
-      SELECT [m].[MenuSectionId], [m].[CreatedDate], [m].[Description], [m].[DisplayOrder], [m].[IsActive], [m].[ModifiedDate], [m].[SectionCode], [m].[SectionName]
-      FROM [MenuSections] AS [m]
-      WHERE [m].[IsActive] = CAST(1 AS bit)
-      ORDER BY [m].[DisplayOrder], [m].[MenuSectionId]
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (10,016ms) [Parameters=[], CommandType='Text', CommandTimeout='120']
-      SELECT [m2].[ModuleId], [m2].[CreatedDate], [m2].[Description], [m2].[DisplayOrder], [m2].[Icon], [m2].[IsActive], [m2].[MenuSectionId], [m2].[ModuleCode], [m2].[ModuleName], [m].[MenuSectionId]
-      FROM [MenuSections] AS [m]
-      INNER JOIN (
-          SELECT [m0].[ModuleId], [m0].[CreatedDate], [m0].[Description], [m0].[DisplayOrder], [m0].[Icon], [m0].[IsActive], [m0].[MenuSectionId], [m0].[ModuleCode], [m0].[ModuleName]
-          FROM [Modules] AS [m0]
-          WHERE [m0].[IsActive] = CAST(1 AS bit)
-      ) AS [m2] ON [m].[MenuSectionId] = [m2].[MenuSectionId]
-      WHERE [m].[IsActive] = CAST(1 AS bit)
-      ORDER BY [m].[DisplayOrder], [m].[MenuSectionId], [m2].[ModuleId]
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (50ms) [Parameters=[], CommandType='Text', CommandTimeout='120']
-      SELECT [m3].[MenuItemId], [m3].[Action], [m3].[Area], [m3].[Controller], [m3].[CreatedDate], [m3].[DisplayOrder], [m3].[Icon], [m3].[IsActive], [m3].[IsVisible], [m3].[Level], [m3].[MenuCode], [m3].[MenuTitle], [m3].[ModifiedDate], [m3].[ModuleId], [m3].[ParentMenuItemId], [m3].[RequiresAuth], [m3].[Route], [m].[MenuSectionId], [m2].[ModuleId]
-      FROM [MenuSections] AS [m]
-      INNER JOIN (
-          SELECT [m0].[ModuleId], [m0].[MenuSectionId]
-          FROM [Modules] AS [m0]
-          WHERE [m0].[IsActive] = CAST(1 AS bit)
-      ) AS [m2] ON [m].[MenuSectionId] = [m2].[MenuSectionId]
-      INNER JOIN (
-          SELECT [m1].[MenuItemId], [m1].[Action], [m1].[Area], [m1].[Controller], [m1].[CreatedDate], [m1].[DisplayOrder], [m1].[Icon], [m1].[IsActive], [m1].[IsVisible], [m1].[Level], [m1].[MenuCode], [m1].[MenuTitle], [m1].[ModifiedDate], [m1].[ModuleId], [m1].[ParentMenuItemId], [m1].[RequiresAuth], [m1].[Route]
-          FROM [MenuItems] AS [m1]
-          WHERE [m1].[IsActive] = CAST(1 AS bit) AND [m1].[IsVisible] = CAST(1 AS bit)
-      ) AS [m3] ON [m2].[ModuleId] = [m3].[ModuleId]
-      WHERE [m].[IsActive] = CAST(1 AS bit)
-      ORDER BY [m].[DisplayOrder], [m].[MenuSectionId], [m2].[ModuleId]
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (13ms) [Parameters=[@__scopeCode_0='?' (Size = 20)], CommandType='Text', CommandTimeout='120']
-      SELECT TOP(1) [s].[ScopeLevelId], [s].[CreatedDate], [s].[Description], [s].[IsActive], [s].[Level], [s].[ScopeCode], [s].[ScopeName]
-      FROM [ScopeLevels] AS [s]
-      WHERE [s].[ScopeCode] = @__scopeCode_0
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='120']
-      SELECT [w].[ActionId] AS [actionId], [w].[ActionCode] AS [actionCode], [w].[ActionName] AS [actionName], [w].[Description] AS [description], [w].[RequiresSignature] AS [requiresSignature], [w].[RequiresComment] AS [requiresComment], [w].[AllowDelegate] AS [allowDelegate], [w].[IconClass] AS [iconClass], [w].[CssClass] AS [cssClass]
-      FROM [WorkflowActions] AS [w]
-      WHERE [w].[IsActive] = CAST(1 AS bit)
-      ORDER BY [w].[DisplayOrder]
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (12ms) [Parameters=[@__userScopeLevel_Level_0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='120']
-      SELECT [r].[RoleId] AS [roleId], [r].[RoleName] AS [roleName], [r].[RoleCode] AS [roleCode], [r].[Description] AS [description], [s].[ScopeName] AS [scopeLevel]
-      FROM [Roles] AS [r]
-      INNER JOIN [ScopeLevels] AS [s] ON [r].[ScopeLevelId] = [s].[ScopeLevelId]
-      WHERE [r].[IsActive] = CAST(1 AS bit) AND [s].[Level] <= @__userScopeLevel_Level_0
-      ORDER BY [r].[RoleName]
-info: FormReporting.Controllers.API.WorkflowApiController[0]
-      User with scope Global (Level 1) retrieved 6 roles
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (71ms) [Parameters=[@__templateId_Value_0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='120']
-      SELECT TOP(1) [f].[TemplateId], [f].[AllowAnonymousAccess], [f].[ArchivedBy], [f].[ArchivedDate], [f].[ArchivedReason], [f].[CategoryId], [f].[CreatedBy], [f].[CreatedDate], [f].[Description], [f].[IsActive], [f].[ModifiedBy], [f].[ModifiedDate], [f].[PublishStatus], [f].[PublishedBy], [f].[PublishedDate], [f].[RequiresApproval], [f].[SubmissionMode], [f].[TemplateCode], [f].[TemplateName], [f].[TemplateType], [f].[Version], [f].[WorkflowId], [f0].[CategoryId], [f0].[CategoryCode], [f0].[CategoryName], [f0].[Color], [f0].[CreatedDate], [f0].[Description], [f0].[DisplayOrder], [f0].[IconClass], [f0].[IsActive], [f0].[ModifiedDate]
-      FROM [FormTemplates] AS [f]
-      INNER JOIN [FormCategories] AS [f0] ON [f].[CategoryId] = [f0].[CategoryId]
-      WHERE [f].[TemplateId] = @__templateId_Value_0
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (9ms) [Parameters=[], CommandType='Text', CommandTimeout='120']
-      SELECT [m].[MenuSectionId], [m].[CreatedDate], [m].[Description], [m].[DisplayOrder], [m].[IsActive], [m].[ModifiedDate], [m].[SectionCode], [m].[SectionName]
-      FROM [MenuSections] AS [m]
-      WHERE [m].[IsActive] = CAST(1 AS bit)
-      ORDER BY [m].[DisplayOrder], [m].[MenuSectionId]
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (11ms) [Parameters=[], CommandType='Text', CommandTimeout='120']
-      SELECT [m2].[ModuleId], [m2].[CreatedDate], [m2].[Description], [m2].[DisplayOrder], [m2].[Icon], [m2].[IsActive], [m2].[MenuSectionId], [m2].[ModuleCode], [m2].[ModuleName], [m].[MenuSectionId]
-      FROM [MenuSections] AS [m]
-      INNER JOIN (
-          SELECT [m0].[ModuleId], [m0].[CreatedDate], [m0].[Description], [m0].[DisplayOrder], [m0].[Icon], [m0].[IsActive], [m0].[MenuSectionId], [m0].[ModuleCode], [m0].[ModuleName]
-          FROM [Modules] AS [m0]
-          WHERE [m0].[IsActive] = CAST(1 AS bit)
-      ) AS [m2] ON [m].[MenuSectionId] = [m2].[MenuSectionId]
-      WHERE [m].[IsActive] = CAST(1 AS bit)
-      ORDER BY [m].[DisplayOrder], [m].[MenuSectionId], [m2].[ModuleId]
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (18ms) [Parameters=[], CommandType='Text', CommandTimeout='120']
-      SELECT [m3].[MenuItemId], [m3].[Action], [m3].[Area], [m3].[Controller], [m3].[CreatedDate], [m3].[DisplayOrder], [m3].[Icon], [m3].[IsActive], [m3].[IsVisible], [m3].[Level], [m3].[MenuCode], [m3].[MenuTitle], [m3].[ModifiedDate], [m3].[ModuleId], [m3].[ParentMenuItemId], [m3].[RequiresAuth], [m3].[Route], [m].[MenuSectionId], [m2].[ModuleId]
-      FROM [MenuSections] AS [m]
-      INNER JOIN (
-          SELECT [m0].[ModuleId], [m0].[MenuSectionId]
-          FROM [Modules] AS [m0]
-          WHERE [m0].[IsActive] = CAST(1 AS bit)
-      ) AS [m2] ON [m].[MenuSectionId] = [m2].[MenuSectionId]
-      INNER JOIN (
-          SELECT [m1].[MenuItemId], [m1].[Action], [m1].[Area], [m1].[Controller], [m1].[CreatedDate], [m1].[DisplayOrder], [m1].[Icon], [m1].[IsActive], [m1].[IsVisible], [m1].[Level], [m1].[MenuCode], [m1].[MenuTitle], [m1].[ModifiedDate], [m1].[ModuleId], [m1].[ParentMenuItemId], [m1].[RequiresAuth], [m1].[Route]
-          FROM [MenuItems] AS [m1]
-          WHERE [m1].[IsActive] = CAST(1 AS bit) AND [m1].[IsVisible] = CAST(1 AS bit)
-      ) AS [m3] ON [m2].[ModuleId] = [m3].[ModuleId]
-      WHERE [m].[IsActive] = CAST(1 AS bit)
-      ORDER BY [m].[DisplayOrder], [m].[MenuSectionId], [m2].[ModuleId]
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (7ms) [Parameters=[], CommandType='Text', CommandTimeout='120']
-      SELECT [w].[ActionId] AS [actionId], [w].[ActionCode] AS [actionCode], [w].[ActionName] AS [actionName], [w].[Description] AS [description], [w].[RequiresSignature] AS [requiresSignature], [w].[RequiresComment] AS [requiresComment], [w].[AllowDelegate] AS [allowDelegate], [w].[IconClass] AS [iconClass], [w].[CssClass] AS [cssClass]
-      FROM [WorkflowActions] AS [w]
-      WHERE [w].[IsActive] = CAST(1 AS bit)
-      ORDER BY [w].[DisplayOrder]
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (8ms) [Parameters=[@__scopeCode_0='?' (Size = 20)], CommandType='Text', CommandTimeout='120']
-      SELECT TOP(1) [s].[ScopeLevelId], [s].[CreatedDate], [s].[Description], [s].[IsActive], [s].[Level], [s].[ScopeCode], [s].[ScopeName]
-      FROM [ScopeLevels] AS [s]
-      WHERE [s].[ScopeCode] = @__scopeCode_0
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (9ms) [Parameters=[@__userScopeLevel_Level_0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='120']
-      SELECT [r].[RoleId] AS [roleId], [r].[RoleName] AS [roleName], [r].[RoleCode] AS [roleCode], [r].[Description] AS [description], [s].[ScopeName] AS [scopeLevel]
-      FROM [Roles] AS [r]
-      INNER JOIN [ScopeLevels] AS [s] ON [r].[ScopeLevelId] = [s].[ScopeLevelId]
-      WHERE [r].[IsActive] = CAST(1 AS bit) AND [s].[Level] <= @__userScopeLevel_Level_0
-      ORDER BY [r].[RoleName]
-info: FormReporting.Controllers.API.WorkflowApiController[0]
-      User with scope Global (Level 1) retrieved 6 roles
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (24ms) [Parameters=[@__templateId_0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='120']
-      SELECT [f].[SectionId] AS [sectionId], [f].[SectionName] AS [sectionName], [f].[SectionDescription] AS [sectionDescription], [f].[DisplayOrder] AS [displayOrder], (
-          SELECT COUNT(*)
-          FROM [FormTemplateItems] AS [f0]
-          WHERE [f].[SectionId] = [f0].[SectionId]) AS [fieldCount]
-      FROM [FormTemplateSections] AS [f]
-      WHERE [f].[TemplateId] = @__templateId_0
-      ORDER BY [f].[DisplayOrder]
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (16ms) [Parameters=[], CommandType='Text', CommandTimeout='120']
-      SELECT [t].[TenantId]
-      FROM [Tenants] AS [t]
-      WHERE [t].[IsActive] = CAST(1 AS bit)
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (38ms) [Parameters=[], CommandType='Text', CommandTimeout='120']
-      SELECT [u].[UserId], [u].[AccessFailedCount], [u].[CreatedDate], [u].[DepartmentId], [u].[Email], [u].[EmailConfirmed], [u].[EmployeeNumber], [u].[FirstName], [u].[IsActive], [u].[LastLoginDate], [u].[LastName], [u].[LockoutEnabled], [u].[LockoutEnd], [u].[ModifiedDate], [u].[NormalizedEmail], [u].[NormalizedUserName], [u].[PasswordHash], [u].[PhoneNumber], [u].[PhoneNumberConfirmed], [u].[SecurityStamp], [u].[TenantId], [u].[TwoFactorEnabled], [u].[UserName], [t].[TenantId], [t].[ContactEmail], [t].[ContactPhone], [t].[CreatedBy], [t].[CreatedDate], [t].[ICTSupportUserId], [t].[IsActive], [t].[Latitude], [t].[Location], [t].[Longitude], [t].[ManagerUserId], [t].[ModifiedBy], [t].[ModifiedDate], [t].[RegionId], [t].[TenantCode], [t].[TenantName], [t].[TenantType], [d].[DepartmentId], [d].[CreatedDate], [d].[DepartmentCode], [d].[DepartmentName], [d].[Description], [d].[IsActive], [d].[ModifiedDate], [d].[ParentDepartmentId], [d].[TenantId]
-      FROM [Users] AS [u]
-      INNER JOIN [Tenants] AS [t] ON [u].[TenantId] = [t].[TenantId]
-      LEFT JOIN [Departments] AS [d] ON [u].[DepartmentId] = [d].[DepartmentId]
-      WHERE [u].[IsActive] = CAST(1 AS bit)
-      ORDER BY [u].[FirstName], [u].[LastName], [u].[UserId], [t].[TenantId], [d].[DepartmentId]
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (26ms) [Parameters=[], CommandType='Text', CommandTimeout='120']
-      SELECT [u0].[UserRoleId], [u0].[AssignedBy], [u0].[AssignedDate], [u0].[RoleId], [u0].[UserId], [u].[UserId], [t].[TenantId], [d].[DepartmentId]
-      FROM [Users] AS [u]
-      INNER JOIN [Tenants] AS [t] ON [u].[TenantId] = [t].[TenantId]
-      LEFT JOIN [Departments] AS [d] ON [u].[DepartmentId] = [d].[DepartmentId]
-      INNER JOIN [UserRoles] AS [u0] ON [u].[UserId] = [u0].[UserId]
-      WHERE [u].[IsActive] = CAST(1 AS bit)
-      ORDER BY [u].[FirstName], [u].[LastName], [u].[UserId], [t].[TenantId], [d].[DepartmentId]
-info: FormReporting.Controllers.API.WorkflowApiController[0]
-      User retrieved 84 accessible users
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (51ms) [Parameters=[@__p_0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='120']
-      SELECT TOP(1) [f].[TemplateId], [f].[AllowAnonymousAccess], [f].[ArchivedBy], [f].[ArchivedDate], [f].[ArchivedReason], [f].[CategoryId], [f].[CreatedBy], [f].[CreatedDate], [f].[Description], [f].[IsActive], [f].[ModifiedBy], [f].[ModifiedDate], [f].[PublishStatus], [f].[PublishedBy], [f].[PublishedDate], [f].[RequiresApproval], [f].[SubmissionMode], [f].[TemplateCode], [f].[TemplateName], [f].[TemplateType], [f].[Version], [f].[WorkflowId]
-      FROM [FormTemplates] AS [f]
-      WHERE [f].[TemplateId] = @__p_0
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (23ms) [Parameters=[@__p_0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='120']
-      SELECT TOP(1) [w].[ActionId], [w].[ActionCode], [w].[ActionName], [w].[AllowDelegate], [w].[CssClass], [w].[Description], [w].[DisplayOrder], [w].[IconClass], [w].[IsActive], [w].[RequiresComment], [w].[RequiresSignature]
-      FROM [WorkflowActions] AS [w]
-      WHERE [w].[ActionId] = @__p_0
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (17,563ms) [Parameters=[@__dto_ApproverUserId_Value_0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='120']
-      SELECT CASE
-          WHEN EXISTS (
-              SELECT 1
-              FROM [Users] AS [u]
-              WHERE [u].[UserId] = @__dto_ApproverUserId_Value_0) THEN CAST(1 AS bit)
-          ELSE CAST(0 AS bit)
-      END
-info: FormReporting.Controllers.Forms.WorkflowController[0]
-      Creating workflow for template 24 with step: Fill REQUESTING STAFF DETAILS
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (20ms) [Parameters=[@__dto_TemplateId_Value_0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='120']
-      SELECT TOP(1) [f].[TemplateId], [f].[AllowAnonymousAccess], [f].[ArchivedBy], [f].[ArchivedDate], [f].[ArchivedReason], [f].[CategoryId], [f].[CreatedBy], [f].[CreatedDate], [f].[Description], [f].[IsActive], [f].[ModifiedBy], [f].[ModifiedDate], [f].[PublishStatus], [f].[PublishedBy], [f].[PublishedDate], [f].[RequiresApproval], [f].[SubmissionMode], [f].[TemplateCode], [f].[TemplateName], [f].[TemplateType], [f].[Version], [f].[WorkflowId], [w].[WorkflowId], [w].[CreatedBy], [w].[CreatedDate], [w].[Description], [w].[IsActive], [w].[ModifiedDate], [w].[WorkflowName]
-      FROM [FormTemplates] AS [f]
-      LEFT JOIN [WorkflowDefinitions] AS [w] ON [f].[WorkflowId] = [w].[WorkflowId]
-      WHERE [f].[TemplateId] = @__dto_TemplateId_Value_0
-      ORDER BY [f].[TemplateId], [w].[WorkflowId]
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (14ms) [Parameters=[@__dto_TemplateId_Value_0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='120']
-      SELECT [w0].[StepId], [w0].[ActionId], [w0].[ApproverRoleId], [w0].[ApproverUserId], [w0].[AssigneeDepartmentId], [w0].[AssigneeFieldId], [w0].[AssigneeType], [w0].[AutoApproveCondition], [w0].[ConditionLogic], [w0].[CreatedDate], [w0].[DependsOnStepIds], [w0].[DueDays], [w0].[EscalationRoleId], [w0].[IsMandatory], [w0].[IsParallel], [w0].[StepName], [w0].[StepOrder], [w0].[TargetId], [w0].[TargetType], [w0].[WorkflowId], [s].[TemplateId], [s].[WorkflowId]
-      FROM (
-          SELECT TOP(1) [f].[TemplateId], [w].[WorkflowId]
-          FROM [FormTemplates] AS [f]
-          LEFT JOIN [WorkflowDefinitions] AS [w] ON [f].[WorkflowId] = [w].[WorkflowId]
-          WHERE [f].[TemplateId] = @__dto_TemplateId_Value_0
-      ) AS [s]
-      INNER JOIN [WorkflowSteps] AS [w0] ON [s].[WorkflowId] = [w0].[WorkflowId]
-      ORDER BY [s].[TemplateId], [s].[WorkflowId]
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (34ms) [Parameters=[@p0='?' (DbType = Int32), @p1='?' (DbType = DateTime2), @p2='?' (Size = 500), @p3='?' (DbType = DateTime2), @p4='?' (Size = 100)], CommandType='Text', CommandTimeout='120']
-      SET IMPLICIT_TRANSACTIONS OFF;
-      SET NOCOUNT ON;
-      INSERT INTO [WorkflowDefinitions] ([CreatedBy], [CreatedDate], [Description], [ModifiedDate], [WorkflowName])
-      OUTPUT INSERTED.[WorkflowId], INSERTED.[IsActive]
-      VALUES (@p0, @p1, @p2, @p3, @p4);
-info: FormReporting.Services.Forms.WorkflowService[0]
-      Created new workflow 1: New User Access Request Workflow for template 24
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (58ms) [Parameters=[@p2='?' (DbType = Int32), @p0='?' (DbType = DateTime2), @p1='?' (DbType = Int32), @p3='?' (DbType = Int32), @p4='?' (DbType = Int32), @p5='?' (DbType = Int32), @p6='?' (DbType = Int32), @p7='?' (DbType = Int32), @p8='?' (Size = 20), @p9='?' (Size = 4000), @p10='?' (Size = 4000), @p11='?' (DbType = DateTime2), @p12='?' (Size = 4000), @p13='?' (DbType = Int32), @p14='?' (DbType = Int32), @p15='?' (Size = 100), @p16='?' (DbType = Int32), @p17='?' (DbType = Int32), @p18='?' (Size = 20), @p19='?' (DbType = Int32)], CommandType='Text', CommandTimeout='120']
-      SET NOCOUNT ON;
-      UPDATE [FormTemplates] SET [ModifiedDate] = @p0, [WorkflowId] = @p1
-      OUTPUT 1
-      WHERE [TemplateId] = @p2;
-      INSERT INTO [WorkflowSteps] ([ActionId], [ApproverRoleId], [ApproverUserId], [AssigneeDepartmentId], [AssigneeFieldId], [AssigneeType], [AutoApproveCondition], [ConditionLogic], [CreatedDate], [DependsOnStepIds], [DueDays], [EscalationRoleId], [StepName], [StepOrder], [TargetId], [TargetType], [WorkflowId])
-      OUTPUT INSERTED.[StepId], INSERTED.[IsMandatory], INSERTED.[IsParallel]
-      VALUES (@p3, @p4, @p5, @p6, @p7, @p8, @p9, @p10, @p11, @p12, @p13, @p14, @p15, @p16, @p17, @p18, @p19);
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (11ms) [Parameters=[@__workflowId_0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='120']
-      SELECT TOP(1) [w].[WorkflowId], [w].[CreatedBy], [w].[CreatedDate], [w].[Description], [w].[IsActive], [w].[ModifiedDate], [w].[WorkflowName], [u].[UserId], [u].[AccessFailedCount], [u].[CreatedDate], [u].[DepartmentId], [u].[Email], [u].[EmailConfirmed], [u].[EmployeeNumber], [u].[FirstName], [u].[IsActive], [u].[LastLoginDate], [u].[LastName], [u].[LockoutEnabled], [u].[LockoutEnd], [u].[ModifiedDate], [u].[NormalizedEmail], [u].[NormalizedUserName], [u].[PasswordHash], [u].[PhoneNumber], [u].[PhoneNumberConfirmed], [u].[SecurityStamp], [u].[TenantId], [u].[TwoFactorEnabled], [u].[UserName]
-      FROM [WorkflowDefinitions] AS [w]
-      INNER JOIN [Users] AS [u] ON [w].[CreatedBy] = [u].[UserId]
-      WHERE [w].[WorkflowId] = @__workflowId_0
-      ORDER BY [w].[WorkflowId], [u].[UserId]
-info: FormReporting.Controllers.Forms.WorkflowController[0]
-      CreateWorkflowAsync returned: NULL
-warn: FormReporting.Controllers.Forms.WorkflowController[0]
-      CreateWorkflowAsync returned null - this should not happen
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (8ms) [Parameters=[@__templateId_Value_0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='120']
-      SELECT TOP(1) [f].[TemplateId], [f].[AllowAnonymousAccess], [f].[ArchivedBy], [f].[ArchivedDate], [f].[ArchivedReason], [f].[CategoryId], [f].[CreatedBy], [f].[CreatedDate], [f].[Description], [f].[IsActive], [f].[ModifiedBy], [f].[ModifiedDate], [f].[PublishStatus], [f].[PublishedBy], [f].[PublishedDate], [f].[RequiresApproval], [f].[SubmissionMode], [f].[TemplateCode], [f].[TemplateName], [f].[TemplateType], [f].[Version], [f].[WorkflowId], [f0].[CategoryId], [f0].[CategoryCode], [f0].[CategoryName], [f0].[Color], [f0].[CreatedDate], [f0].[Description], [f0].[DisplayOrder], [f0].[IconClass], [f0].[IsActive], [f0].[ModifiedDate]
-      FROM [FormTemplates] AS [f]
-      INNER JOIN [FormCategories] AS [f0] ON [f].[CategoryId] = [f0].[CategoryId]
-      WHERE [f].[TemplateId] = @__templateId_Value_0
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (1ms) [Parameters=[@__workflowId_0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='120']
-      SELECT TOP(1) [w].[WorkflowId], [w].[CreatedBy], [w].[CreatedDate], [w].[Description], [w].[IsActive], [w].[ModifiedDate], [w].[WorkflowName], [u].[UserId], [u].[AccessFailedCount], [u].[CreatedDate], [u].[DepartmentId], [u].[Email], [u].[EmailConfirmed], [u].[EmployeeNumber], [u].[FirstName], [u].[IsActive], [u].[LastLoginDate], [u].[LastName], [u].[LockoutEnabled], [u].[LockoutEnd], [u].[ModifiedDate], [u].[NormalizedEmail], [u].[NormalizedUserName], [u].[PasswordHash], [u].[PhoneNumber], [u].[PhoneNumberConfirmed], [u].[SecurityStamp], [u].[TenantId], [u].[TwoFactorEnabled], [u].[UserName]
-      FROM [WorkflowDefinitions] AS [w]
-      INNER JOIN [Users] AS [u] ON [w].[CreatedBy] = [u].[UserId]
-      WHERE [w].[WorkflowId] = @__workflowId_0
-      ORDER BY [w].[WorkflowId], [u].[UserId]
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (25ms) [Parameters=[], CommandType='Text', CommandTimeout='120']
-      SELECT [m].[MenuSectionId], [m].[CreatedDate], [m].[Description], [m].[DisplayOrder], [m].[IsActive], [m].[ModifiedDate], [m].[SectionCode], [m].[SectionName]
-      FROM [MenuSections] AS [m]
-      WHERE [m].[IsActive] = CAST(1 AS bit)
-      ORDER BY [m].[DisplayOrder], [m].[MenuSectionId]
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (13ms) [Parameters=[], CommandType='Text', CommandTimeout='120']
-      SELECT [m2].[ModuleId], [m2].[CreatedDate], [m2].[Description], [m2].[DisplayOrder], [m2].[Icon], [m2].[IsActive], [m2].[MenuSectionId], [m2].[ModuleCode], [m2].[ModuleName], [m].[MenuSectionId]
-      FROM [MenuSections] AS [m]
-      INNER JOIN (
-          SELECT [m0].[ModuleId], [m0].[CreatedDate], [m0].[Description], [m0].[DisplayOrder], [m0].[Icon], [m0].[IsActive], [m0].[MenuSectionId], [m0].[ModuleCode], [m0].[ModuleName]
-          FROM [Modules] AS [m0]
-          WHERE [m0].[IsActive] = CAST(1 AS bit)
-      ) AS [m2] ON [m].[MenuSectionId] = [m2].[MenuSectionId]
-      WHERE [m].[IsActive] = CAST(1 AS bit)
-      ORDER BY [m].[DisplayOrder], [m].[MenuSectionId], [m2].[ModuleId]
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (24ms) [Parameters=[], CommandType='Text', CommandTimeout='120']
-      SELECT [m3].[MenuItemId], [m3].[Action], [m3].[Area], [m3].[Controller], [m3].[CreatedDate], [m3].[DisplayOrder], [m3].[Icon], [m3].[IsActive], [m3].[IsVisible], [m3].[Level], [m3].[MenuCode], [m3].[MenuTitle], [m3].[ModifiedDate], [m3].[ModuleId], [m3].[ParentMenuItemId], [m3].[RequiresAuth], [m3].[Route], [m].[MenuSectionId], [m2].[ModuleId]
-      FROM [MenuSections] AS [m]
-      INNER JOIN (
-          SELECT [m0].[ModuleId], [m0].[MenuSectionId]
-          FROM [Modules] AS [m0]
-          WHERE [m0].[IsActive] = CAST(1 AS bit)
-      ) AS [m2] ON [m].[MenuSectionId] = [m2].[MenuSectionId]
-      INNER JOIN (
-          SELECT [m1].[MenuItemId], [m1].[Action], [m1].[Area], [m1].[Controller], [m1].[CreatedDate], [m1].[DisplayOrder], [m1].[Icon], [m1].[IsActive], [m1].[IsVisible], [m1].[Level], [m1].[MenuCode], [m1].[MenuTitle], [m1].[ModifiedDate], [m1].[ModuleId], [m1].[ParentMenuItemId], [m1].[RequiresAuth], [m1].[Route]
-          FROM [MenuItems] AS [m1]
-          WHERE [m1].[IsActive] = CAST(1 AS bit) AND [m1].[IsVisible] = CAST(1 AS bit)
-      ) AS [m3] ON [m2].[ModuleId] = [m3].[ModuleId]
-      WHERE [m].[IsActive] = CAST(1 AS bit)
-      ORDER BY [m].[DisplayOrder], [m].[MenuSectionId], [m2].[ModuleId]
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (10ms) [Parameters=[], CommandType='Text', CommandTimeout='120']
-      SELECT [w].[ActionId] AS [actionId], [w].[ActionCode] AS [actionCode], [w].[ActionName] AS [actionName], [w].[Description] AS [description], [w].[RequiresSignature] AS [requiresSignature], [w].[RequiresComment] AS [requiresComment], [w].[AllowDelegate] AS [allowDelegate], [w].[IconClass] AS [iconClass], [w].[CssClass] AS [cssClass]
-      FROM [WorkflowActions] AS [w]
-      WHERE [w].[IsActive] = CAST(1 AS bit)
-      ORDER BY [w].[DisplayOrder]
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (12ms) [Parameters=[@__scopeCode_0='?' (Size = 20)], CommandType='Text', CommandTimeout='120']
-      SELECT TOP(1) [s].[ScopeLevelId], [s].[CreatedDate], [s].[Description], [s].[IsActive], [s].[Level], [s].[ScopeCode], [s].[ScopeName]
-      FROM [ScopeLevels] AS [s]
-      WHERE [s].[ScopeCode] = @__scopeCode_0
-info: Microsoft.EntityFrameworkCore.Database.Command[20101]
-      Executed DbCommand (12ms) [Parameters=[@__userScopeLevel_Level_0='?' (DbType = Int32)], CommandType='Text', CommandTimeout='120']
-      SELECT [r].[RoleId] AS [roleId], [r].[RoleName] AS [roleName], [r].[RoleCode] AS [roleCode], [r].[Description] AS [description], [s].[ScopeName] AS [scopeLevel]
-      FROM [Roles] AS [r]
-      INNER JOIN [ScopeLevels] AS [s] ON [r].[ScopeLevelId] = [s].[ScopeLevelId]
-      WHERE [r].[IsActive] = CAST(1 AS bit) AND [s].[Level] <= @__userScopeLevel_Level_0
-      ORDER BY [r].[RoleName]
-info: FormReporting.Controllers.API.WorkflowApiController[0]
-      User with scope Global (Level 1) retrieved 6 roles
+Severity	Code	Description	Project	File	Line	Suppression State
+Error (active)	CS0019	Operator '??' cannot be applied to operands of type 'int' and 'int'	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\Panels\_MetricMappingPanel.cshtml	31	
+Error (active)	CS0019	Operator '??' cannot be applied to operands of type 'int' and 'int'	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\Panels\_MetricMappingPanel.cshtml	73	
+Error (active)	CS1003	Syntax error, ',' expected	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_FieldLevelTab.cshtml	34	
+Error (active)	CS1003	Syntax error, ',' expected	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_FieldLevelTab.cshtml	34	
+Error (active)	RZ2005	The 'section' directive must appear at the start of the line.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_SectionLevelTab.cshtml	26	
+Error (active)	RZ2005	The 'section' directive must appear at the start of the line.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_SectionLevelTab.cshtml	47	
+Error (active)	RZ2005	The 'section' directive must appear at the start of the line.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_SectionLevelTab.cshtml	58	
+Error (active)	RZ2005	The 'section' directive must appear at the start of the line.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_SectionLevelTab.cshtml	64	
+Error (active)	RZ2005	The 'section' directive must appear at the start of the line.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_SectionLevelTab.cshtml	65	
+Error (active)	RZ2005	The 'section' directive must appear at the start of the line.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_SectionLevelTab.cshtml	74	
+Error (active)	RZ2005	The 'section' directive must appear at the start of the line.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_SectionLevelTab.cshtml	78	
+Error (active)	RZ2005	The 'section' directive must appear at the start of the line.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_SectionLevelTab.cshtml	82	
+Error (active)	RZ2005	The 'section' directive must appear at the start of the line.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_SectionLevelTab.cshtml	111	
+Error (active)	RZ2005	The 'section' directive must appear at the start of the line.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_SectionLevelTab.cshtml	112	
+Error (active)	RZ2005	The 'section' directive must appear at the start of the line.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_SectionLevelTab.cshtml	116	
+Error (active)	RZ2005	The 'section' directive must appear at the start of the line.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_SectionLevelTab.cshtml	117	
+Error (active)	RZ2005	The 'section' directive must appear at the start of the line.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_SectionLevelTab.cshtml	128	
+Error (active)	RZ2005	The 'section' directive must appear at the start of the line.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_SectionLevelTab.cshtml	130	
+Error (active)	RZ2005	The 'section' directive must appear at the start of the line.		C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_FieldLevelTab.cshtml	26	
+Error (active)	RZ2005	The 'section' directive must appear at the start of the line.		C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_FieldLevelTab.cshtml	30	
+Error (active)	RZ1011	The 'section' directives value(s) must be separated by whitespace.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_SectionLevelTab.cshtml	26	
+Error (active)	RZ1011	The 'section' directives value(s) must be separated by whitespace.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_SectionLevelTab.cshtml	47	
+Error (active)	RZ1011	The 'section' directives value(s) must be separated by whitespace.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_SectionLevelTab.cshtml	58	
+Error (active)	RZ1011	The 'section' directives value(s) must be separated by whitespace.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_SectionLevelTab.cshtml	64	
+Error (active)	RZ1011	The 'section' directives value(s) must be separated by whitespace.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_SectionLevelTab.cshtml	65	
+Error (active)	RZ1011	The 'section' directives value(s) must be separated by whitespace.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_SectionLevelTab.cshtml	74	
+Error (active)	RZ1011	The 'section' directives value(s) must be separated by whitespace.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_SectionLevelTab.cshtml	78	
+Error (active)	RZ1011	The 'section' directives value(s) must be separated by whitespace.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_SectionLevelTab.cshtml	82	
+Error (active)	RZ1011	The 'section' directives value(s) must be separated by whitespace.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_SectionLevelTab.cshtml	111	
+Error (active)	RZ1011	The 'section' directives value(s) must be separated by whitespace.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_SectionLevelTab.cshtml	112	
+Error (active)	RZ1011	The 'section' directives value(s) must be separated by whitespace.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_SectionLevelTab.cshtml	116	
+Error (active)	RZ1011	The 'section' directives value(s) must be separated by whitespace.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_SectionLevelTab.cshtml	117	
+Error (active)	RZ1011	The 'section' directives value(s) must be separated by whitespace.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_SectionLevelTab.cshtml	128	
+Error (active)	RZ1011	The 'section' directives value(s) must be separated by whitespace.	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_SectionLevelTab.cshtml	130	
+Error (active)	RZ1011	The 'section' directives value(s) must be separated by whitespace.		C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_FieldLevelTab.cshtml	26	
+Error (active)	RZ1011	The 'section' directives value(s) must be separated by whitespace.		C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_FieldLevelTab.cshtml	30	
+Error (active)	RZ1011	The 'section' directives value(s) must be separated by whitespace.		C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_FieldLevelTab.cshtml	30	
+Error (active)	CS0103	The name 'F0' does not exist in the current context	FormReporting	C:\Users\KTDA\source\repos\MochamaB\FormReporting\Views\Forms\FormTemplates\MetricConfig\_FieldLevelTab.cshtml	34	

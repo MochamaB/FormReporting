@@ -1,0 +1,169 @@
+@model FormReporting.Models.ViewModels.Metrics.FieldMappingWizardViewModel
+
+@{
+    var parentModel = ViewData["ParentModel"] as FormReporting.Models.ViewModels.Metrics.FieldMappingWizardViewModel ?? Model;
+}
+
+<!-- Step 3: Review & Save -->
+<div class="review-step">
+    
+    <div class="alert alert-success mb-4">
+        <div class="d-flex align-items-center">
+            <i class="ri-checkbox-circle-line fs-4 me-3"></i>
+            <div>
+                <h6 class="alert-heading mb-1">Ready to Save</h6>
+                <p class="mb-0">Review your mapping configuration below and click "Save Mapping" to complete.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Review Summary Cards -->
+    <div class="row">
+        <!-- Field Information -->
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-light">
+                    <h6 class="card-title mb-0">
+                        <i class="ri-focus-3-line me-2 text-primary"></i>Field Information
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-6 mb-2">
+                            <small class="text-muted">Field Name</small>
+                            <div class="fw-medium">@parentModel?.FieldName</div>
+                        </div>
+                        <div class="col-6 mb-2">
+                            <small class="text-muted">Field Code</small>
+                            <div class="fw-medium">@(parentModel?.FieldCode ?? "-")</div>
+                        </div>
+                        <div class="col-6 mb-2">
+                            <small class="text-muted">Data Type</small>
+                            <div><span class="badge bg-info-subtle text-info">@parentModel?.DataType</span></div>
+                        </div>
+                        <div class="col-6 mb-2">
+                            <small class="text-muted">Section</small>
+                            <div class="fw-medium">@parentModel?.SectionName</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mapping Configuration -->
+        <div class="col-md-6 mb-3">
+            <div class="card h-100">
+                <div class="card-header bg-light">
+                    <h6 class="card-title mb-0">
+                        <i class="ri-settings-3-line me-2 text-success"></i>Mapping Configuration
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-12 mb-2">
+                            <small class="text-muted">Mapping Name</small>
+                            <div id="reviewMappingName" class="fw-medium">-</div>
+                        </div>
+                        <div class="col-6 mb-2">
+                            <small class="text-muted">Mapping Type</small>
+                            <div id="reviewMappingType" class="fw-medium">-</div>
+                        </div>
+                        <div class="col-6 mb-2">
+                            <small class="text-muted">Aggregation</small>
+                            <div id="reviewAggregationType" class="fw-medium">-</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Metric Choice -->
+    <div class="card mb-3">
+        <div class="card-header bg-light">
+            <h6 class="card-title mb-0">
+                <i class="ri-bar-chart-line me-2 text-warning"></i>Metric Choice
+            </h6>
+        </div>
+        <div class="card-body">
+            <div id="reviewMetricChoice" class="fw-medium">-</div>
+        </div>
+    </div>
+
+    <!-- What Happens Next -->
+    <div class="card border-0 bg-light">
+        <div class="card-body">
+            <h6 class="card-title">
+                <i class="ri-information-line me-2"></i>What Happens Next
+            </h6>
+            <ul class="mb-0 ps-3">
+                <li>The field mapping will be saved to the database</li>
+                <li>You'll be redirected back to the metric configuration overview</li>
+                <li>The field will show as "Mapped" in the field list</li>
+                <li>You can edit or delete this mapping at any time</li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Update review summary when step becomes visible
+    function updateReviewSummary() {
+        const mappingName = document.getElementById('MappingName')?.value || '-';
+        const mappingTypeSelect = document.getElementById('MappingType');
+        const aggregationSelect = document.getElementById('AggregationType');
+        const metricOptionSelect = document.getElementById('MetricOption');
+
+        document.getElementById('reviewMappingName').textContent = mappingName;
+        
+        if (mappingTypeSelect) {
+            const selectedType = mappingTypeSelect.options[mappingTypeSelect.selectedIndex];
+            document.getElementById('reviewMappingType').textContent = selectedType?.text || '-';
+        }
+        
+        if (aggregationSelect) {
+            const selectedAgg = aggregationSelect.options[aggregationSelect.selectedIndex];
+            document.getElementById('reviewAggregationType').textContent = selectedAgg?.text?.split(' - ')[0] || '-';
+        }
+
+        if (metricOptionSelect) {
+            const metricOption = metricOptionSelect.value;
+            let metricText = 'Standalone (No Metric)';
+            
+            if (metricOption === 'create-new') {
+                const newName = document.getElementById('NewMetricName')?.value || 'New Metric';
+                metricText = 'Create New Metric: ' + newName;
+            } else if (metricOption === 'link-existing') {
+                const metricSelect = document.getElementById('MetricId');
+                if (metricSelect && metricSelect.value) {
+                    const selectedMetric = metricSelect.options[metricSelect.selectedIndex];
+                    metricText = 'Link to Existing: ' + (selectedMetric?.text || 'Selected Metric');
+                } else {
+                    metricText = 'Link to Existing: (No metric selected)';
+                }
+            }
+            
+            document.getElementById('reviewMetricChoice').textContent = metricText;
+        }
+    }
+
+    // Update on tab change (when review step becomes visible)
+    const reviewTab = document.getElementById('review');
+    if (reviewTab) {
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                if (mutation.attributeName === 'class' && reviewTab.classList.contains('active')) {
+                    updateReviewSummary();
+                }
+            });
+        });
+        observer.observe(reviewTab, { attributes: true });
+    }
+
+    // Also update immediately if review is already active
+    if (document.getElementById('review')?.classList.contains('active')) {
+        updateReviewSummary();
+    }
+});
+</script>

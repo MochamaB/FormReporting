@@ -52,6 +52,14 @@
     --vz-info-text-emphasis: #1f5ccf;
     --vz-info-bg-subtle: #e8f1ff;
     --vz-info-border-subtle: #c8dcff;
+
+    /* Dark Grey Color – Neutral Tone */
+    --vz-darkgrey: #c6c6c6;
+    --vz-darkgrey-rgb: 198, 198, 198;
+    --vz-darkgrey-subtle: rgba(198, 198, 198, 0.1);
+    --vz-darkgrey-text-emphasis: #9a9a9a;
+    --vz-darkgrey-bg-subtle: #f1f1f1;
+    --vz-darkgrey-border-subtle: #d8d8d8;
     
 }
 
@@ -345,4 +353,19 @@ a:hover {
     animation: none;
     box-shadow: 0 0 20px var(--vz-success);
     background: var(--vz-success);
+}
+.code-ellipsis {
+    max-width: 220px;      /* adjust to fit your card width */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: inline-block;
+    vertical-align: bottom;
+}
+
+.modal-title {
+     margin-bottom: 0.5rem;
+    line-height: var(--vz-modal-title-line-height);
+    color: #fff;
+    font-weight: 400;
 }

@@ -38,6 +38,12 @@
         badgeColor: "info",
         isActive: Model.ActiveTab == "workflow",
         contentPartialPath: "~/Views/Forms/FormTemplates/Panels/_WorkflowBuilderPanel.cshtml")
+    .WithTab("submissionrules", "Submission Rules",
+        icon: "ri-time-line",
+        badge: Model.SubmissionRuleCount > 0 ? Model.SubmissionRuleCount.ToString() : null,
+        badgeColor: "warning",
+        isActive: Model.ActiveTab == "submissionrules",
+        contentPartialPath: "~/Views/Forms/FormTemplates/Panels/_SubmissionRulesPanel.cshtml")
     .WithTab("metrics", "Metrics",
         icon: "ri-bar-chart-box-line",
         badge: Model.MetricMappingCount > 0 ? Model.MetricMappingCount.ToString() : null,
@@ -67,100 +73,147 @@
 
 
 
-<!-- Template Header Card -->
-<div class="row">
-    <div class="col-12">
-        <div class="template-header">
-            <div class="d-flex align-items-start gap-3">
-                <!-- Template Icon -->
-                <div class="template-icon bg-primary-subtle text-primary">
-                    <i class="ri-file-list-3-line"></i>
+<!-- Template Header Card - Full Width with Secondary Background -->
+<div class="card bg-secondary-subtle border-0 mb-4" style = "margin-top:-1.5rem;margin-left:-1.5rem;margin-right:-1.5rem">
+    <div class="card-body">
+        <div class="d-flex align-items-start">
+
+            <!-- Icon -->
+            <div class="flex-shrink-0 me-3">
+                <div class="avatar-lg">
+                    <div class="avatar-title bg-primary-subtle text-primary rounded fs-2">
+                        <i class="ri-file-list-3-line"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="flex-grow-1">
+
+                <!-- Top Row: Title/Description (left) + Buttons (right) -->
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+
+                    <!-- Title + Description -->
+                    <div class="me-3">
+                        <h3 class="mb-1 fw-semibold text-dark">
+                            @Model.TemplateName
+                        </h3>
+
+                        @if (!string.IsNullOrEmpty(Model.Description))
+                        {
+                            <p class="text-muted mb-0">
+                                @Model.Description
+                            </p>
+                        }
+                    </div>
+
+                    <!-- Buttons -->
+                    <div class="d-flex gap-2">
+
+                        @if (Model.IsPublished)
+                        {
+                            <a href="@Url.Action("StartSubmission", "FormSubmissions", 
+                                new { templateId = Model.TemplateId })"
+                               class="btn btn-success">
+                                <i class="ri-add-line me-1"></i>
+                                New Submission
+                            </a>
+                        }
+
+                        <div class="dropdown">
+                            <button class="btn btn-secondary dropdown-toggle"
+                                    type="button"
+                                    data-bs-toggle="dropdown">
+                                Actions
+                            </button>
+
+                            <ul class="dropdown-menu dropdown-menu-end">
+
+                                <li>
+                                    <a class="dropdown-item"
+                                       href="@Url.Action("FormBuilder", "FormTemplates", 
+                                       new { id = Model.TemplateId })">
+                                        <i class="ri-edit-line me-2"></i>
+                                        Edit Template
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item" href="#">
+                                        <i class="ri-file-copy-line me-2"></i>
+                                        Duplicate
+                                    </a>
+                                </li>
+
+                                <li>
+                                    <a class="dropdown-item" href="#">
+                                        <i class="ri-download-line me-2"></i>
+                                        Export
+                                    </a>
+                                </li>
+
+                                <li><hr class="dropdown-divider" /></li>
+
+                                <li>
+                                    <a class="dropdown-item text-danger" href="#">
+                                        <i class="ri-archive-line me-2"></i>
+                                        Archive
+                                    </a>
+                                </li>
+
+                            </ul>
+                        </div>
+                    </div>
                 </div>
 
-                <!-- Template Info -->
-                <div class="flex-grow-1">
-                    <div class="d-flex align-items-center gap-2 mb-1">
-                        <h4 class="template-title mb-0">@Model.TemplateName</h4>
-                        <span class="badge @Model.StatusBadgeClass">@Model.PublishStatus</span>
-                        <span class="badge @Model.TypeBadgeClass">@Model.TemplateType</span>
-                    </div>
-                    <div class="template-code">@Model.TemplateCode</div>
-                    @if (!string.IsNullOrEmpty(Model.Description))
-                    {
-                        <p class="text-muted mb-0 mt-2">@Model.Description</p>
-                    }
+                <!-- Metadata Row (Full width under both sections) -->
+                <div class="d-flex flex-wrap align-items-center gap-3 text-muted small mt-3">
 
-                    <!-- Meta Info -->
-                    <div class="template-meta">
-                        @if (!string.IsNullOrEmpty(Model.CategoryName))
-                        {
-                            <span class="template-meta-item">
-                                <i class="ri-folder-line"></i> @Model.CategoryName
-                            </span>
-                        }
-                        <span class="template-meta-item">
-                            <i class="ri-calendar-line"></i> Created @Model.CreatedDate.ToString("MMM dd, yyyy")
+                    <span><i class="ri-folder-line me-1"></i>
+                        <strong>Category:</strong>
+                        @(Model.CategoryName ?? "Uncategorized")
+                    </span>
+
+                    <span><i class="ri-code-line me-1"></i>
+                        <strong>Code:</strong>
+                        @Model.TemplateCode
+                    </span>
+
+                    <span><i class="ri-settings-line me-1"></i>
+                        <strong>Mode:</strong>
+                        @Model.SubmissionMode.ToString()
+                    </span>
+
+                    <span>
+                        <strong>Status:</strong>
+                        <span class="badge @Model.StatusBadgeClass">
+                            @Model.PublishStatus
                         </span>
-                        @if (Model.PublishedDate.HasValue)
-                        {
-                            <span class="template-meta-item">
-                                <i class="ri-check-double-line"></i> Published @Model.PublishedDate.Value.ToString("MMM dd, yyyy")
-                            </span>
-                        }
-                        @if (!string.IsNullOrEmpty(Model.CreatorName))
-                        {
-                            <span class="template-meta-item">
-                                <i class="ri-user-line"></i> @Model.CreatorName
-                            </span>
-                        }
-                        <span class="template-meta-item">
-                            <i class="ri-git-branch-line"></i> Version @Model.Version
-                        </span>
-                    </div>
+                    </span>
+
+                    <span><i class="ri-calendar-line me-1"></i>
+                        <strong>Created:</strong>
+                        @Model.CreatedDate.ToString("MMM dd, yyyy")
+                    </span>
+
+                    <span><i class="ri-file-line me-1"></i>
+                        <strong>Type:</strong>
+                        @(Model.TemplateType ?? "Form")
+                    </span>
+
+                    <span><i class="ri-git-branch-line me-1"></i>
+                        <strong>Version:</strong>
+                        @Model.Version
+                    </span>
+
                 </div>
 
-                <!-- Actions -->
-                <div class="d-flex gap-2">
-                    @if (Model.IsPublished)
-                    {
-                        <a href="@Url.Action("StartSubmission", "FormSubmissions", new { templateId = Model.TemplateId })" 
-                           class="btn btn-primary">
-                            <i class="ri-add-line me-1"></i> New Submission
-                        </a>
-                    }
-                    <div class="dropdown">
-                        <button class="btn btn-soft-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            <i class="ri-more-2-fill"></i>
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li>
-                                <a class="dropdown-item" href="@Url.Action("FormBuilder", "FormTemplates", new { id = Model.TemplateId })">
-                                    <i class="ri-edit-line me-2"></i>Edit Template
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="#">
-                                    <i class="ri-file-copy-line me-2"></i>Duplicate
-                                </a>
-                            </li>
-                            <li>
-                                <a class="dropdown-item" href="#">
-                                    <i class="ri-download-line me-2"></i>Export
-                                </a>
-                            </li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <a class="dropdown-item text-danger" href="#">
-                                    <i class="ri-archive-line me-2"></i>Archive
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
 </div>
+
+
 
 <!-- Tabs Content -->
 <div class="row">

@@ -1,0 +1,337 @@
+@{
+    // Step 2: Metric Definition Choice
+    // Get parent model from ViewData
+    var parentModel = ViewData["ParentModel"] as FormReporting.Models.ViewModels.Metrics.FieldMappingWizardViewModel;
+    var existingMapping = parentModel?.ExistingMapping;
+    var compatibleMetrics = parentModel?.CompatibleMetrics ?? new List<FormReporting.Models.ViewModels.Metrics.CompatibleMetricViewModel>();
+    
+    // Determine default selection based on existing mapping
+    var defaultOption = "standalone";
+    if (existingMapping?.MetricId != null)
+    {
+        defaultOption = "link-existing";
+    }
+}
+
+<div class="metric-choice-step">
+    <!-- Step Introduction -->
+    <div class="alert alert-primary mb-4">
+        <h6 class="alert-heading"><i class="ri-bar-chart-line me-2"></i>Choose Metric Approach</h6>
+        <p class="mb-0">Now decide how you want to handle the metric definition for reporting and dashboard purposes.</p>
+    </div>
+
+    <!-- Metric Option Chooser -->
+    <div class="mb-4">
+        <label class="form-label">How would you like to handle the metric for this mapping?</label>
+        <select class="form-select form-select-lg" id="metricOptionChooser">
+            @if (defaultOption == "standalone")
+            {
+                <option value="standalone" selected>Keep Standalone - No formal metric definition</option>
+            }
+            else
+            {
+                <option value="standalone">Keep Standalone - No formal metric definition</option>
+            }
+            @if (defaultOption == "create-new")
+            {
+                <option value="create-new" selected>Create New Metric - Define new KPI for reporting</option>
+            }
+            else
+            {
+                <option value="create-new">Create New Metric - Define new KPI for reporting</option>
+            }
+            @if (defaultOption == "link-existing")
+            {
+                <option value="link-existing" selected>Link Existing Metric - Connect to existing KPI</option>
+            }
+            else
+            {
+                <option value="link-existing">Link Existing Metric - Connect to existing KPI</option>
+            }
+        </select>
+        <div class="form-text">Choose the approach that best fits your reporting needs</div>
+    </div>
+    
+    <!-- Dynamic Content Area -->
+    <div id="metricOptionContent">
+        <!-- Standalone Content (Default) -->
+        <div id="standalone-content" class="option-content">
+            <div class="card border-info">
+                <div class="card-body">
+                    <h6 class="card-title text-info">
+                        <i class="ri-file-line me-2"></i>Keep Standalone
+                    </h6>
+                    <p class="card-text">
+                        This field mapping will work independently without creating a formal metric definition. 
+                        Perfect for simple tracking and basic reporting needs.
+                    </p>
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <h6 class="text-success"><i class="ri-check-line me-1"></i>Benefits:</h6>
+                            <ul class="list-unstyled small">
+                                <li>• Quick and simple setup</li>
+                                <li>• No additional configuration</li>
+                                <li>• Field-level tracking enabled</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-warning"><i class="ri-information-line me-1"></i>Limitations:</h6>
+                            <ul class="list-unstyled small">
+                                <li>• No formal KPI thresholds</li>
+                                <li>• Limited dashboard integration</li>
+                                <li>• Basic reporting only</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Create New Metric Content -->
+        <div id="create-new-content" class="option-content d-none">
+            <div class="card border-success">
+                <div class="card-body">
+                    <h6 class="card-title text-success">
+                        <i class="ri-add-circle-line me-2"></i>Create New Metric Definition
+                    </h6>
+                    <p class="card-text mb-3">
+                        Create a new metric definition with KPI thresholds and full dashboard integration.
+                    </p>
+                    
+                    <!-- Metric Name Suggestions -->
+                    <div class="alert alert-info d-none" id="metricSuggestions">
+                        <h6 class="alert-heading"><i class="ri-lightbulb-line me-1"></i>Suggested Metric Names</h6>
+                        <div class="d-flex flex-wrap gap-2" id="suggestionButtons"></div>
+                    </div>
+                    
+                    <!-- Metric Configuration Form -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Metric Name <span class="text-danger">*</span></label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="newMetricName" placeholder="e.g., LAN Performance Index">
+                                    <button class="btn btn-outline-secondary" type="button" id="generateSuggestions" title="Generate Suggestions">
+                                        <i class="ri-magic-line"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text">
+                                    <i class="ri-magic-line me-1"></i>
+                                    <span id="metricNameHelp">Based on your field mapping configuration</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Metric Code</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control" id="newMetricCode" placeholder="Auto-generated" readonly>
+                                    <button class="btn btn-outline-secondary" type="button" id="regenerateCode" title="Regenerate Code">
+                                        <i class="ri-refresh-line"></i>
+                                    </button>
+                                </div>
+                                <div class="form-text">Auto-generated global code with template context</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        <textarea class="form-control" id="newMetricDescription" rows="2" placeholder="Describe what this metric measures"></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Category</label>
+                                <select class="form-select" id="newMetricCategory">
+                                    <option value="Performance">Performance</option>
+                                    <option value="Quality">Quality</option>
+                                    <option value="Compliance">Compliance</option>
+                                    <option value="Efficiency">Efficiency</option>
+                                    <option value="Infrastructure">Infrastructure</option>
+                                    <option value="Security">Security</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Data Type</label>
+                                <select class="form-select" id="newMetricDataType">
+                                    <option value="Decimal">Decimal</option>
+                                    <option value="Integer">Integer</option>
+                                    <option value="Percentage">Percentage</option>
+                                    <option value="Boolean">Boolean</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Unit</label>
+                                <input type="text" class="form-control" id="newMetricUnit" placeholder="e.g., Score, Count, %">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Threshold Suggestions -->
+                    <div class="alert alert-warning d-none" id="thresholdSuggestions">
+                        <h6 class="alert-heading"><i class="ri-bar-chart-line me-1"></i>Suggested Thresholds</h6>
+                        <p class="mb-2" id="thresholdAnalysis">Based on field options and scores:</p>
+                        <div class="d-flex flex-wrap gap-2" id="thresholdButtons"></div>
+                    </div>
+                    
+                    <!-- KPI Thresholds -->
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Green Threshold <i class="ri-information-line text-muted" title="Good/Target performance level"></i></label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="newMetricGreen" placeholder="90" step="0.01">
+                                    <button class="btn btn-outline-success btn-sm" type="button" id="suggestGreen" title="Suggest Value">
+                                        <i class="ri-magic-line"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Yellow Threshold <i class="ri-information-line text-muted" title="Warning/Attention needed level"></i></label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="newMetricYellow" placeholder="70" step="0.01">
+                                    <button class="btn btn-outline-warning btn-sm" type="button" id="suggestYellow" title="Suggest Value">
+                                        <i class="ri-magic-line"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label class="form-label">Red Threshold <i class="ri-information-line text-muted" title="Critical/Poor performance level"></i></label>
+                                <div class="input-group">
+                                    <input type="number" class="form-control" id="newMetricRed" placeholder="50" step="0.01">
+                                    <button class="btn btn-outline-danger btn-sm" type="button" id="suggestRed" title="Suggest Value">
+                                        <i class="ri-magic-line"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Link Existing Metric Content -->
+        <div id="link-existing-content" class="option-content d-none">
+            <div class="card border-primary">
+                <div class="card-body">
+                    <h6 class="card-title text-primary">
+                        <i class="ri-link me-2"></i>Link to Existing Metric
+                    </h6>
+                    <p class="card-text mb-3">
+                        Connect this field to an existing metric definition for consolidated reporting and dashboard integration.
+                    </p>
+                    
+                    <!-- Compatible Metrics Loading (hidden since we pre-load from server) -->
+                    <div id="compatibleMetricsLoading" class="text-center py-3 d-none">
+                        <div class="spinner-border spinner-border-sm text-primary" role="status">
+                            <span class="visually-hidden">Loading compatible metrics...</span>
+                        </div>
+                        <div class="mt-2 text-muted">Finding compatible metrics...</div>
+                    </div>
+                    
+                    <!-- Compatible Metrics Selection -->
+                    <div id="compatibleMetricsSection" class="@(compatibleMetrics.Any() ? "" : "d-none")">
+                        <div class="mb-3">
+                            <label class="form-label">Select Compatible Metric <span class="text-danger">*</span></label>
+                            <select class="form-select" id="metricSelect">
+                                <option value="">Choose a compatible metric...</option>
+                                @foreach (var metric in compatibleMetrics)
+                                {
+                                    var isSelected = existingMapping?.MetricId == metric.MetricId;
+                                    if (isSelected)
+                                    {
+                                        <option value="@metric.MetricId" data-category="@metric.Category" data-description="@metric.Description" selected>@metric.MetricName (@metric.MetricCode)</option>
+                                    }
+                                    else
+                                    {
+                                        <option value="@metric.MetricId" data-category="@metric.Category" data-description="@metric.Description">@metric.MetricName (@metric.MetricCode)</option>
+                                    }
+                                }
+                            </select>
+                            <div class="form-text">Only metrics compatible with your field type are shown</div>
+                        </div>
+                        
+                        <!-- Selected Metric Details -->
+                        <div id="selectedMetricDetails" class="d-none">
+                            <div class="card bg-light">
+                                <div class="card-body">
+                                    <h6 class="card-title">Selected Metric Details</h6>
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <small class="text-muted">Metric Name:</small>
+                                            <div id="selectedMetricName" class="fw-medium">-</div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <small class="text-muted">Category:</small>
+                                            <div id="selectedMetricCategory" class="fw-medium">-</div>
+                                        </div>
+                                    </div>
+                                    <div class="mt-2">
+                                        <small class="text-muted">Description:</small>
+                                        <div id="selectedMetricDescription" class="fw-medium">-</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- No Compatible Metrics -->
+                    <div id="noCompatibleMetrics" class="@(compatibleMetrics.Any() ? "d-none" : "")">
+                        <div class="alert alert-warning">
+                            <h6 class="alert-heading"><i class="ri-alert-line me-2"></i>No Compatible Metrics Found</h6>
+                            <p class="mb-0">
+                                There are no existing metrics compatible with this field type. 
+                                Consider creating a new metric instead.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+$(document).ready(function() {
+    // Handle metric option chooser change
+    $('#metricOptionChooser').on('change', function() {
+        const selectedOption = $(this).val();
+        
+        // Hide all content sections
+        $('.option-content').addClass('d-none');
+        
+        // Show selected content
+        $(`#${selectedOption}-content`).removeClass('d-none');
+        
+        // Initialize specific functionality
+        switch(selectedOption) {
+            case 'create-new':
+                FieldMappingWizard.initializeCreateNewSection();
+                break;
+            case 'link-existing':
+                FieldMappingWizard.loadCompatibleMetrics();
+                break;
+        }
+    });
+    
+    // Handle metric selection for linking
+    $('#metricSelect').on('change', function() {
+        const selectedValue = $(this).val();
+        if (selectedValue) {
+            FieldMappingWizard.showSelectedMetricDetails(selectedValue);
+        } else {
+            $('#selectedMetricDetails').addClass('d-none');
+        }
+    });
+});
+</script>

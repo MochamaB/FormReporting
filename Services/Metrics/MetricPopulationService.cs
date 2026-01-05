@@ -267,7 +267,7 @@ namespace FormReporting.Services.Metrics
             }
         }
 
-        public async Task UpsertTenantMetricAsync(int tenantId, int metricId, DateTime reportingPeriod,
+        public async Task UpsertTenantMetricAsync(int tenantId, int? metricId, DateTime reportingPeriod,
             decimal numericValue, string? textValue, string sourceType, int sourceReferenceId)
         {
             // Check if metric value already exists for this tenant/metric/period
@@ -307,7 +307,7 @@ namespace FormReporting.Services.Metrics
             await _context.SaveChangesAsync();
         }
 
-        public async Task LogPopulationSuccessAsync(int submissionId, int metricId, int mappingId,
+        public async Task LogPopulationSuccessAsync(int submissionId, int? metricId, int mappingId,
             int sourceItemId, string sourceValue, decimal calculatedValue, string? formula, int processingTimeMs)
         {
             var log = new MetricPopulationLog
@@ -328,7 +328,7 @@ namespace FormReporting.Services.Metrics
             await _context.SaveChangesAsync();
         }
 
-        public async Task LogPopulationErrorAsync(int submissionId, int metricId, int mappingId,
+        public async Task LogPopulationErrorAsync(int submissionId, int? metricId, int mappingId,
             int sourceItemId, string errorMessage, string? formula)
         {
             var log = new MetricPopulationLog

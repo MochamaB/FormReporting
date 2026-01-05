@@ -60,6 +60,7 @@ namespace FormReporting.Services.Notifications
                 var notification = new Notification
                 {
                     TemplateId = template.TemplateId,
+                    NotificationType = template.Category ?? "General",
                     Title = subject,
                     Message = body,
                     SourceEntityType = dto.SourceEntityType,
@@ -226,7 +227,8 @@ namespace FormReporting.Services.Notifications
                     IsRead = nr.IsRead,
                     CreatedDate = nr.Notification.CreatedDate,
                     Status = nr.IsRead ? "Read" : "Unread",
-                    ActionUrl = nr.Notification.ActionUrl
+                    ActionUrl = nr.Notification.ActionUrl,
+                    IconClass = GetIconClass(nr.Notification.SourceEntityType)
                 })
                 .ToListAsync();
 
@@ -246,7 +248,9 @@ namespace FormReporting.Services.Notifications
         {
             var notifications = _context.NotificationRecipients
                 .Where(nr => nr.UserId == userId && !nr.IsDismissed)
-                .Include(nr => nr.Notification);
+                .Include(nr => nr.Notification)
+                    .ThenInclude(n => n.Deliveries)
+                        .ThenInclude(d => d.Channel);
 
             var today = DateTime.UtcNow.Date;
             var weekStart = today.AddDays(-(int)today.DayOfWeek);
@@ -255,6 +259,12 @@ namespace FormReporting.Services.Notifications
             {
                 TotalCount = await notifications.CountAsync(),
                 UnreadCount = await notifications.Where(nr => !nr.IsRead).CountAsync(),
+                EmailCount = await notifications
+                    .Where(nr => nr.Notification.Deliveries.Any(d => d.Channel.ChannelType == "Email"))
+                    .CountAsync(),
+                InAppCount = await notifications
+                    .Where(nr => nr.Notification.Deliveries.Any(d => d.Channel.ChannelType == "InApp"))
+                    .CountAsync(),
                 TodayCount = await notifications
                     .Where(nr => nr.Notification.CreatedDate >= today)
                     .CountAsync(),
@@ -595,6 +605,109 @@ namespace FormReporting.Services.Notifications
                 .ToListAsync();
         }
 
+        /// <summary>
+        /// Get notification details by ID (for offcanvas modal)
+        /// </summary>
+        public async Task<NotificationDetailDto?> GetNotificationDetailsAsync(long notificationId, int userId)
+        {
+            // This is the same implementation as GetNotificationByIdAsync
+            return await GetNotificationByIdAsync(notificationId, userId);
+        }
+
+        /// <summary>
+        /// Mark notification as unread
+        /// </summary>
+        public async Task<bool> MarkAsUnreadAsync(long notificationId, int userId)
+        {
+            var recipient = await _context.NotificationRecipients
+                .FirstOrDefaultAsync(nr =>
+                    nr.NotificationId == notificationId &&
+                    nr.UserId == userId
+                );
+
+            if (recipient == null)
+            {
+                return false;
+            }
+
+            if (recipient.IsRead)
+            {
+                recipient.IsRead = false;
+                recipient.ReadDate = null;
+                await _context.SaveChangesAsync();
+
+                _logger.LogInformation(
+                    "Marked notification {NotificationId} as unread for user {UserId}",
+                    notificationId,
+                    userId
+                );
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Mark all notifications as read for a user
+        /// </summary>
+        public async Task<int> MarkAllAsReadAsync(int userId)
+        {
+            var unreadRecipients = await _context.NotificationRecipients
+                .Where(nr => nr.UserId == userId && !nr.IsRead && !nr.IsDismissed)
+                .ToListAsync();
+
+            if (!unreadRecipients.Any())
+            {
+                return 0;
+            }
+
+            var now = DateTime.UtcNow;
+            foreach (var recipient in unreadRecipients)
+            {
+                recipient.IsRead = true;
+                recipient.ReadDate = now;
+            }
+
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Marked {Count} notifications as read for user {UserId}",
+                unreadRecipients.Count,
+                userId
+            );
+
+            return unreadRecipients.Count;
+        }
+
+        /// <summary>
+        /// Delete notification
+        /// </summary>
+        public async Task<bool> DeleteNotificationAsync(long notificationId, int userId)
+        {
+            var recipient = await _context.NotificationRecipients
+                .FirstOrDefaultAsync(nr =>
+                    nr.NotificationId == notificationId &&
+                    nr.UserId == userId
+                );
+
+            if (recipient == null)
+            {
+                return false;
+            }
+
+            // Soft delete by marking as dismissed
+            recipient.IsDismissed = true;
+            recipient.DismissedDate = DateTime.UtcNow;
+            await _context.SaveChangesAsync();
+
+            _logger.LogInformation(
+                "Deleted notification {NotificationId} for user {UserId}",
+                notificationId,
+                userId
+            );
+
+            return true;
+        }
+
         // ========================================================================
         // HELPER METHODS
         // ========================================================================
@@ -637,7 +750,7 @@ namespace FormReporting.Services.Notifications
         /// <summary>
         /// Strip HTML tags from string
         /// </summary>
-        private string StripHtml(string html)
+        private static string StripHtml(string html)
         {
             if (string.IsNullOrEmpty(html))
             {
@@ -650,7 +763,7 @@ namespace FormReporting.Services.Notifications
         /// <summary>
         /// Get icon class based on source entity type
         /// </summary>
-        private string GetIconClass(string? sourceEntityType)
+        private static string GetIconClass(string? sourceEntityType)
         {
             return sourceEntityType switch
             {

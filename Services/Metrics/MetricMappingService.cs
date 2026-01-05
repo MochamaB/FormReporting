@@ -53,17 +53,17 @@ namespace FormReporting.Services.Metrics
             return mapping != null ? MapToViewModel(mapping) : null;
         }
 
-        public async Task<MetricMappingViewModel> CreateMappingAsync(CreateMappingDto dto)
+        public async Task<MetricMappingViewModel> CreateFieldMappingAsync(CreateFieldMappingDto dto)
         {
             // Validate
-            var validation = await ValidateMappingAsync(dto);
+            var validation = await ValidateFieldMappingAsync(dto);
             if (!validation.IsValid)
             {
                 throw new InvalidOperationException($"Invalid mapping: {string.Join(", ", validation.Errors)}");
             }
 
-            // Check for duplicate mapping
-            if (await _context.FormItemMetricMappings.AnyAsync(m => 
+            // Check for duplicate mapping (only if linking to a metric)
+            if (dto.MetricId.HasValue && await _context.FormItemMetricMappings.AnyAsync(m => 
                 m.ItemId == dto.ItemId && m.MetricId == dto.MetricId && m.IsActive))
             {
                 throw new InvalidOperationException("This field is already mapped to this metric");
@@ -72,8 +72,10 @@ namespace FormReporting.Services.Metrics
             var mapping = new FormItemMetricMapping
             {
                 ItemId = dto.ItemId,
+                MappingName = dto.MappingName,
                 MetricId = dto.MetricId,
                 MappingType = dto.MappingType,
+                AggregationType = dto.AggregationType,
                 TransformationLogic = dto.TransformationLogic,
                 ExpectedValue = dto.ExpectedValue,
                 IsActive = true,
@@ -124,7 +126,7 @@ namespace FormReporting.Services.Metrics
             return true;
         }
 
-        public async Task<(bool IsValid, List<string> Errors)> ValidateMappingAsync(CreateMappingDto dto)
+        public async Task<(bool IsValid, List<string> Errors)> ValidateFieldMappingAsync(CreateFieldMappingDto dto)
         {
             var errors = new List<string>();
 
@@ -136,25 +138,28 @@ namespace FormReporting.Services.Metrics
                 return (false, errors);
             }
 
-            // Check if metric exists
-            var metric = await _context.MetricDefinitions.FindAsync(dto.MetricId);
-            if (metric == null)
+            // Check if metric exists (only if MetricId is provided)
+            if (dto.MetricId.HasValue)
             {
-                errors.Add("Metric not found");
-                return (false, errors);
+                var metric = await _context.MetricDefinitions.FindAsync(dto.MetricId);
+                if (metric == null)
+                {
+                    errors.Add("Metric not found");
+                    return (false, errors);
+                }
             }
 
             // Validate mapping type
-            var validTypes = new[] { "Direct", "SystemCalculated", "BinaryCompliance", "Derived" };
+            var validTypes = new[] { "Direct", "Calculated", "BinaryCompliance", "Derived" };
             if (!validTypes.Contains(dto.MappingType))
             {
                 errors.Add($"Invalid mapping type. Must be one of: {string.Join(", ", validTypes)}");
             }
 
             // Type-specific validation
-            if (dto.MappingType == "SystemCalculated" && string.IsNullOrEmpty(dto.TransformationLogic))
+            if (dto.MappingType == "Calculated" && string.IsNullOrEmpty(dto.TransformationLogic))
             {
-                errors.Add("SystemCalculated mappings require TransformationLogic (formula)");
+                errors.Add("Calculated mappings require TransformationLogic (formula)");
             }
 
             if (dto.MappingType == "BinaryCompliance" && string.IsNullOrEmpty(dto.ExpectedValue))
@@ -162,8 +167,8 @@ namespace FormReporting.Services.Metrics
                 errors.Add("BinaryCompliance mappings require ExpectedValue");
             }
 
-            // Validate formula if SystemCalculated
-            if (dto.MappingType == "SystemCalculated" && !string.IsNullOrEmpty(dto.TransformationLogic))
+            // Validate formula if Calculated
+            if (dto.MappingType == "Calculated" && !string.IsNullOrEmpty(dto.TransformationLogic))
             {
                 try
                 {

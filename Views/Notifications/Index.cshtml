@@ -1,0 +1,348 @@
+@using FormReporting.Extensions
+@using FormReporting.Models.ViewModels.Components
+@model FormReporting.Models.ViewModels.Notifications.AllNotificationsViewModel
+
+@{
+    ViewData["Title"] = "All Notifications";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    //=================================================================
+    // STAT CARDS CONFIGURATION
+    //=================================================================
+
+    var statConfig = new StatsRowConfig
+    {
+        Titles = new List<string> {
+            "Total Notifications",
+            "Unread",
+            "Email Notifications",
+            "InApp Notifications"
+        },
+        Values = new List<string> {
+            Model.Stats.TotalCount.ToString(),
+            Model.Stats.UnreadCount.ToString(),
+            Model.Stats.EmailCount.ToString(),
+            Model.Stats.InAppCount.ToString()
+        },
+        Icons = new List<string> {
+            "ri-notification-line",
+            "ri-mail-unread-line",
+            "ri-mail-line",
+            "ri-smartphone-line"
+        },
+        ColorThemes = new List<string> {
+            "primary",
+            "warning",
+            "info",
+            "success"
+        },
+        CardType = CardType.IconLeftCard,
+        Subtitles = new List<string> {
+            "All Time",
+            "Needs Attention",
+            "Email channel",
+            "In-app channel"
+        }
+    };
+
+    var statCards = statConfig.BuildStatsRow();
+
+    //=================================================================
+    // DATATABLE SERVER-SIDE CONFIGURATION
+    //=================================================================
+
+    var tableConfig = new DataTableConfig
+    {
+        TableId = "notificationsTable",
+        Columns = new List<string> {
+            "Notification",
+            "Priority",
+            "Channel",
+            "Date",
+            "Status",
+            "Actions"
+        },
+        EnableSearch = true,
+        SearchBox = new SearchBoxConfig
+        {
+            ParameterName = "search",
+            PlaceholderText = "Search notifications...",
+            CurrentValue = Model.SearchFilter,
+            ActionUrl = Url.Action("Index", "Notifications") ?? "/Notifications"
+        },
+        FilterDropdowns = new List<FilterDropdownConfig>
+        {
+            new FilterDropdownConfig
+            {
+                Label = "Status",
+                Options = new List<FilterOption>
+                {
+                    new FilterOption
+                    {
+                        Text = "All",
+                        Value = "",
+                        Url = Url.Action("Index", "Notifications", new { search = Model.SearchFilter, category = Model.CategoryFilter, priority = Model.PriorityFilter }) ?? "/Notifications",
+                        IsActive = string.IsNullOrEmpty(Model.StatusFilter)
+                    },
+                    new FilterOption
+                    {
+                        Text = "Unread",
+                        Value = "Unread",
+                        Url = Url.Action("Index", "Notifications", new { search = Model.SearchFilter, status = "Unread", category = Model.CategoryFilter, priority = Model.PriorityFilter }) ?? "/Notifications",
+                        IsActive = Model.StatusFilter == "Unread"
+                    },
+                    new FilterOption
+                    {
+                        Text = "Read",
+                        Value = "Read",
+                        Url = Url.Action("Index", "Notifications", new { search = Model.SearchFilter, status = "Read", category = Model.CategoryFilter, priority = Model.PriorityFilter }) ?? "/Notifications",
+                        IsActive = Model.StatusFilter == "Read"
+                    }
+                }
+            },
+            new FilterDropdownConfig
+            {
+                Label = "Channel",
+                Options = new List<FilterOption>
+                {
+                    new FilterOption
+                    {
+                        Text = "All Channels",
+                        Value = "",
+                        Url = Url.Action("Index", "Notifications", new { search = Model.SearchFilter, status = Model.StatusFilter, priority = Model.PriorityFilter }) ?? "/Notifications",
+                        IsActive = string.IsNullOrEmpty(Model.CategoryFilter)
+                    },
+                    new FilterOption
+                    {
+                        Text = "Email",
+                        Value = "Email",
+                        Url = Url.Action("Index", "Notifications", new { search = Model.SearchFilter, status = Model.StatusFilter, category = "Email", priority = Model.PriorityFilter }) ?? "/Notifications",
+                        IsActive = Model.CategoryFilter == "Email"
+                    },
+                    new FilterOption
+                    {
+                        Text = "InApp",
+                        Value = "InApp",
+                        Url = Url.Action("Index", "Notifications", new { search = Model.SearchFilter, status = Model.StatusFilter, category = "InApp", priority = Model.PriorityFilter }) ?? "/Notifications",
+                        IsActive = Model.CategoryFilter == "InApp"
+                    }
+                }
+            },
+            new FilterDropdownConfig
+            {
+                Label = "Priority",
+                Options = new List<FilterOption>
+                {
+                    new FilterOption
+                    {
+                        Text = "All Priorities",
+                        Value = "",
+                        Url = Url.Action("Index", "Notifications", new { search = Model.SearchFilter, status = Model.StatusFilter, category = Model.CategoryFilter }) ?? "/Notifications",
+                        IsActive = string.IsNullOrEmpty(Model.PriorityFilter)
+                    },
+                    new FilterOption
+                    {
+                        Text = "Urgent",
+                        Value = "Urgent",
+                        Url = Url.Action("Index", "Notifications", new { search = Model.SearchFilter, status = Model.StatusFilter, category = Model.CategoryFilter, priority = "Urgent" }) ?? "/Notifications",
+                        IsActive = Model.PriorityFilter == "Urgent"
+                    },
+                    new FilterOption
+                    {
+                        Text = "High",
+                        Value = "High",
+                        Url = Url.Action("Index", "Notifications", new { search = Model.SearchFilter, status = Model.StatusFilter, category = Model.CategoryFilter, priority = "High" }) ?? "/Notifications",
+                        IsActive = Model.PriorityFilter == "High"
+                    },
+                    new FilterOption
+                    {
+                        Text = "Normal",
+                        Value = "Normal",
+                        Url = Url.Action("Index", "Notifications", new { search = Model.SearchFilter, status = Model.StatusFilter, category = Model.CategoryFilter, priority = "Normal" }) ?? "/Notifications",
+                        IsActive = Model.PriorityFilter == "Normal"
+                    },
+                    new FilterOption
+                    {
+                        Text = "Low",
+                        Value = "Low",
+                        Url = Url.Action("Index", "Notifications", new { search = Model.SearchFilter, status = Model.StatusFilter, category = Model.CategoryFilter, priority = "Low" }) ?? "/Notifications",
+                        IsActive = Model.PriorityFilter == "Low"
+                    }
+                }
+            }
+        },
+        ShowPagination = false,
+        EnableHover = true
+    };
+
+    var table = tableConfig.BuildDataTable();
+}
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- SECTION 1: RENDER STATISTIC CARDS -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<div class="row">
+    @foreach (var card in statCards)
+    {
+        <partial name="~/Views/Shared/Components/StatisticCards/_IconLeftCard.cshtml" model="card" />
+    }
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════ -->
+<!-- SECTION 2: RENDER DATATABLE (Server-side with Bulk Actions) -->
+<!-- ═══════════════════════════════════════════════════════════ -->
+
+<div class="row mt-3">
+    <div class="col-12">
+        <div class="card">
+            <!-- Card Header: Search, Filters, Bulk Actions -->
+            <div class="card-header">
+                <div class="d-flex justify-content-between align-items-center flex-wrap w-100 gap-2">
+
+                    @* Left Side: Search and Filters *@
+                    <div class="d-flex gap-2 flex-wrap align-items-center">
+                        @* Search Box *@
+                        @if (table.SearchBox != null)
+                        {
+                            <partial name="~/Views/Shared/Components/DataTable/_SearchBox.cshtml" model="table.SearchBox" />
+                        }
+
+                        @* Filter Dropdowns *@
+                        @if (table.FilterDropdowns != null && table.FilterDropdowns.Any())
+                        {
+                            foreach (var filterDropdown in table.FilterDropdowns)
+                            {
+                                <partial name="~/Views/Shared/Components/DataTable/_FilterDropdown.cshtml" model="filterDropdown" />
+                            }
+                        }
+                    </div>
+
+                    @* Right Side: Bulk Actions Dropdown *@
+                    <div class="d-flex gap-2 align-items-center">
+                        @* Bulk Actions Dropdown (hidden until rows selected) *@
+                        <div class="dropdown bulk-actions-dropdown" data-table-id="@table.TableId" style="display: none;">
+                            <button class="btn btn-soft-primary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                <i class="ri-checkbox-multiple-line me-1"></i>Bulk Actions (<span class="selected-count">0</span>)
+                            </button>
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li>
+                                    <a class="dropdown-item bulk-action-btn" href="#"
+                                       data-url="@Url.Action("BulkMarkAsRead", "Notifications")"
+                                       data-confirm="false"
+                                       data-message="">
+                                        <i class="ri-check-double-line me-1"></i>Mark as Read
+                                    </a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item bulk-action-btn text-danger" href="#"
+                                       data-url="@Url.Action("BulkDelete", "Notifications")"
+                                       data-confirm="true"
+                                       data-message="Are you sure you want to delete the selected notifications? This action cannot be undone.">
+                                        <i class="ri-delete-bin-line me-1"></i>Delete Selected
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Card Body: Table -->
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="@table.TableClasses" id="@table.TableId" style="width: 100%;"
+                           data-datatable="true"
+                           data-bulk-actions="true">
+                        <thead class="bg-light">
+                            <tr>
+                                @* Bulk selection checkbox column *@
+                                <th scope="col" style="width: 40px;">
+                                    <input type="checkbox" class="form-check-input select-all-checkbox" />
+                                </th>
+
+                                @foreach (var column in table.Columns)
+                                {
+                                    <th scope="col" style="min-width: 50px; padding: 12px; white-space: nowrap;">@column</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @if (Model.Notifications.Data != null && Model.Notifications.Data.Any())
+                            {
+                                @foreach (var notification in Model.Notifications.Data)
+                                {
+                                    <tr class="@(!notification.IsRead ? "fw-bold" : "")">
+                                        @* Checkbox for bulk selection *@
+                                        <td>
+                                            <input type="checkbox" class="form-check-input row-select-checkbox" value="@notification.NotificationId" />
+                                        </td>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="flex-shrink-0">
+                                                    <div class="avatar-xs">
+                                                        <div class="avatar-title bg-soft-primary text-primary rounded">
+                                                            <i class="@notification.IconClass"></i>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="flex-grow-1 ms-3">
+                                                    <h6 class="fs-14 mb-1">@notification.Title</h6>
+                                                    <p class="text-muted mb-0 text-truncate" style="max-width: 300px;">@notification.Message</p>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-@notification.PriorityColor">@notification.Priority</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-@notification.ChannelColor">@notification.ChannelType</span>
+                                        </td>
+                                        <td>
+                                            <span class="text-muted">@notification.CreatedDate.ToString("MMM dd, yyyy h:mm tt")</span>
+                                        </td>
+                                        <td>
+                                            <span class="badge bg-@notification.StatusColor">@notification.Status</span>
+                                        </td>
+                                        <td>
+                                            <div class="d-flex gap-2">
+                                                <button type="button" class="btn btn-sm btn-soft-primary" onclick="viewNotification(@notification.NotificationId)" title="View Details">
+                                                    <i class="ri-eye-line"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-soft-success" onclick="markAsRead(@notification.NotificationId)" title="Mark as Read">
+                                                    <i class="ri-check-line"></i>
+                                                </button>
+                                                <button type="button" class="btn btn-sm btn-soft-danger" onclick="deleteNotification(@notification.NotificationId)" title="Delete">
+                                                    <i class="ri-delete-bin-line"></i>
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                            else
+                            {
+                                <tr>
+                                    <td colspan="7" class="text-center py-4">
+                                        <div class="text-muted">
+                                            <i class="ri-notification-off-line fs-1 d-block mb-2"></i>
+                                            <p>No notifications found</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Notification Details Offcanvas -->
+<partial name="Partials/_NotificationOffcanvas" />
+
+@section Scripts {
+    <!-- Page-specific JavaScript -->
+    <script src="~/js/pages/notifications-index.js"></script>
+}

@@ -220,6 +220,26 @@ namespace FormReporting.Data
         public DbSet<FormItemMetricMapping> FormItemMetricMappings { get; set; } = null!;
 
         /// <summary>
+        /// Form section to metric mappings
+        /// </summary>
+        public DbSet<FormSectionMetricMapping> FormSectionMetricMappings { get; set; } = null!;
+
+        /// <summary>
+        /// Form section metric sources (junction table)
+        /// </summary>
+        public DbSet<FormSectionMetricSource> FormSectionMetricSources { get; set; } = null!;
+
+        /// <summary>
+        /// Form template to metric mappings
+        /// </summary>
+        public DbSet<FormTemplateMetricMapping> FormTemplateMetricMappings { get; set; } = null!;
+
+        /// <summary>
+        /// Form template metric sources (junction table)
+        /// </summary>
+        public DbSet<FormTemplateMetricSource> FormTemplateMetricSources { get; set; } = null!;
+
+        /// <summary>
         /// Metric population logs
         /// </summary>
         public DbSet<MetricPopulationLog> MetricPopulationLogs { get; set; } = null!;
@@ -413,15 +433,6 @@ namespace FormReporting.Data
         // SECTION 10: REPORTING & ANALYTICS
         // ============================================================================
 
-        /// <summary>
-        /// Tenant performance snapshots (pre-aggregated metrics)
-        /// </summary>
-        public DbSet<TenantPerformanceSnapshot> TenantPerformanceSnapshots { get; set; } = null!;
-
-        /// <summary>
-        /// Regional monthly snapshots
-        /// </summary>
-        public DbSet<RegionalMonthlySnapshot> RegionalMonthlySnapshots { get; set; } = null!;
 
         /// <summary>
         /// Custom report definitions
@@ -546,6 +557,10 @@ namespace FormReporting.Data
             modelBuilder.ApplyConfiguration(new FormItemValidationConfiguration());
             modelBuilder.ApplyConfiguration(new FormItemCalculationConfiguration());
             modelBuilder.ApplyConfiguration(new FormItemMetricMappingConfiguration());
+            modelBuilder.ApplyConfiguration(new FormSectionMetricMappingConfiguration());
+            modelBuilder.ApplyConfiguration(new FormSectionMetricSourceConfiguration());
+            modelBuilder.ApplyConfiguration(new FormTemplateMetricMappingConfiguration());
+            modelBuilder.ApplyConfiguration(new FormTemplateMetricSourceConfiguration());
             modelBuilder.ApplyConfiguration(new MetricPopulationLogConfiguration());
             modelBuilder.ApplyConfiguration(new FormTemplateSubmissionConfiguration());
             modelBuilder.ApplyConfiguration(new FormTemplateResponseConfiguration());
@@ -592,8 +607,6 @@ namespace FormReporting.Data
             modelBuilder.ApplyConfiguration(new AlertHistoryConfiguration());
 
             // Apply Section 10: Reporting & Analytics configurations
-            modelBuilder.ApplyConfiguration(new TenantPerformanceSnapshotConfiguration());
-            modelBuilder.ApplyConfiguration(new RegionalMonthlySnapshotConfiguration());
             modelBuilder.ApplyConfiguration(new ReportDefinitionConfiguration());
             modelBuilder.ApplyConfiguration(new ReportFieldConfiguration());
             modelBuilder.ApplyConfiguration(new ReportFilterConfiguration());

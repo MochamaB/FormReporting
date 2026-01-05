@@ -202,7 +202,15 @@
                             <div class="horizontal-step-content-area">
                                 @if (!string.IsNullOrEmpty(step.ContentPartialPath))
                                 {
-                                    <partial name="@step.ContentPartialPath" />
+                                    var parentModel = ViewData["ParentModel"];
+                                    if (parentModel != null)
+                                    {
+                                        <partial name="@step.ContentPartialPath" model="@parentModel" />
+                                    }
+                                    else
+                                    {
+                                        <partial name="@step.ContentPartialPath" />
+                                    }
                                 }
                                 else
                                 {

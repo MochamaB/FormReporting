@@ -1,9 +1,150 @@
 @using FormReporting.Models.ViewModels.Forms
 @{
     var model = ViewData["TemplateDetails"] as TemplateDetailsViewModel;
+    
+    // Calculate progress percentages
+    var fieldProgress = model?.TotalMappableFields > 0 
+        ? (decimal)(model?.FieldMappingCount ?? 0) / model.TotalMappableFields * 100 
+        : 0;
+    var sectionProgress = model?.TotalMappableSections > 0 
+        ? (decimal)(model?.SectionMappingCount ?? 0) / model.TotalMappableSections * 100 
+        : 0;
+    var templateProgress = model?.TemplateKpiCount > 0 ? 100 : 0;
 }
 
 <!-- Metrics Panel: KPI mappings -->
 <div id="metrics-panel">
-    <!-- TODO: Implement metric mapping panel -->
+    <!-- Configure Metrics Button (Top Left) -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <small class="text-muted">
+            @if (model?.MetricsLastUpdated.HasValue == true)
+            {
+                <text>Last updated: @(model.MetricsLastUpdated.Value.ToString("MMM dd, yyyy"))</text>
+            }
+            else
+            {
+                <text>No metrics configured yet</text>
+            }
+        </small>
+        <a href="@Url.Action("ConfigureMetrics", "FormTemplates", new { id = model?.TemplateId })" 
+           class="btn btn-primary">
+            <i class="ri-settings-3-line me-2"></i>Configure Metrics
+        </a>
+    </div>
+
+    <!-- Configuration Status Overview -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 bg-light">
+                <div class="card-body text-center py-3">
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <i class="ri-focus-3-line text-primary me-2"></i>
+                        <h6 class="mb-0">Field Mappings</h6>
+                    </div>
+                    <div class="progress mb-2" style="height: 6px;">
+                        <div class="progress-bar bg-primary" role="progressbar" style="width: @fieldProgress%"></div>
+                    </div>
+                    <small class="text-muted">@(model?.FieldMappingCount ?? 0)/@(model?.TotalMappableFields ?? 0) configured</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 bg-light">
+                <div class="card-body text-center py-3">
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <i class="ri-layout-grid-line text-info me-2"></i>
+                        <h6 class="mb-0">Section Aggregations</h6>
+                    </div>
+                    <div class="progress mb-2" style="height: 6px;">
+                        <div class="progress-bar bg-info" role="progressbar" style="width: @sectionProgress%"></div>
+                    </div>
+                    <small class="text-muted">@(model?.SectionMappingCount ?? 0)/@(model?.TotalMappableSections ?? 0) configured</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 bg-light">
+                <div class="card-body text-center py-3">
+                    <div class="d-flex align-items-center justify-content-center mb-2">
+                        <i class="ri-file-chart-line text-success me-2"></i>
+                        <h6 class="mb-0">Template KPIs</h6>
+                    </div>
+                    <div class="progress mb-2" style="height: 6px;">
+                        <div class="progress-bar bg-success" role="progressbar" style="width: @templateProgress%"></div>
+                    </div>
+                    <small class="text-muted">@(model?.TemplateKpiCount ?? 0) configured</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configured Metrics Preview -->
+    <div class="card">
+        <div class="card-header">
+            <h6 class="mb-0">
+                <i class="ri-bar-chart-box-line me-2"></i>Configured Metrics
+            </h6>
+        </div>
+        <div class="card-body">
+            @if (model?.ConfiguredMetrics?.Any() == true)
+            {
+                <div class="table-responsive">
+                    <table class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th>Mapping Name</th>
+                                <th>Level</th>
+                                <th>Type</th>
+                                <th>Metric</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var metric in model.ConfiguredMetrics)
+                            {
+                                <tr>
+                                    <td>
+                                        <strong>@metric.MappingName</strong>
+                                        @if (!string.IsNullOrEmpty(metric.MetricCode))
+                                        {
+                                            <br><small class="text-muted">@metric.MetricCode</small>
+                                        }
+                                    </td>
+                                    <td>
+                                        <span class="badge @metric.LevelBadgeClass">@metric.Level</span>
+                                    </td>
+                                    <td>@metric.MappingType</td>
+                                    <td>@metric.MetricName</td>
+                                    <td>
+                                        @if (metric.IsActive)
+                                        {
+                                            <i class="ri-check-line text-success"></i>
+                                            <span class="text-success">Active</span>
+                                        }
+                                        else
+                                        {
+                                            <i class="ri-close-line text-muted"></i>
+                                            <span class="text-muted">Inactive</span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+            else
+            {
+                <div class="text-center py-4">
+                    <i class="ri-bar-chart-box-line text-muted" style="font-size: 3rem;"></i>
+                    <h6 class="text-muted mt-2">No metrics configured yet</h6>
+                    <p class="text-muted mb-3">Click "Configure Metrics" to start mapping fields to KPIs</p>
+                    <a href="@Url.Action("ConfigureMetrics", "FormTemplates", new { id = model?.TemplateId })" 
+                       class="btn btn-outline-primary">
+                        <i class="ri-add-line me-1"></i>Start Configuration
+                    </a>
+                </div>
+            }
+        </div>
+    </div>
 </div>

@@ -4,6 +4,7 @@ using FormReporting.Data;
 using FormReporting.Models.Entities.Forms;
 using FormReporting.Models.ViewModels.Forms;
 using FormReporting.Models.ViewModels.Components;
+using FormReporting.Models.ViewModels.Metrics;
 using FormReporting.Extensions;
 using FormReporting.Services.Forms;
 using FormReporting.Services.Identity;
@@ -226,6 +227,7 @@ namespace FormReporting.Controllers.Forms
                 .Include(t => t.Sections)
                     .ThenInclude(s => s.Items)
                 .Include(t => t.Submissions)
+                .Include(t => t.SubmissionRules)
                 .Include(t => t.Assignments)
                     .ThenInclude(a => a.TenantGroup)
                 .Include(t => t.Assignments)
@@ -305,6 +307,10 @@ namespace FormReporting.Controllers.Forms
                 WorkflowName = template.Workflow?.WorkflowName,
                 WorkflowStepCount = template.Workflow?.Steps.Count ?? 0,
 
+                // Submission Rules
+                SubmissionRuleCount = template.SubmissionRules.Count,
+                ActiveSubmissionRuleCount = template.SubmissionRules.Count(r => r.Status == "Active"),
+
                 // Submissions
                 SubmissionCount = template.Submissions.Count,
                 PendingSubmissionCount = template.Submissions.Count(s => s.Status == "Draft" || s.Status == "Submitted" || s.Status == "InApproval"),
@@ -331,11 +337,87 @@ namespace FormReporting.Controllers.Forms
                 }
             };
 
+            // Load metric mappings for the Metrics tab
+            var fieldMappings = await _context.FormItemMetricMappings
+                .Include(m => m.Item)
+                .Include(m => m.Metric)
+                .Where(m => m.Item.Section.TemplateId == id && m.IsActive)
+                .ToListAsync();
+
+            var sectionMappings = await _context.FormSectionMetricMappings
+                .Include(m => m.Section)
+                .Include(m => m.Metric)
+                .Where(m => m.Section.TemplateId == id && m.IsActive)
+                .ToListAsync();
+
+            var templateMappings = await _context.FormTemplateMetricMappings
+                .Include(m => m.Metric)
+                .Where(m => m.TemplateId == id && m.IsActive)
+                .ToListAsync();
+
+            // Populate metric summary data
+            viewModel.FieldMappingCount = fieldMappings.Count;
+            viewModel.SectionMappingCount = sectionMappings.Count;
+            viewModel.TemplateKpiCount = templateMappings.Count;
+            viewModel.MetricMappingCount = fieldMappings.Count + sectionMappings.Count + templateMappings.Count;
+            viewModel.TotalMappableFields = template.Sections.Sum(s => s.Items.Count);
+            viewModel.TotalMappableSections = template.Sections.Count;
+
+            // Get the most recent update date from all mappings
+            var allDates = fieldMappings.Select(m => m.CreatedDate)
+                .Concat(sectionMappings.Select(m => m.CreatedDate))
+                .Concat(templateMappings.Select(m => m.CreatedDate));
+            viewModel.MetricsLastUpdated = allDates.Any() ? allDates.Max() : null;
+
+            // Build configured metrics list for display
+            var configuredMetrics = new List<MetricMappingSummary>();
+
+            // Add field-level mappings
+            configuredMetrics.AddRange(fieldMappings.Select(m => new MetricMappingSummary
+            {
+                MappingId = m.MappingId,
+                MappingName = m.Item?.ItemName ?? "Unknown Field",
+                Level = "Field",
+                MappingType = m.MappingType,
+                MetricName = m.Metric?.MetricName ?? "Unknown Metric",
+                MetricCode = m.Metric?.MetricCode,
+                IsActive = m.IsActive
+            }));
+
+            // Add section-level mappings
+            configuredMetrics.AddRange(sectionMappings.Select(m => new MetricMappingSummary
+            {
+                MappingId = m.MappingId,
+                MappingName = m.Section?.SectionName ?? "Unknown Section",
+                Level = "Section",
+                MappingType = m.AggregationType,
+                MetricName = m.Metric?.MetricName ?? "Unknown Metric",
+                MetricCode = m.Metric?.MetricCode,
+                IsActive = m.IsActive
+            }));
+
+            // Add template-level mappings
+            configuredMetrics.AddRange(templateMappings.Select(m => new MetricMappingSummary
+            {
+                MappingId = m.MappingId,
+                MappingName = m.MappingName ?? "Template KPI",
+                Level = "Template",
+                MappingType = m.AggregationType,
+                MetricName = m.Metric?.MetricName ?? "Unknown Metric",
+                MetricCode = m.Metric?.MetricCode,
+                IsActive = m.IsActive
+            }));
+
+            viewModel.ConfiguredMetrics = configuredMetrics;
+
             // Pass assignments directly to view for server-side rendering
             ViewData["Assignments"] = template.Assignments.ToList();
             
             // Pass workflow directly to view for server-side rendering
             ViewData["Workflow"] = template.Workflow;
+            
+            // Pass submission rules directly to view for server-side rendering
+            ViewData["SubmissionRules"] = template.SubmissionRules.ToList();
 
             return View("~/Views/Forms/FormTemplates/Details.cshtml", viewModel);
         }
@@ -1419,6 +1501,16 @@ namespace FormReporting.Controllers.Forms
             {
                 return Json(new { error = ex.Message });
             }
+        }
+
+        /// <summary>
+        /// Configure Metrics - Redirects to MetricMappingController
+        /// </summary>
+        [HttpGet]
+        public IActionResult ConfigureMetrics(int id)
+        {
+            // Redirect to the new MetricMappingController
+            return RedirectToAction("Index", "MetricMapping", new { templateId = id });
         }
     }
 }

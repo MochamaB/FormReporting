@@ -16,7 +16,7 @@ namespace FormReporting.Models.ViewModels.Metrics
         public string? SectionName { get; set; }
 
         // Metric information
-        public int MetricId { get; set; }
+        public int? MetricId { get; set; }
         public string MetricCode { get; set; } = string.Empty;
         public string MetricName { get; set; } = string.Empty;
         public string MetricDataType { get; set; } = string.Empty;

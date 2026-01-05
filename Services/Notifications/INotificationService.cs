@@ -90,14 +90,34 @@ namespace FormReporting.Services.Notifications
         Task<NotificationDetailDto?> GetNotificationByIdAsync(long notificationId, int userId);
 
         /// <summary>
+        /// Get notification details by ID (for offcanvas modal)
+        /// </summary>
+        Task<NotificationDetailDto?> GetNotificationDetailsAsync(long notificationId, int userId);
+
+        /// <summary>
         /// Mark notification as read
         /// </summary>
         Task<bool> MarkAsReadAsync(long notificationId, int userId);
 
         /// <summary>
+        /// Mark notification as unread
+        /// </summary>
+        Task<bool> MarkAsUnreadAsync(long notificationId, int userId);
+
+        /// <summary>
+        /// Mark all notifications as read for a user
+        /// </summary>
+        Task<int> MarkAllAsReadAsync(int userId);
+
+        /// <summary>
         /// Mark notification as dismissed
         /// </summary>
         Task<bool> MarkAsDismissedAsync(long notificationId, int userId);
+
+        /// <summary>
+        /// Delete notification
+        /// </summary>
+        Task<bool> DeleteNotificationAsync(long notificationId, int userId);
 
         /// <summary>
         /// Get unread notification count (for bell badge)

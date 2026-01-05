@@ -39,19 +39,19 @@ namespace FormReporting.Services.Metrics
         /// Upsert metric value to TenantMetrics table
         /// Updates if exists for same (TenantId, MetricId, Period), inserts if new
         /// </summary>
-        Task UpsertTenantMetricAsync(int tenantId, int metricId, DateTime reportingPeriod, 
+        Task UpsertTenantMetricAsync(int tenantId, int? metricId, DateTime reportingPeriod, 
             decimal numericValue, string? textValue, string sourceType, int sourceReferenceId);
 
         /// <summary>
         /// Log successful metric population
         /// </summary>
-        Task LogPopulationSuccessAsync(int submissionId, int metricId, int mappingId, 
+        Task LogPopulationSuccessAsync(int submissionId, int? metricId, int mappingId, 
             int sourceItemId, string sourceValue, decimal calculatedValue, string? formula, int processingTimeMs);
 
         /// <summary>
         /// Log failed metric population
         /// </summary>
-        Task LogPopulationErrorAsync(int submissionId, int metricId, int mappingId, 
+        Task LogPopulationErrorAsync(int submissionId, int? metricId, int mappingId, 
             int sourceItemId, string errorMessage, string? formula);
 
         /// <summary>

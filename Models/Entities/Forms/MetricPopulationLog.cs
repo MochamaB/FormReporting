@@ -17,8 +17,7 @@ namespace FormReporting.Models.Entities.Forms
         [Required]
         public int SubmissionId { get; set; }
 
-        [Required]
-        public int MetricId { get; set; }
+        public int? MetricId { get; set; }
 
         [Required]
         public int MappingId { get; set; }
@@ -53,7 +52,7 @@ namespace FormReporting.Models.Entities.Forms
         public virtual FormTemplateSubmission Submission { get; set; } = null!;
 
         [ForeignKey(nameof(MetricId))]
-        public virtual MetricDefinition Metric { get; set; } = null!;
+        public virtual MetricDefinition? Metric { get; set; }
 
         [ForeignKey(nameof(MappingId))]
         public virtual FormItemMetricMapping Mapping { get; set; } = null!;

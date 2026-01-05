@@ -57,11 +57,13 @@ builder.Services.AddScoped<IFormResponseService, FormResponseService>();
 builder.Services.AddScoped<IFormAssignmentService, FormAssignmentService>();
 builder.Services.AddScoped<IWorkflowService, WorkflowService>();
 builder.Services.AddScoped<IWorkflowEngineService, WorkflowEngineService>();
+builder.Services.AddScoped<ISubmissionRuleService, SubmissionRuleService>();
 
 // Metrics services
 builder.Services.AddScoped<FormReporting.Services.Metrics.IMetricDefinitionService, FormReporting.Services.Metrics.MetricDefinitionService>();
 builder.Services.AddScoped<FormReporting.Services.Metrics.IMetricMappingService, FormReporting.Services.Metrics.MetricMappingService>();
 builder.Services.AddScoped<FormReporting.Services.Metrics.IMetricPopulationService, FormReporting.Services.Metrics.MetricPopulationService>();
+builder.Services.AddScoped<FormReporting.Services.Metrics.IFieldMappingValidationService, FormReporting.Services.Metrics.FieldMappingValidationService>();
 
 // Identity services
 builder.Services.AddScoped<IScopeService, ScopeService>();
@@ -80,6 +82,7 @@ builder.Services.AddMemoryCache(); // For template caching
 builder.Services.AddScoped<FormReporting.Services.Notifications.INotificationTemplateService, FormReporting.Services.Notifications.NotificationTemplateService>();
 builder.Services.AddScoped<FormReporting.Services.Notifications.INotificationService, FormReporting.Services.Notifications.NotificationService>();
 builder.Services.AddScoped<FormReporting.Services.Notifications.INotificationDeliveryService, FormReporting.Services.Notifications.NotificationDeliveryService>();
+builder.Services.AddScoped<FormReporting.Services.Notifications.INotificationTriggerService, FormReporting.Services.Notifications.NotificationTriggerService>();
 
 // Notification providers (registered as INotificationProvider for factory pattern)
 builder.Services.AddScoped<FormReporting.Services.Notifications.Providers.INotificationProvider, FormReporting.Services.Notifications.Providers.EmailProvider>();

@@ -1,0 +1,319 @@
+@model FormReporting.Models.ViewModels.Metrics.MetricConfigurationViewModel
+
+<!-- Section-Level Metrics Step -->
+<div class="section-level-step">
+    <!-- Step Actions -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <span class="badge bg-info-subtle text-info">Step 2 of 3</span>
+        </div>
+        <div>
+            <button type="button" class="btn btn-outline-secondary btn-sm me-2" id="refreshFromFields">
+                <i class="ri-refresh-line me-1"></i>Refresh from Fields
+            </button>
+            <button type="button" class="btn btn-info btn-sm" id="addSectionMapping">
+                <i class="ri-add-line me-1"></i>Add Section Mapping
+            </button>
+        </div>
+    </div>
+
+    <!-- Progress Overview -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-0 bg-info-subtle">
+                <div class="card-body text-center py-3">
+                    <div class="progress mb-2" style="height: 6px;">
+                        <div class="progress-bar bg-info" role="progressbar" style="width: @(Model.SectionProgress)%"></div>
+                    </div>
+                    <div class="fw-bold text-info">@Model.ConfiguredSections/@Model.TotalSections</div>
+                    <small class="text-muted">Sections Configured</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 bg-primary-subtle">
+                <div class="card-body text-center py-3">
+                    <div class="fw-bold text-primary">@Model.Sections.Count(s => s.CanConfigureSection)</div>
+                    <small class="text-muted">Ready to Configure</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 bg-success-subtle">
+                <div class="card-body text-center py-3">
+                    <div class="fw-bold text-success">@Model.Sections.Sum(s => s.ConfiguredFieldCount)</div>
+                    <small class="text-muted">Source Field Mappings</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section Aggregations - Accordion Layout -->
+    <div class="accordion accordion-flush" id="sectionAggregationsAccordion">
+        @{ var sectionIdx = 0; }
+        @foreach (var templateSection in Model.Sections.OrderBy(s => s.DisplayOrder))
+        {
+            var collapseId = $"section-agg-collapse-{templateSection.SectionId}";
+            var headerId = $"section-agg-header-{templateSection.SectionId}";
+            var isFirst = sectionIdx == 0;
+            var statusClass = templateSection.HasMapping ? "success" : templateSection.CanConfigureSection ? "warning" : "secondary";
+            
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="@headerId">
+                    <button class="accordion-button @(isFirst ? "" : "collapsed")" type="button" 
+                            data-bs-toggle="collapse" data-bs-target="#@collapseId" 
+                            aria-expanded="@(isFirst ? "true" : "false")" aria-controls="@collapseId">
+                        <div class="d-flex justify-content-between align-items-center w-100 me-3">
+                            <div class="d-flex align-items-center">
+                                <i class="ri-layout-grid-line me-2 text-info"></i>
+                                <strong>@templateSection.SectionName</strong>
+                            </div>
+                            <div class="d-flex align-items-center">
+                                @if (templateSection.HasMapping)
+                                {
+                                    <span class="badge bg-success me-2">
+                                        <i class="ri-check-line me-1"></i>Configured
+                                    </span>
+                                }
+                                else if (templateSection.CanConfigureSection)
+                                {
+                                    <span class="badge bg-warning me-2">
+                                        <i class="ri-time-line me-1"></i>Ready
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary me-2">
+                                        <i class="ri-close-line me-1"></i>No Fields
+                                    </span>
+                                }
+                                <small class="text-muted">@templateSection.ConfiguredFieldCount fields</small>
+                            </div>
+                        </div>
+                    </button>
+                </h2>
+                <div id="@collapseId" class="accordion-collapse collapse @(isFirst ? "show" : "")" 
+                     aria-labelledby="@headerId" data-bs-parent="#sectionAggregationsAccordion">
+                    <div class="accordion-body">
+                @if (templateSection.HasMapping)
+                {
+                    <!-- Configured Section Mapping -->
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-info mb-2">
+                                <i class="ri-bar-chart-box-line me-1"></i>@templateSection.Mapping.MappingName
+                            </h6>
+                            <div class="mb-2">
+                                <strong>Metric:</strong> 
+                                @if (templateSection.Mapping.Metric != null)
+                                {
+                                    <span>@templateSection.Mapping.Metric.MetricName</span>
+                                    <small class="text-muted">(@templateSection.Mapping.Metric.MetricCode)</small>
+                                }
+                                else
+                                {
+                                    <span class="text-muted">Standalone mapping</span>
+                                }
+                            </div>
+                            <div class="mb-2">
+                                <strong>Type:</strong> 
+                                <span class="badge bg-info-subtle text-info">@templateSection.Mapping.MappingType</span>
+                            </div>
+                            <div class="mb-2">
+                                <strong>Aggregation:</strong> 
+                                <span class="badge bg-primary-subtle text-primary">@templateSection.Mapping.AggregationType</span>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-muted mb-2">Source Fields (@templateSection.Mapping.Sources.Count)</h6>
+                            @if (templateSection.Mapping.Sources.Any())
+                            {
+                                <div class="list-group list-group-flush">
+                                    @foreach (var source in templateSection.Mapping.Sources.OrderBy(s => s.DisplayOrder))
+                                    {
+                                        <div class="list-group-item px-0 py-2 border-0">
+                                            <div class="d-flex justify-content-between align-items-center">
+                                                <div>
+                                                    <strong>@source.ItemMapping.Item.ItemName</strong>
+                                                    @if (source.Weight.HasValue)
+                                                    {
+                                                        <small class="text-muted">(Weight: @source.Weight.Value.ToString("P1"))</small>
+                                                    }
+                                                </div>
+                                                <span class="badge bg-light text-dark">@source.ItemMapping.MappingType</span>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                            }
+                            else
+                            {
+                                <p class="text-muted mb-0">No source fields configured</p>
+                            }
+                        </div>
+                    </div>
+                    
+                    <!-- Sample Calculation Preview -->
+                    <div class="mt-3 p-3 bg-light rounded">
+                        <h6 class="text-muted mb-2">
+                            <i class="ri-eye-line me-1"></i>Sample Calculation Preview
+                        </h6>
+                        <div class="row">
+                            <div class="col-md-8">
+                                <small class="text-muted">
+                                    @if (templateSection.Mapping.AggregationType == "WeightedAverage")
+                                    {
+                                        <span>Weighted Average: </span>
+                                        @foreach (var source in templateSection.Mapping.Sources.Take(2))
+                                        {
+                                            <span>@source.ItemMapping.Item.ItemName (@(source.Weight?.ToString("P0") ?? "25%")) + </span>
+                                        }
+                                        <span>...</span>
+                                    }
+                                    else if (templateSection.Mapping.AggregationType == "Average")
+                                    {
+                                        <span>Average of @templateSection.Mapping.Sources.Count field values</span>
+                                    }
+                                    else if (templateSection.Mapping.AggregationType == "Sum")
+                                    {
+                                        <span>Sum of @templateSection.Mapping.Sources.Count field values</span>
+                                    }
+                                    else
+                                    {
+                                        <span>Custom aggregation formula</span>
+                                    }
+                                </small>
+                            </div>
+                            <div class="col-md-4 text-end">
+                                <strong class="text-success">Sample: 87.5%</strong>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <button type="button" class="btn btn-outline-info btn-sm btn-edit-section-mapping" 
+                                data-section-id="@templateSection.SectionId" 
+                                data-mapping-id="@templateSection.Mapping.MappingId"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#sectionMappingModal">
+                            <i class="ri-edit-line me-1"></i>Edit Mapping
+                        </button>
+                        <button type="button" class="btn btn-outline-danger btn-sm btn-delete-section-mapping" 
+                                data-section-id="@templateSection.SectionId" 
+                                data-mapping-id="@templateSection.Mapping.MappingId">
+                            <i class="ri-delete-bin-line me-1"></i>Delete Mapping
+                        </button>
+                    </div>
+                }
+                else if (templateSection.CanConfigureSection)
+                {
+                    <!-- Can Configure Section -->
+                    <div class="text-center py-3">
+                        <i class="ri-add-circle-line text-info" style="font-size: 2rem;"></i>
+                        <h6 class="text-info mt-2">Ready to Configure</h6>
+                        <p class="text-muted mb-3">This section has @templateSection.ConfiguredFieldCount configured field mappings that can be aggregated.</p>
+                        <button type="button" class="btn btn-info btn-add-section-mapping" 
+                                data-section-id="@templateSection.SectionId"
+                                data-bs-toggle="modal" 
+                                data-bs-target="#sectionMappingModal">
+                            <i class="ri-add-line me-1"></i>Add Section Mapping
+                        </button>
+                    </div>
+                }
+                else
+                {
+                    <!-- Cannot Configure Section -->
+                    <div class="text-center py-3">
+                        <i class="ri-information-line text-muted" style="font-size: 2rem;"></i>
+                        <h6 class="text-muted mt-2">No Field Mappings</h6>
+                        <p class="text-muted mb-3">
+                            Configure field mappings first before creating section aggregations.
+                        </p>
+                        <a href="#field-level" class="btn btn-outline-primary" data-bs-toggle="pill">
+                            <i class="ri-arrow-left-line me-1"></i>Go to Field Level
+                        </a>
+                    </div>
+                }
+                    </div>
+                </div>
+            </div>
+            sectionIdx++;
+        }
+    </div>
+
+    <!-- Section Mapping Suggestions -->
+    @if (Model.Sections.Any(s => s.CanConfigureSection))
+    {
+        <div class="card border-info">
+            <div class="card-header bg-info-subtle">
+                <h6 class="mb-0 text-info">
+                    <i class="ri-lightbulb-line me-2"></i>Suggested Section Aggregations
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="p-3 border rounded">
+                            <h6 class="text-info">Average Score</h6>
+                            <p class="text-muted small mb-2">Simple average of all field values</p>
+                            <button type="button" class="btn btn-outline-info btn-sm btn-create-suggested" 
+                                    data-suggestion="average-score">
+                                <i class="ri-add-line me-1"></i>Create
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 border rounded">
+                            <h6 class="text-info">Weighted Average</h6>
+                            <p class="text-muted small mb-2">Weighted average based on field importance</p>
+                            <button type="button" class="btn btn-outline-info btn-sm btn-create-suggested" 
+                                    data-suggestion="weighted-average">
+                                <i class="ri-add-line me-1"></i>Create
+                            </button>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="p-3 border rounded">
+                            <h6 class="text-info">Compliance Rate</h6>
+                            <p class="text-muted small mb-2">Percentage of compliant fields</p>
+                            <button type="button" class="btn btn-outline-info btn-sm btn-create-suggested" 
+                                    data-suggestion="compliance-rate">
+                                <i class="ri-add-line me-1"></i>Create
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- Section Mapping Modal -->
+<div class="modal fade" id="sectionMappingModal" tabindex="-1" aria-labelledby="sectionMappingModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="sectionMappingModalLabel">
+                    <i class="ri-layout-grid-line me-2"></i>Configure Section Aggregation
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- Modal content will be loaded dynamically -->
+                <div id="sectionMappingContent">
+                    <div class="text-center py-4">
+                        <div class="spinner-border text-info" role="status">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-info" id="saveSectionMapping">
+                    <i class="ri-save-line me-1"></i>Save Aggregation
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

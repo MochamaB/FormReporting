@@ -598,6 +598,11 @@ namespace FormReporting.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MappingId"));
 
+                    b.Property<string>("AggregationType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
                     b.Property<DateTime>("CreatedDate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -615,12 +620,17 @@ namespace FormReporting.Data.Migrations
                     b.Property<int>("ItemId")
                         .HasColumnType("int");
 
+                    b.Property<string>("MappingName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
                     b.Property<string>("MappingType")
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
 
-                    b.Property<int>("MetricId")
+                    b.Property<int?>("MetricId")
                         .HasColumnType("int");
 
                     b.Property<string>("TransformationLogic")
@@ -633,7 +643,8 @@ namespace FormReporting.Data.Migrations
 
                     b.HasIndex("ItemId", "MetricId")
                         .IsUnique()
-                        .HasDatabaseName("UQ_ItemMetricMap");
+                        .HasDatabaseName("UQ_ItemMetricMap")
+                        .HasFilter("[MetricId] IS NOT NULL");
 
                     b.HasIndex("MappingType", "IsActive")
                         .HasDatabaseName("IX_ItemMetricMap_Type");
@@ -965,6 +976,91 @@ namespace FormReporting.Data.Migrations
 
                             t.HasCheckConstraint("CK_ValidationType", "ValidationType IN ('Required', 'Email', 'Phone', 'URL', 'Range', 'MinLength', 'MaxLength', 'Pattern', 'Custom', 'CrossField', 'Date', 'Number', 'Integer', 'Decimal')");
                         });
+                });
+
+            modelBuilder.Entity("FormReporting.Models.Entities.Forms.FormSectionMetricMapping", b =>
+                {
+                    b.Property<int>("MappingId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MappingId"));
+
+                    b.Property<string>("AggregationType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("MappingName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("MappingType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<int?>("MetricId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SectionId")
+                        .HasColumnType("int");
+
+                    b.HasKey("MappingId");
+
+                    b.HasIndex("MetricId");
+
+                    b.HasIndex("SectionId");
+
+                    b.HasIndex("SectionId", "MappingName")
+                        .IsUnique();
+
+                    b.ToTable("FormSectionMetricMappings");
+                });
+
+            modelBuilder.Entity("FormReporting.Models.Entities.Forms.FormSectionMetricSource", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("ItemMappingId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("SectionMappingId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("Weight")
+                        .HasColumnType("decimal(5,4)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ItemMappingId");
+
+                    b.HasIndex("SectionMappingId");
+
+                    b.HasIndex("SectionMappingId", "ItemMappingId")
+                        .IsUnique();
+
+                    b.ToTable("FormSectionMetricSources");
                 });
 
             modelBuilder.Entity("FormReporting.Models.Entities.Forms.FormTemplate", b =>
@@ -1359,6 +1455,91 @@ namespace FormReporting.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("FormReporting.Models.Entities.Forms.FormTemplateMetricMapping", b =>
+                {
+                    b.Property<int>("MappingId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MappingId"));
+
+                    b.Property<string>("AggregationType")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime>("CreatedDate")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<bool>("IsActive")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("MappingName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("MappingType")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<int?>("MetricId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TemplateId")
+                        .HasColumnType("int");
+
+                    b.HasKey("MappingId");
+
+                    b.HasIndex("MetricId");
+
+                    b.HasIndex("TemplateId");
+
+                    b.HasIndex("TemplateId", "MappingName")
+                        .IsUnique();
+
+                    b.ToTable("FormTemplateMetricMappings");
+                });
+
+            modelBuilder.Entity("FormReporting.Models.Entities.Forms.FormTemplateMetricSource", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("DisplayOrder")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(0);
+
+                    b.Property<int>("SectionMappingId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("TemplateMappingId")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("Weight")
+                        .HasColumnType("decimal(5,4)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SectionMappingId");
+
+                    b.HasIndex("TemplateMappingId");
+
+                    b.HasIndex("TemplateMappingId", "SectionMappingId")
+                        .IsUnique();
+
+                    b.ToTable("FormTemplateMetricSources");
+                });
+
             modelBuilder.Entity("FormReporting.Models.Entities.Forms.FormTemplateResponse", b =>
                 {
                     b.Property<long>("ResponseId")
@@ -1709,7 +1890,7 @@ namespace FormReporting.Data.Migrations
                     b.Property<int>("MappingId")
                         .HasColumnType("int");
 
-                    b.Property<int>("MetricId")
+                    b.Property<int?>("MetricId")
                         .HasColumnType("int");
 
                     b.Property<int?>("PopulatedBy")
@@ -3499,6 +3680,9 @@ namespace FormReporting.Data.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("nvarchar(100)");
 
+                    b.Property<int?>("HierarchyLevel")
+                        .HasColumnType("int");
+
                     b.Property<bool>("IsActive")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("bit")
@@ -3518,6 +3702,13 @@ namespace FormReporting.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(200)
                         .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("MetricScope")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<int?>("ParentMetricId")
+                        .HasColumnType("int");
 
                     b.Property<string>("SourceType")
                         .IsRequired()
@@ -3541,6 +3732,8 @@ namespace FormReporting.Data.Migrations
 
                     b.HasIndex("MetricCode")
                         .IsUnique();
+
+                    b.HasIndex("ParentMetricId");
 
                     b.HasIndex("SourceType", "IsActive")
                         .HasDatabaseName("IX_Metrics_SourceType");
@@ -3638,14 +3831,21 @@ namespace FormReporting.Data.Migrations
                         .HasColumnType("datetime2")
                         .HasDefaultValueSql("GETDATE()");
 
-                    b.Property<int>("MetricId")
+                    b.Property<int?>("MetricId")
                         .HasColumnType("int");
+
+                    b.Property<string>("MetricScope")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<decimal?>("NumericValue")
                         .HasColumnType("decimal(18,4)");
 
                     b.Property<DateTime>("ReportingPeriod")
                         .HasColumnType("date");
+
+                    b.Property<int?>("SourceMappingId")
+                        .HasColumnType("int");
 
                     b.Property<int?>("SourceReferenceId")
                         .HasColumnType("int");
@@ -3682,7 +3882,8 @@ namespace FormReporting.Data.Migrations
                     b.HasIndex("TenantId", "MetricId", "ReportingPeriod")
                         .IsUnique()
                         .IsDescending(false, false, true)
-                        .HasDatabaseName("IX_TenantMetrics_Tenant");
+                        .HasDatabaseName("IX_TenantMetrics_Tenant")
+                        .HasFilter("[MetricId] IS NOT NULL");
 
                     b.ToTable("TenantMetrics", t =>
                         {
@@ -4673,62 +4874,6 @@ namespace FormReporting.Data.Migrations
                     b.ToTable("TenantGroupMembers", (string)null);
                 });
 
-            modelBuilder.Entity("FormReporting.Models.Entities.Reporting.RegionalMonthlySnapshot", b =>
-                {
-                    b.Property<long>("SnapshotId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("SnapshotId"));
-
-                    b.Property<decimal?>("AvgComplianceScore")
-                        .HasColumnType("decimal(5,2)");
-
-                    b.Property<decimal?>("AvgResolutionDays")
-                        .HasColumnType("decimal(5,2)");
-
-                    b.Property<int>("FaultyDevices")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("LastUpdated")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("OpenTickets")
-                        .HasColumnType("int");
-
-                    b.Property<int>("RegionId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ResolvedTickets")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TotalDevices")
-                        .HasColumnType("int");
-
-                    b.Property<decimal?>("TotalExpenses")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<int>("TotalFactories")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TotalTickets")
-                        .HasColumnType("int");
-
-                    b.Property<int>("WorkingDevices")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("YearMonth")
-                        .HasColumnType("date");
-
-                    b.HasKey("SnapshotId");
-
-                    b.HasIndex("RegionId", "YearMonth")
-                        .IsUnique()
-                        .HasDatabaseName("UQ_RegionMonth");
-
-                    b.ToTable("RegionalMonthlySnapshot");
-                });
-
             modelBuilder.Entity("FormReporting.Models.Entities.Reporting.ReportAccessControl", b =>
                 {
                     b.Property<int>("AccessId")
@@ -5097,6 +5242,9 @@ namespace FormReporting.Data.Migrations
                     b.Property<int>("DisplayOrder")
                         .HasColumnType("int");
 
+                    b.Property<bool>("DrillDownEnabled")
+                        .HasColumnType("bit");
+
                     b.Property<string>("FormatString")
                         .HasMaxLength(50)
                         .HasColumnType("nvarchar(50)");
@@ -5109,6 +5257,10 @@ namespace FormReporting.Data.Migrations
 
                     b.Property<int?>("MetricId")
                         .HasColumnType("int");
+
+                    b.Property<string>("MetricScope")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<int>("ReportId")
                         .HasColumnType("int");
@@ -5424,84 +5576,6 @@ namespace FormReporting.Data.Migrations
                     b.ToTable("ReportSorting", t =>
                         {
                             t.HasCheckConstraint("CK_ReportSort_Direction", "[SortDirection] IN ('ASC', 'DESC')");
-                        });
-                });
-
-            modelBuilder.Entity("FormReporting.Models.Entities.Reporting.TenantPerformanceSnapshot", b =>
-                {
-                    b.Property<long>("SnapshotId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("SnapshotId"));
-
-                    b.Property<decimal?>("ComplianceScore")
-                        .HasColumnType("decimal(5,2)");
-
-                    b.Property<int>("DataVersion")
-                        .HasColumnType("int");
-
-                    b.Property<int>("FaultyDevices")
-                        .HasColumnType("int");
-
-                    b.Property<string>("GeneratedBy")
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<DateTime>("GeneratedDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("MetricsData")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<int>("OpenTickets")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("SnapshotDate")
-                        .HasColumnType("date");
-
-                    b.Property<string>("SnapshotType")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<int>("TenantId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("TotalDevices")
-                        .HasColumnType("int");
-
-                    b.Property<decimal?>("TotalExpenses")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("UptimePercent")
-                        .HasColumnType("decimal(5,2)");
-
-                    b.Property<int>("WorkingDevices")
-                        .HasColumnType("int");
-
-                    b.HasKey("SnapshotId");
-
-                    b.HasIndex("GeneratedDate")
-                        .IsDescending()
-                        .HasDatabaseName("IX_PerfSnapshot_Generated");
-
-                    b.HasIndex("SnapshotType", "SnapshotDate")
-                        .IsDescending(false, true)
-                        .HasDatabaseName("IX_PerfSnapshot_Type_Date");
-
-                    b.HasIndex("TenantId", "SnapshotDate")
-                        .IsDescending(false, true)
-                        .HasDatabaseName("IX_PerfSnapshot_Tenant_Date");
-
-                    b.HasIndex("TenantId", "SnapshotDate", "SnapshotType")
-                        .IsUnique()
-                        .HasDatabaseName("UQ_PerfSnapshot");
-
-                    b.ToTable("TenantPerformanceSnapshot", t =>
-                        {
-                            t.HasCheckConstraint("CK_SnapshotType", "[SnapshotType] IN ('Daily', 'Weekly', 'Monthly', 'Quarterly')");
                         });
                 });
 
@@ -6418,8 +6492,7 @@ namespace FormReporting.Data.Migrations
                     b.HasOne("FormReporting.Models.Entities.Metrics.MetricDefinition", "Metric")
                         .WithMany("FormItemMetricMappings")
                         .HasForeignKey("MetricId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Item");
 
@@ -6488,6 +6561,43 @@ namespace FormReporting.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Item");
+                });
+
+            modelBuilder.Entity("FormReporting.Models.Entities.Forms.FormSectionMetricMapping", b =>
+                {
+                    b.HasOne("FormReporting.Models.Entities.Metrics.MetricDefinition", "Metric")
+                        .WithMany()
+                        .HasForeignKey("MetricId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("FormReporting.Models.Entities.Forms.FormTemplateSection", "Section")
+                        .WithMany()
+                        .HasForeignKey("SectionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Metric");
+
+                    b.Navigation("Section");
+                });
+
+            modelBuilder.Entity("FormReporting.Models.Entities.Forms.FormSectionMetricSource", b =>
+                {
+                    b.HasOne("FormReporting.Models.Entities.Forms.FormItemMetricMapping", "ItemMapping")
+                        .WithMany()
+                        .HasForeignKey("ItemMappingId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("FormReporting.Models.Entities.Forms.FormSectionMetricMapping", "SectionMapping")
+                        .WithMany("Sources")
+                        .HasForeignKey("SectionMappingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ItemMapping");
+
+                    b.Navigation("SectionMapping");
                 });
 
             modelBuilder.Entity("FormReporting.Models.Entities.Forms.FormTemplate", b =>
@@ -6631,6 +6741,43 @@ namespace FormReporting.Data.Migrations
                     b.Navigation("Template");
                 });
 
+            modelBuilder.Entity("FormReporting.Models.Entities.Forms.FormTemplateMetricMapping", b =>
+                {
+                    b.HasOne("FormReporting.Models.Entities.Metrics.MetricDefinition", "Metric")
+                        .WithMany()
+                        .HasForeignKey("MetricId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.HasOne("FormReporting.Models.Entities.Forms.FormTemplate", "Template")
+                        .WithMany()
+                        .HasForeignKey("TemplateId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Metric");
+
+                    b.Navigation("Template");
+                });
+
+            modelBuilder.Entity("FormReporting.Models.Entities.Forms.FormTemplateMetricSource", b =>
+                {
+                    b.HasOne("FormReporting.Models.Entities.Forms.FormSectionMetricMapping", "SectionMapping")
+                        .WithMany()
+                        .HasForeignKey("SectionMappingId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("FormReporting.Models.Entities.Forms.FormTemplateMetricMapping", "TemplateMapping")
+                        .WithMany("Sources")
+                        .HasForeignKey("TemplateMappingId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("SectionMapping");
+
+                    b.Navigation("TemplateMapping");
+                });
+
             modelBuilder.Entity("FormReporting.Models.Entities.Forms.FormTemplateResponse", b =>
                 {
                     b.HasOne("FormReporting.Models.Entities.Forms.FormTemplateItem", "Item")
@@ -6745,8 +6892,7 @@ namespace FormReporting.Data.Migrations
                     b.HasOne("FormReporting.Models.Entities.Metrics.MetricDefinition", "Metric")
                         .WithMany()
                         .HasForeignKey("MetricId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("FormReporting.Models.Entities.Identity.User", "PopulatedByUser")
                         .WithMany()
@@ -7256,6 +7402,15 @@ namespace FormReporting.Data.Migrations
                     b.Navigation("Uploader");
                 });
 
+            modelBuilder.Entity("FormReporting.Models.Entities.Metrics.MetricDefinition", b =>
+                {
+                    b.HasOne("FormReporting.Models.Entities.Metrics.MetricDefinition", "ParentMetric")
+                        .WithMany("ChildMetrics")
+                        .HasForeignKey("ParentMetricId");
+
+                    b.Navigation("ParentMetric");
+                });
+
             modelBuilder.Entity("FormReporting.Models.Entities.Metrics.SystemMetricLog", b =>
                 {
                     b.HasOne("FormReporting.Models.Entities.Metrics.MetricDefinition", "MetricDefinition")
@@ -7280,8 +7435,7 @@ namespace FormReporting.Data.Migrations
                     b.HasOne("FormReporting.Models.Entities.Metrics.MetricDefinition", "MetricDefinition")
                         .WithMany("TenantMetrics")
                         .HasForeignKey("MetricId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("FormReporting.Models.Entities.Organizational.Tenant", "Tenant")
                         .WithMany()
@@ -7564,17 +7718,6 @@ namespace FormReporting.Data.Migrations
                     b.Navigation("TenantGroup");
                 });
 
-            modelBuilder.Entity("FormReporting.Models.Entities.Reporting.RegionalMonthlySnapshot", b =>
-                {
-                    b.HasOne("FormReporting.Models.Entities.Organizational.Region", "Region")
-                        .WithMany()
-                        .HasForeignKey("RegionId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Region");
-                });
-
             modelBuilder.Entity("FormReporting.Models.Entities.Reporting.ReportAccessControl", b =>
                 {
                     b.HasOne("FormReporting.Models.Entities.Organizational.Department", "Department")
@@ -7802,17 +7945,6 @@ namespace FormReporting.Data.Migrations
                     b.Navigation("Metric");
 
                     b.Navigation("Report");
-                });
-
-            modelBuilder.Entity("FormReporting.Models.Entities.Reporting.TenantPerformanceSnapshot", b =>
-                {
-                    b.HasOne("FormReporting.Models.Entities.Organizational.Tenant", "Tenant")
-                        .WithMany()
-                        .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Tenant");
                 });
 
             modelBuilder.Entity("FormReporting.Models.Entities.Software.SoftwareInstallationHistory", b =>
@@ -8044,6 +8176,11 @@ namespace FormReporting.Data.Migrations
                     b.Navigation("Items");
                 });
 
+            modelBuilder.Entity("FormReporting.Models.Entities.Forms.FormSectionMetricMapping", b =>
+                {
+                    b.Navigation("Sources");
+                });
+
             modelBuilder.Entity("FormReporting.Models.Entities.Forms.FormTemplate", b =>
                 {
                     b.Navigation("Analytics");
@@ -8074,6 +8211,11 @@ namespace FormReporting.Data.Migrations
                     b.Navigation("Routings");
 
                     b.Navigation("Validations");
+                });
+
+            modelBuilder.Entity("FormReporting.Models.Entities.Forms.FormTemplateMetricMapping", b =>
+                {
+                    b.Navigation("Sources");
                 });
 
             modelBuilder.Entity("FormReporting.Models.Entities.Forms.FormTemplateSection", b =>
@@ -8191,6 +8333,8 @@ namespace FormReporting.Data.Migrations
 
             modelBuilder.Entity("FormReporting.Models.Entities.Metrics.MetricDefinition", b =>
                 {
+                    b.Navigation("ChildMetrics");
+
                     b.Navigation("FormItemMetricMappings");
 
                     b.Navigation("SystemMetricLogs");
