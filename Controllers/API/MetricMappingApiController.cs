@@ -189,15 +189,21 @@ namespace FormReporting.Controllers.API
             try
             {
                 var metrics = await _context.MetricDefinitions
+                    .Include(m => m.SubCategory)
+                        .ThenInclude(sc => sc.Category)
                     .Where(m => m.IsActive)
-                    .OrderBy(m => m.Category)
+                    .OrderBy(m => m.SubCategory.Category.CategoryName)
+                    .ThenBy(m => m.SubCategory.SubCategoryName)
                     .ThenBy(m => m.MetricName)
                     .Select(m => new
                     {
                         metricId = m.MetricId,
                         metricCode = m.MetricCode,
                         metricName = m.MetricName,
-                        category = m.Category,
+                        subCategoryId = m.SubCategoryId,
+                        subCategoryName = m.SubCategory.SubCategoryName,
+                        categoryId = m.SubCategory.CategoryId,
+                        categoryName = m.SubCategory.Category.CategoryName,
                         dataType = m.DataType,
                         unit = m.Unit,
                         sourceType = m.SourceType,
@@ -265,17 +271,23 @@ namespace FormReporting.Controllers.API
 
                 // Get compatible metrics based on field type and hierarchy
                 var metrics = await _context.MetricDefinitions
+                    .Include(m => m.SubCategory)
+                        .ThenInclude(sc => sc.Category)
                     .Where(m => m.IsActive && 
                                m.MetricScope == "Field" && 
                                m.SourceType == "UserInput")
-                    .OrderBy(m => m.Category)
+                    .OrderBy(m => m.SubCategory.Category.CategoryName)
+                    .ThenBy(m => m.SubCategory.SubCategoryName)
                     .ThenBy(m => m.MetricName)
                     .Select(m => new
                     {
                         metricId = m.MetricId,
                         metricCode = m.MetricCode,
                         metricName = m.MetricName,
-                        category = m.Category,
+                        subCategoryId = m.SubCategoryId,
+                        subCategoryName = m.SubCategory.SubCategoryName,
+                        categoryId = m.SubCategory.CategoryId,
+                        categoryName = m.SubCategory.Category.CategoryName,
                         dataType = m.DataType,
                         unit = m.Unit,
                         description = m.Description,
@@ -387,8 +399,8 @@ namespace FormReporting.Controllers.API
                     MetricName = dto.MetricName,
                     Description = dto.Description,
                     DataType = dto.DataType ?? "Decimal",
-                    Unit = dto.Unit,
-                    Category = dto.Category ?? "Performance",
+                    UnitId = dto.UnitId,
+                    SubCategoryId = dto.SubCategoryId,
                     MetricScope = "Field", // Always Field for field mappings
                     SourceType = "UserInput", // Always UserInput for field mappings
                     HierarchyLevel = 0, // Field level is 0
@@ -411,9 +423,9 @@ namespace FormReporting.Controllers.API
                         metricId = metric.MetricId,
                         metricCode = metric.MetricCode,
                         metricName = metric.MetricName,
-                        category = metric.Category,
+                        subCategoryId = metric.SubCategoryId,
                         dataType = metric.DataType,
-                        unit = metric.Unit
+                        unitId = metric.UnitId
                     }
                 });
             }
@@ -883,7 +895,6 @@ namespace FormReporting.Controllers.API
                     mapping.MetricId = dto.MetricId;
                     mapping.MappingName = dto.MappingName;
                     mapping.MappingType = dto.MappingType;
-                    mapping.AggregationType = dto.AggregationType ?? "Direct";
                     mapping.TransformationLogic = dto.TransformationLogic;
                     mapping.ExpectedValue = dto.ExpectedValue;
                     // Note: FormItemMetricMapping doesn't have ModifiedDate property
@@ -897,7 +908,6 @@ namespace FormReporting.Controllers.API
                         MetricId = dto.MetricId,
                         MappingName = dto.MappingName,
                         MappingType = dto.MappingType,
-                        AggregationType = dto.AggregationType ?? "Direct",
                         TransformationLogic = dto.TransformationLogic,
                         ExpectedValue = dto.ExpectedValue,
                         IsActive = true,

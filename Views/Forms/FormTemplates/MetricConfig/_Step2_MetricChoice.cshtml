@@ -250,11 +250,11 @@
                                     var isSelected = existingMapping?.MetricId == metric.MetricId;
                                     if (isSelected)
                                     {
-                                        <option value="@metric.MetricId" data-category="@metric.Category" data-description="@metric.Description" selected>@metric.MetricName (@metric.MetricCode)</option>
+                                        <option value="@metric.MetricId" data-category="@metric.CategoryName" data-description="@metric.Description" selected>@metric.MetricName (@metric.MetricCode)</option>
                                     }
                                     else
                                     {
-                                        <option value="@metric.MetricId" data-category="@metric.Category" data-description="@metric.Description">@metric.MetricName (@metric.MetricCode)</option>
+                                        <option value="@metric.MetricId" data-category="@metric.CategoryName" data-description="@metric.Description">@metric.MetricName (@metric.MetricCode)</option>
                                     }
                                 }
                             </select>

@@ -1,0 +1,237 @@
+@model FormReporting.Models.ViewModels.Metrics.SectionMappingWizardViewModel
+
+@{
+    var existingMapping = Model.ExistingMapping;
+}
+
+<!-- Source Selection Step -->
+<div class="source-selection-step">
+    @if (Model.HasFieldMappings)
+    {
+        <div class="mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <h6 class="mb-1">Select Field Mappings to Include</h6>
+                    <small class="text-muted">Choose which field mappings should be aggregated in this section metric.</small>
+                </div>
+                <div>
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="selectAllSources">
+                        <i class="ri-checkbox-multiple-line me-1"></i>Select All
+                    </button>
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="deselectAllSources">
+                        <i class="ri-checkbox-blank-line me-1"></i>Deselect All
+                    </button>
+                </div>
+            </div>
+
+            <!-- Source List -->
+            <div class="list-group" id="sources-list">
+                @for (int i = 0; i < Model.AvailableFieldMappings.Count; i++)
+                {
+                    var mapping = Model.AvailableFieldMappings[i];
+                    var isChecked = mapping.IsSelected;
+                    var weight = mapping.Weight ?? (1.0m / Model.AvailableFieldMappings.Count);
+                    
+                    <div class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col-auto">
+                                <div class="form-check">
+                                    <input class="form-check-input source-checkbox" 
+                                           type="checkbox" 
+                                           name="SelectedSources"
+                                           value="@mapping.MappingId"
+                                           id="source_@mapping.MappingId"
+                                           data-index="@i"
+                                           @(isChecked ? "checked" : "") />
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="d-flex align-items-center">
+                                    <i class="ri-focus-3-line text-primary me-2"></i>
+                                    <div>
+                                        <strong>@mapping.ItemName</strong>
+                                        @if (!string.IsNullOrEmpty(mapping.ItemCode))
+                                        {
+                                            <span class="badge bg-secondary-subtle text-secondary ms-1">@mapping.ItemCode</span>
+                                        }
+                                        <br />
+                                        <small class="text-muted">
+                                            @mapping.MappingType • @mapping.AggregationType
+                                            @if (!string.IsNullOrEmpty(mapping.MetricName))
+                                            {
+                                                <span>• Linked to: @mapping.MetricName</span>
+                                            }
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-auto">
+                                <span class="badge bg-info-subtle text-info">@mapping.DataType</span>
+                            </div>
+                            <div class="col-md-2 weight-input-group d-none">
+                                <div class="input-group input-group-sm">
+                                    <input type="number" 
+                                           class="form-control weight-input" 
+                                           name="Sources[@i].Weight"
+                                           value="@weight.ToString("0.00")"
+                                           min="0" 
+                                           max="1" 
+                                           step="0.01"
+                                           placeholder="Weight" />
+                                    <span class="input-group-text">%</span>
+                                </div>
+                                <input type="hidden" name="Sources[@i].ItemMappingId" value="@mapping.MappingId" />
+                                <input type="hidden" name="Sources[@i].DisplayOrder" value="@i" />
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+
+            <!-- Weight Info (shown for WeightedAverage) -->
+            <div class="alert alert-info mt-3 d-none" id="weightInfoAlert">
+                <i class="ri-scales-3-line me-2"></i>
+                <strong>Weighted Average:</strong> Assign weights to each source. Weights should sum to 1.0 (100%).
+                <button type="button" class="btn btn-sm btn-outline-info ms-2" id="distributeWeightsEvenly">
+                    Distribute Evenly
+                </button>
+            </div>
+
+            <!-- Selection Summary -->
+            <div class="card border-primary mt-3">
+                <div class="card-body py-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <span>
+                            <i class="ri-checkbox-circle-line text-primary me-2"></i>
+                            <strong id="selectedCount">0</strong> of @Model.TotalFieldMappings field mappings selected
+                        </span>
+                        <span class="badge bg-primary" id="totalWeightBadge" style="display: none;">
+                            Total Weight: <span id="totalWeight">0.00</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <!-- No Field Mappings Available -->
+        <div class="text-center py-5">
+            <i class="ri-inbox-line text-muted" style="font-size: 4rem;"></i>
+            <h5 class="text-muted mt-3">No Field Mappings Available</h5>
+            <p class="text-muted mb-4">
+                This section doesn't have any configured field mappings yet.<br />
+                You can still create a section mapping, but it won't aggregate any data.
+            </p>
+            <a href="@Url.Action("Index", "MetricMapping", new { templateId = Model.TemplateId })" 
+               class="btn btn-outline-primary">
+                <i class="ri-arrow-left-line me-1"></i>Go Back and Configure Fields First
+            </a>
+        </div>
+    }
+</div>
+
+<script>
+(function() {
+    const sourceCheckboxes = document.querySelectorAll('.source-checkbox');
+    const selectAllBtn = document.getElementById('selectAllSources');
+    const deselectAllBtn = document.getElementById('deselectAllSources');
+    const selectedCountEl = document.getElementById('selectedCount');
+    const weightInputGroups = document.querySelectorAll('.weight-input-group');
+    const weightInfoAlert = document.getElementById('weightInfoAlert');
+    const totalWeightBadge = document.getElementById('totalWeightBadge');
+    const totalWeightEl = document.getElementById('totalWeight');
+    const distributeBtn = document.getElementById('distributeWeightsEvenly');
+    const aggregationTypeSelect = document.getElementById('AggregationType');
+
+    function updateSelectedCount() {
+        const checkedCount = document.querySelectorAll('.source-checkbox:checked').length;
+        if (selectedCountEl) {
+            selectedCountEl.textContent = checkedCount;
+        }
+    }
+
+    function updateTotalWeight() {
+        let total = 0;
+        document.querySelectorAll('.source-checkbox:checked').forEach(checkbox => {
+            const row = checkbox.closest('.list-group-item');
+            const weightInput = row.querySelector('.weight-input');
+            if (weightInput) {
+                total += parseFloat(weightInput.value) || 0;
+            }
+        });
+        if (totalWeightEl) {
+            totalWeightEl.textContent = total.toFixed(2);
+        }
+    }
+
+    function toggleWeightInputs(show) {
+        weightInputGroups.forEach(group => {
+            group.classList.toggle('d-none', !show);
+        });
+        if (weightInfoAlert) {
+            weightInfoAlert.classList.toggle('d-none', !show);
+        }
+        if (totalWeightBadge) {
+            totalWeightBadge.style.display = show ? 'inline-block' : 'none';
+        }
+        if (show) {
+            updateTotalWeight();
+        }
+    }
+
+    function distributeWeightsEvenly() {
+        const checkedBoxes = document.querySelectorAll('.source-checkbox:checked');
+        const count = checkedBoxes.length;
+        if (count === 0) return;
+
+        const evenWeight = (1 / count).toFixed(2);
+        checkedBoxes.forEach(checkbox => {
+            const row = checkbox.closest('.list-group-item');
+            const weightInput = row.querySelector('.weight-input');
+            if (weightInput) {
+                weightInput.value = evenWeight;
+            }
+        });
+        updateTotalWeight();
+    }
+
+    // Event listeners
+    sourceCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            updateSelectedCount();
+            updateTotalWeight();
+        });
+    });
+
+    selectAllBtn?.addEventListener('click', function() {
+        sourceCheckboxes.forEach(cb => cb.checked = true);
+        updateSelectedCount();
+        updateTotalWeight();
+    });
+
+    deselectAllBtn?.addEventListener('click', function() {
+        sourceCheckboxes.forEach(cb => cb.checked = false);
+        updateSelectedCount();
+        updateTotalWeight();
+    });
+
+    distributeBtn?.addEventListener('click', distributeWeightsEvenly);
+
+    document.querySelectorAll('.weight-input').forEach(input => {
+        input.addEventListener('input', updateTotalWeight);
+    });
+
+    // Check aggregation type on load and when changed
+    function checkAggregationType() {
+        const isWeightedAverage = aggregationTypeSelect?.value === 'WeightedAverage';
+        toggleWeightInputs(isWeightedAverage);
+    }
+
+    aggregationTypeSelect?.addEventListener('change', checkAggregationType);
+
+    // Initial state
+    updateSelectedCount();
+    checkAggregationType();
+})();
+</script>

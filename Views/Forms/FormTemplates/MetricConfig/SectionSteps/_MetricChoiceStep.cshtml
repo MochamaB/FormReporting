@@ -1,0 +1,291 @@
+@model FormReporting.Models.ViewModels.Metrics.SectionMappingWizardViewModel
+
+@{
+    var existingMapping = Model.ExistingMapping;
+    var defaultOption = existingMapping?.MetricId != null ? "link-existing" : "standalone";
+}
+
+<!-- Metric Choice Step -->
+<div class="metric-choice-step">
+    <!-- Metric Option Selector -->
+    <div class="mb-4">
+        <label for="MetricOption" class="form-label">
+            How would you like to handle the metric? <span class="text-danger">*</span>
+        </label>
+        <select class="form-select" id="MetricOption" name="MetricOption" required>
+            <option value="standalone" selected="@(defaultOption == "standalone")">
+                Standalone - Track without linking to a metric definition
+            </option>
+            <option value="create-new">
+                Create New - Create a new metric definition for this mapping
+            </option>
+            <option value="link-existing" selected="@(defaultOption == "link-existing")">
+                Link Existing - Connect to an existing metric definition
+            </option>
+        </select>
+        <small class="text-muted">Choose how this section aggregation relates to metric definitions.</small>
+    </div>
+
+    <!-- Option Content Sections -->
+    
+    <!-- Standalone Content -->
+    <div id="standaloneContent" class="metric-option-content @(defaultOption != "standalone" ? "d-none" : "")">
+        <div class="alert alert-light">
+            <div class="d-flex">
+                <i class="ri-checkbox-circle-line text-success me-3 fs-20"></i>
+                <div>
+                    <h6 class="mb-1">Standalone Mapping</h6>
+                    <p class="mb-0 text-muted small">
+                        This section aggregation will be tracked independently without linking to a global metric definition.
+                        You can always link it to a metric later.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Create New Content -->
+    <div id="createNewContent" class="metric-option-content d-none">
+        <div class="card border-primary">
+            <div class="card-header bg-primary-subtle">
+                <h6 class="mb-0 text-primary">
+                    <i class="ri-add-circle-line me-2"></i>Create New Metric Definition
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="NewMetricName" class="form-label">Metric Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="NewMetricName" name="NewMetricName" 
+                                   placeholder="e.g., Section Performance Score" />
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="NewMetricCode" class="form-label">Metric Code</label>
+                            <input type="text" class="form-control" id="NewMetricCode" name="NewMetricCode" 
+                                   placeholder="Auto-generated if empty" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label for="NewMetricDescription" class="form-label">Description</label>
+                    <textarea class="form-control" id="NewMetricDescription" name="NewMetricDescription" 
+                              rows="2" placeholder="Describe what this metric measures..."></textarea>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="NewMetricCategory" class="form-label">Category</label>
+                            <select class="form-select" id="NewMetricCategory" name="NewMetricCategory">
+                                <option value="Performance">Performance</option>
+                                <option value="Quality">Quality</option>
+                                <option value="Compliance">Compliance</option>
+                                <option value="Efficiency">Efficiency</option>
+                                <option value="Safety">Safety</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="NewMetricDataType" class="form-label">Data Type</label>
+                            <select class="form-select" id="NewMetricDataType" name="NewMetricDataType">
+                                <option value="Decimal">Decimal</option>
+                                <option value="Integer">Integer</option>
+                                <option value="Percentage">Percentage</option>
+                                <option value="Currency">Currency</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="NewMetricUnit" class="form-label">Unit</label>
+                            <input type="text" class="form-control" id="NewMetricUnit" name="NewMetricUnit" 
+                                   value="Score" placeholder="e.g., Score, %, Points" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI and Aggregation -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="NewMetricIsKPI" name="NewMetricIsKPI" value="true" />
+                                <label class="form-check-label" for="NewMetricIsKPI">
+                                    <strong>Track as KPI</strong>
+                                </label>
+                            </div>
+                            <small class="text-muted">Enable to track this metric as a Key Performance Indicator with thresholds.</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="NewMetricAggregationType" class="form-label">Aggregation Type</label>
+                            <select class="form-select" id="NewMetricAggregationType" name="NewMetricAggregationType">
+                                <option value="">Use mapping aggregation type</option>
+                                <option value="Sum">Sum</option>
+                                <option value="Average">Average</option>
+                                <option value="Count">Count</option>
+                                <option value="Min">Min</option>
+                                <option value="Max">Max</option>
+                                <option value="Latest">Latest</option>
+                                <option value="Percentage">Percentage</option>
+                            </select>
+                            <small class="text-muted">How to aggregate values across submissions.</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Thresholds -->
+                <div id="thresholdSection">
+                    <h6 class="text-muted mb-3">
+                        <i class="ri-dashboard-line me-1"></i>KPI Thresholds (Optional)
+                    </h6>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="NewMetricGreen" class="form-label">
+                                    <span class="badge bg-success me-1">Green</span> Threshold
+                                </label>
+                                <input type="number" class="form-control" id="NewMetricGreen" name="NewMetricGreen" 
+                                       step="0.01" placeholder="e.g., 80" />
+                                <small class="text-muted">Value >= this is good</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="NewMetricYellow" class="form-label">
+                                    <span class="badge bg-warning me-1">Yellow</span> Threshold
+                                </label>
+                                <input type="number" class="form-control" id="NewMetricYellow" name="NewMetricYellow" 
+                                       step="0.01" placeholder="e.g., 60" />
+                                <small class="text-muted">Value >= this is warning</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="NewMetricRed" class="form-label">
+                                    <span class="badge bg-danger me-1">Red</span> Threshold
+                                </label>
+                                <input type="number" class="form-control" id="NewMetricRed" name="NewMetricRed" 
+                                       step="0.01" placeholder="e.g., 40" />
+                                <small class="text-muted">Value < this is critical</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Link Existing Content -->
+    <div id="linkExistingContent" class="metric-option-content @(defaultOption != "link-existing" ? "d-none" : "")">
+        <div class="card border-info">
+            <div class="card-header bg-info-subtle">
+                <h6 class="mb-0 text-info">
+                    <i class="ri-link me-2"></i>Link to Existing Metric
+                </h6>
+            </div>
+            <div class="card-body">
+                @if (Model.CompatibleMetrics.Any())
+                {
+                    <div class="mb-3">
+                        <label for="MetricId" class="form-label">Select Metric <span class="text-danger">*</span></label>
+                        <select class="form-select" id="MetricId" name="MetricId">
+                            <option value="">Choose a metric...</option>
+                            @foreach (var metric in Model.CompatibleMetrics)
+                            {
+                                var isSelected = existingMapping?.MetricId == metric.MetricId;
+                                <option value="@metric.MetricId" 
+                                        data-category="@metric.CategoryName"
+                                        data-description="@metric.Description"
+                                        data-unit="@metric.UnitName"
+                                        selected="@isSelected">
+                                    @metric.MetricName (@metric.MetricCode)
+                                </option>
+                            }
+                        </select>
+                    </div>
+
+                    <!-- Selected Metric Details -->
+                    <div id="selectedMetricDetails" class="@(existingMapping?.MetricId == null ? "d-none" : "")">
+                        <div class="alert alert-light mb-0">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    <small class="text-muted">Category</small>
+                                    <div id="selectedMetricCategory" class="fw-medium">@(existingMapping?.MetricName ?? "-")</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted">Unit</small>
+                                    <div id="selectedMetricUnit" class="fw-medium">-</div>
+                                </div>
+                                <div class="col-md-4">
+                                    <small class="text-muted">Description</small>
+                                    <div id="selectedMetricDescription" class="fw-medium small">-</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="alert alert-warning mb-0">
+                        <i class="ri-alert-line me-2"></i>
+                        No compatible metrics available. You can create a new metric instead.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    const metricSelect = document.getElementById('MetricId');
+    const detailsDiv = document.getElementById('selectedMetricDetails');
+
+    metricSelect?.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        if (selectedOption.value) {
+            document.getElementById('selectedMetricCategory').textContent = selectedOption.getAttribute('data-category') || '-';
+            document.getElementById('selectedMetricUnit').textContent = selectedOption.getAttribute('data-unit') || '-';
+            document.getElementById('selectedMetricDescription').textContent = selectedOption.getAttribute('data-description') || '-';
+            detailsDiv?.classList.remove('d-none');
+        } else {
+            detailsDiv?.classList.add('d-none');
+        }
+    });
+
+    // Auto-generate metric name and code based on section name
+    const metricOption = document.getElementById('MetricOption');
+    metricOption?.addEventListener('change', function() {
+        if (this.value === 'create-new') {
+            const sectionName = '@Model.SectionName';
+            const nameInput = document.getElementById('NewMetricName');
+            const codeInput = document.getElementById('NewMetricCode');
+            
+            if (!nameInput.value) {
+                nameInput.value = sectionName + ' Performance Index';
+            }
+            if (!codeInput.value) {
+                codeInput.value = sectionName.toUpperCase().replace(/\s+/g, '_') + '_SECTION_@Model.TemplateId';
+            }
+        }
+    });
+
+    // Auto-generate code when name changes
+    document.getElementById('NewMetricName')?.addEventListener('input', function() {
+        const code = this.value
+            .toUpperCase()
+            .replace(/[^A-Z0-9\s]/g, '')
+            .replace(/\s+/g, '_')
+            .substring(0, 30) + '_SECTION_@Model.TemplateId';
+        document.getElementById('NewMetricCode').value = code;
+    });
+})();
+</script>

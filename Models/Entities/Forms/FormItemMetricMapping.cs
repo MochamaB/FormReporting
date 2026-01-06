@@ -23,22 +23,24 @@ namespace FormReporting.Models.Entities.Forms
         [StringLength(100)]
         public string MappingName { get; set; } = string.Empty;
 
-        // Mapping types
-        [Required]
-        [StringLength(30)]
-        public string MappingType { get; set; } = string.Empty; // 'Direct', 'Calculated', 'BinaryCompliance', 'Derived'
-
-        // Aggregation type
+        // === MAPPING LOGIC ===
         [Required]
         [StringLength(20)]
-        public string AggregationType { get; set; } = string.Empty; // Direct, Sum, Count, Avg
+        public string MappingType { get; set; } = "Direct"; // Direct, Calculated, Derived
 
-        // For calculated metrics (e.g., availability% = operational/total * 100)
-        public string? TransformationLogic { get; set; } // JSON: {"formula": "(item21 / item20) * 100", "items": [21, 20]}
+        [Required]
+        [StringLength(20)]
+        public string OutputType { get; set; } = "Raw"; // Raw, Percentage, Normalized
 
-        // For binary compliance metrics (e.g., Is LAN working? Expected: Yes)
+        // === TRANSFORMATION ===
+        public string? TransformationLogic { get; set; } // JSON for Calculated/Derived mappings
+
+        // === EXPECTED VALUE COMPARISON (replaces Binary) ===
         [StringLength(100)]
-        public string? ExpectedValue { get; set; } // 'TRUE', 'Yes', '100%', etc.
+        public string? ExpectedValue { get; set; } // For compliance checking against field value
+
+        [StringLength(20)]
+        public string? ComparisonOperator { get; set; } = "Equals"; // Equals, GreaterThan, LessThan, Contains
 
         public bool IsActive { get; set; } = true;
 

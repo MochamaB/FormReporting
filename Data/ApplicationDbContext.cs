@@ -136,6 +136,26 @@ namespace FormReporting.Data
         // ============================================================================
 
         /// <summary>
+        /// Metric categories lookup table
+        /// </summary>
+        public DbSet<MetricCategory> MetricCategories { get; set; } = null!;
+
+        /// <summary>
+        /// Metric subcategories with constraints
+        /// </summary>
+        public DbSet<MetricSubCategory> MetricSubCategories { get; set; } = null!;
+
+        /// <summary>
+        /// Junction table for subcategory allowed units
+        /// </summary>
+        public DbSet<MetricSubCategoryUnit> MetricSubCategoryUnits { get; set; } = null!;
+
+        /// <summary>
+        /// Metric units lookup table
+        /// </summary>
+        public DbSet<MetricUnit> MetricUnits { get; set; } = null!;
+
+        /// <summary>
         /// Metric definitions with KPI thresholds
         /// </summary>
         public DbSet<MetricDefinition> MetricDefinitions { get; set; } = null!;
@@ -539,6 +559,10 @@ namespace FormReporting.Data
             modelBuilder.ApplyConfiguration(new UserGroupMemberConfiguration());
 
             // Apply Section 3: Metrics & KPI Tracking configurations
+            modelBuilder.ApplyConfiguration(new MetricCategoryConfiguration());
+            modelBuilder.ApplyConfiguration(new MetricSubCategoryConfiguration());
+            modelBuilder.ApplyConfiguration(new MetricSubCategoryUnitConfiguration());
+            modelBuilder.ApplyConfiguration(new MetricUnitConfiguration());
             modelBuilder.ApplyConfiguration(new MetricDefinitionConfiguration());
             modelBuilder.ApplyConfiguration(new TenantMetricConfiguration());
             modelBuilder.ApplyConfiguration(new SystemMetricLogConfiguration());

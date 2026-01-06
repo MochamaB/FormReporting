@@ -37,9 +37,9 @@ namespace FormReporting.Controllers.Metrics
             }
 
             // 3. APPLY CATEGORY FILTER
-            if (!string.IsNullOrEmpty(category))
+            if (!string.IsNullOrEmpty(category) && int.TryParse(category, out var categoryId))
             {
-                query = query.Where(m => m.Category == category);
+                query = query.Where(m => m.SubCategory.CategoryId == categoryId);
             }
 
             // 4. APPLY SOURCE TYPE FILTER
@@ -56,11 +56,10 @@ namespace FormReporting.Controllers.Metrics
             var userInputMetrics = allMetrics.Count(m => m.SourceType == "UserInput");
 
             // Get unique categories and source types for filter dropdowns
-            var categories = await _context.MetricDefinitions
-                .Where(m => !string.IsNullOrEmpty(m.Category))
-                .Select(m => m.Category!)
-                .Distinct()
-                .OrderBy(c => c)
+            var categories = await _context.MetricCategories
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.DisplayOrder)
+                .Select(c => c.CategoryName)
                 .ToListAsync();
 
             var sourceTypes = await _context.MetricDefinitions
@@ -78,7 +77,11 @@ namespace FormReporting.Controllers.Metrics
 
             // 7. GET PAGINATED DATA
             var metrics = await query
-                .OrderBy(m => m.Category)
+                .Include(m => m.SubCategory)
+                    .ThenInclude(sc => sc.Category)
+                .Include(m => m.Unit)
+                .OrderBy(m => m.SubCategory.Category.CategoryName)
+                .ThenBy(m => m.SubCategory.SubCategoryName)
                 .ThenBy(m => m.MetricName)
                 .Skip(skip)
                 .Take(pageSize)
@@ -92,11 +95,15 @@ namespace FormReporting.Controllers.Metrics
                     MetricId = m.MetricId,
                     MetricCode = m.MetricCode,
                     MetricName = m.MetricName,
-                    Category = m.Category ?? "Uncategorized",
+                    SubCategoryId = m.SubCategoryId,
+                    SubCategoryName = m.SubCategory?.SubCategoryName ?? "Uncategorized",
+                    CategoryId = m.SubCategory?.CategoryId,
+                    CategoryName = m.SubCategory?.Category?.CategoryName ?? "Uncategorized",
                     Description = m.Description,
                     SourceType = m.SourceType,
                     DataType = m.DataType,
-                    Unit = m.Unit,
+                    UnitId = m.UnitId,
+                    UnitName = m.Unit?.UnitName,
                     IsKPI = m.IsKPI,
                     IsActive = m.IsActive,
                     ThresholdGreen = m.ThresholdGreen,
@@ -208,7 +215,7 @@ namespace FormReporting.Controllers.Metrics
         /// Display the create metric definition form with wizard
         /// </summary>
         [HttpGet("Create")]
-        public IActionResult Create()
+        public async Task<IActionResult> Create()
         {
             var model = new CreateMetricDefinitionDto
             {
@@ -220,6 +227,9 @@ namespace FormReporting.Controllers.Metrics
 
             var wizard = BuildMetricWizard();
             ViewData["Wizard"] = wizard;
+
+            // Populate ViewBag with MetricCategories and MetricUnits for dropdowns
+            await LoadCategoryAndUnitDropdowns();
 
             return View("~/Views/Metrics/MetricDefinitions/Create.cshtml", model);
         }
@@ -236,6 +246,7 @@ namespace FormReporting.Controllers.Metrics
                 // Rebuild wizard for error display
                 var wizard = BuildMetricWizard();
                 ViewData["Wizard"] = wizard;
+                await LoadCategoryAndUnitDropdowns();
                 return View("~/Views/Metrics/MetricDefinitions/Create.cshtml", model);
             }
 
@@ -250,6 +261,7 @@ namespace FormReporting.Controllers.Metrics
                 // Rebuild wizard for error display
                 var wizard = BuildMetricWizard();
                 ViewData["Wizard"] = wizard;
+                await LoadCategoryAndUnitDropdowns();
                 return View("~/Views/Metrics/MetricDefinitions/Create.cshtml", model);
             }
 
@@ -258,11 +270,11 @@ namespace FormReporting.Controllers.Metrics
             {
                 MetricCode = model.MetricCode,
                 MetricName = model.MetricName,
-                Category = model.Category,
+                SubCategoryId = model.SubCategoryId,
                 Description = model.Description,
                 SourceType = model.SourceType,
                 DataType = model.DataType,
-                Unit = model.Unit,
+                UnitId = model.UnitId,
                 AggregationType = model.AggregationType,
                 IsKPI = model.IsKPI,
                 ThresholdGreen = model.ThresholdGreen,
@@ -300,11 +312,11 @@ namespace FormReporting.Controllers.Metrics
             {
                 MetricCode = metric.MetricCode,
                 MetricName = metric.MetricName,
-                Category = metric.Category,
+                SubCategoryId = metric.SubCategoryId,
                 Description = metric.Description,
                 SourceType = metric.SourceType,
                 DataType = metric.DataType,
-                Unit = metric.Unit,
+                UnitId = metric.UnitId,
                 AggregationType = metric.AggregationType,
                 IsKPI = metric.IsKPI,
                 ThresholdGreen = metric.ThresholdGreen,
@@ -317,6 +329,7 @@ namespace FormReporting.Controllers.Metrics
 
             ViewBag.MetricId = id;
             ViewBag.IsEdit = true;
+            await LoadCategoryAndUnitDropdowns();
 
             return View("~/Views/Metrics/MetricDefinitions/Edit.cshtml", model);
         }
@@ -332,6 +345,7 @@ namespace FormReporting.Controllers.Metrics
             {
                 ViewBag.MetricId = id;
                 ViewBag.IsEdit = true;
+                await LoadCategoryAndUnitDropdowns();
                 return View("~/Views/Metrics/MetricDefinitions/Edit.cshtml", model);
             }
 
@@ -352,17 +366,18 @@ namespace FormReporting.Controllers.Metrics
                 ModelState.AddModelError("MetricCode", "A metric with this code already exists.");
                 ViewBag.MetricId = id;
                 ViewBag.IsEdit = true;
+                await LoadCategoryAndUnitDropdowns();
                 return View("~/Views/Metrics/MetricDefinitions/Edit.cshtml", model);
             }
 
             // Update metric
             metric.MetricCode = model.MetricCode;
             metric.MetricName = model.MetricName;
-            metric.Category = model.Category;
+            metric.SubCategoryId = model.SubCategoryId;
             metric.Description = model.Description;
             metric.SourceType = model.SourceType;
             metric.DataType = model.DataType;
-            metric.Unit = model.Unit;
+            metric.UnitId = model.UnitId;
             metric.AggregationType = model.AggregationType;
             metric.IsKPI = model.IsKPI;
             metric.ThresholdGreen = model.ThresholdGreen;
@@ -376,6 +391,23 @@ namespace FormReporting.Controllers.Metrics
 
             TempData["SuccessMessage"] = $"Metric '{metric.MetricName}' updated successfully.";
             return RedirectToAction(nameof(Index));
+        }
+
+        /// <summary>
+        /// Load dropdown data for subcategories and units
+        /// </summary>
+        private async Task LoadCategoryAndUnitDropdowns()
+        {
+            ViewBag.MetricSubCategories = await _context.MetricSubCategories
+                .Include(sc => sc.Category)
+                .Where(sc => sc.IsActive && sc.Category.IsActive)
+                .OrderBy(sc => sc.Category.DisplayOrder)
+                .ThenBy(sc => sc.DisplayOrder)
+                .ToListAsync();
+            ViewBag.MetricUnits = await _context.MetricUnits
+                .Where(u => u.IsActive)
+                .OrderBy(u => u.DisplayOrder)
+                .ToListAsync();
         }
     }
 }

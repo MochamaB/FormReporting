@@ -18,9 +18,9 @@ namespace FormReporting.Models.ViewModels.Metrics
         [Display(Name = "Metric Name")]
         public string MetricName { get; set; } = string.Empty;
 
-        [StringLength(100, ErrorMessage = "Category cannot exceed 100 characters")]
-        [Display(Name = "Category")]
-        public string? Category { get; set; }
+        [Required(ErrorMessage = "SubCategory is required")]
+        [Display(Name = "SubCategory")]
+        public int SubCategoryId { get; set; }
 
         [StringLength(500, ErrorMessage = "Description cannot exceed 500 characters")]
         [Display(Name = "Description")]
@@ -36,9 +36,8 @@ namespace FormReporting.Models.ViewModels.Metrics
         [Display(Name = "Data Type")]
         public string DataType { get; set; } = string.Empty;
 
-        [StringLength(50, ErrorMessage = "Unit cannot exceed 50 characters")]
         [Display(Name = "Unit")]
-        public string? Unit { get; set; }
+        public int? UnitId { get; set; }
 
         [StringLength(20, ErrorMessage = "Aggregation Type cannot exceed 20 characters")]
         [Display(Name = "Aggregation Type")]
@@ -86,8 +85,7 @@ namespace FormReporting.Models.ViewModels.Metrics
         [StringLength(500)]
         public string? Description { get; set; }
 
-        [StringLength(100)]
-        public string? Category { get; set; }
+        public int? SubCategoryId { get; set; }
 
         public decimal? ThresholdGreen { get; set; }
         public decimal? ThresholdYellow { get; set; }

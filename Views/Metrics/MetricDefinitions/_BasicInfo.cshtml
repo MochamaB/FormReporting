@@ -29,20 +29,18 @@
 <div class="row">
     <div class="col-12">
         <div class="mb-3">
-            <label asp-for="Category" class="form-label">Category</label>
-            <select asp-for="Category" class="form-select">
-                <option value="">-- Select Category --</option>
-                <option value="Hardware">Hardware</option>
-                <option value="Software">Software</option>
-                <option value="Network">Network</option>
-                <option value="Security">Security</option>
-                <option value="Compliance">Compliance</option>
-                <option value="Infrastructure">Infrastructure</option>
-                <option value="Performance">Performance</option>
-                <option value="Availability">Availability</option>
-                <option value="Capacity">Capacity</option>
+            <label asp-for="SubCategoryId" class="form-label">Subcategory</label>
+            <select asp-for="SubCategoryId" class="form-select">
+                <option value="">-- Select Subcategory --</option>
+                @if (ViewBag.MetricSubCategories != null)
+                {
+                    foreach (var subCategory in ViewBag.MetricSubCategories)
+                    {
+                        <option value="@subCategory.SubCategoryId">@subCategory.CategoryName - @subCategory.SubCategoryName</option>
+                    }
+                }
             </select>
-            <span asp-validation-for="Category" class="text-danger"></span>
+            <span asp-validation-for="SubCategoryId" class="text-danger"></span>
             <small class="text-muted">Group this metric into a category for easier filtering.</small>
         </div>
     </div>

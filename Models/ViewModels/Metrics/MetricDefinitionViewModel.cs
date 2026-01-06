@@ -8,13 +8,17 @@ namespace FormReporting.Models.ViewModels.Metrics
         public int MetricId { get; set; }
         public string MetricCode { get; set; } = string.Empty;
         public string MetricName { get; set; } = string.Empty;
-        public string? Category { get; set; }
+        public int SubCategoryId { get; set; }
+        public string? SubCategoryName { get; set; }
+        public int? CategoryId { get; set; }
+        public string? CategoryName { get; set; }
         public string? Description { get; set; }
 
         // Source configuration
         public string SourceType { get; set; } = string.Empty;
         public string DataType { get; set; } = string.Empty;
-        public string? Unit { get; set; }
+        public int? UnitId { get; set; }
+        public string? UnitName { get; set; }
         public string? AggregationType { get; set; }
 
         // KPI configuration
@@ -52,7 +56,7 @@ namespace FormReporting.Models.ViewModels.Metrics
             _ => DataType
         };
 
-        public string DisplayName => $"{MetricName} ({Unit ?? DataType})";
+        public string DisplayName => $"{MetricName} ({UnitName ?? DataType})";
 
         public bool HasThresholds => ThresholdGreen.HasValue || ThresholdYellow.HasValue;
     }

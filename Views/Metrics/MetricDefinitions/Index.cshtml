@@ -229,9 +229,9 @@
                                         <td>@Html.Raw(metric.SourceTypeBadge)</td>
                                         <td>
                                             @Html.Raw(metric.DataTypeBadge)
-                                            @if (!string.IsNullOrEmpty(metric.Unit))
+                                            @if (!string.IsNullOrEmpty(metric.UnitName))
                                             {
-                                                <br><small class="text-muted">(@metric.Unit)</small>
+                                                <br><small class="text-muted">(@metric.UnitName)</small>
                                             }
                                         </td>
                                         <td>@Html.Raw(metric.KpiBadge)</td>

@@ -20,8 +20,8 @@ namespace FormReporting.Models.Entities.Metrics
         [StringLength(200)]
         public string MetricName { get; set; } = string.Empty;
 
-        [StringLength(100)]
-        public string? Category { get; set; } // Infrastructure, Software, Hardware, Performance, Compliance
+        // Foreign key to MetricSubCategory
+        public int SubCategoryId { get; set; }
 
         // Source configuration
         [Required]
@@ -32,8 +32,8 @@ namespace FormReporting.Models.Entities.Metrics
         [StringLength(20)]
         public string DataType { get; set; } = string.Empty; // Integer, Decimal, Percentage, Boolean, Text, Duration, Date, DateTime
 
-        [StringLength(50)]
-        public string? Unit { get; set; } // Count, Percentage, Version, Status, Days, Hours, Minutes, Seconds, GB, MB, KB, TB, Bytes, None
+        // Foreign key to MetricUnit
+        public int? UnitId { get; set; }
 
         [StringLength(20)]
         public string? AggregationType { get; set; } // SUM, AVG, MAX, MIN, LAST_VALUE, COUNT, NONE
@@ -73,6 +73,12 @@ namespace FormReporting.Models.Entities.Metrics
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
         // Navigation properties
+        [ForeignKey(nameof(SubCategoryId))]
+        public virtual MetricSubCategory SubCategory { get; set; } = null!;
+
+        [ForeignKey(nameof(UnitId))]
+        public virtual MetricUnit? Unit { get; set; }
+
         [ForeignKey(nameof(ParentMetricId))]
         public virtual MetricDefinition? ParentMetric { get; set; }
         

@@ -1,0 +1,383 @@
+@model FormReporting.Models.ViewModels.Metrics.SectionMappingWizardViewModel
+@using FormReporting.Models.ViewModels.Components
+@using FormReporting.Extensions
+
+@{
+    ViewData["Title"] = $"Map Section - {Model.SectionName}";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    // Determine if editing existing mapping
+    var isEditing = Model.ExistingMapping != null;
+    var pageTitle = isEditing ? "Edit Section Mapping" : "Create Section Mapping";
+
+    // Build wizard configuration using VerticalWizard for step-by-step mapping
+    var wizardConfig = new WizardConfig
+    {
+        FormId = "sectionMappingForm",
+        FormAction = Url.Action("SaveSectionMapping", "MetricMapping", new { templateId = Model.TemplateId, sectionId = Model.SectionId }),
+        FormMethod = "POST",
+        Layout = WizardLayout.Vertical,
+        ShowSummary = false,
+        ContainerCssClass = "section-mapping-wizard",
+        Steps = new List<WizardStep>
+        {
+            new WizardStep
+            {
+                StepId = "configure",
+                StepNumber = 1,
+                Title = "Configure Mapping",
+                Label = "Configure",
+                Description = "Set up mapping options",
+                Instructions = "Configure how this section's field values should be aggregated.",
+                Icon = "ri-settings-3-line",
+                State = WizardStepState.Active,
+                ContentPartialPath = "~/Views/Forms/FormTemplates/MetricConfig/SectionSteps/_ConfigureStep.cshtml",
+                ShowPrevious = false,
+                ShowNext = true,
+                NextButtonText = "Continue to Source Selection"
+            },
+            new WizardStep
+            {
+                StepId = "sources",
+                StepNumber = 2,
+                Title = "Select Sources",
+                Label = "Sources",
+                Description = "Choose field mappings",
+                Instructions = "Select which field mappings to include in this section aggregation.",
+                Icon = "ri-checkbox-multiple-line",
+                State = WizardStepState.Pending,
+                ContentPartialPath = "~/Views/Forms/FormTemplates/MetricConfig/SectionSteps/_SourceSelectionStep.cshtml",
+                ShowPrevious = true,
+                ShowNext = true,
+                PreviousButtonText = "Back",
+                NextButtonText = "Continue to Metric Choice"
+            },
+            new WizardStep
+            {
+                StepId = "metric-choice",
+                StepNumber = 3,
+                Title = "Choose Metric",
+                Label = "Metric",
+                Description = "Select metric option",
+                Instructions = "Decide how to handle the metric definition for reporting.",
+                Icon = "ri-bar-chart-line",
+                State = WizardStepState.Pending,
+                ContentPartialPath = "~/Views/Forms/FormTemplates/MetricConfig/SectionSteps/_MetricChoiceStep.cshtml",
+                ShowPrevious = true,
+                ShowNext = true,
+                PreviousButtonText = "Back",
+                NextButtonText = "Review"
+            },
+            new WizardStep
+            {
+                StepId = "review",
+                StepNumber = 4,
+                Title = "Review & Save",
+                Label = "Review",
+                Description = "Confirm and save",
+                Instructions = "Review your section mapping configuration and save.",
+                Icon = "ri-check-double-line",
+                State = WizardStepState.Pending,
+                ContentPartialPath = "~/Views/Forms/FormTemplates/MetricConfig/SectionSteps/_ReviewStep.cshtml",
+                ShowPrevious = true,
+                ShowNext = false,
+                PreviousButtonText = "Back",
+                CustomButtonHtml = @"<button type=""submit"" class=""btn btn-success btn-label ms-auto"" id=""submit-mapping-btn"">
+                    <i class=""ri-save-line label-icon align-middle fs-16 me-2""></i>
+                    Save Mapping
+                </button>"
+            }
+        }
+    };
+
+    // Transform config into renderable wizard
+    var wizard = wizardConfig.BuildWizard();
+    
+    ViewData["WizardViewModel"] = wizard;
+    ViewData["ParentModel"] = Model;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/metric-configuration.css" asp-append-version="true" />
+}
+
+<!-- Combined Card: Header + Wizard -->
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <!-- Card Header with Section Information -->
+            <div class="card-header">
+                <div class="d-flex align-items-start justify-content-between">
+                    <div class="d-flex align-items-start gap-3">
+                        <div class="avatar-sm flex-shrink-0">
+                            <div class="avatar-title bg-info-subtle text-info rounded fs-3">
+                                <i class="ri-layout-grid-line"></i>
+                            </div>
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <h5 class="mb-0 fw-semibold">@Model.SectionName</h5>
+                            </div>
+                            <div class="d-flex align-items-center flex-wrap gap-2">
+                                <span class="badge bg-light text-muted">@Model.TemplateName</span>
+                                <span class="badge bg-info-subtle text-info">
+                                    <i class="ri-stack-line me-1"></i>@Model.TotalFieldMappings Field Mappings
+                                </span>
+                                @if (isEditing)
+                                {
+                                    <span class="badge bg-warning-subtle text-warning">
+                                        <i class="ri-edit-line me-1"></i>Editing
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-success-subtle text-success">
+                                        <i class="ri-add-line me-1"></i>New Mapping
+                                    </span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex-shrink-0">
+                        <a href="@Url.Action("Index", "MetricMapping", new { templateId = Model.TemplateId })" 
+                           class="btn btn-soft-secondary">
+                            <i class="ri-arrow-left-line me-1"></i>Back to Overview
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Card Body with Wizard Form -->
+            <div class="card-body">
+                <form id="sectionMappingForm" 
+                      action="@Url.Action("SaveSectionMapping", "MetricMapping", new { templateId = Model.TemplateId, sectionId = Model.SectionId })" 
+                      method="post">
+                    @Html.AntiForgeryToken()
+                    
+                    <!-- Hidden fields -->
+                    <input type="hidden" name="SectionId" value="@Model.SectionId" />
+                    <input type="hidden" name="TemplateId" value="@Model.TemplateId" />
+                    @if (Model.ExistingMapping != null)
+                    {
+                        <input type="hidden" name="MappingId" value="@Model.ExistingMapping.MappingId" />
+                    }
+                    
+                    <!-- Wizard Partial -->
+                    <partial name="~/Views/Shared/Components/Wizards/_VerticalWizard.cshtml" model="wizard" />
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+    (function() {
+        'use strict';
+
+        // Register validation callback for this wizard
+        window.wizardValidationCallbacks = window.wizardValidationCallbacks || {};
+        window.wizardValidationCallbacks['sectionMappingForm'] = validateStep;
+
+        function validateStep(currentStepId) {
+            console.log('[SectionMappingWizard] Validating step:', currentStepId);
+            
+            // Clear previous validation errors
+            clearValidationErrors(currentStepId);
+            
+            let isValid = true;
+            let errors = [];
+
+            switch (currentStepId) {
+                case 'configure':
+                    const configResult = validateConfigureStep();
+                    isValid = configResult.isValid;
+                    errors = configResult.errors;
+                    break;
+
+                case 'sources':
+                    const sourcesResult = validateSourcesStep();
+                    isValid = sourcesResult.isValid;
+                    errors = sourcesResult.errors;
+                    break;
+
+                case 'metric-choice':
+                    const metricResult = validateMetricChoiceStep();
+                    isValid = metricResult.isValid;
+                    errors = metricResult.errors;
+                    break;
+
+                case 'review':
+                    // Review step - just display, no validation needed
+                    updateReviewSummary();
+                    isValid = true;
+                    break;
+
+                default:
+                    isValid = true;
+            }
+
+            if (!isValid && errors.length > 0) {
+                showValidationErrors(currentStepId, errors);
+            }
+
+            return isValid;
+        }
+
+        function validateConfigureStep() {
+            const errors = [];
+            
+            const mappingName = document.getElementById('MappingName')?.value?.trim();
+            if (!mappingName) {
+                errors.push({ field: 'MappingName', message: 'Mapping name is required' });
+            }
+
+            const mappingType = document.getElementById('MappingType')?.value;
+            if (!mappingType) {
+                errors.push({ field: 'MappingType', message: 'Please select a mapping type' });
+            }
+
+            const aggregationType = document.getElementById('AggregationType')?.value;
+            if (!aggregationType) {
+                errors.push({ field: 'AggregationType', message: 'Please select an aggregation type' });
+            }
+
+            return { isValid: errors.length === 0, errors };
+        }
+
+        function validateSourcesStep() {
+            const errors = [];
+            
+            // Check if at least one source is selected
+            const selectedSources = document.querySelectorAll('input[name="SelectedSources"]:checked');
+            if (selectedSources.length === 0) {
+                errors.push({ field: 'sources-list', message: 'Please select at least one field mapping as source' });
+            }
+
+            // If weighted average, validate weights sum to 1
+            const aggregationType = document.getElementById('AggregationType')?.value;
+            if (aggregationType === 'WeightedAverage') {
+                let totalWeight = 0;
+                selectedSources.forEach(checkbox => {
+                    const weightInput = document.querySelector(`input[name="Sources[${checkbox.value}].Weight"]`);
+                    if (weightInput) {
+                        totalWeight += parseFloat(weightInput.value) || 0;
+                    }
+                });
+                
+                if (Math.abs(totalWeight - 1) > 0.01) {
+                    errors.push({ field: 'weights', message: 'Weights must sum to 1.0 (100%)' });
+                }
+            }
+
+            return { isValid: errors.length === 0, errors };
+        }
+
+        function validateMetricChoiceStep() {
+            const errors = [];
+            
+            const metricOption = document.getElementById('MetricOption')?.value;
+            if (!metricOption) {
+                errors.push({ field: 'MetricOption', message: 'Please select a metric option' });
+            }
+
+            // If create-new, validate metric name
+            if (metricOption === 'create-new') {
+                const newMetricName = document.getElementById('NewMetricName')?.value?.trim();
+                if (!newMetricName) {
+                    errors.push({ field: 'NewMetricName', message: 'Metric name is required when creating new' });
+                }
+            }
+
+            // If link-existing, validate metric selection
+            if (metricOption === 'link-existing') {
+                const metricId = document.getElementById('MetricId')?.value;
+                if (!metricId) {
+                    errors.push({ field: 'MetricId', message: 'Please select a metric to link to' });
+                }
+            }
+
+            return { isValid: errors.length === 0, errors };
+        }
+
+        function updateReviewSummary() {
+            // Update review summary with current form values
+            const mappingName = document.getElementById('MappingName')?.value || '-';
+            const mappingType = document.getElementById('MappingType')?.selectedOptions[0]?.text || '-';
+            const aggregationType = document.getElementById('AggregationType')?.selectedOptions[0]?.text || '-';
+            const metricOption = document.getElementById('MetricOption')?.value || 'standalone';
+
+            document.getElementById('reviewMappingName').textContent = mappingName;
+            document.getElementById('reviewMappingType').textContent = mappingType;
+            document.getElementById('reviewAggregationType').textContent = aggregationType;
+
+            // Count selected sources
+            const selectedSources = document.querySelectorAll('input[name="SelectedSources"]:checked');
+            document.getElementById('reviewSourceCount').textContent = selectedSources.length + ' field mapping(s)';
+
+            let metricText = 'Standalone (No Metric)';
+            if (metricOption === 'create-new') {
+                const newName = document.getElementById('NewMetricName')?.value || 'New Metric';
+                metricText = 'Create New: ' + newName;
+            } else if (metricOption === 'link-existing') {
+                const selectedMetric = document.getElementById('MetricId')?.selectedOptions[0]?.text || 'Selected Metric';
+                metricText = 'Link to: ' + selectedMetric;
+            }
+            document.getElementById('reviewMetricChoice').textContent = metricText;
+        }
+
+        function clearValidationErrors(stepId) {
+            const stepPane = document.getElementById(stepId);
+            if (!stepPane) return;
+
+            stepPane.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
+            stepPane.querySelectorAll('.invalid-feedback').forEach(el => el.remove());
+            
+            const errorAlert = stepPane.querySelector('.validation-error-alert');
+            if (errorAlert) errorAlert.remove();
+        }
+
+        function showValidationErrors(stepId, errors) {
+            errors.forEach(error => {
+                const field = document.getElementById(error.field);
+                if (field) {
+                    field.classList.add('is-invalid');
+                    const existingFeedback = field.parentNode.querySelector('.invalid-feedback');
+                    if (!existingFeedback) {
+                        const feedback = document.createElement('div');
+                        feedback.className = 'invalid-feedback';
+                        feedback.textContent = error.message;
+                        field.parentNode.appendChild(feedback);
+                    }
+                }
+            });
+        }
+
+        // Handle metric option change to show/hide sections
+        document.addEventListener('change', function(e) {
+            if (e.target.id === 'MetricOption') {
+                const value = e.target.value;
+                document.querySelectorAll('.metric-option-content').forEach(el => el.classList.add('d-none'));
+                
+                if (value === 'standalone') {
+                    document.getElementById('standaloneContent')?.classList.remove('d-none');
+                } else if (value === 'create-new') {
+                    document.getElementById('createNewContent')?.classList.remove('d-none');
+                } else if (value === 'link-existing') {
+                    document.getElementById('linkExistingContent')?.classList.remove('d-none');
+                }
+            }
+
+            // Handle aggregation type change to show/hide weight inputs
+            if (e.target.id === 'AggregationType') {
+                const showWeights = e.target.value === 'WeightedAverage';
+                document.querySelectorAll('.weight-input-group').forEach(el => {
+                    el.classList.toggle('d-none', !showWeights);
+                });
+            }
+        });
+
+        console.log('[SectionMappingWizard] Validation registered for sectionMappingForm');
+    })();
+    </script>
+}

@@ -75,9 +75,13 @@ namespace FormReporting.Models.ViewModels.Metrics
         public int MetricId { get; set; }
         public string MetricCode { get; set; } = string.Empty;
         public string MetricName { get; set; } = string.Empty;
-        public string? Category { get; set; }
+        public int SubCategoryId { get; set; }
+        public string? SubCategoryName { get; set; }
+        public int? CategoryId { get; set; }
+        public string? CategoryName { get; set; }
         public string? DataType { get; set; }
-        public string? Unit { get; set; }
+        public int? UnitId { get; set; }
+        public string? UnitName { get; set; }
         public string? Description { get; set; }
     }
 }

@@ -28,11 +28,15 @@ namespace FormReporting.Models.ViewModels.Metrics
         public int MetricId { get; set; }
         public string MetricCode { get; set; } = string.Empty;
         public string MetricName { get; set; } = string.Empty;
-        public string Category { get; set; } = string.Empty;
+        public int SubCategoryId { get; set; }
+        public string? SubCategoryName { get; set; }
+        public int? CategoryId { get; set; }
+        public string CategoryName { get; set; } = "Uncategorized";
         public string? Description { get; set; }
         public string SourceType { get; set; } = string.Empty;
         public string DataType { get; set; } = string.Empty;
-        public string? Unit { get; set; }
+        public int? UnitId { get; set; }
+        public string? UnitName { get; set; }
         public bool IsKPI { get; set; }
         public bool IsActive { get; set; }
         public decimal? ThresholdGreen { get; set; }
@@ -49,15 +53,15 @@ namespace FormReporting.Models.ViewModels.Metrics
             ? "<span class=\"badge bg-warning-subtle text-warning\"><i class=\"ri-star-fill\"></i> KPI</span>"
             : "<span class=\"badge bg-light text-muted\">Standard</span>";
 
-        public string CategoryBadge => Category switch
+        public string CategoryBadge => CategoryName switch
         {
-            "Hardware" => $"<span class=\"badge bg-primary-subtle text-primary\"><i class=\"ri-computer-line\"></i> {Category}</span>",
-            "Software" => $"<span class=\"badge bg-info-subtle text-info\"><i class=\"ri-apps-line\"></i> {Category}</span>",
-            "Network" => $"<span class=\"badge bg-success-subtle text-success\"><i class=\"ri-global-line\"></i> {Category}</span>",
-            "Security" => $"<span class=\"badge bg-danger-subtle text-danger\"><i class=\"ri-shield-check-line\"></i> {Category}</span>",
-            "Compliance" => $"<span class=\"badge bg-warning-subtle text-warning\"><i class=\"ri-file-shield-line\"></i> {Category}</span>",
-            "Infrastructure" => $"<span class=\"badge bg-secondary-subtle text-secondary\"><i class=\"ri-server-line\"></i> {Category}</span>",
-            _ => $"<span class=\"badge bg-light text-muted\">{Category}</span>"
+            "Hardware" => $"<span class=\"badge bg-primary-subtle text-primary\"><i class=\"ri-computer-line\"></i> {CategoryName}</span>",
+            "Software" => $"<span class=\"badge bg-info-subtle text-info\"><i class=\"ri-apps-line\"></i> {CategoryName}</span>",
+            "Network" => $"<span class=\"badge bg-success-subtle text-success\"><i class=\"ri-global-line\"></i> {CategoryName}</span>",
+            "Security" => $"<span class=\"badge bg-danger-subtle text-danger\"><i class=\"ri-shield-check-line\"></i> {CategoryName}</span>",
+            "Compliance" => $"<span class=\"badge bg-warning-subtle text-warning\"><i class=\"ri-file-shield-line\"></i> {CategoryName}</span>",
+            "Infrastructure" => $"<span class=\"badge bg-secondary-subtle text-secondary\"><i class=\"ri-server-line\"></i> {CategoryName}</span>",
+            _ => $"<span class=\"badge bg-light text-muted\">{CategoryName}</span>"
         };
 
         public string SourceTypeBadge => SourceType switch

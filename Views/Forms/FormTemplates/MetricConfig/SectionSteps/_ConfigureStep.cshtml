@@ -1,0 +1,153 @@
+@model FormReporting.Models.ViewModels.Metrics.SectionMappingWizardViewModel
+
+@{
+    var existingMapping = Model.ExistingMapping;
+}
+
+<!-- Configure Mapping Step -->
+<div class="configure-step">
+    <!-- Mapping Name -->
+    <div class="mb-4">
+        <label for="MappingName" class="form-label">
+            Mapping Name <span class="text-danger">*</span>
+        </label>
+        <input type="text" 
+               class="form-control" 
+               id="MappingName" 
+               name="MappingName" 
+               value="@(existingMapping?.MappingName ?? $"{Model.SectionName} Aggregation")"
+               placeholder="Enter a descriptive name for this mapping"
+               required />
+        <small class="text-muted">A descriptive name to identify this section aggregation.</small>
+    </div>
+
+    <div class="row">
+        <!-- Mapping Type -->
+        <div class="col-md-6">
+            <div class="mb-4">
+                <label for="MappingType" class="form-label">
+                    Mapping Type <span class="text-danger">*</span>
+                </label>
+                <select class="form-select" id="MappingType" name="MappingType" required>
+                    <option value="">Select mapping type...</option>
+                    @foreach (var type in Model.ValidMappingTypes)
+                    {
+                        var isSelected = existingMapping?.MappingType == type.Value;
+                        <option value="@type.Value" 
+                                data-description="@type.Description"
+                                selected="@isSelected">
+                            @type.Text @(type.IsRecommended ? "(Recommended)" : "")
+                        </option>
+                    }
+                </select>
+                <small class="text-muted" id="mappingTypeDescription">
+                    How to combine field values in this section.
+                </small>
+            </div>
+        </div>
+
+        <!-- Aggregation Type -->
+        <div class="col-md-6">
+            <div class="mb-4">
+                <label for="AggregationType" class="form-label">
+                    Aggregation Type <span class="text-danger">*</span>
+                </label>
+                <select class="form-select" id="AggregationType" name="AggregationType" required>
+                    <option value="">Select aggregation type...</option>
+                    @foreach (var type in Model.ValidAggregationTypes)
+                    {
+                        var isSelected = existingMapping?.AggregationType == type.Value;
+                        <option value="@type.Value" 
+                                data-description="@type.Description"
+                                selected="@isSelected">
+                            @type.Text
+                        </option>
+                    }
+                </select>
+                <small class="text-muted" id="aggregationTypeDescription">
+                    How to aggregate values from selected field mappings.
+                </small>
+            </div>
+        </div>
+    </div>
+
+    <!-- Info Alert -->
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+        <div class="d-flex">
+            <i class="ri-information-line me-2 fs-16"></i>
+            <div>
+                <strong>Section Aggregation</strong>
+                <p class="mb-0 small">
+                    Section mappings combine values from multiple field mappings within this section.
+                    Choose <strong>Aggregated</strong> for simple combinations (average, sum, etc.) or 
+                    <strong>Calculated</strong> for custom formulas.
+                </p>
+            </div>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+
+    <!-- Available Field Mappings Summary -->
+    @if (Model.HasFieldMappings)
+    {
+        <div class="card border-success mt-4">
+            <div class="card-header bg-success-subtle">
+                <h6 class="mb-0 text-success">
+                    <i class="ri-checkbox-circle-line me-2"></i>Available Field Mappings (@Model.TotalFieldMappings)
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    @foreach (var mapping in Model.AvailableFieldMappings.Take(6))
+                    {
+                        <div class="col-md-4 mb-2">
+                            <div class="d-flex align-items-center">
+                                <i class="ri-focus-3-line text-primary me-2"></i>
+                                <div>
+                                    <strong class="small">@mapping.ItemName</strong>
+                                    <br />
+                                    <span class="badge bg-light text-dark small">@mapping.MappingType</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                    @if (Model.TotalFieldMappings > 6)
+                    {
+                        <div class="col-12">
+                            <small class="text-muted">... and @(Model.TotalFieldMappings - 6) more</small>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-warning mt-4">
+            <i class="ri-alert-line me-2"></i>
+            <strong>No Field Mappings Available</strong>
+            <p class="mb-0 small">
+                This section has no configured field mappings. You can still create a section mapping,
+                but it won't have any source data to aggregate until field mappings are created.
+            </p>
+        </div>
+    }
+</div>
+
+<script>
+(function() {
+    // Update description when mapping type changes
+    document.getElementById('MappingType')?.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const description = selectedOption.getAttribute('data-description') || 'How to combine field values in this section.';
+        document.getElementById('mappingTypeDescription').textContent = description;
+    });
+
+    // Update description when aggregation type changes
+    document.getElementById('AggregationType')?.addEventListener('change', function() {
+        const selectedOption = this.options[this.selectedIndex];
+        const description = selectedOption.getAttribute('data-description') || 'How to aggregate values from selected field mappings.';
+        document.getElementById('aggregationTypeDescription').textContent = description;
+    });
+})();
+</script>

@@ -20,6 +20,7 @@
             // STEP 1: Template Properties
             new WizardStep
             {
+                StepId = "template-info",
                 StepNumber = 1,
                 Title = "Template Info",
                 Label = "Template Info",
@@ -35,6 +36,7 @@
             // STEP 2: Option Items
             new WizardStep
             {
+                StepId = "option-items",
                 StepNumber = 2,
                 Title = "Option Items",
                 Label = "Option Items",
@@ -65,15 +67,28 @@
                 <p class="text-muted mb-0 mt-1">Define a reusable set of options for form fields</p>
             </div>
             <div class="card-body">
-                <!-- Hidden field for TemplateId -->
-                <input type="hidden" name="TemplateId" value="0" form="@wizard.FormId" />
-                
+                @* Display validation summary *@
+                @if (!ViewData.ModelState.IsValid)
+                {
+                    <div class="alert alert-danger">
+                        <h6><i class="ri-error-warning-line me-2"></i>Please fix the following errors:</h6>
+                        <ul class="mb-0">
+                            @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                            {
+                                <li>@error.ErrorMessage</li>
+                            }
+                        </ul>
+                    </div>
+                }
+
                 @{
                     // Pass the OptionTemplateEditViewModel to wizard step partials
                     ViewData["ParentModel"] = Model;
                 }
                 
                 <form id="@wizard.FormId" method="@wizard.FormMethod" action="@wizard.FormAction">
+                    @Html.AntiForgeryToken()
+                    
                     <partial name="~/Views/Shared/Components/Wizards/_VerticalWizard.cshtml" model="wizard" />
                 </form>
             </div>

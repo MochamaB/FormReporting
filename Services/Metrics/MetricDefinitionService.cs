@@ -17,8 +17,12 @@ namespace FormReporting.Services.Metrics
         public async Task<List<MetricDefinitionViewModel>> GetAllMetricsAsync()
         {
             return await _context.MetricDefinitions
+                .Include(m => m.SubCategory)
+                    .ThenInclude(sc => sc.Category)
+                .Include(m => m.Unit)
                 .Where(m => m.IsActive)
-                .OrderBy(m => m.Category)
+                .OrderBy(m => m.SubCategory.Category.CategoryName)
+                .ThenBy(m => m.SubCategory.SubCategoryName)
                 .ThenBy(m => m.MetricName)
                 .Select(m => MapToViewModel(m))
                 .ToListAsync();
@@ -27,8 +31,12 @@ namespace FormReporting.Services.Metrics
         public async Task<List<MetricDefinitionViewModel>> GetMetricsByCategoryAsync(string category)
         {
             return await _context.MetricDefinitions
-                .Where(m => m.IsActive && m.Category == category)
-                .OrderBy(m => m.MetricName)
+                .Include(m => m.SubCategory)
+                    .ThenInclude(sc => sc.Category)
+                .Include(m => m.Unit)
+                .Where(m => m.IsActive && m.SubCategory.Category.CategoryName == category)
+                .OrderBy(m => m.SubCategory.SubCategoryName)
+                .ThenBy(m => m.MetricName)
                 .Select(m => MapToViewModel(m))
                 .ToListAsync();
         }
@@ -36,8 +44,12 @@ namespace FormReporting.Services.Metrics
         public async Task<List<MetricDefinitionViewModel>> GetKPIMetricsAsync()
         {
             return await _context.MetricDefinitions
+                .Include(m => m.SubCategory)
+                    .ThenInclude(sc => sc.Category)
+                .Include(m => m.Unit)
                 .Where(m => m.IsActive && m.IsKPI)
-                .OrderBy(m => m.Category)
+                .OrderBy(m => m.SubCategory.Category.CategoryName)
+                .ThenBy(m => m.SubCategory.SubCategoryName)
                 .ThenBy(m => m.MetricName)
                 .Select(m => MapToViewModel(m))
                 .ToListAsync();
@@ -71,11 +83,11 @@ namespace FormReporting.Services.Metrics
             {
                 MetricCode = dto.MetricCode,
                 MetricName = dto.MetricName,
-                Category = dto.Category,
+                SubCategoryId = dto.SubCategoryId,
                 Description = dto.Description,
                 SourceType = dto.SourceType,
                 DataType = dto.DataType,
-                Unit = dto.Unit,
+                UnitId = dto.UnitId,
                 AggregationType = dto.AggregationType,
                 IsKPI = dto.IsKPI,
                 ThresholdGreen = dto.ThresholdGreen,
@@ -119,8 +131,8 @@ namespace FormReporting.Services.Metrics
             if (dto.Description != null)
                 metric.Description = dto.Description;
 
-            if (dto.Category != null)
-                metric.Category = dto.Category;
+            if (dto.SubCategoryId.HasValue)
+                metric.SubCategoryId = dto.SubCategoryId.Value;
 
             if (dto.ThresholdGreen.HasValue)
                 metric.ThresholdGreen = dto.ThresholdGreen;
@@ -155,8 +167,12 @@ namespace FormReporting.Services.Metrics
             var compatibleMetricTypes = GetCompatibleMetricTypes(fieldDataType);
 
             return await _context.MetricDefinitions
+                .Include(m => m.SubCategory)
+                    .ThenInclude(sc => sc.Category)
+                .Include(m => m.Unit)
                 .Where(m => m.IsActive && compatibleMetricTypes.Contains(m.DataType))
-                .OrderBy(m => m.Category)
+                .OrderBy(m => m.SubCategory.Category.CategoryName)
+                .ThenBy(m => m.SubCategory.SubCategoryName)
                 .ThenBy(m => m.MetricName)
                 .Select(m => MapToViewModel(m))
                 .ToListAsync();
@@ -170,11 +186,15 @@ namespace FormReporting.Services.Metrics
                 MetricId = metric.MetricId,
                 MetricCode = metric.MetricCode,
                 MetricName = metric.MetricName,
-                Category = metric.Category,
+                SubCategoryId = metric.SubCategoryId,
+                SubCategoryName = metric.SubCategory?.SubCategoryName,
+                CategoryId = metric.SubCategory?.CategoryId,
+                CategoryName = metric.SubCategory?.Category?.CategoryName,
                 Description = metric.Description,
                 SourceType = metric.SourceType,
                 DataType = metric.DataType,
-                Unit = metric.Unit,
+                UnitId = metric.UnitId,
+                UnitName = metric.Unit?.UnitName,
                 AggregationType = metric.AggregationType,
                 IsKPI = metric.IsKPI,
                 ThresholdGreen = metric.ThresholdGreen,

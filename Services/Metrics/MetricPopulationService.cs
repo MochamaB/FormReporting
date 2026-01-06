@@ -412,7 +412,8 @@ namespace FormReporting.Services.Metrics
             if (metric == null)
                 return value.ToString();
 
-            return metric.Unit switch
+            var unitName = metric.Unit?.UnitName;
+            return unitName switch
             {
                 "Percentage" => $"{value:F2}%",
                 "Count" => value.ToString("N0"),

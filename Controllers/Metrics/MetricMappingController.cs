@@ -145,17 +145,25 @@ namespace FormReporting.Controllers.Metrics
 
             // Get compatible metrics for linking
             var compatibleMetrics = await _context.MetricDefinitions
+                .Include(m => m.SubCategory)
+                    .ThenInclude(sc => sc.Category)
+                .Include(m => m.Unit)
                 .Where(m => m.IsActive && m.MetricScope == "Field" && m.SourceType == "UserInput")
-                .OrderBy(m => m.Category)
+                .OrderBy(m => m.SubCategory.Category.CategoryName)
+                .ThenBy(m => m.SubCategory.SubCategoryName)
                 .ThenBy(m => m.MetricName)
                 .Select(m => new CompatibleMetricViewModel
                 {
                     MetricId = m.MetricId,
                     MetricCode = m.MetricCode,
                     MetricName = m.MetricName,
-                    Category = m.Category,
+                    SubCategoryId = m.SubCategoryId,
+                    SubCategoryName = m.SubCategory != null ? m.SubCategory.SubCategoryName : null,
+                    CategoryId = m.SubCategory != null ? m.SubCategory.CategoryId : null,
+                    CategoryName = m.SubCategory != null && m.SubCategory.Category != null ? m.SubCategory.Category.CategoryName : null,
                     DataType = m.DataType,
-                    Unit = m.Unit,
+                    UnitId = m.UnitId,
+                    UnitName = m.Unit != null ? m.Unit.UnitName : null,
                     Description = m.Description
                 })
                 .ToListAsync();
@@ -194,13 +202,22 @@ namespace FormReporting.Controllers.Metrics
                     MappingId = existingMapping.MappingId,
                     MappingName = existingMapping.MappingName,
                     MappingType = existingMapping.MappingType,
-                    AggregationType = existingMapping.AggregationType,
                     ExpectedValue = existingMapping.ExpectedValue,
                     MetricId = existingMapping.MetricId,
                     MetricName = existingMapping.Metric?.MetricName,
                     MetricCode = existingMapping.Metric?.MetricCode
                 } : null
             };
+
+            // Populate ViewBag with MetricCategories and MetricUnits for dropdowns
+            ViewBag.MetricCategories = await _context.MetricCategories
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.DisplayOrder)
+                .ToListAsync();
+            ViewBag.MetricUnits = await _context.MetricUnits
+                .Where(u => u.IsActive)
+                .OrderBy(u => u.DisplayOrder)
+                .ToListAsync();
 
             return View("~/Views/Forms/FormTemplates/MetricConfig/MapField.cshtml", viewModel);
         }
@@ -242,9 +259,9 @@ namespace FormReporting.Controllers.Metrics
                             MetricName = request.NewMetricName ?? $"{field.ItemName} Metric",
                             MetricCode = request.NewMetricCode ?? GenerateMetricCode(request.NewMetricName ?? field.ItemName),
                             Description = request.NewMetricDescription,
-                            Category = request.NewMetricCategory ?? "Performance",
+                            SubCategoryId = request.NewMetricSubCategoryId,
                             DataType = request.NewMetricDataType ?? "Decimal",
-                            Unit = request.NewMetricUnit ?? "Score",
+                            UnitId = request.NewMetricUnitId,
                             MetricScope = "Field",
                             HierarchyLevel = 0, // Field level
                             SourceType = request.MappingType == "Calculated" ? "SystemCalculated" : "UserInput",
@@ -280,7 +297,6 @@ namespace FormReporting.Controllers.Metrics
                     // Update existing mapping
                     existingMapping.MappingName = request.MappingName;
                     existingMapping.MappingType = request.MappingType;
-                    existingMapping.AggregationType = request.AggregationType;
                     existingMapping.ExpectedValue = request.ExpectedValue;
                     existingMapping.MetricId = metricId;
                     // Note: FormItemMetricMapping doesn't have ModifiedDate property
@@ -293,7 +309,6 @@ namespace FormReporting.Controllers.Metrics
                         ItemId = fieldId,
                         MappingName = request.MappingName,
                         MappingType = request.MappingType,
-                        AggregationType = request.AggregationType,
                         ExpectedValue = request.ExpectedValue,
                         MetricId = metricId,
                         IsActive = true,
@@ -325,6 +340,265 @@ namespace FormReporting.Controllers.Metrics
                 .Replace(" ", "_")
                 .ToUpperInvariant()
                 .Substring(0, Math.Min(name.Length, 30));
+        }
+
+        // ===================================================================
+        // SECTION MAPPING - Full Page Wizard
+        // ===================================================================
+
+        /// <summary>
+        /// Map Section - Full page wizard for creating/editing section metric mappings
+        /// </summary>
+        [HttpGet("Configure/{templateId}/Section/{sectionId}")]
+        public async Task<IActionResult> MapSection(int templateId, int sectionId)
+        {
+            // Load section with related data
+            var section = await _context.FormTemplateSections
+                .Include(s => s.Template)
+                .Include(s => s.Items)
+                .FirstOrDefaultAsync(s => s.SectionId == sectionId && s.TemplateId == templateId);
+
+            if (section == null)
+            {
+                TempData["Error"] = "Section not found.";
+                return RedirectToAction(nameof(Index), new { templateId });
+            }
+
+            // Get field mappings in this section (available for aggregation)
+            var fieldMappings = await _context.FormItemMetricMappings
+                .Include(m => m.Item)
+                .Include(m => m.Metric)
+                .Where(m => m.Item.SectionId == sectionId && m.IsActive)
+                .OrderBy(m => m.Item.DisplayOrder)
+                .ToListAsync();
+
+            // Get existing section mapping if any
+            var existingMapping = await _context.FormSectionMetricMappings
+                .Include(m => m.Metric)
+                .Include(m => m.Sources)
+                    .ThenInclude(s => s.ItemMapping)
+                        .ThenInclude(im => im.Item)
+                .FirstOrDefaultAsync(m => m.SectionId == sectionId && m.IsActive);
+
+            // Get compatible metrics for linking (Section scope)
+            var compatibleMetrics = await _context.MetricDefinitions
+                .Include(m => m.SubCategory)
+                    .ThenInclude(sc => sc.Category)
+                .Include(m => m.Unit)
+                .Where(m => m.IsActive && (m.MetricScope == "Section" || m.MetricScope == null))
+                .OrderBy(m => m.SubCategory.Category.CategoryName)
+                .ThenBy(m => m.SubCategory.SubCategoryName)
+                .ThenBy(m => m.MetricName)
+                .Select(m => new CompatibleMetricViewModel
+                {
+                    MetricId = m.MetricId,
+                    MetricCode = m.MetricCode,
+                    MetricName = m.MetricName,
+                    SubCategoryId = m.SubCategoryId,
+                    SubCategoryName = m.SubCategory != null ? m.SubCategory.SubCategoryName : null,
+                    CategoryId = m.SubCategory != null ? m.SubCategory.CategoryId : null,
+                    CategoryName = m.SubCategory != null && m.SubCategory.Category != null ? m.SubCategory.Category.CategoryName : null,
+                    DataType = m.DataType,
+                    UnitId = m.UnitId,
+                    UnitName = m.Unit != null ? m.Unit.UnitName : null,
+                    Description = m.Description
+                })
+                .ToListAsync();
+
+            // Build ViewModel
+            var viewModel = new SectionMappingWizardViewModel
+            {
+                SectionId = section.SectionId,
+                SectionName = section.SectionName ?? string.Empty,
+                TemplateId = section.TemplateId,
+                TemplateName = section.Template?.TemplateName,
+                DisplayOrder = section.DisplayOrder,
+                AvailableFieldMappings = fieldMappings.Select(m => new FieldMappingSourceViewModel
+                {
+                    MappingId = m.MappingId,
+                    ItemId = m.ItemId,
+                    ItemName = m.Item?.ItemName ?? string.Empty,
+                    ItemCode = m.Item?.ItemCode,
+                    DataType = m.Item?.DataType ?? "Text",
+                    MappingType = m.MappingType,
+                    MappingName = m.MappingName,
+                    MetricId = m.MetricId,
+                    MetricName = m.Metric?.MetricName,
+                    IsSelected = existingMapping?.Sources.Any(s => s.ItemMappingId == m.MappingId) ?? false,
+                    Weight = existingMapping?.Sources.FirstOrDefault(s => s.ItemMappingId == m.MappingId)?.Weight,
+                    DisplayOrder = existingMapping?.Sources.FirstOrDefault(s => s.ItemMappingId == m.MappingId)?.DisplayOrder ?? m.Item?.DisplayOrder ?? 0
+                }).ToList(),
+                CompatibleMetrics = compatibleMetrics,
+                ExistingMapping = existingMapping != null ? new ExistingSectionMappingViewModel
+                {
+                    MappingId = existingMapping.MappingId,
+                    MappingName = existingMapping.MappingName,
+                    MappingType = existingMapping.MappingType,
+                    AggregationType = existingMapping.AggregationType,
+                    MetricId = existingMapping.MetricId,
+                    MetricName = existingMapping.Metric?.MetricName,
+                    MetricCode = existingMapping.Metric?.MetricCode,
+                    Sources = existingMapping.Sources.Select(s => new SelectedSourceViewModel
+                    {
+                        ItemMappingId = s.ItemMappingId,
+                        ItemName = s.ItemMapping?.Item?.ItemName ?? string.Empty,
+                        Weight = s.Weight,
+                        DisplayOrder = s.DisplayOrder
+                    }).ToList()
+                } : null
+            };
+
+            // Populate ViewBag with MetricCategories and MetricUnits for dropdowns
+            ViewBag.MetricCategories = await _context.MetricCategories
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.DisplayOrder)
+                .ToListAsync();
+            ViewBag.MetricUnits = await _context.MetricUnits
+                .Where(u => u.IsActive)
+                .OrderBy(u => u.DisplayOrder)
+                .ToListAsync();
+
+            return View("~/Views/Forms/FormTemplates/MetricConfig/MapSection.cshtml", viewModel);
+        }
+
+        /// <summary>
+        /// Save Section Mapping - POST action for the section mapping wizard
+        /// </summary>
+        [HttpPost("Configure/{templateId}/Section/{sectionId}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> SaveSectionMapping(int templateId, int sectionId, CreateSectionMappingDto request)
+        {
+            if (!ModelState.IsValid)
+            {
+                TempData["Error"] = "Please fill in all required fields.";
+                return RedirectToAction(nameof(MapSection), new { templateId, sectionId });
+            }
+
+            try
+            {
+                // Verify section exists and belongs to template
+                var section = await _context.FormTemplateSections
+                    .FirstOrDefaultAsync(s => s.SectionId == sectionId && s.TemplateId == templateId);
+
+                if (section == null)
+                {
+                    TempData["Error"] = "Section not found.";
+                    return RedirectToAction(nameof(Index), new { templateId });
+                }
+
+                int? metricId = null;
+
+                // Handle metric option
+                switch (request.MetricOption)
+                {
+                    case "create-new":
+                        // Create new metric definition
+                        var newMetric = new Models.Entities.Metrics.MetricDefinition
+                        {
+                            MetricName = request.NewMetricName ?? $"{section.SectionName} Metric",
+                            MetricCode = request.NewMetricCode ?? GenerateMetricCode(request.NewMetricName ?? section.SectionName ?? "Section"),
+                            Description = request.NewMetricDescription,
+                            SubCategoryId = request.NewMetricSubCategoryId,
+                            DataType = request.NewMetricDataType ?? "Decimal",
+                            UnitId = request.NewMetricUnitId,
+                            MetricScope = "Section",
+                            HierarchyLevel = 1, // Section level
+                            SourceType = request.MappingType == "Calculated" ? "SystemCalculated" : "Aggregated",
+                            AggregationType = request.NewMetricAggregationType ?? request.AggregationType,
+                            IsKPI = request.NewMetricIsKPI,
+                            ThresholdGreen = request.NewMetricGreen,
+                            ThresholdYellow = request.NewMetricYellow,
+                            ThresholdRed = request.NewMetricRed,
+                            IsActive = true,
+                            CreatedDate = DateTime.UtcNow
+                        };
+                        _context.MetricDefinitions.Add(newMetric);
+                        await _context.SaveChangesAsync();
+                        metricId = newMetric.MetricId;
+                        break;
+
+                    case "link-existing":
+                        metricId = request.MetricId;
+                        break;
+
+                    case "standalone":
+                    default:
+                        metricId = null;
+                        break;
+                }
+
+                // Check for existing mapping
+                var existingMapping = await _context.FormSectionMetricMappings
+                    .Include(m => m.Sources)
+                    .FirstOrDefaultAsync(m => m.SectionId == sectionId && m.IsActive);
+
+                if (existingMapping != null)
+                {
+                    // Update existing mapping
+                    existingMapping.MappingName = request.MappingName;
+                    existingMapping.MappingType = request.MappingType;
+                    existingMapping.AggregationType = request.AggregationType;
+                    existingMapping.MetricId = metricId;
+
+                    // Remove old sources
+                    _context.FormSectionMetricSources.RemoveRange(existingMapping.Sources);
+
+                    // Add new sources
+                    if (request.Sources != null && request.Sources.Any())
+                    {
+                        foreach (var source in request.Sources)
+                        {
+                            existingMapping.Sources.Add(new Models.Entities.Forms.FormSectionMetricSource
+                            {
+                                SectionMappingId = existingMapping.MappingId,
+                                ItemMappingId = source.ItemMappingId,
+                                Weight = source.Weight,
+                                DisplayOrder = source.DisplayOrder
+                            });
+                        }
+                    }
+                }
+                else
+                {
+                    // Create new mapping
+                    var newMapping = new Models.Entities.Forms.FormSectionMetricMapping
+                    {
+                        SectionId = sectionId,
+                        MappingName = request.MappingName,
+                        MappingType = request.MappingType,
+                        AggregationType = request.AggregationType,
+                        MetricId = metricId,
+                        IsActive = true,
+                        CreatedDate = DateTime.UtcNow
+                    };
+
+                    // Add sources
+                    if (request.Sources != null && request.Sources.Any())
+                    {
+                        foreach (var source in request.Sources)
+                        {
+                            newMapping.Sources.Add(new Models.Entities.Forms.FormSectionMetricSource
+                            {
+                                ItemMappingId = source.ItemMappingId,
+                                Weight = source.Weight,
+                                DisplayOrder = source.DisplayOrder
+                            });
+                        }
+                    }
+
+                    _context.FormSectionMetricMappings.Add(newMapping);
+                }
+
+                await _context.SaveChangesAsync();
+
+                TempData["Success"] = $"Section mapping for '{section.SectionName}' saved successfully.";
+                return RedirectToAction(nameof(Index), new { templateId });
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = $"Error saving mapping: {ex.Message}";
+                return RedirectToAction(nameof(MapSection), new { templateId, sectionId });
+            }
         }
 
         // ===================================================================
@@ -365,17 +639,25 @@ namespace FormReporting.Controllers.Metrics
 
             // Get compatible metrics for linking
             var compatibleMetrics = await _context.MetricDefinitions
+                .Include(m => m.SubCategory)
+                    .ThenInclude(sc => sc.Category)
+                .Include(m => m.Unit)
                 .Where(m => m.IsActive && m.MetricScope == "Field" && m.SourceType == "UserInput")
-                .OrderBy(m => m.Category)
+                .OrderBy(m => m.SubCategory.Category.CategoryName)
+                .ThenBy(m => m.SubCategory.SubCategoryName)
                 .ThenBy(m => m.MetricName)
                 .Select(m => new CompatibleMetricViewModel
                 {
                     MetricId = m.MetricId,
                     MetricCode = m.MetricCode,
                     MetricName = m.MetricName,
-                    Category = m.Category,
+                    SubCategoryId = m.SubCategoryId,
+                    SubCategoryName = m.SubCategory != null ? m.SubCategory.SubCategoryName : null,
+                    CategoryId = m.SubCategory != null ? m.SubCategory.CategoryId : null,
+                    CategoryName = m.SubCategory != null && m.SubCategory.Category != null ? m.SubCategory.Category.CategoryName : null,
                     DataType = m.DataType,
-                    Unit = m.Unit,
+                    UnitId = m.UnitId,
+                    UnitName = m.Unit != null ? m.Unit.UnitName : null,
                     Description = m.Description
                 })
                 .ToListAsync();
@@ -414,7 +696,6 @@ namespace FormReporting.Controllers.Metrics
                     MappingId = existingMapping.MappingId,
                     MappingName = existingMapping.MappingName,
                     MappingType = existingMapping.MappingType,
-                    AggregationType = existingMapping.AggregationType,
                     ExpectedValue = existingMapping.ExpectedValue,
                     MetricId = existingMapping.MetricId,
                     MetricName = existingMapping.Metric?.MetricName,

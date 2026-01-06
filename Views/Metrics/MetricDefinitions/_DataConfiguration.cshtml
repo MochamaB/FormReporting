@@ -42,10 +42,19 @@
 <div class="row">
     <div class="col-md-6">
         <div class="mb-3">
-            <label asp-for="Unit" class="form-label">Unit</label>
-            <input asp-for="Unit" class="form-control" placeholder="e.g., GB, %, count, days" maxlength="50" />
-            <span asp-validation-for="Unit" class="text-danger"></span>
-            <small class="text-muted">Unit of measurement (e.g., GB, %, count).</small>
+            <label asp-for="UnitId" class="form-label">Unit</label>
+            <select asp-for="UnitId" class="form-select">
+                <option value="">-- Select Unit --</option>
+                @if (ViewBag.MetricUnits != null)
+                {
+                    foreach (var unit in ViewBag.MetricUnits)
+                    {
+                        <option value="@unit.UnitId">@unit.UnitName</option>
+                    }
+                }
+            </select>
+            <span asp-validation-for="UnitId" class="text-danger"></span>
+            <small class="text-muted">Unit of measurement (e.g., Percentage, Count, Score).</small>
         </div>
     </div>
 

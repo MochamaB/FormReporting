@@ -208,15 +208,24 @@
                                         <td>@Html.Raw(template.StatusBadge)</td>
                                         <td>
                                             <div class="d-flex gap-1">
-                                                <!-- View Details -->
-                                                
-
                                                 <!-- Edit -->
-                                                <a href="@Url.Action("Edit", new { id = template.TemplateId })" 
+                                                <a href="@Url.Action("Edit", "OptionTemplates", new { id = template.TemplateId })" 
                                                    class="btn btn-sm btn-soft-success"
                                                    title="Edit Template">
                                                     <i class="ri-pencil-line"></i>
                                                 </a>
+
+                                                <!-- Delete (only for non-system templates) -->
+                                                @if (!template.IsSystemTemplate)
+                                                {
+                                                    <button type="button" 
+                                                            class="btn btn-sm btn-soft-danger btn-delete-template"
+                                                            data-template-id="@template.TemplateId"
+                                                            data-template-name="@template.TemplateName"
+                                                            title="Delete Template">
+                                                        <i class="ri-delete-bin-line"></i>
+                                                    </button>
+                                                }
                                             </div>
                                         </td>
                                     </tr>
@@ -302,9 +311,59 @@
     </div>
 </div>
 
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteTemplateModal" tabindex="-1" aria-labelledby="deleteTemplateModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteTemplateModalLabel">
+                    <i class="ri-alert-line text-danger me-2"></i>Confirm Delete
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the template "<strong id="deleteTemplateName"></strong>"?</p>
+                <p class="text-muted mb-0">This action cannot be undone. All options in this template will also be deleted.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <form id="deleteTemplateForm" method="post" style="display: inline;">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="btn btn-danger">
+                        <i class="ri-delete-bin-line me-1"></i>Delete Template
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <script>
-        // Optional: Add any client-side functionality here
-        console.log('Option Templates Index loaded');
+        (function() {
+            'use strict';
+            
+            // Delete template functionality
+            const deleteModal = document.getElementById('deleteTemplateModal');
+            const deleteForm = document.getElementById('deleteTemplateForm');
+            const deleteTemplateName = document.getElementById('deleteTemplateName');
+            
+            document.querySelectorAll('.btn-delete-template').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    const templateId = this.getAttribute('data-template-id');
+                    const templateName = this.getAttribute('data-template-name');
+                    
+                    // Update modal content
+                    deleteTemplateName.textContent = templateName;
+                    deleteForm.action = '/Forms/OptionTemplates/Delete/' + templateId;
+                    
+                    // Show modal
+                    var modal = new bootstrap.Modal(deleteModal);
+                    modal.show();
+                });
+            });
+            
+            console.log('Option Templates Index loaded');
+        })();
     </script>
 }

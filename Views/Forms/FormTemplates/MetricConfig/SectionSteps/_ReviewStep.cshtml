@@ -1,0 +1,218 @@
+@model FormReporting.Models.ViewModels.Metrics.SectionMappingWizardViewModel
+
+<!-- Review Step -->
+<div class="review-step">
+    <div class="alert alert-success mb-4">
+        <div class="d-flex">
+            <i class="ri-checkbox-circle-line me-3 fs-20"></i>
+            <div>
+                <h6 class="mb-1">Ready to Save</h6>
+                <p class="mb-0 text-muted small">
+                    Review your section mapping configuration below. Click "Save Mapping" to complete.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Configuration Summary -->
+    <div class="card">
+        <div class="card-header">
+            <h6 class="mb-0">
+                <i class="ri-file-list-3-line me-2"></i>Configuration Summary
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <table class="table table-sm table-borderless mb-0">
+                        <tbody>
+                            <tr>
+                                <td class="text-muted" style="width: 40%;">Section:</td>
+                                <td class="fw-medium">@Model.SectionName</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Mapping Name:</td>
+                                <td class="fw-medium" id="reviewMappingName">-</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Mapping Type:</td>
+                                <td class="fw-medium" id="reviewMappingType">-</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Aggregation:</td>
+                                <td class="fw-medium" id="reviewAggregationType">-</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <table class="table table-sm table-borderless mb-0">
+                        <tbody>
+                            <tr>
+                                <td class="text-muted" style="width: 40%;">Sources:</td>
+                                <td class="fw-medium" id="reviewSourceCount">0 field mapping(s)</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Metric:</td>
+                                <td class="fw-medium" id="reviewMetricChoice">Standalone</td>
+                            </tr>
+                            <tr>
+                                <td class="text-muted">Template:</td>
+                                <td class="fw-medium">@Model.TemplateName</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Selected Sources Preview -->
+    <div class="card mt-3">
+        <div class="card-header">
+            <h6 class="mb-0">
+                <i class="ri-checkbox-multiple-line me-2"></i>Selected Field Mappings
+            </h6>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-sm mb-0" id="reviewSourcesTable">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Field Name</th>
+                            <th>Mapping Type</th>
+                            <th>Weight</th>
+                        </tr>
+                    </thead>
+                    <tbody id="reviewSourcesBody">
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-3">
+                                <i class="ri-information-line me-1"></i>
+                                Sources will be displayed here after selection
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- What Happens Next -->
+    <div class="card mt-3 border-info">
+        <div class="card-header bg-info-subtle">
+            <h6 class="mb-0 text-info">
+                <i class="ri-lightbulb-line me-2"></i>What Happens Next?
+            </h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="d-flex">
+                        <div class="flex-shrink-0">
+                            <div class="avatar-xs">
+                                <div class="avatar-title bg-primary-subtle text-primary rounded">1</div>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-2">
+                            <h6 class="mb-1">Mapping Created</h6>
+                            <p class="text-muted small mb-0">
+                                The section aggregation will be saved and linked to selected field mappings.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex">
+                        <div class="flex-shrink-0">
+                            <div class="avatar-xs">
+                                <div class="avatar-title bg-primary-subtle text-primary rounded">2</div>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-2">
+                            <h6 class="mb-1">Auto-Calculation</h6>
+                            <p class="text-muted small mb-0">
+                                When submissions are made, section values will be calculated automatically.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex">
+                        <div class="flex-shrink-0">
+                            <div class="avatar-xs">
+                                <div class="avatar-title bg-primary-subtle text-primary rounded">3</div>
+                            </div>
+                        </div>
+                        <div class="flex-grow-1 ms-2">
+                            <h6 class="mb-1">Reporting</h6>
+                            <p class="text-muted small mb-0">
+                                Section metrics will appear in dashboards and reports.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+(function() {
+    // This script updates the review summary when the step is shown
+    // The main validation script in MapSection.cshtml calls updateReviewSummary()
+    
+    // Also populate the sources table
+    function populateSourcesTable() {
+        const tbody = document.getElementById('reviewSourcesBody');
+        if (!tbody) return;
+
+        const selectedSources = document.querySelectorAll('input[name="SelectedSources"]:checked');
+        const aggregationType = document.getElementById('AggregationType')?.value;
+        const showWeights = aggregationType === 'WeightedAverage';
+
+        if (selectedSources.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="3" class="text-center text-muted py-3">
+                        <i class="ri-information-line me-1"></i>
+                        No field mappings selected
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+
+        let html = '';
+        selectedSources.forEach(checkbox => {
+            const row = checkbox.closest('.list-group-item');
+            const fieldName = row.querySelector('strong')?.textContent || 'Unknown';
+            const mappingType = row.querySelector('.text-muted small')?.textContent?.split('•')[0]?.trim() || '-';
+            
+            let weight = '-';
+            if (showWeights) {
+                const weightInput = row.querySelector('.weight-input');
+                if (weightInput) {
+                    weight = (parseFloat(weightInput.value) * 100).toFixed(0) + '%';
+                }
+            }
+
+            html += `
+                <tr>
+                    <td><i class="ri-focus-3-line text-primary me-1"></i>${fieldName}</td>
+                    <td><span class="badge bg-light text-dark">${mappingType}</span></td>
+                    <td>${weight}</td>
+                </tr>
+            `;
+        });
+
+        tbody.innerHTML = html;
+    }
+
+    // Call on step activation (handled by wizard navigation)
+    // Also expose globally for the validation callback
+    window.populateSectionReviewSources = populateSourcesTable;
+
+    // Initial call
+    setTimeout(populateSourcesTable, 100);
+})();
+</script>

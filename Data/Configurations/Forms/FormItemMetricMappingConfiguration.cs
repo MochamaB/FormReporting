@@ -16,6 +16,27 @@ namespace FormReporting.Data.Configurations.Forms
                 .IsUnique()
                 .HasDatabaseName("UQ_ItemMetricMap");
 
+            // Property Configurations
+            builder.Property(fimm => fimm.MappingType)
+                .IsRequired()
+                .HasMaxLength(20)
+                .HasDefaultValue("Direct");
+
+            builder.Property(fimm => fimm.OutputType)
+                .IsRequired()
+                .HasMaxLength(20)
+                .HasDefaultValue("Raw");
+
+            builder.Property(fimm => fimm.ExpectedValue)
+                .HasMaxLength(100);
+
+            builder.Property(fimm => fimm.ComparisonOperator)
+                .HasMaxLength(20)
+                .HasDefaultValue("Equals");
+
+            builder.Property(fimm => fimm.TransformationLogic)
+                .HasColumnType("nvarchar(max)");
+
             // Indexes
             builder.HasIndex(fimm => new { fimm.ItemId, fimm.IsActive })
                 .HasDatabaseName("IX_ItemMetricMap_Item");
@@ -23,7 +44,7 @@ namespace FormReporting.Data.Configurations.Forms
             builder.HasIndex(fimm => new { fimm.MetricId, fimm.IsActive })
                 .HasDatabaseName("IX_ItemMetricMap_Metric");
 
-            builder.HasIndex(fimm => new { fimm.MappingType, fimm.IsActive })
+            builder.HasIndex(fimm => new { fimm.MappingType, fimm.OutputType, fimm.IsActive })
                 .HasDatabaseName("IX_ItemMetricMap_Type");
 
             // Default Values

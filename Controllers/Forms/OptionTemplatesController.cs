@@ -4,6 +4,7 @@ using FormReporting.Models.ViewModels.Forms;
 using FormReporting.Models.Entities.Forms;
 using FormReporting.Models.ViewModels.Components;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authorization;
 
 namespace FormReporting.Controllers.Forms
 {
@@ -11,6 +12,7 @@ namespace FormReporting.Controllers.Forms
     /// Controller for managing form item option templates
     /// Provides pre-defined option sets for rapid form building
     /// </summary>
+    [Authorize]
     [Route("Forms/[controller]")]
     public class OptionTemplatesController : Controller
     {
@@ -152,14 +154,15 @@ namespace FormReporting.Controllers.Forms
                     UsageCount = 0
                 };
 
-                // Add items
-                foreach (var itemModel in model.Items.OrderBy(i => i.DisplayOrder))
+                // Add items with auto-assigned sequential DisplayOrder
+                int displayOrder = 1;
+                foreach (var itemModel in model.Items)
                 {
                     template.Items.Add(new FormItemOptionTemplateItem
                     {
                         OptionValue = itemModel.OptionValue,
                         OptionLabel = itemModel.OptionLabel,
-                        DisplayOrder = itemModel.DisplayOrder,
+                        DisplayOrder = displayOrder++, // Auto-assign sequential DisplayOrder (1, 2, 3...)
                         ScoreValue = itemModel.ScoreValue,
                         ScoreWeight = itemModel.ScoreWeight,
                         IconClass = itemModel.IconClass,
@@ -227,9 +230,9 @@ namespace FormReporting.Controllers.Forms
         /// <summary>
         /// Handle edit template submission
         /// </summary>
-        [HttpPost("Edit")]
+        [HttpPost("Edit/{id:int}")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(OptionTemplateEditViewModel model)
+        public async Task<IActionResult> Edit(int id, OptionTemplateEditViewModel model)
         {
             if (ModelState.IsValid)
             {
@@ -264,13 +267,14 @@ namespace FormReporting.Controllers.Forms
 
                 // Remove existing items and add updated ones
                 template.Items.Clear();
-                foreach (var itemModel in model.Items.OrderBy(i => i.DisplayOrder))
+                int displayOrder = 1;
+                foreach (var itemModel in model.Items)
                 {
                     template.Items.Add(new FormItemOptionTemplateItem
                     {
                         OptionValue = itemModel.OptionValue,
                         OptionLabel = itemModel.OptionLabel,
-                        DisplayOrder = itemModel.DisplayOrder,
+                        DisplayOrder = displayOrder++, // Auto-assign sequential DisplayOrder (1, 2, 3...)
                         ScoreValue = itemModel.ScoreValue,
                         ScoreWeight = itemModel.ScoreWeight,
                         IconClass = itemModel.IconClass,
@@ -287,6 +291,67 @@ namespace FormReporting.Controllers.Forms
 
             await LoadDropdownOptions();
             return View("~/Views/Forms/OptionTemplates/Edit.cshtml", model);
+        }
+
+        /// <summary>
+        /// Delete a template
+        /// </summary>
+        [HttpPost("Delete/{id}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            var template = await _templateService.GetByIdWithItemsAsync(id);
+
+            if (template == null)
+            {
+                TempData["ErrorMessage"] = "Template not found.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Check if template is a system template
+            if (template.IsSystemTemplate)
+            {
+                TempData["ErrorMessage"] = "System templates cannot be deleted.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            var templateName = template.TemplateName;
+            var result = await _templateService.DeleteTemplateAsync(id);
+
+            if (result)
+            {
+                TempData["SuccessMessage"] = $"Option template '{templateName}' deleted successfully.";
+            }
+            else
+            {
+                TempData["ErrorMessage"] = "Failed to delete template.";
+            }
+
+            return RedirectToAction(nameof(Index));
+        }
+
+        /// <summary>
+        /// Toggle template active status
+        /// </summary>
+        [HttpPost("ToggleStatus/{id}")]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> ToggleStatus(int id)
+        {
+            var template = await _templateService.GetByIdWithItemsAsync(id);
+
+            if (template == null)
+            {
+                return Json(new { success = false, message = "Template not found." });
+            }
+
+            template.IsActive = !template.IsActive;
+            await _templateService.UpdateTemplateAsync(template);
+
+            return Json(new { 
+                success = true, 
+                isActive = template.IsActive,
+                message = template.IsActive ? "Template activated." : "Template deactivated."
+            });
         }
 
         /// <summary>

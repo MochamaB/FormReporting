@@ -91,12 +91,16 @@
                 <div class="row">
                     <div class="col-md-4">
                         <div class="mb-3">
-                            <label for="NewMetricCategory" class="form-label">Category</label>
-                            <select class="form-select" id="NewMetricCategory" name="NewMetricCategory">
-                                <option value="Performance">Performance</option>
-                                <option value="Quality">Quality</option>
-                                <option value="Compliance">Compliance</option>
-                                <option value="Infrastructure">Infrastructure</option>
+                            <label for="NewMetricCategoryId" class="form-label">Category</label>
+                            <select class="form-select" id="NewMetricCategoryId" name="NewMetricCategoryId">
+                                <option value="">-- Select Category --</option>
+                                @if (ViewBag.MetricCategories != null)
+                                {
+                                    foreach (var category in ViewBag.MetricCategories)
+                                    {
+                                        <option value="@category.CategoryId">@category.CategoryName</option>
+                                    }
+                                }
                             </select>
                         </div>
                     </div>
@@ -112,9 +116,17 @@
                     </div>
                     <div class="col-md-4">
                         <div class="mb-3">
-                            <label for="NewMetricUnit" class="form-label">Unit</label>
-                            <input type="text" class="form-control" id="NewMetricUnit" name="NewMetricUnit" 
-                                   placeholder="e.g., Score, %" value="Score" />
+                            <label for="NewMetricUnitId" class="form-label">Unit</label>
+                            <select class="form-select" id="NewMetricUnitId" name="NewMetricUnitId">
+                                <option value="">-- Select Unit --</option>
+                                @if (ViewBag.MetricUnits != null)
+                                {
+                                    foreach (var unit in ViewBag.MetricUnits)
+                                    {
+                                        <option value="@unit.UnitId">@unit.UnitName</option>
+                                    }
+                                }
+                            </select>
                         </div>
                     </div>
                 </div>
@@ -160,7 +172,8 @@
                                     <i class="ri-checkbox-circle-fill me-1"></i>Green (Good)
                                 </label>
                                 <input type="number" class="form-control" id="NewMetricGreen" name="NewMetricGreen" 
-                                       placeholder="90" step="0.01" />
+                                       value="90" step="0.01" />
+                                <small class="text-muted">Values at or above this are good</small>
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -169,7 +182,8 @@
                                     <i class="ri-error-warning-fill me-1"></i>Yellow (Warning)
                                 </label>
                                 <input type="number" class="form-control" id="NewMetricYellow" name="NewMetricYellow" 
-                                       placeholder="60" step="0.01" />
+                                       value="60" step="0.01" />
+                                <small class="text-muted">Values between yellow and green</small>
                             </div>
                         </div>
                         <div class="col-md-4">
@@ -178,7 +192,8 @@
                                     <i class="ri-close-circle-fill me-1"></i>Red (Critical)
                                 </label>
                                 <input type="number" class="form-control" id="NewMetricRed" name="NewMetricRed" 
-                                       placeholder="30" step="0.01" />
+                                       value="30" step="0.01" />
+                                <small class="text-muted">Values below this are critical</small>
                             </div>
                         </div>
                     </div>
@@ -209,7 +224,7 @@
                             {
                                 var isSelected = existingMapping?.MetricId == metric.MetricId;
                                 <option value="@metric.MetricId" 
-                                        data-category="@metric.Category"
+                                        data-category="@metric.CategoryName"
                                         data-description="@metric.Description"
                                         selected="@isSelected">
                                     @metric.MetricName (@metric.MetricCode)
@@ -311,27 +326,29 @@ document.addEventListener('DOMContentLoaded', function() {
         const dataType = dataTypeSelect.value;
         const aggregationType = aggregationTypeSelect ? aggregationTypeSelect.value : '';
 
-        // Only suggest if fields are empty
-        const hasValues = greenInput.value || yellowInput.value || redInput.value;
-        if (hasValues) return;
-
-        // Threshold suggestions based on data type and aggregation
+        // Update default values based on data type and aggregation
         if (dataType === 'Percentage' || aggregationType === 'Percentage') {
-            greenInput.placeholder = '90';
-            yellowInput.placeholder = '60';
-            redInput.placeholder = '30';
+            // Percentage-based thresholds (0-100)
+            if (!greenInput.dataset.userModified) greenInput.value = '90';
+            if (!yellowInput.dataset.userModified) yellowInput.value = '60';
+            if (!redInput.dataset.userModified) redInput.value = '30';
         } else if (dataType === 'Integer' && aggregationType === 'Average') {
-            // Rating-like scale
-            greenInput.placeholder = '4';
-            yellowInput.placeholder = '3';
-            redInput.placeholder = '2';
-        } else {
-            // Default - user must define
-            greenInput.placeholder = '';
-            yellowInput.placeholder = '';
-            redInput.placeholder = '';
+            // Rating-like scale (1-5)
+            if (!greenInput.dataset.userModified) greenInput.value = '4';
+            if (!yellowInput.dataset.userModified) yellowInput.value = '3';
+            if (!redInput.dataset.userModified) redInput.value = '2';
         }
+        // Keep existing values if user has modified them
     }
+    
+    // Track user modifications to threshold fields
+    [greenInput, yellowInput, redInput].forEach(function(input) {
+        if (input) {
+            input.addEventListener('input', function() {
+                this.dataset.userModified = 'true';
+            });
+        }
+    });
 
     // Toggle threshold section visibility based on IsKPI
     function toggleThresholdSection() {

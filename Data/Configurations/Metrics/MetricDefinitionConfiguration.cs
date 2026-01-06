@@ -15,8 +15,8 @@ namespace FormReporting.Data.Configurations.Metrics
             builder.HasIndex(m => m.MetricCode).IsUnique();
 
             // Indexes
-            builder.HasIndex(m => new { m.Category, m.IsKPI, m.IsActive })
-                .HasDatabaseName("IX_Metrics_Category");
+            builder.HasIndex(m => new { m.SubCategoryId, m.IsKPI, m.IsActive })
+                .HasDatabaseName("IX_Metrics_SubCategory");
 
             builder.HasIndex(m => new { m.SourceType, m.IsActive })
                 .HasDatabaseName("IX_Metrics_SourceType");
@@ -32,10 +32,7 @@ namespace FormReporting.Data.Configurations.Metrics
                 "DataType IN ('Integer', 'Decimal', 'Percentage', 'Boolean', 'Text', 'Duration', 'Date', 'DateTime')"
             ));
 
-            builder.ToTable(t => t.HasCheckConstraint(
-                "CK_Metric_Unit",
-                "Unit IS NULL OR Unit IN ('Count', 'Percentage', 'Version', 'Status', 'Days', 'Hours', 'Minutes', 'Seconds', 'GB', 'MB', 'KB', 'TB', 'Bytes', 'None')"
-            ));
+            // Unit is now a foreign key to MetricUnits table - no check constraint needed
 
             builder.ToTable(t => t.HasCheckConstraint(
                 "CK_Metric_AggregationType",
@@ -48,6 +45,16 @@ namespace FormReporting.Data.Configurations.Metrics
             builder.Property(m => m.CreatedDate).HasDefaultValueSql("GETDATE()");
 
             // Relationships
+            builder.HasOne(m => m.SubCategory)
+                .WithMany(sc => sc.MetricDefinitions)
+                .HasForeignKey(m => m.SubCategoryId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            builder.HasOne(m => m.Unit)
+                .WithMany()
+                .HasForeignKey(m => m.UnitId)
+                .OnDelete(DeleteBehavior.SetNull);
+
             builder.HasMany(m => m.TenantMetrics)
                 .WithOne(tm => tm.MetricDefinition)
                 .HasForeignKey(tm => tm.MetricId)

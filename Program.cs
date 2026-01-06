@@ -130,7 +130,19 @@ using (var scope = app.Services.CreateScope())
 
         // 9. Seed Notification System (depends on Users)
        // NotificationSeeder.SeedNotificationData(context);
-        
+
+       // 10. Seed Metric Categories (behavior types: Score, Performance, Trend, etc.)
+      //  MetricCategorySeeder.SeedMetricCategories(context);
+
+        // 11. Seed Metric Units (measurement units: %, count, hours, etc.)
+    //    MetricUnitSeeder.SeedMetricUnits(context);
+
+        // 12. Seed Metric SubCategories (specific types with constraints)
+     //   MetricSubCategorySeeder.SeedMetricSubCategories(context);
+
+        // 13. Seed Metric SubCategory-Unit links (which units are allowed per subcategory)
+     //   MetricSubCategoryUnitSeeder.SeedMetricSubCategoryUnits(context);
+
     }
     catch (Exception ex)
     {

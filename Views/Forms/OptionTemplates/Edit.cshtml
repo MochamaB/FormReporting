@@ -12,7 +12,7 @@
     var wizardConfig = new WizardConfig
     {
         FormId = "editTemplateWizard",
-        FormAction = Url.Action("Edit", "OptionTemplates") ?? "/Forms/OptionTemplates/Edit",
+        FormAction = Url.Action("Edit", "OptionTemplates", new { id = Model.TemplateId }) ?? $"/Forms/OptionTemplates/Edit/{Model.TemplateId}",
         FormMethod = "POST",
         Layout = WizardLayout.Vertical,
         Steps = new List<WizardStep>
@@ -65,15 +65,16 @@
                 <p class="text-muted mb-0 mt-1">Update template properties and manage options</p>
             </div>
             <div class="card-body">
-                <!-- Hidden field for TemplateId -->
-                <input type="hidden" name="TemplateId" value="@Model.TemplateId" form="@wizard.FormId" />
-                
                 @{
                     // Pass the OptionTemplateEditViewModel to wizard step partials
                     ViewData["ParentModel"] = Model;
                 }
                 
                 <form id="@wizard.FormId" method="@wizard.FormMethod" action="@wizard.FormAction">
+                    @Html.AntiForgeryToken()
+                    <!-- Hidden field for TemplateId - must be inside the form -->
+                    <input type="hidden" name="TemplateId" value="@Model.TemplateId" />
+                    
                     <partial name="~/Views/Shared/Components/Wizards/_VerticalWizard.cshtml" model="wizard" />
                 </form>
             </div>

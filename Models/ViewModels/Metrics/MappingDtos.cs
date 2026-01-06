@@ -46,14 +46,12 @@ namespace FormReporting.Models.ViewModels.Metrics
         [StringLength(500)]
         public string? NewMetricDescription { get; set; }
 
-        [StringLength(50)]
-        public string? NewMetricCategory { get; set; }
+        public int NewMetricSubCategoryId { get; set; }
 
         [StringLength(20)]
         public string? NewMetricDataType { get; set; }
 
-        [StringLength(20)]
-        public string? NewMetricUnit { get; set; }
+        public int? NewMetricUnitId { get; set; }
 
         public decimal? NewMetricGreen { get; set; }
         public decimal? NewMetricYellow { get; set; }

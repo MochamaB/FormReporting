@@ -4,6 +4,7 @@ using FormReporting.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FormReporting.Data.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260105211026_AddMetriccategoriesAndUnits")]
+    partial class AddMetriccategoriesAndUnits
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -598,11 +601,10 @@ namespace FormReporting.Data.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("MappingId"));
 
-                    b.Property<string>("ComparisonOperator")
-                        .ValueGeneratedOnAdd()
+                    b.Property<string>("AggregationType")
+                        .IsRequired()
                         .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .HasDefaultValue("Equals");
+                        .HasColumnType("nvarchar(20)");
 
                     b.Property<DateTime>("CreatedDate")
                         .ValueGeneratedOnAdd()
@@ -628,20 +630,11 @@ namespace FormReporting.Data.Migrations
 
                     b.Property<string>("MappingType")
                         .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .HasDefaultValue("Direct");
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
 
                     b.Property<int?>("MetricId")
                         .HasColumnType("int");
-
-                    b.Property<string>("OutputType")
-                        .IsRequired()
-                        .ValueGeneratedOnAdd()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)")
-                        .HasDefaultValue("Raw");
 
                     b.Property<string>("TransformationLogic")
                         .HasColumnType("nvarchar(max)");
@@ -656,11 +649,11 @@ namespace FormReporting.Data.Migrations
                         .HasDatabaseName("UQ_ItemMetricMap")
                         .HasFilter("[MetricId] IS NOT NULL");
 
+                    b.HasIndex("MappingType", "IsActive")
+                        .HasDatabaseName("IX_ItemMetricMap_Type");
+
                     b.HasIndex("MetricId", "IsActive")
                         .HasDatabaseName("IX_ItemMetricMap_Metric");
-
-                    b.HasIndex("MappingType", "OutputType", "IsActive")
-                        .HasDatabaseName("IX_ItemMetricMap_Type");
 
                     b.ToTable("FormItemMetricMappings");
                 });
@@ -3716,6 +3709,9 @@ namespace FormReporting.Data.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("nvarchar(20)");
 
+                    b.Property<int?>("CategoryId")
+                        .HasColumnType("int");
+
                     b.Property<string>("ComplianceRule")
                         .HasColumnType("nvarchar(max)");
 
@@ -3764,9 +3760,6 @@ namespace FormReporting.Data.Migrations
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
 
-                    b.Property<int?>("MetricUnitUnitId")
-                        .HasColumnType("int");
-
                     b.Property<int?>("ParentMetricId")
                         .HasColumnType("int");
 
@@ -3774,9 +3767,6 @@ namespace FormReporting.Data.Migrations
                         .IsRequired()
                         .HasMaxLength(30)
                         .HasColumnType("nvarchar(30)");
-
-                    b.Property<int>("SubCategoryId")
-                        .HasColumnType("int");
 
                     b.Property<decimal?>("ThresholdGreen")
                         .HasColumnType("decimal(18,4)");
@@ -3795,8 +3785,6 @@ namespace FormReporting.Data.Migrations
                     b.HasIndex("MetricCode")
                         .IsUnique();
 
-                    b.HasIndex("MetricUnitUnitId");
-
                     b.HasIndex("ParentMetricId");
 
                     b.HasIndex("UnitId");
@@ -3804,8 +3792,8 @@ namespace FormReporting.Data.Migrations
                     b.HasIndex("SourceType", "IsActive")
                         .HasDatabaseName("IX_Metrics_SourceType");
 
-                    b.HasIndex("SubCategoryId", "IsKPI", "IsActive")
-                        .HasDatabaseName("IX_Metrics_SubCategory");
+                    b.HasIndex("CategoryId", "IsKPI", "IsActive")
+                        .HasDatabaseName("IX_Metrics_Category");
 
                     b.ToTable("MetricDefinitions", t =>
                         {
@@ -3815,134 +3803,6 @@ namespace FormReporting.Data.Migrations
 
                             t.HasCheckConstraint("CK_Metric_SourceType", "SourceType IN ('UserInput', 'SystemCalculated', 'ExternalSystem', 'ComplianceTracking', 'AutomatedCheck')");
                         });
-                });
-
-            modelBuilder.Entity("FormReporting.Models.Entities.Metrics.MetricSubCategory", b =>
-                {
-                    b.Property<int>("SubCategoryId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SubCategoryId"));
-
-                    b.Property<string>("AllowedAggregationTypes")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AllowedDataTypes")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("AllowedScopes")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<int>("CategoryId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedDate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.Property<string>("DefaultAggregationType")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("DefaultDataType")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<string>("DefaultScope")
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<int?>("DefaultUnitId")
-                        .HasColumnType("int");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsActive")
-                        .HasColumnType("bit");
-
-                    b.Property<string>("SubCategoryCode")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("SubCategoryName")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<decimal?>("SuggestedThresholdGreen")
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal?>("SuggestedThresholdRed")
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<decimal?>("SuggestedThresholdYellow")
-                        .HasColumnType("decimal(18,4)");
-
-                    b.HasKey("SubCategoryId");
-
-                    b.HasIndex("DefaultUnitId");
-
-                    b.HasIndex("SubCategoryCode")
-                        .IsUnique()
-                        .HasDatabaseName("IX_MetricSubCategories_SubCategoryCode");
-
-                    b.HasIndex("CategoryId", "DisplayOrder")
-                        .HasDatabaseName("IX_MetricSubCategories_CategoryId_DisplayOrder");
-
-                    b.ToTable("MetricSubCategories", (string)null);
-                });
-
-            modelBuilder.Entity("FormReporting.Models.Entities.Metrics.MetricSubCategoryUnit", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedDate")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValueSql("GETUTCDATE()");
-
-                    b.Property<int>("DisplayOrder")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsDefault")
-                        .HasColumnType("bit");
-
-                    b.Property<int>("SubCategoryId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UnitId")
-                        .HasColumnType("int");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UnitId");
-
-                    b.HasIndex("SubCategoryId", "DisplayOrder")
-                        .HasDatabaseName("IX_MetricSubCategoryUnits_SubCategoryId_DisplayOrder");
-
-                    b.HasIndex("SubCategoryId", "UnitId")
-                        .IsUnique()
-                        .HasDatabaseName("IX_MetricSubCategoryUnits_SubCategoryId_UnitId");
-
-                    b.ToTable("MetricSubCategoryUnits", (string)null);
                 });
 
             modelBuilder.Entity("FormReporting.Models.Entities.Metrics.MetricUnit", b =>
@@ -7658,65 +7518,21 @@ namespace FormReporting.Data.Migrations
 
             modelBuilder.Entity("FormReporting.Models.Entities.Metrics.MetricDefinition", b =>
                 {
-                    b.HasOne("FormReporting.Models.Entities.Metrics.MetricUnit", null)
+                    b.HasOne("FormReporting.Models.Entities.Metrics.MetricCategory", "Category")
                         .WithMany("MetricDefinitions")
-                        .HasForeignKey("MetricUnitUnitId");
+                        .HasForeignKey("CategoryId");
 
                     b.HasOne("FormReporting.Models.Entities.Metrics.MetricDefinition", "ParentMetric")
                         .WithMany("ChildMetrics")
                         .HasForeignKey("ParentMetricId");
 
-                    b.HasOne("FormReporting.Models.Entities.Metrics.MetricSubCategory", "SubCategory")
-                        .WithMany("MetricDefinitions")
-                        .HasForeignKey("SubCategoryId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
                     b.HasOne("FormReporting.Models.Entities.Metrics.MetricUnit", "Unit")
-                        .WithMany()
-                        .HasForeignKey("UnitId")
-                        .OnDelete(DeleteBehavior.SetNull);
-
-                    b.Navigation("ParentMetric");
-
-                    b.Navigation("SubCategory");
-
-                    b.Navigation("Unit");
-                });
-
-            modelBuilder.Entity("FormReporting.Models.Entities.Metrics.MetricSubCategory", b =>
-                {
-                    b.HasOne("FormReporting.Models.Entities.Metrics.MetricCategory", "Category")
-                        .WithMany("SubCategories")
-                        .HasForeignKey("CategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("FormReporting.Models.Entities.Metrics.MetricUnit", "DefaultUnit")
-                        .WithMany()
-                        .HasForeignKey("DefaultUnitId")
-                        .OnDelete(DeleteBehavior.SetNull);
+                        .WithMany("MetricDefinitions")
+                        .HasForeignKey("UnitId");
 
                     b.Navigation("Category");
 
-                    b.Navigation("DefaultUnit");
-                });
-
-            modelBuilder.Entity("FormReporting.Models.Entities.Metrics.MetricSubCategoryUnit", b =>
-                {
-                    b.HasOne("FormReporting.Models.Entities.Metrics.MetricSubCategory", "SubCategory")
-                        .WithMany("AllowedUnits")
-                        .HasForeignKey("SubCategoryId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("FormReporting.Models.Entities.Metrics.MetricUnit", "Unit")
-                        .WithMany()
-                        .HasForeignKey("UnitId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("SubCategory");
+                    b.Navigation("ParentMetric");
 
                     b.Navigation("Unit");
                 });
@@ -8643,7 +8459,7 @@ namespace FormReporting.Data.Migrations
 
             modelBuilder.Entity("FormReporting.Models.Entities.Metrics.MetricCategory", b =>
                 {
-                    b.Navigation("SubCategories");
+                    b.Navigation("MetricDefinitions");
                 });
 
             modelBuilder.Entity("FormReporting.Models.Entities.Metrics.MetricDefinition", b =>
@@ -8655,13 +8471,6 @@ namespace FormReporting.Data.Migrations
                     b.Navigation("SystemMetricLogs");
 
                     b.Navigation("TenantMetrics");
-                });
-
-            modelBuilder.Entity("FormReporting.Models.Entities.Metrics.MetricSubCategory", b =>
-                {
-                    b.Navigation("AllowedUnits");
-
-                    b.Navigation("MetricDefinitions");
                 });
 
             modelBuilder.Entity("FormReporting.Models.Entities.Metrics.MetricUnit", b =>
