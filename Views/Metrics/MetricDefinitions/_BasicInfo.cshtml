@@ -27,21 +27,30 @@
 </div>
 
 <div class="row">
-    <div class="col-12">
+    <div class="col-md-6">
         <div class="mb-3">
-            <label asp-for="SubCategoryId" class="form-label">Subcategory</label>
-            <select asp-for="SubCategoryId" class="form-select">
-                <option value="">-- Select Subcategory --</option>
-                @if (ViewBag.MetricSubCategories != null)
+            <label for="CategoryId" class="form-label">Category <span class="text-danger">*</span></label>
+            <select id="CategoryId" name="CategoryId" class="form-select" data-target="SubCategoryId">
+                <option value="">-- Select Category --</option>
+                @if (ViewBag.MetricCategories != null)
                 {
-                    foreach (var subCategory in ViewBag.MetricSubCategories)
+                    foreach (var category in ViewBag.MetricCategories)
                     {
-                        <option value="@subCategory.SubCategoryId">@subCategory.CategoryName - @subCategory.SubCategoryName</option>
+                        <option value="@category.CategoryId">@category.CategoryName</option>
                     }
                 }
             </select>
+            <small class="text-muted">Choose the main category for this metric.</small>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="mb-3">
+            <label asp-for="SubCategoryId" class="form-label">Subcategory <span class="text-danger">*</span></label>
+            <select asp-for="SubCategoryId" id="SubCategoryId" class="form-select" disabled data-target="UnitId">
+                <option value="">-- Select Category First --</option>
+            </select>
             <span asp-validation-for="SubCategoryId" class="text-danger"></span>
-            <small class="text-muted">Group this metric into a category for easier filtering.</small>
+            <small class="text-muted">Specific subcategory within the selected category.</small>
         </div>
     </div>
 </div>

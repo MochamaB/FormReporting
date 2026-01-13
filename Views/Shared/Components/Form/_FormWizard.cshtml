@@ -57,6 +57,18 @@
                     @await Html.PartialAsync("Components/Form/_FormSection", section)
                 </div>
             }
+
+            @* Complete/Review Step - Final step before submission *@
+            @{
+                var completeStepNumber = Model.Sections.Count + 1;
+            }
+            <div class="wizard-step-content"
+                 id="step-@completeStepNumber-@Model.FormId"
+                 data-step="@completeStepNumber"
+                 data-complete-step="true"
+                 style="display: none;">
+                @await Html.PartialAsync("~/Views/Shared/Components/Form/_ReviewStep.cshtml", Model)
+            </div>
         </div>
 
         @* Wizard Navigation Buttons *@

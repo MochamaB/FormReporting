@@ -2,7 +2,7 @@
 
 @{
     var parentModel = ViewData["ParentModel"] as FormReporting.Models.ViewModels.Metrics.FieldMappingWizardViewModel ?? Model;
-    var existingMapping = parentModel?.ExistingMapping;
+    var existingMapping = parentModel?.ExistingMappings?.FirstOrDefault();
     var compatibleMetrics = parentModel?.CompatibleMetrics ?? new List<FormReporting.Models.ViewModels.Metrics.CompatibleMetricViewModel>();
     
     // Determine current metric option
@@ -15,6 +15,17 @@
 
 <!-- Step 2: Choose Metric -->
 <div class="metric-choice-step">
+    
+    <!-- Display Mapping Name from Step 1 -->
+    <div class="alert alert-info mb-4">
+        <div class="d-flex align-items-center">
+            <i class="ri-information-line fs-5 me-2"></i>
+            <div>
+                <strong>Mapping Configuration:</strong>
+                <span id="displayMappingName" class="ms-2">@(parentModel?.DataType ?? "Value") - Direct (Raw)</span>
+            </div>
+        </div>
+    </div>
     
     <!-- Metric Option Selector -->
     <div class="mb-4">
@@ -63,33 +74,10 @@
                 <h6 class="card-title text-success">
                     <i class="ri-add-circle-line me-2"></i>Create New Metric Definition
                 </h6>
-                
+                <hr />
+
                 <div class="row">
                     <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="NewMetricName" class="form-label">Metric Name <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" id="NewMetricName" name="NewMetricName" 
-                                   value="@(parentModel?.FieldName) Performance Index"
-                                   placeholder="e.g., Field Performance Index" />
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="NewMetricCode" class="form-label">Metric Code</label>
-                            <input type="text" class="form-control" id="NewMetricCode" name="NewMetricCode" 
-                                   placeholder="Auto-generated" readonly />
-                        </div>
-                    </div>
-                </div>
-                
-                <div class="mb-3">
-                    <label for="NewMetricDescription" class="form-label">Description</label>
-                    <textarea class="form-control" id="NewMetricDescription" name="NewMetricDescription" rows="2" 
-                              placeholder="Describe what this metric measures">Measures the performance and quality of @(parentModel?.FieldName?.ToLower()) based on field responses.</textarea>
-                </div>
-                
-                <div class="row">
-                    <div class="col-md-4">
                         <div class="mb-3">
                             <label for="NewMetricCategoryId" class="form-label">Category</label>
                             <select class="form-select" id="NewMetricCategoryId" name="NewMetricCategoryId">
@@ -102,39 +90,86 @@
                                     }
                                 }
                             </select>
+                            <div class="form-text">Select a category to see available subcategories</div>
                         </div>
                     </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="NewMetricSubCategoryId" class="form-label">SubCategory <span class="text-danger">*</span></label>
+                            <select class="form-select" id="NewMetricSubCategoryId" name="NewMetricSubCategoryId" disabled>
+                                <option value="">-- Select Category First --</option>
+                            </select>
+                            <div class="form-text">SubCategory determines allowed data types and units</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
                     <div class="col-md-4">
                         <div class="mb-3">
-                            <label for="NewMetricDataType" class="form-label">Data Type</label>
-                            <select class="form-select" id="NewMetricDataType" name="NewMetricDataType">
-                                <option value="Decimal">Decimal</option>
-                                <option value="Integer">Integer</option>
-                                <option value="Percentage">Percentage</option>
+                            <label for="NewMetricDataType" class="form-label">Data Type <span class="text-danger">*</span></label>
+                            <select class="form-select" id="NewMetricDataType" name="NewMetricDataType" disabled required>
+                                <option value="">-- Select SubCategory First --</option>
                             </select>
+                            <div class="form-text text-muted" id="allowedDataTypesHint">Select a subcategory to see allowed data types</div>
                         </div>
                     </div>
+
+                    <div class="col-md-4">
+                        <div class="mb-3">
+                            <label for="NewMetricAggregationType" class="form-label">Aggregation Type <span class="text-danger">*</span></label>
+                            <select class="form-select" id="NewMetricAggregationType" name="NewMetricAggregationType" disabled required>
+                                <option value="">-- Select SubCategory First --</option>
+                            </select>
+                            <div class="form-text text-muted" id="allowedAggregationTypesHint">Select a subcategory to see allowed aggregation types</div>
+                        </div>
+                    </div>
+                   
                     <div class="col-md-4">
                         <div class="mb-3">
                             <label for="NewMetricUnitId" class="form-label">Unit</label>
-                            <select class="form-select" id="NewMetricUnitId" name="NewMetricUnitId">
-                                <option value="">-- Select Unit --</option>
-                                @if (ViewBag.MetricUnits != null)
-                                {
-                                    foreach (var unit in ViewBag.MetricUnits)
-                                    {
-                                        <option value="@unit.UnitId">@unit.UnitName</option>
-                                    }
-                                }
+                            <select class="form-select" id="NewMetricUnitId" name="NewMetricUnitId" disabled>
+                                <option value="">-- Select SubCategory First --</option>
                             </select>
+                            <div class="form-text text-muted" id="allowedUnitsHint">Select a subcategory to see allowed units</div>
                         </div>
                     </div>
                 </div>
                 
                 <hr />
+
+                                <div class="row">
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="NewMetricName" class="form-label">Metric Name <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" id="NewMetricName" name="NewMetricName" 
+                                   value=""
+                                   placeholder="Auto-generated from selections" />
+                            <small class="text-muted">Format: [AggregationType] [SubCategory] of [Context]</small>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="mb-3">
+                            <label for="NewMetricCode" class="form-label">Metric Code</label>
+                            <input type="text" class="form-control" id="NewMetricCode" name="NewMetricCode" 
+                                   placeholder="Auto-generated" readonly />
+                            <small class="text-muted">Generated from metric name</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="NewMetricDescription" class="form-label">Description</label>
+                    <textarea class="form-control" id="NewMetricDescription" name="NewMetricDescription" rows="2" 
+                              placeholder="Auto-generated description"></textarea>
+                    <small class="text-muted">Auto-generated based on selections</small>
+                </div>
+
+                <hr/>
+
                 <h6 class="text-muted mb-3">KPI Settings</h6>
                 <div class="row">
-                    <div class="col-md-6">
+                    <div class="col-md-12">
                         <div class="mb-3">
                             <div class="form-check form-switch">
                                 <input class="form-check-input" type="checkbox" id="NewMetricIsKPI" name="NewMetricIsKPI" value="true" />
@@ -143,22 +178,6 @@
                                 </label>
                             </div>
                             <small class="text-muted">Enable to track this metric as a Key Performance Indicator with thresholds.</small>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="mb-3">
-                            <label for="NewMetricAggregationType" class="form-label">Aggregation Type</label>
-                            <select class="form-select" id="NewMetricAggregationType" name="NewMetricAggregationType">
-                                <option value="">Use mapping aggregation type</option>
-                                <option value="Sum">Sum</option>
-                                <option value="Average">Average</option>
-                                <option value="Count">Count</option>
-                                <option value="Min">Min</option>
-                                <option value="Max">Max</option>
-                                <option value="Latest">Latest</option>
-                                <option value="Percentage">Percentage</option>
-                            </select>
-                            <small class="text-muted">How to aggregate values across submissions.</small>
                         </div>
                     </div>
                 </div>
@@ -264,6 +283,28 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    // ===================================================================
+    // Update Mapping Name Display from Step 1
+    // ===================================================================
+    function updateMappingNameDisplay() {
+        const mappingNameInput = document.getElementById('MappingName');
+        const displayMappingName = document.getElementById('displayMappingName');
+        
+        if (mappingNameInput && displayMappingName) {
+            const mappingName = mappingNameInput.value || '@(parentModel?.FieldName ?? "Field") - Direct (Raw)';
+            displayMappingName.textContent = mappingName;
+        }
+    }
+    
+    // Update on page load
+    updateMappingNameDisplay();
+    
+    // Listen for changes from Step 1 (if navigating back and forth)
+    const mappingNameInput = document.getElementById('MappingName');
+    if (mappingNameInput) {
+        mappingNameInput.addEventListener('change', updateMappingNameDisplay);
+    }
+    
     // Generate metric code from name
     const metricNameInput = document.getElementById('NewMetricName');
     const metricCodeInput = document.getElementById('NewMetricCode');
@@ -287,10 +328,311 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // ===================================================================
+    // Category → SubCategory Cascading Dropdown
+    // ===================================================================
+    const categorySelect = document.getElementById('NewMetricCategoryId');
+    const subCategorySelect = document.getElementById('NewMetricSubCategoryId');
+    const dataTypeHint = document.getElementById('allowedDataTypesHint');
+    const aggregationHint = document.getElementById('allowedAggregationTypesHint');
+
+    if (categorySelect && subCategorySelect) {
+        categorySelect.addEventListener('change', function() {
+            const categoryId = this.value;
+
+            // Reset subcategory dropdown
+            subCategorySelect.innerHTML = '<option value="">-- Loading... --</option>';
+            subCategorySelect.disabled = true;
+
+            if (!categoryId) {
+                subCategorySelect.innerHTML = '<option value="">-- Select Category First --</option>';
+                return;
+            }
+
+            // Fetch subcategories for selected category
+            fetch(`/Metrics/MetricDefinitions/api/subcategories/${categoryId}`)
+                .then(response => response.json())
+                .then(subcategories => {
+                    subCategorySelect.innerHTML = '<option value="">-- Select SubCategory --</option>';
+
+                    if (subcategories && subcategories.length > 0) {
+                        subcategories.forEach(sc => {
+                            const option = document.createElement('option');
+                            option.value = sc.subCategoryId;
+                            option.textContent = sc.subCategoryName;
+                            option.dataset.allowedDataTypes = sc.allowedDataTypes || '';
+                            option.dataset.allowedAggregationTypes = sc.allowedAggregationTypes || '';
+                            option.dataset.defaultDataType = sc.defaultDataType || '';
+                            option.dataset.defaultAggregationType = sc.defaultAggregationType || '';
+                            option.dataset.defaultUnitId = sc.defaultUnitId || '';
+                            option.dataset.suggestedThresholdGreen = sc.suggestedThresholdGreen || '';
+                            option.dataset.suggestedThresholdYellow = sc.suggestedThresholdYellow || '';
+                            option.dataset.suggestedThresholdRed = sc.suggestedThresholdRed || '';
+                            subCategorySelect.appendChild(option);
+                        });
+                        subCategorySelect.disabled = false;
+                    } else {
+                        subCategorySelect.innerHTML = '<option value="">-- No SubCategories Available --</option>';
+                    }
+                })
+                .catch(error => {
+                    console.error('Error loading subcategories:', error);
+                    subCategorySelect.innerHTML = '<option value="">-- Error Loading --</option>';
+                });
+        });
+
+        // Handle subcategory selection - dynamically populate dropdowns based on DB constraints
+        subCategorySelect.addEventListener('change', async function() {
+            const subCategoryId = this.value;
+            const selectedOption = this.options[this.selectedIndex];
+            
+            const dataTypeSelect = document.getElementById('NewMetricDataType');
+            const aggTypeSelect = document.getElementById('NewMetricAggregationType');
+            const unitSelect = document.getElementById('NewMetricUnitId');
+            
+            if (!subCategoryId) {
+                // Reset all dropdowns
+                if (dataTypeSelect) {
+                    dataTypeSelect.innerHTML = '<option value="">-- Select SubCategory First --</option>';
+                    dataTypeSelect.disabled = true;
+                }
+                if (aggTypeSelect) {
+                    aggTypeSelect.innerHTML = '<option value="">-- Select SubCategory First --</option>';
+                    aggTypeSelect.disabled = true;
+                }
+                if (unitSelect) {
+                    unitSelect.innerHTML = '<option value="">-- Select SubCategory First --</option>';
+                    unitSelect.disabled = true;
+                }
+                if (dataTypeHint) dataTypeHint.textContent = 'Select a subcategory to see allowed data types';
+                if (aggregationHint) aggregationHint.textContent = 'Select a subcategory to see allowed aggregation types';
+                return;
+            }
+
+            // Get constraint data from selected option's data attributes
+            const allowedDataTypes = selectedOption.dataset.allowedDataTypes;
+            const allowedAggregationTypes = selectedOption.dataset.allowedAggregationTypes;
+            const defaultDataType = selectedOption.dataset.defaultDataType;
+            const defaultAggregationType = selectedOption.dataset.defaultAggregationType;
+            const defaultUnitId = selectedOption.dataset.defaultUnitId;
+
+            // 1. Populate Data Type dropdown
+            if (dataTypeSelect && allowedDataTypes) {
+                const dataTypes = allowedDataTypes.split(',').map(dt => dt.trim());
+                dataTypeSelect.innerHTML = '<option value="">-- Select Data Type --</option>';
+                dataTypes.forEach(dataType => {
+                    const option = document.createElement('option');
+                    option.value = dataType;
+                    option.textContent = dataType;
+                    if (dataType === defaultDataType) {
+                        option.selected = true;
+                    }
+                    dataTypeSelect.appendChild(option);
+                });
+                dataTypeSelect.disabled = false;
+                
+                if (dataTypeHint) {
+                    dataTypeHint.innerHTML = `<small class="text-success"><i class="ri-check-line"></i> Allowed: ${allowedDataTypes}</small>`;
+                }
+            }
+
+            // 2. Populate Aggregation Type dropdown
+            if (aggTypeSelect && allowedAggregationTypes) {
+                const aggTypes = allowedAggregationTypes.split(',').map(at => at.trim());
+                aggTypeSelect.innerHTML = '<option value="">-- Select Aggregation Type --</option>';
+                
+                // Map aggregation type codes to display names
+                const aggTypeLabels = {
+                    'SUM': 'Sum',
+                    'AVG': 'Average',
+                    'COUNT': 'Count',
+                    'MIN': 'Minimum',
+                    'MAX': 'Maximum',
+                    'LAST_VALUE': 'Latest',
+                    'PERCENTAGE': 'Percentage'
+                };
+                
+                aggTypes.forEach(aggType => {
+                    const option = document.createElement('option');
+                    option.value = aggType;
+                    option.textContent = aggTypeLabels[aggType] || aggType;
+                    if (aggType === defaultAggregationType) {
+                        option.selected = true;
+                    }
+                    aggTypeSelect.appendChild(option);
+                });
+                aggTypeSelect.disabled = false;
+                
+                if (aggregationHint) {
+                    aggregationHint.innerHTML = `<small class="text-success"><i class="ri-check-line"></i> Allowed: ${allowedAggregationTypes}</small>`;
+                }
+            }
+
+            // 3. Populate Units dropdown from API
+            if (unitSelect) {
+                unitSelect.innerHTML = '<option value="">-- Loading Units... --</option>';
+                unitSelect.disabled = true;
+                
+                try {
+                    const response = await fetch(`/Metrics/MetricDefinitions/api/subcategory-units/${subCategoryId}`);
+                    const units = await response.json();
+                    
+                    unitSelect.innerHTML = '<option value="">-- Select Unit (Optional) --</option>';
+                    units.forEach(unit => {
+                        const option = document.createElement('option');
+                        option.value = unit.unitId;
+                        option.textContent = `${unit.unitName} (${unit.unitSymbol})`;
+                        if (unit.isDefault || unit.unitId == defaultUnitId) {
+                            option.selected = true;
+                        }
+                        unitSelect.appendChild(option);
+                    });
+                    unitSelect.disabled = false;
+                    
+                    const unitsHint = document.getElementById('allowedUnitsHint');
+                    if (unitsHint) {
+                        unitsHint.innerHTML = `<small class="text-success"><i class="ri-check-line"></i> ${units.length} unit(s) available</small>`;
+                    }
+                } catch (error) {
+                    console.error('Error loading units:', error);
+                    unitSelect.innerHTML = '<option value="">-- Error Loading Units --</option>';
+                }
+            }
+            
+            // 4. Populate Threshold fields with suggested values
+            const greenInput = document.getElementById('NewMetricGreen');
+            const yellowInput = document.getElementById('NewMetricYellow');
+            const redInput = document.getElementById('NewMetricRed');
+            
+            if (greenInput && selectedOption.dataset.suggestedThresholdGreen) {
+                greenInput.value = selectedOption.dataset.suggestedThresholdGreen;
+                greenInput.placeholder = `Suggested: ${selectedOption.dataset.suggestedThresholdGreen}`;
+            }
+            if (yellowInput && selectedOption.dataset.suggestedThresholdYellow) {
+                yellowInput.value = selectedOption.dataset.suggestedThresholdYellow;
+                yellowInput.placeholder = `Suggested: ${selectedOption.dataset.suggestedThresholdYellow}`;
+            }
+            if (redInput && selectedOption.dataset.suggestedThresholdRed) {
+                redInput.value = selectedOption.dataset.suggestedThresholdRed;
+                redInput.placeholder = `Suggested: ${selectedOption.dataset.suggestedThresholdRed}`;
+            }
+            
+            // Auto-generate metric name after subcategory changes
+            generateMetricName();
+        });
+    }
+
+    // ===================================================================
+    // Auto-Generate Metric Name, Code, and Description
+    // ===================================================================
+    function generateMetricName() {
+        const categorySelect = document.getElementById('NewMetricCategoryId');
+        const subCategorySelect = document.getElementById('NewMetricSubCategoryId');
+        const aggTypeSelect = document.getElementById('NewMetricAggregationType');
+        const dataTypeSelect = document.getElementById('NewMetricDataType');
+        const nameInput = document.getElementById('NewMetricName');
+        const codeInput = document.getElementById('NewMetricCode');
+        const descriptionInput = document.getElementById('NewMetricDescription');
+        
+        if (!subCategorySelect || !aggTypeSelect || !nameInput) return;
+        
+        const subCategoryId = subCategorySelect.value;
+        const aggType = aggTypeSelect.value;
+        
+        if (!subCategoryId || !aggType) {
+            // Clear if incomplete
+            nameInput.value = '';
+            codeInput.value = '';
+            descriptionInput.value = '';
+            return;
+        }
+        
+        // Get selected option texts
+        const subCategoryName = subCategorySelect.options[subCategorySelect.selectedIndex]?.text || '';
+        const aggTypeText = aggTypeSelect.options[aggTypeSelect.selectedIndex]?.text || '';
+        
+        // Get context (field name or template name)
+        const context = '@(parentModel?.FieldName ?? parentModel?.TemplateName ?? "Local Area Network")';
+        
+        // Generate name: [AggregationType] [SubCategory] of [Context]
+        // Example: "Average Composite Score of Local Area Network"
+        const generatedName = `${aggTypeText} ${subCategoryName} of ${context}`;
+        nameInput.value = generatedName;
+        
+        // Generate code: Uppercase, replace spaces with underscores
+        // Example: "AVG_COMPOSITE_SCORE_LAN"
+        const generatedCode = generatedName
+            .toUpperCase()
+            .replace(/\s+/g, '_')
+            .replace(/[^A-Z0-9_]/g, '')
+            .substring(0, 50); // Limit length
+        codeInput.value = generatedCode;
+        
+        // Generate description
+        const dataType = dataTypeSelect?.value || 'value';
+        const generatedDescription = `Calculates the ${aggTypeText.toLowerCase()} ${subCategoryName.toLowerCase()} ` +
+            `for ${context} based on ${dataType.toLowerCase()} data. ` +
+            `This metric aggregates field-level data to provide insights into performance.`;
+        descriptionInput.value = generatedDescription;
+    }
+    
+    // Attach listeners to regenerate name when selections change
+    // Note: Using getElementById directly to avoid duplicate declarations
+    const aggTypeSelectForName = document.getElementById('NewMetricAggregationType');
+    const dataTypeSelectForName = document.getElementById('NewMetricDataType');
+    
+    if (aggTypeSelectForName) {
+        aggTypeSelectForName.addEventListener('change', generateMetricName);
+    }
+    if (dataTypeSelectForName) {
+        dataTypeSelectForName.addEventListener('change', generateMetricName);
+    }
+
+    // Note: Category and SubCategory change handlers are already defined above
+    // in the cascading dropdown section (lines 312-357 and 360-478)
+    
+    function clearDependentFields() {
+        // Clear dropdowns
+        const dataTypeSelect = document.getElementById('NewMetricDataType');
+        const aggTypeSelect = document.getElementById('NewMetricAggregationType');
+        const unitSelect = document.getElementById('NewMetricUnitId');
+        
+        if (dataTypeSelect) {
+            dataTypeSelect.innerHTML = '<option value="">-- Select SubCategory First --</option>';
+            dataTypeSelect.disabled = true;
+        }
+        if (aggTypeSelect) {
+            aggTypeSelect.innerHTML = '<option value="">-- Select SubCategory First --</option>';
+            aggTypeSelect.disabled = true;
+        }
+        if (unitSelect) {
+            unitSelect.innerHTML = '<option value="">-- Select SubCategory First --</option>';
+            unitSelect.disabled = true;
+        }
+        
+        // Clear name, code, description
+        const nameInput = document.getElementById('NewMetricName');
+        const codeInput = document.getElementById('NewMetricCode');
+        const descriptionInput = document.getElementById('NewMetricDescription');
+        
+        if (nameInput) nameInput.value = '';
+        if (codeInput) codeInput.value = '';
+        if (descriptionInput) descriptionInput.value = '';
+        
+        // Clear hints
+        const dataTypeHint = document.getElementById('allowedDataTypesHint');
+        const aggregationHint = document.getElementById('allowedAggregationTypesHint');
+        const unitsHint = document.getElementById('allowedUnitsHint');
+        
+        if (dataTypeHint) dataTypeHint.textContent = 'Select a subcategory to see allowed data types';
+        if (aggregationHint) aggregationHint.textContent = 'Select a subcategory to see allowed aggregation types';
+        if (unitsHint) unitsHint.textContent = 'Select a subcategory to see allowed units';
+    }
+
     // Show metric details when selected
     const metricSelect = document.getElementById('MetricId');
     const detailsDiv = document.getElementById('selectedMetricDetails');
-    
+
     if (metricSelect && detailsDiv) {
         metricSelect.addEventListener('change', function() {
             const selectedOption = this.options[this.selectedIndex];
@@ -302,7 +644,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 detailsDiv.classList.add('d-none');
             }
         });
-        
+
         // Trigger on load if value exists
         if (metricSelect.value) {
             metricSelect.dispatchEvent(new Event('change'));
@@ -312,8 +654,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // ===================================================================
     // Threshold Auto-Suggestion based on Data Type and Aggregation Type
     // ===================================================================
-    const dataTypeSelect = document.getElementById('NewMetricDataType');
-    const aggregationTypeSelect = document.getElementById('NewMetricAggregationType');
+    const dataTypeSelectForThreshold = document.getElementById('NewMetricDataType');
+    const aggregationTypeSelectForThreshold = document.getElementById('NewMetricAggregationType');
     const greenInput = document.getElementById('NewMetricGreen');
     const yellowInput = document.getElementById('NewMetricYellow');
     const redInput = document.getElementById('NewMetricRed');
@@ -321,10 +663,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const thresholdSection = document.getElementById('thresholdSection');
 
     function suggestThresholds() {
-        if (!dataTypeSelect || !greenInput || !yellowInput || !redInput) return;
+        if (!dataTypeSelectForThreshold || !greenInput || !yellowInput || !redInput) return;
 
-        const dataType = dataTypeSelect.value;
-        const aggregationType = aggregationTypeSelect ? aggregationTypeSelect.value : '';
+        const dataType = dataTypeSelectForThreshold.value;
+        const aggregationType = aggregationTypeSelectForThreshold ? aggregationTypeSelectForThreshold.value : '';
 
         // Update default values based on data type and aggregation
         if (dataType === 'Percentage' || aggregationType === 'Percentage') {
@@ -363,11 +705,11 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Event listeners
-    if (dataTypeSelect) {
-        dataTypeSelect.addEventListener('change', suggestThresholds);
+    if (dataTypeSelectForThreshold) {
+        dataTypeSelectForThreshold.addEventListener('change', suggestThresholds);
     }
-    if (aggregationTypeSelect) {
-        aggregationTypeSelect.addEventListener('change', suggestThresholds);
+    if (aggregationTypeSelectForThreshold) {
+        aggregationTypeSelectForThreshold.addEventListener('change', suggestThresholds);
     }
     if (isKPICheckbox) {
         isKPICheckbox.addEventListener('change', toggleThresholdSection);
@@ -376,5 +718,71 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initial call
     suggestThresholds();
     toggleThresholdSection();
+    
+    // ===================================================================
+    // Validation: Require Thresholds When IsKPI is Checked
+    // ===================================================================
+    function validateKPIThresholds() {
+        const isKPICheckbox = document.getElementById('NewMetricIsKPI');
+        const greenInput = document.getElementById('NewMetricGreen');
+        const yellowInput = document.getElementById('NewMetricYellow');
+        const redInput = document.getElementById('NewMetricRed');
+        
+        // Only validate if IsKPI is checked
+        if (isKPICheckbox && isKPICheckbox.checked) {
+            const errors = [];
+            
+            if (!greenInput || !greenInput.value || greenInput.value.trim() === '') {
+                errors.push('Green threshold is required for KPI metrics');
+            }
+            if (!yellowInput || !yellowInput.value || yellowInput.value.trim() === '') {
+                errors.push('Yellow threshold is required for KPI metrics');
+            }
+            if (!redInput || !redInput.value || redInput.value.trim() === '') {
+                errors.push('Red threshold is required for KPI metrics');
+            }
+            
+            if (errors.length > 0) {
+                alert('KPI Validation Error:\n\n' + errors.join('\n'));
+                return false;
+            }
+            
+            // Validate threshold values are numeric
+            const greenValue = parseFloat(greenInput.value);
+            const yellowValue = parseFloat(yellowInput.value);
+            const redValue = parseFloat(redInput.value);
+            
+            if (isNaN(greenValue) || isNaN(yellowValue) || isNaN(redValue)) {
+                alert('All threshold values must be valid numbers');
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    // Attach validation to save button
+    const saveButton = document.getElementById('saveFieldMapping');
+    if (saveButton) {
+        saveButton.addEventListener('click', function(e) {
+            if (!validateKPIThresholds()) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        });
+    }
+    
+    // Also add validation to form submit if there's a form
+    const form = document.querySelector('form');
+    if (form) {
+        form.addEventListener('submit', function(e) {
+            if (!validateKPIThresholds()) {
+                e.preventDefault();
+                e.stopPropagation();
+                return false;
+            }
+        });
+    }
 });
 </script>

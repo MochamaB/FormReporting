@@ -37,6 +37,7 @@ namespace FormReporting.Models.ViewModels.Metrics
     {
         public int SectionId { get; set; }
         public string SectionName { get; set; } = string.Empty;
+        public string SectionDescription { get; set; } = string.Empty;
         public int DisplayOrder { get; set; }
 
         // Fields in this section
@@ -47,7 +48,7 @@ namespace FormReporting.Models.ViewModels.Metrics
 
         // Helper properties
         public bool HasMapping => Mapping != null;
-        public int ConfiguredFieldCount => Fields.Count(f => f.Mapping != null);
+        public int ConfiguredFieldCount => Fields.Count(f => f.HasMappings);
         public int TotalFieldCount => Fields.Count;
         public bool CanConfigureSection => ConfiguredFieldCount > 0;
     }
@@ -62,13 +63,31 @@ namespace FormReporting.Models.ViewModels.Metrics
         public string ItemCode { get; set; } = string.Empty;
         public string DataType { get; set; } = string.Empty;
         public bool IsRequired { get; set; }
+        public int DisplayOrder { get; set; }
 
-        // Field-level mapping
-        public FormItemMetricMapping? Mapping { get; set; }
+        // Multiple field-level mappings
+        public List<FormItemMetricMapping> Mappings { get; set; } = new List<FormItemMetricMapping>();
+
+        // Settable property for backward compatibility - also updates Mappings list
+        private FormItemMetricMapping? _mapping;
+        public FormItemMetricMapping? Mapping
+        {
+            get => _mapping ?? Mappings.FirstOrDefault();
+            set
+            {
+                _mapping = value;
+                if (value != null && !Mappings.Contains(value))
+                {
+                    Mappings.Clear();
+                    Mappings.Add(value);
+                }
+            }
+        }
 
         // Helper properties
-        public bool HasMapping => Mapping != null;
-        public string MappingStatus => HasMapping ? "Configured" : "Not Mapped";
+        public bool HasMappings => Mappings.Any() || _mapping != null;
+        public bool HasMapping => HasMappings; // Backward compatibility
+        public string MappingStatus => HasMappings ? "Configured" : "Not Mapped";
         public string MappingType => Mapping?.MappingType ?? "None";
         public string MetricName => Mapping?.Metric?.MetricName ?? "No Metric";
     }

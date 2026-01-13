@@ -182,25 +182,26 @@
             const currentContent = this.stepContents[this.currentStep];
             const nextContent = this.stepContents[stepIndex];
             const direction = stepIndex > this.currentStep ? 'forward' : 'backward';
+            const isCompleteStep = nextContent.dataset.completeStep === 'true';
 
             if (animate) {
                 // Animate transition
                 currentContent.style.opacity = '0';
                 currentContent.style.transform = direction === 'forward' ? 'translateX(-20px)' : 'translateX(20px)';
-                
+
                 setTimeout(() => {
                     currentContent.style.display = 'none';
                     nextContent.style.display = 'block';
                     nextContent.style.opacity = '0';
                     nextContent.style.transform = direction === 'forward' ? 'translateX(20px)' : 'translateX(-20px)';
-                    
+
                     // Force reflow
                     nextContent.offsetHeight;
-                    
+
                     nextContent.style.transition = `opacity ${CONFIG.animationDuration}ms ease, transform ${CONFIG.animationDuration}ms ease`;
                     nextContent.style.opacity = '1';
                     nextContent.style.transform = 'translateX(0)';
-                    
+
                     setTimeout(() => {
                         this.isNavigating = false;
                         nextContent.style.transition = '';
@@ -227,6 +228,13 @@
 
             // Scroll to top of form
             this.wrapper.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+            // Dispatch event for Complete step (so Review can re-populate values)
+            if (isCompleteStep) {
+                document.dispatchEvent(new CustomEvent('wizardStepChanged', {
+                    detail: { isCompleteStep: true, stepIndex: stepIndex }
+                }));
+            }
 
             // Auto-save on step change
             this.triggerAutoSave();
@@ -301,6 +309,11 @@
         validateCurrentStep() {
             const currentContent = this.stepContents[this.currentStep];
             if (!currentContent) return true;
+
+            // Skip validation for Complete/Review step (no fields to validate)
+            if (currentContent.dataset.completeStep === 'true') {
+                return true;
+            }
 
             const fields = currentContent.querySelectorAll('input, select, textarea');
             let isValid = true;
@@ -647,12 +660,17 @@
 
     function initializeWizards() {
         const wizards = document.querySelectorAll('.form-wizard-wrapper');
-        
+
         wizards.forEach(wizard => {
             const wizardId = wizard.dataset.wizardId;
             if (wizardId && !wizardInstances.has(wizardId)) {
                 const instance = new FormWizard(wizard);
                 wizardInstances.set(wizardId, instance);
+
+                // Expose first wizard instance globally for Review step Edit buttons
+                if (!window.formWizard) {
+                    window.formWizard = instance;
+                }
             }
         });
     }

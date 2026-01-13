@@ -73,6 +73,15 @@ namespace FormReporting.Models.Entities.Forms
 
         public bool IsActive { get; set; } = true;
 
+        // ===== SCORING FIELDS =====
+        /// <summary>
+        /// Weight/importance of this field in section score calculations
+        /// Used for weighted averages when calculating section scores
+        /// Default: 1.0 (equal weight)
+        /// </summary>
+        [Column(TypeName = "decimal(5,4)")]
+        public decimal Weight { get; set; } = 1.0m;
+
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
         // Navigation properties

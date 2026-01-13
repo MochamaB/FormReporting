@@ -75,8 +75,10 @@ namespace FormReporting.Services.Metrics
                 MappingName = dto.MappingName,
                 MetricId = dto.MetricId,
                 MappingType = dto.MappingType,
+                OutputType = dto.OutputType ?? "Raw",
                 TransformationLogic = dto.TransformationLogic,
                 ExpectedValue = dto.ExpectedValue,
+                ComparisonOperator = dto.ComparisonOperator,
                 IsActive = true,
                 CreatedDate = DateTime.UtcNow
             };
@@ -100,11 +102,20 @@ namespace FormReporting.Services.Metrics
             if (mapping == null)
                 return false;
 
+            if (dto.MappingName != null)
+                mapping.MappingName = dto.MappingName;
+
+            if (dto.OutputType != null)
+                mapping.OutputType = dto.OutputType;
+
             if (dto.TransformationLogic != null)
                 mapping.TransformationLogic = dto.TransformationLogic;
 
             if (dto.ExpectedValue != null)
                 mapping.ExpectedValue = dto.ExpectedValue;
+
+            if (dto.ComparisonOperator != null)
+                mapping.ComparisonOperator = dto.ComparisonOperator;
 
             if (dto.IsActive.HasValue)
                 mapping.IsActive = dto.IsActive.Value;

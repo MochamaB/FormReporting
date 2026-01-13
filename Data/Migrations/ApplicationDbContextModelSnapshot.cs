@@ -1441,6 +1441,11 @@ namespace FormReporting.Data.Migrations
                         .HasColumnType("int")
                         .HasDefaultValue(1);
 
+                    b.Property<decimal>("Weight")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(5,4)")
+                        .HasDefaultValue(1.0m);
+
                     b.HasKey("ItemId");
 
                     b.HasIndex("LibraryFieldId")
@@ -1671,6 +1676,11 @@ namespace FormReporting.Data.Migrations
 
                     b.Property<int>("TemplateId")
                         .HasColumnType("int");
+
+                    b.Property<decimal>("Weight")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("decimal(5,4)")
+                        .HasDefaultValue(1.0m);
 
                     b.HasKey("SectionId");
 

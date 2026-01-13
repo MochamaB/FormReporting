@@ -60,7 +60,7 @@ namespace FormReporting.Data.Seeders
         private const int UNIT_NONE = 20;
 
         // ============================================================
-        // SCORE SubCategory IDs (1-6)
+        // SCORE SubCategory IDs (1-9)
         // ============================================================
         private const int SC_SATISFACTION_SCORE = 1;
         private const int SC_QUALITY_SCORE = 2;
@@ -68,68 +68,96 @@ namespace FormReporting.Data.Seeders
         private const int SC_WEIGHTED_SCORE = 4;
         private const int SC_COMPOSITE_SCORE = 5;
         private const int SC_THRESHOLD_SCORE = 6;
+        private const int SC_RISK_SCORE = 7;
+        private const int SC_HEALTH_SCORE = 8;
+        private const int SC_NORMALIZED_SCORE = 9;
 
         // ============================================================
-        // PERFORMANCE SubCategory IDs (7-11)
+        // PERFORMANCE SubCategory IDs (10-17)
         // ============================================================
-        private const int SC_AVAILABILITY_RATE = 7;
-        private const int SC_EFFICIENCY_RATE = 8;
-        private const int SC_UTILIZATION_RATE = 9;
-        private const int SC_SUCCESS_RATE = 10;
-        private const int SC_COMPLETION_RATE = 11;
+        private const int SC_AVAILABILITY_RATE = 10;
+        private const int SC_EFFICIENCY_RATE = 11;
+        private const int SC_UTILIZATION_RATE = 12;
+        private const int SC_SUCCESS_RATE = 13;
+        private const int SC_COMPLETION_RATE = 14;
+        private const int SC_RELIABILITY = 15;
+        private const int SC_STABILITY = 16;
+        private const int SC_FAILURE_RATE = 17;
 
         // ============================================================
-        // TREND SubCategory IDs (12-15)
+        // TREND SubCategory IDs (18-21)
         // ============================================================
-        private const int SC_GROWTH_RATE = 12;
-        private const int SC_CHANGE_RATE = 13;
-        private const int SC_PERIOD_COMPARISON = 14;
-        private const int SC_MOVING_AVERAGE = 15;
+        private const int SC_GROWTH_RATE = 18;
+        private const int SC_CHANGE_RATE = 19;
+        private const int SC_PERIOD_COMPARISON = 20;
+        private const int SC_MOVING_AVERAGE = 21;
 
         // ============================================================
-        // COMPARISON SubCategory IDs (16-20)
+        // COMPARISON SubCategory IDs (22-26)
         // ============================================================
-        private const int SC_RATIO = 16;
-        private const int SC_VARIANCE = 17;
-        private const int SC_BENCHMARK = 18;
-        private const int SC_EXPECTED_VALUE = 19;
-        private const int SC_TARGET_VS_ACTUAL = 20;
+        private const int SC_RATIO = 22;
+        private const int SC_VARIANCE = 23;
+        private const int SC_BENCHMARK = 24;
+        private const int SC_EXPECTED_VALUE = 25;
+        private const int SC_TARGET_VS_ACTUAL = 26;
 
         // ============================================================
-        // TIME SubCategory IDs (21-26)
+        // TIME SubCategory IDs (27-32)
         // ============================================================
-        private const int SC_DURATION = 21;
-        private const int SC_RESPONSE_TIME = 22;
-        private const int SC_LEAD_TIME = 23;
-        private const int SC_DOWNTIME = 24;
-        private const int SC_TIME_IN_STATE = 25;
-        private const int SC_AGE = 26;
+        private const int SC_DURATION = 27;
+        private const int SC_RESPONSE_TIME = 28;
+        private const int SC_LEAD_TIME = 29;
+        private const int SC_DOWNTIME = 30;
+        private const int SC_TIME_IN_STATE = 31;
+        private const int SC_AGE = 32;
 
         // ============================================================
-        // COUNT SubCategory IDs (27-32)
+        // COUNT SubCategory IDs (33-38)
         // ============================================================
-        private const int SC_QUANTITY = 27;
-        private const int SC_FREQUENCY = 28;
-        private const int SC_INCIDENTS = 29;
-        private const int SC_CAPACITY = 30;
-        private const int SC_SELECTION_COUNT = 31;
-        private const int SC_UNIQUE_COUNT = 32;
+        private const int SC_QUANTITY = 33;
+        private const int SC_FREQUENCY = 34;
+        private const int SC_INCIDENTS = 35;
+        private const int SC_CAPACITY = 36;
+        private const int SC_SELECTION_COUNT = 37;
+        private const int SC_UNIQUE_COUNT = 38;
 
         // ============================================================
-        // COMPLIANCE SubCategory IDs (33-36)
+        // COMPLIANCE SubCategory IDs (39-42)
         // ============================================================
-        private const int SC_COMPLIANCE_RATE = 33;
-        private const int SC_AUDIT_SCORE = 34;
-        private const int SC_SLA_COMPLIANCE = 35;
-        private const int SC_POLICY_COMPLIANCE = 36;
+        private const int SC_COMPLIANCE_RATE = 39;
+        private const int SC_AUDIT_SCORE = 40;
+        private const int SC_SLA_COMPLIANCE = 41;
+        private const int SC_POLICY_COMPLIANCE = 42;
 
         // ============================================================
-        // FINANCIAL SubCategory IDs (37-40)
+        // FINANCIAL SubCategory IDs (43-46)
         // ============================================================
-        private const int SC_COST = 37;
-        private const int SC_BUDGET = 38;
-        private const int SC_BUDGET_VARIANCE = 39;
-        private const int SC_ROI = 40;
+        private const int SC_COST = 43;
+        private const int SC_BUDGET = 44;
+        private const int SC_BUDGET_VARIANCE = 45;
+        private const int SC_ROI = 46;
+
+        // ============================================================
+        // FORM_ANALYTICS SubCategory IDs (47-51)
+        // ============================================================
+        private const int SC_FORM_COMPLETION_RATE = 47;
+        private const int SC_FORM_ABANDONMENT_RATE = 48;
+        private const int SC_FIELD_SKIP_RATE = 49;
+        private const int SC_TIME_TO_COMPLETE = 50;
+        private const int SC_SUBMISSION_VOLUME = 51;
+
+        // ============================================================
+        // TEXT_ANALYTICS SubCategory IDs (52-54)
+        // ============================================================
+        private const int SC_SENTIMENT_SCORE = 52;
+        private const int SC_WORD_FREQUENCY = 53;
+        private const int SC_TEXT_LENGTH = 54;
+
+        // ============================================================
+        // ADVANCED_ANALYTICS SubCategory IDs (55-56)
+        // ============================================================
+        private const int SC_CORRELATION = 55;
+        private const int SC_PREDICTIVE_INDICATOR = 56;
 
         public static void SeedMetricSubCategoryUnits(ApplicationDbContext context)
         {
@@ -461,75 +489,75 @@ namespace FormReporting.Data.Seeders
             }));
 
             // ============================================================
-            // NEW SCORE SUBCATEGORIES (IDs 7-9)
+            // NEW SCORE SUBCATEGORIES (7-9)
             // ============================================================
 
             // RISK_SCORE: Percentage, Score
-            links.AddRange(CreateLinks(7, new[]
+            links.AddRange(CreateLinks(SC_RISK_SCORE, new[]
             {
                 (UNIT_PERCENT, true, 1),   // Default
                 (UNIT_SCORE, false, 2)
             }));
 
             // HEALTH_SCORE: Percentage, Score
-            links.AddRange(CreateLinks(8, new[]
+            links.AddRange(CreateLinks(SC_HEALTH_SCORE, new[]
             {
                 (UNIT_PERCENT, true, 1),   // Default
                 (UNIT_SCORE, false, 2)
             }));
 
             // NORMALIZED_SCORE: Percentage
-            links.AddRange(CreateLinks(9, new[]
+            links.AddRange(CreateLinks(SC_NORMALIZED_SCORE, new[]
             {
                 (UNIT_PERCENT, true, 1)    // Default
             }));
 
             // ============================================================
-            // NEW PERFORMANCE SUBCATEGORIES (IDs 12-14)
+            // NEW PERFORMANCE SUBCATEGORIES (15-17)
             // ============================================================
 
             // RELIABILITY: Percentage
-            links.AddRange(CreateLinks(12, new[]
+            links.AddRange(CreateLinks(SC_RELIABILITY, new[]
             {
                 (UNIT_PERCENT, true, 1)    // Default
             }));
 
             // STABILITY: Percentage
-            links.AddRange(CreateLinks(13, new[]
+            links.AddRange(CreateLinks(SC_STABILITY, new[]
             {
                 (UNIT_PERCENT, true, 1)    // Default
             }));
 
             // FAILURE_RATE: Percentage
-            links.AddRange(CreateLinks(14, new[]
+            links.AddRange(CreateLinks(SC_FAILURE_RATE, new[]
             {
                 (UNIT_PERCENT, true, 1)    // Default
             }));
 
             // ============================================================
-            // FORM_ANALYTICS SUBCATEGORIES (IDs 41-45)
+            // FORM_ANALYTICS SUBCATEGORIES (47-51)
             // ============================================================
 
             // FORM_COMPLETION_RATE: Percentage
-            links.AddRange(CreateLinks(41, new[]
+            links.AddRange(CreateLinks(SC_FORM_COMPLETION_RATE, new[]
             {
                 (UNIT_PERCENT, true, 1)    // Default
             }));
 
             // FORM_ABANDONMENT_RATE: Percentage
-            links.AddRange(CreateLinks(42, new[]
+            links.AddRange(CreateLinks(SC_FORM_ABANDONMENT_RATE, new[]
             {
                 (UNIT_PERCENT, true, 1)    // Default
             }));
 
             // FIELD_SKIP_RATE: Percentage
-            links.AddRange(CreateLinks(43, new[]
+            links.AddRange(CreateLinks(SC_FIELD_SKIP_RATE, new[]
             {
                 (UNIT_PERCENT, true, 1)    // Default
             }));
 
             // TIME_TO_COMPLETE: Minutes, Hours, Seconds
-            links.AddRange(CreateLinks(44, new[]
+            links.AddRange(CreateLinks(SC_TIME_TO_COMPLETE, new[]
             {
                 (UNIT_MINUTES, true, 1),   // Default
                 (UNIT_HOURS, false, 2),
@@ -537,49 +565,49 @@ namespace FormReporting.Data.Seeders
             }));
 
             // SUBMISSION_VOLUME: Count, Items
-            links.AddRange(CreateLinks(45, new[]
+            links.AddRange(CreateLinks(SC_SUBMISSION_VOLUME, new[]
             {
                 (UNIT_COUNT, true, 1),     // Default
                 (UNIT_ITEMS, false, 2)
             }));
 
             // ============================================================
-            // TEXT_ANALYTICS SUBCATEGORIES (IDs 46-48)
+            // TEXT_ANALYTICS SUBCATEGORIES (52-54)
             // ============================================================
 
             // SENTIMENT_SCORE: Percentage, Score
-            links.AddRange(CreateLinks(46, new[]
+            links.AddRange(CreateLinks(SC_SENTIMENT_SCORE, new[]
             {
                 (UNIT_PERCENT, true, 1),   // Default
                 (UNIT_SCORE, false, 2)
             }));
 
             // WORD_FREQUENCY: Count, Items
-            links.AddRange(CreateLinks(47, new[]
+            links.AddRange(CreateLinks(SC_WORD_FREQUENCY, new[]
             {
                 (UNIT_COUNT, true, 1),     // Default
                 (UNIT_ITEMS, false, 2)
             }));
 
             // TEXT_LENGTH: Count (characters/words)
-            links.AddRange(CreateLinks(48, new[]
+            links.AddRange(CreateLinks(SC_TEXT_LENGTH, new[]
             {
                 (UNIT_COUNT, true, 1)      // Default
             }));
 
             // ============================================================
-            // ADVANCED_ANALYTICS SUBCATEGORIES (IDs 49-50)
+            // ADVANCED_ANALYTICS SUBCATEGORIES (55-56)
             // ============================================================
 
             // CORRELATION: Ratio, Percentage
-            links.AddRange(CreateLinks(49, new[]
+            links.AddRange(CreateLinks(SC_CORRELATION, new[]
             {
                 (UNIT_RATIO, true, 1),     // Default
                 (UNIT_PERCENT, false, 2)
             }));
 
             // PREDICTIVE_INDICATOR: Percentage, Score
-            links.AddRange(CreateLinks(50, new[]
+            links.AddRange(CreateLinks(SC_PREDICTIVE_INDICATOR, new[]
             {
                 (UNIT_PERCENT, true, 1),   // Default
                 (UNIT_SCORE, false, 2)

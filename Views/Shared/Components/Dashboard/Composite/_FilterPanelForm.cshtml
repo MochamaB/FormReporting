@@ -1,18 +1,10 @@
 @model FilterPanelConfig
 
-<form method="@Model.Method" action="@Model.ActionUrl">
-    <div class="row g-3">
+<form method="@Model.Method" action="@Model.ActionUrl" id="@(Model.Id)-form">
+    <div class="d-flex align-items-center gap-1 flex-wrap mb-3">
         @foreach (var filter in Model.Filters)
         {
-            <div class="@filter.ColumnClass">
-                <label for="filter-@filter.Name" class="form-label">
-                    @filter.Label
-                    @if (filter.Required)
-                    {
-                        <span class="text-danger">*</span>
-                    }
-                </label>
-
+            <div class="@filter.ColumnClass pe-1">
                 @switch (filter.Type)
                 {
                     case FilterInputType.Text:
@@ -22,13 +14,50 @@
                                name="@filter.Name"
                                value="@filter.Value"
                                placeholder="@filter.Placeholder"
+                               onchange="applyMainFilters()"
                                @(filter.Required ? "required" : "") />
+                        break;
+
+                    case FilterInputType.DropdownButton:
+                        <div class="dropdown">
+                            @{
+                                var currentText = string.IsNullOrEmpty(filter.Value) 
+                                    ? filter.Label 
+                                    : filter.Options?.FirstOrDefault(o => o.Value == filter.Value)?.Text ?? filter.Label;
+                                var isActive = !string.IsNullOrEmpty(filter.Value);
+                            }
+                            <button class="btn @(isActive ? "btn-primary" : "btn-soft-secondary") dropdown-toggle" 
+                                    type="button" 
+                                    data-bs-toggle="dropdown" 
+                                    aria-expanded="false"
+                                    data-filter-name="@filter.Name">
+                                <i class="ri-filter-line me-1"></i>@currentText
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item @(!isActive ? "active" : "")" 
+                                       href="#" data-value="" onclick="applyDropdownFilter('@filter.Name', '')">
+                                    @if (!isActive) { <i class="ri-check-line me-1"></i> }All @filter.Label
+                                </a></li>
+                                @if (filter.Options != null)
+                                {
+                                    foreach (var option in filter.Options)
+                                    {
+                                        var optionActive = option.Value == filter.Value;
+                                        <li><a class="dropdown-item @(optionActive ? "active" : "")" 
+                                               href="#" data-value="@option.Value" onclick="applyDropdownFilter('@filter.Name', '@option.Value')">
+                                            @if (optionActive) { <i class="ri-check-line me-1"></i> }@option.Text
+                                        </a></li>
+                                    }
+                                }
+                            </ul>
+                        </div>
                         break;
 
                     case FilterInputType.Select:
                         <select class="form-select"
                                 id="filter-@filter.Name"
                                 name="@filter.Name"
+                                onchange="applyMainFilters()"
                                 @(filter.Required ? "required" : "")>
                             <option value="">-- Select --</option>
                             @if (filter.Options != null)
@@ -93,25 +122,346 @@
             </div>
         }
 
-        @if (Model.ShowApplyButton || Model.ShowClearButton)
+        @* Clear and Advanced Buttons in Same Row *@
+        @if (Model.AdvancedFilters != null && Model.AdvancedFilters.Any())
         {
-            <div class="col-12">
-                <div class="hstack gap-2">
-                    @if (Model.ShowApplyButton)
-                    {
-                        <button type="submit" class="btn btn-primary">
-                            <i class="ri-search-line align-middle"></i> Apply Filters
-                        </button>
-                    }
-
-                    @if (Model.ShowClearButton)
-                    {
-                        <button type="reset" class="btn btn-soft-secondary">
-                            <i class="ri-close-line align-middle"></i> Clear
-                        </button>
-                    }
-                </div>
-            </div>
+            var hasAdvancedValues = Model.AdvancedFilters.Any(f => !string.IsNullOrEmpty(f.Value));
+            var advancedCount = Model.AdvancedFilters.Count(f => !string.IsNullOrEmpty(f.Value));
+            var hasAnyFilters = Model.Filters.Any(f => !string.IsNullOrEmpty(f.Value)) || hasAdvancedValues;
+            
+            @* Clear button - only show if any filters are applied *@
+            if (hasAnyFilters)
+            {
+                <button class="btn btn-soft-secondary" type="button" onclick="clearAllFilters()">
+                    <i class="ri-close-line align-middle"></i> Clear
+                </button>
+            }
+            
+            <button class="btn @(hasAdvancedValues ? "btn-warning" : "btn-outline-secondary")" 
+                    type="button" 
+                    data-bs-toggle="collapse" 
+                    data-bs-target="#@(Model.Id)-advanced" 
+                    aria-expanded="false" 
+                    aria-controls="@(Model.Id)-advanced">
+                <i class="ri-filter-2-line me-1"></i>Advanced
+                @if (hasAdvancedValues)
+                {
+                    <span class="badge bg-light text-dark ms-1">@advancedCount</span>
+                }
+            </button>
         }
     </div>
+    
+    @* Advanced Filters Collapsible Section *@
+    @if (Model.AdvancedFilters != null && Model.AdvancedFilters.Any())
+    {
+        <div class="collapse bg-light" id="@(Model.Id)-advanced" style="border-left: 4px solid var(--vz-primary);padding:1.0rem">
+            <div class="d-flex align-items-center gap-1 flex-wrap mb-3">
+                @foreach (var filter in Model.AdvancedFilters)
+                {
+                    <div class="@filter.ColumnClass pe-1">
+                        <label for="filter-@filter.Name" class="form-label small text-muted mb-1">
+                            @filter.Label
+                            @if (filter.Required)
+                            {
+                                <span class="text-danger">*</span>
+                            }
+                        </label>
+
+                        @switch (filter.Type)
+                        {
+                            case FilterInputType.Text:
+                                <input type="text"
+                                       class="form-control"
+                                       id="filter-@filter.Name"
+                                       name="@filter.Name"
+                                       value="@filter.Value"
+                                       placeholder="@filter.Placeholder"
+                                       @(filter.Required ? "required" : "") />
+                                break;
+
+                            case FilterInputType.Select:
+                                <select class="form-select"
+                                        id="filter-@filter.Name"
+                                        name="@filter.Name"
+                                        @(filter.Required ? "required" : "")>
+                                    <option value="">-- Select --</option>
+                                    @if (filter.Options != null)
+                                    {
+                                        foreach (var option in filter.Options)
+                                        {
+                                            <option value="@option.Value"
+                                                    selected="@(option.Selected || option.Value == filter.Value)">
+                                                @option.Text
+                                            </option>
+                                        }
+                                    }
+                                </select>
+                                break;
+
+                            case FilterInputType.Date:
+                                <input type="date"
+                                       class="form-control "
+                                       id="filter-@filter.Name"
+                                       name="@filter.Name"
+                                       value="@filter.Value"
+                                       @(filter.Required ? "required" : "") />
+                                break;
+
+                            case FilterInputType.DateRange:
+                                <input type="text"
+                                       class="form-control"
+                                       id="filter-@filter.Name"
+                                       name="@filter.Name"
+                                       value="@filter.Value"
+                                       placeholder="@(filter.Placeholder ?? "Select date range")"
+                                       data-provider="flatpickr"
+                                       data-date-format="Y-m-d"
+                                       data-range-date="true"
+                                       @(filter.Required ? "required" : "") />
+                                break;
+
+                            case FilterInputType.Number:
+                                <input type="number"
+                                       class="form-control"
+                                       id="filter-@filter.Name"
+                                       name="@filter.Name"
+                                       value="@filter.Value"
+                                       placeholder="@filter.Placeholder"
+                                       @(filter.Required ? "required" : "") />
+                                break;
+
+                            case FilterInputType.Checkbox:
+                                <div class="form-check mt-2">
+                                    <input class="form-check-input"
+                                           type="checkbox"
+                                           id="filter-@filter.Name"
+                                           name="@filter.Name"
+                                           value="true"
+                                           @(filter.Value == "true" ? "checked" : "") />
+                                    <label class="form-check-label" for="filter-@filter.Name">
+                                        @filter.Placeholder
+                                    </label>
+                                </div>
+                                break;
+                        }
+                    </div>
+                }
+                
+                @* Apply Filters Button in Same Row as Advanced Inputs *@
+                <button type="submit" class="btn btn-primary mt-2">
+                    <i class="ri-search-line align-middle"></i> Apply Filters
+                </button>
+            </div>
+        </div>
+    }
 </form>
+<hr/>
+
+<script>
+// Apply main filters immediately on change
+function applyMainFilters() {
+    // Get only main filter values
+    const form = document.getElementById('@(Model.Id)-form');
+    const formData = new FormData(form);
+    const params = new URLSearchParams();
+    
+    // Only include main filters (not advanced ones)
+    const mainFilterNames = ['regionId', 'tenantId', 'status'];
+    mainFilterNames.forEach(name => {
+        const value = formData.get(name);
+        if (value) {
+            params.append(name, value);
+        }
+    });
+    
+    // Trigger dashboard update with main filters
+    if (typeof FormStatisticsDashboard !== 'undefined') {
+        FormStatisticsDashboard.applyFilters(params.toString());
+    }
+}
+
+// Apply dropdown filter (for DropdownButton type)
+function applyDropdownFilter(filterName, filterValue) {
+    // Close the dropdown
+    const button = document.querySelector(`[data-filter-name="${filterName}"]`);
+    if (button) {
+        const dropdown = bootstrap.Dropdown.getInstance(button);
+        if (dropdown) {
+            dropdown.hide();
+        }
+    }
+    
+    // Update the filter value in the form
+    const form = document.getElementById('@(Model.Id)-form');
+    let hiddenInput = form.querySelector(`input[name="${filterName}"]`);
+    
+    // Create hidden input if it doesn't exist
+    if (!hiddenInput) {
+        hiddenInput = document.createElement('input');
+        hiddenInput.type = 'hidden';
+        hiddenInput.name = filterName;
+        form.appendChild(hiddenInput);
+    }
+    
+    // Update the value
+    hiddenInput.value = filterValue;
+    
+    // Update button appearance
+    if (button) {
+        const isActive = filterValue !== '';
+        button.className = `${isActive ? 'btn btn-primary' : 'btn btn-outline-secondary'} dropdown-toggle`;
+        
+        // Update button text
+        const dropdown = button.closest('.dropdown');
+        const optionText = isActive 
+            ? dropdown.querySelector(`[data-value="${filterValue}"]`).textContent.trim()
+            : filterName.charAt(0).toUpperCase() + filterName.slice(1).replace('Id', '');
+        button.innerHTML = `<i class="ri-filter-line me-1"></i>${optionText || filterName}`;
+        
+        // Update active state in dropdown menu
+        dropdown.querySelectorAll('.dropdown-item').forEach(item => {
+            const itemValue = item.getAttribute('data-value');
+            const itemActive = itemValue === filterValue;
+            item.classList.toggle('active', itemActive);
+            
+            // Update check icon
+            const icon = item.querySelector('i');
+            if (itemActive && !icon) {
+                item.innerHTML = `<i class="ri-check-line me-1"></i>${item.textContent.trim()}`;
+            } else if (!itemActive && icon) {
+                icon.remove();
+            }
+        });
+    }
+    
+    // Apply the filter immediately
+    const params = new URLSearchParams();
+    params.append(filterName, filterValue);
+    
+    if (typeof FormStatisticsDashboard !== 'undefined') {
+        FormStatisticsDashboard.applyFilters(params.toString());
+    }
+    
+    // Update clear button visibility
+    updateClearButtonVisibility();
+    
+    // Prevent default link behavior
+    event.preventDefault();
+    return false;
+}
+
+// Clear advanced filters only
+function clearAdvancedFilters() {
+    const form = document.getElementById('@(Model.Id)-form');
+    const advancedInputs = form.querySelectorAll('#@(Model.Id)-advanced input, #@(Model.Id)-advanced select');
+    advancedInputs.forEach(input => {
+        if (input.type === 'checkbox') {
+            input.checked = false;
+        } else {
+            input.value = '';
+        }
+    });
+    
+    // Update advanced button appearance
+    const advancedButton = form.querySelector('[data-bs-target="#@(Model.Id)-advanced"]');
+    if (advancedButton) {
+        advancedButton.className = 'btn btn-outline-secondary btn-sm';
+        advancedButton.innerHTML = '<i class="ri-filter-2-line me-1"></i>Advanced';
+    }
+    
+    // Collapse advanced section
+    const advancedSection = document.getElementById('@(Model.Id)-advanced');
+    if (advancedSection) {
+        const collapse = new bootstrap.Collapse(advancedSection, {
+            toggle: false
+        });
+        collapse.hide();
+    }
+    
+    // Update clear button visibility
+    updateClearButtonVisibility();
+}
+
+// Clear all filters (main + advanced)
+function clearAllFilters() {
+    const form = document.getElementById('@(Model.Id)-form');
+    
+    // Clear main filters
+    const mainFilterNames = ['regionId', 'tenantId', 'status'];
+    mainFilterNames.forEach(filterName => {
+        const hiddenInput = form.querySelector(`input[name="${filterName}"]`);
+        if (hiddenInput) {
+            hiddenInput.value = '';
+        }
+        
+        // Update button appearance
+        const button = document.querySelector(`[data-filter-name="${filterName}"]`);
+        if (button) {
+            button.className = 'btn btn-outline-secondary dropdown-toggle';
+            const labelName = filterName.charAt(0).toUpperCase() + filterName.slice(1).replace('Id', '');
+            button.innerHTML = `<i class="ri-filter-line me-1"></i>${labelName}`;
+            
+            // Update dropdown menu active states
+            const dropdown = button.closest('.dropdown');
+            if (dropdown) {
+                dropdown.querySelectorAll('.dropdown-item').forEach(item => {
+                    item.classList.remove('active');
+                    const icon = item.querySelector('i');
+                    if (icon) icon.remove();
+                });
+            }
+        }
+    });
+    
+    // Clear advanced filters
+    clearAdvancedFilters();
+    
+    // Apply cleared filters
+    if (typeof FormStatisticsDashboard !== 'undefined') {
+        FormStatisticsDashboard.applyFilters('');
+    }
+}
+
+// Update clear button visibility based on filter states
+function updateClearButtonVisibility() {
+    const form = document.getElementById('@(Model.Id)-form');
+    const mainFilterNames = ['regionId', 'tenantId', 'status'];
+    const advancedInputs = form.querySelectorAll('#@(Model.Id)-advanced input, #@(Model.Id)-advanced select');
+    
+    // Check if any main filters have values
+    const hasMainFilters = mainFilterNames.some(filterName => {
+        const input = form.querySelector(`input[name="${filterName}"]`);
+        return input && input.value !== '';
+    });
+    
+    // Check if any advanced filters have values
+    const hasAdvancedFilters = Array.from(advancedInputs).some(input => {
+        if (input.type === 'checkbox') {
+            return input.checked;
+        } else {
+            return input.value !== '';
+        }
+    });
+    
+    // Show/hide clear button
+    const clearButton = form.querySelector('button[onclick*="clearAllFilters"]');
+    if (clearButton) {
+        clearButton.style.display = (hasMainFilters || hasAdvancedFilters) ? 'inline-block' : 'none';
+    }
+}
+</script>
+
+<script>
+// Initialize dropdowns and clear button visibility on page load
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize Bootstrap dropdowns
+    const dropdownButtons = document.querySelectorAll('[data-bs-toggle="dropdown"]');
+    dropdownButtons.forEach(button => {
+        new bootstrap.Dropdown(button);
+    });
+    
+    // Initialize clear button visibility
+    updateClearButtonVisibility();
+});
+</script>

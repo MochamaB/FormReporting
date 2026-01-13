@@ -57,9 +57,9 @@ namespace FormReporting.Services.Metrics
     {
         // Mapping type constants
         private const string DIRECT = "Direct";
-        private const string BINARY = "BinaryCompliance";
         private const string CALCULATED = "Calculated";
         private const string DERIVED = "Derived";
+        private const string EXPECTED = "Expected";
 
         // Aggregation type constants
         private const string AGG_SUM = "Sum";
@@ -87,13 +87,13 @@ namespace FormReporting.Services.Metrics
             [FormFieldType.Rating] = new() { DIRECT, CALCULATED, DERIVED },
             [FormFieldType.Slider] = new() { DIRECT, CALCULATED, DERIVED },
 
-            // Selection fields - can be direct (with scores), binary, or derived
-            [FormFieldType.Dropdown] = new() { DIRECT, BINARY, DERIVED },
-            [FormFieldType.Radio] = new() { DIRECT, BINARY, DERIVED },
-            [FormFieldType.Checkbox] = new() { DIRECT, BINARY, DERIVED },
+            // Selection fields - can be direct (with scores), expected, or derived
+            [FormFieldType.Dropdown] = new() { DIRECT, EXPECTED, DERIVED },
+            [FormFieldType.Radio] = new() { DIRECT, EXPECTED, DERIVED },
+            [FormFieldType.Checkbox] = new() { DIRECT, EXPECTED, DERIVED },
 
-            // Text fields - only binary compliance or derived
-            [FormFieldType.Text] = new() { BINARY, DERIVED },
+            // Text fields - only expected compliance or derived
+            [FormFieldType.Text] = new() { EXPECTED, DERIVED },
 
             // Date fields - calculated (for durations) or derived
             [FormFieldType.Date] = new() { CALCULATED, DERIVED },
@@ -124,13 +124,13 @@ namespace FormReporting.Services.Metrics
             [FormFieldType.Rating] = DIRECT,
             [FormFieldType.Slider] = DIRECT,
 
-            // Selection fields - direct if scored, binary if compliance-based
+            // Selection fields - direct if scored, expected if compliance-based
             [FormFieldType.Dropdown] = DIRECT,
             [FormFieldType.Radio] = DIRECT,
-            [FormFieldType.Checkbox] = BINARY,
+            [FormFieldType.Checkbox] = EXPECTED,
 
-            // Text fields - binary compliance
-            [FormFieldType.Text] = BINARY,
+            // Text fields - expected compliance
+            [FormFieldType.Text] = EXPECTED,
 
             // Date fields - calculated for durations
             [FormFieldType.Date] = CALCULATED,
@@ -231,13 +231,13 @@ namespace FormReporting.Services.Metrics
             [(FormFieldType.Radio, DIRECT)] = new() { AGG_AVERAGE, AGG_COUNT, AGG_LATEST },
             [(FormFieldType.Checkbox, DIRECT)] = new() { AGG_SUM, AGG_COUNT, AGG_AVERAGE },
 
-            // Selection + BinaryCompliance → percentage-friendly
-            [(FormFieldType.Dropdown, BINARY)] = new() { AGG_PERCENTAGE, AGG_COUNT, AGG_SUM },
-            [(FormFieldType.Radio, BINARY)] = new() { AGG_PERCENTAGE, AGG_COUNT, AGG_SUM },
-            [(FormFieldType.Checkbox, BINARY)] = new() { AGG_PERCENTAGE, AGG_COUNT, AGG_SUM },
+            // Selection + Expected → percentage-friendly for compliance tracking
+            [(FormFieldType.Dropdown, EXPECTED)] = new() { AGG_PERCENTAGE, AGG_COUNT, AGG_SUM },
+            [(FormFieldType.Radio, EXPECTED)] = new() { AGG_PERCENTAGE, AGG_COUNT, AGG_SUM },
+            [(FormFieldType.Checkbox, EXPECTED)] = new() { AGG_PERCENTAGE, AGG_COUNT, AGG_SUM },
 
-            // Text + BinaryCompliance
-            [(FormFieldType.Text, BINARY)] = new() { AGG_PERCENTAGE, AGG_COUNT },
+            // Text + Expected
+            [(FormFieldType.Text, EXPECTED)] = new() { AGG_PERCENTAGE, AGG_COUNT },
 
             // Date/Time + Calculated
             [(FormFieldType.Date, CALCULATED)] = new() { AGG_COUNT, AGG_LATEST, AGG_MIN, AGG_MAX },
@@ -273,13 +273,13 @@ namespace FormReporting.Services.Metrics
             [(FormFieldType.Radio, DIRECT)] = AGG_AVERAGE,
             [(FormFieldType.Checkbox, DIRECT)] = AGG_COUNT,
 
-            // Selection + Binary → Percentage for compliance
-            [(FormFieldType.Dropdown, BINARY)] = AGG_PERCENTAGE,
-            [(FormFieldType.Radio, BINARY)] = AGG_PERCENTAGE,
-            [(FormFieldType.Checkbox, BINARY)] = AGG_PERCENTAGE,
+            // Selection + Expected → Percentage for compliance tracking
+            [(FormFieldType.Dropdown, EXPECTED)] = AGG_PERCENTAGE,
+            [(FormFieldType.Radio, EXPECTED)] = AGG_PERCENTAGE,
+            [(FormFieldType.Checkbox, EXPECTED)] = AGG_PERCENTAGE,
 
-            // Text + Binary
-            [(FormFieldType.Text, BINARY)] = AGG_PERCENTAGE,
+            // Text + Expected
+            [(FormFieldType.Text, EXPECTED)] = AGG_PERCENTAGE,
 
             // Date/Time
             [(FormFieldType.Date, CALCULATED)] = AGG_COUNT,

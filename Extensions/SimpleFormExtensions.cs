@@ -388,6 +388,33 @@ public static class SimpleFormExtensions
         return config;
     }
 
+    /// <summary>
+    /// Adds an icon picker field with live preview and modal selection
+    /// </summary>
+    public static SimpleFormConfig WithIconPickerField(this SimpleFormConfig config,
+        string propertyName,
+        string label,
+        object? value = null,
+        bool isRequired = false,
+        string? placeholder = null,
+        string? helpText = null,
+        string columnClass = "col-12")
+    {
+        config.Fields.Add(new SimpleFormFieldConfig
+        {
+            PropertyName = propertyName,
+            Label = label,
+            FieldType = SimpleFieldType.IconPicker,
+            Value = value,
+            IsRequired = isRequired,
+            PlaceholderText = placeholder ?? "e.g., ri-file-list-line",
+            HelpText = helpText ?? "Click the button to browse available icons",
+            ColumnClass = columnClass,
+            DisplayOrder = config.Fields.Count + 1
+        });
+        return config;
+    }
+
     #endregion
 
     #region Helper Methods for CSS Classes

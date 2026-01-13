@@ -145,5 +145,6 @@ public enum SimpleFieldType
     Select,            // <select>
     Radio,             // <input type="radio">
     Hidden,            // <input type="hidden">
-    File               // <input type="file">
+    File,              // <input type="file">
+    IconPicker         // Icon picker with modal and live preview
 }

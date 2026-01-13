@@ -48,11 +48,9 @@
                     isRequired: false,
                     placeholder: "Enter a brief description of this category",
                     helpText: "Optional description (max 500 characters)")
-                .WithTextField("IconClass", "Icon Class",
+                .WithIconPickerField("IconClass", "Icon Class",
                     value: Model?.IconClass,
                     isRequired: false,
-                    placeholder: "e.g., ri-file-list-line",
-                    helpText: "Remix Icon class name for visual representation",
                     columnClass: "col-md-6")
                 .WithTextField("Color", "Color (Hex)",
                     value: Model?.Color,

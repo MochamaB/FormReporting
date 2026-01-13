@@ -20,15 +20,19 @@ namespace FormReporting.Models.ViewModels.Metrics
         // Field Options (for dropdowns, checkboxes, etc.)
         public List<FieldOptionViewModel> Options { get; set; } = new();
         
-        // Existing Mapping (if any)
-        public ExistingMappingViewModel? ExistingMapping { get; set; }
+        // Multiple Existing Mappings (updated for multiple mappings support)
+        public List<ExistingMappingViewModel> ExistingMappings { get; set; } = new();
         
         // Available Mapping Types for this field type
         public List<MappingTypeOption> ValidMappingTypes { get; set; } = new();
+        public List<OutputTypeOption> ValidOutputTypes { get; set; } = new();
         public string? RecommendedMappingType { get; set; }
         
         // Compatible Metrics for linking
         public List<CompatibleMetricViewModel> CompatibleMetrics { get; set; } = new();
+        
+        // Scope information for validation
+        public List<ScopeOption> AllowedScopes { get; set; } = new();
     }
 
     /// <summary>
@@ -49,11 +53,17 @@ namespace FormReporting.Models.ViewModels.Metrics
         public int MappingId { get; set; }
         public string? MappingName { get; set; }
         public string? MappingType { get; set; }
-        public string? AggregationType { get; set; }
+        public string? OutputType { get; set; }
         public string? ExpectedValue { get; set; }
+        public string? ComparisonOperator { get; set; }
+        public string? TransformationLogic { get; set; }
         public int? MetricId { get; set; }
         public string? MetricName { get; set; }
         public string? MetricCode { get; set; }
+        public string? CategoryName { get; set; }
+        public string? SubCategoryName { get; set; }
+        public string? UnitName { get; set; }
+        public DateTime CreatedDate { get; set; }
     }
 
     /// <summary>
@@ -65,6 +75,29 @@ namespace FormReporting.Models.ViewModels.Metrics
         public string Text { get; set; } = string.Empty;
         public string? Description { get; set; }
         public bool IsRecommended { get; set; }
+    }
+
+    /// <summary>
+    /// Output type option with description
+    /// </summary>
+    public class OutputTypeOption
+    {
+        public string Value { get; set; } = string.Empty;
+        public string Text { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public bool IsRecommended { get; set; }
+    }
+
+    /// <summary>
+    /// Scope option for validation
+    /// </summary>
+    public class ScopeOption
+    {
+        public string Value { get; set; } = string.Empty;
+        public string Text { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public bool IsAllowed { get; set; }
+        public bool IsDefault { get; set; }
     }
 
     /// <summary>

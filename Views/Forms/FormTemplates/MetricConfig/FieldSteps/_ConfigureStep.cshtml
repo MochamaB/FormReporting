@@ -2,13 +2,13 @@
 
 @{
     var parentModel = ViewData["ParentModel"] as FormReporting.Models.ViewModels.Metrics.FieldMappingWizardViewModel ?? Model;
-    var existingMapping = parentModel?.ExistingMapping;
+    var existingMapping = parentModel?.ExistingMappings?.FirstOrDefault();
     var recommendedType = parentModel?.RecommendedMappingType ?? "Direct";
     
     // Default mapping name suggestion
     var defaultMappingName = existingMapping?.MappingName ?? $"{parentModel?.FieldName} Mapping";
     var selectedMappingType = existingMapping?.MappingType ?? recommendedType;
-    var selectedAggregationType = existingMapping?.AggregationType ?? "Sum";
+    var selectedOutputType = existingMapping?.OutputType ?? "Raw";
 }
 
 <!-- Step 1: Configure Mapping -->
@@ -33,20 +33,7 @@
         </div>
     }
 
-    <!-- Mapping Name -->
-    <div class="mb-4">
-        <label for="MappingName" class="form-label">
-            Mapping Name <span class="text-danger">*</span>
-        </label>
-        <input type="text" 
-               class="form-control" 
-               id="MappingName" 
-               name="MappingName" 
-               value="@defaultMappingName"
-               placeholder="Enter a descriptive name for this mapping"
-               required />
-        <div class="form-text">A descriptive name to identify this mapping in reports.</div>
-    </div>
+   
 
     <!-- Mapping Type -->
     <div class="mb-4">
@@ -80,35 +67,73 @@
         </div>
     </div>
 
-    <!-- Aggregation Type -->
+    <!-- Output Type -->
     <div class="mb-4">
-        <label for="AggregationType" class="form-label">
-            Aggregation Type <span class="text-danger">*</span>
+        <label for="OutputType" class="form-label">
+            Output Type <span class="text-danger">*</span>
         </label>
-        <select class="form-select" id="AggregationType" name="AggregationType" required>
-            <option value="">Select aggregation type...</option>
-            <option value="Sum" selected="@(selectedAggregationType == "Sum")">Sum - Total of all values</option>
-            <option value="Average" selected="@(selectedAggregationType == "Average")">Average - Mean of all values</option>
-            <option value="Count" selected="@(selectedAggregationType == "Count")">Count - Number of responses</option>
-            <option value="Min" selected="@(selectedAggregationType == "Min")">Minimum - Lowest value</option>
-            <option value="Max" selected="@(selectedAggregationType == "Max")">Maximum - Highest value</option>
-            <option value="Latest" selected="@(selectedAggregationType == "Latest")">Latest - Most recent value</option>
+        <select class="form-select" id="OutputType" name="OutputType" required>
+            <option value="">Select output type...</option>
+            <option value="Raw" selected="@(selectedOutputType == "Raw")">Raw - Use original field value</option>
+            <option value="Percentage" selected="@(selectedOutputType == "Percentage")">Percentage - Convert to percentage format</option>
+            <option value="Normalized" selected="@(selectedOutputType == "Normalized")">Normalized - Scale to 0-100 range</option>
         </select>
-        <div class="form-text">How values should be aggregated when multiple submissions exist.</div>
+        <div class="form-text">How the field value should be processed for reporting.</div>
     </div>
 
-    <!-- Expected Value (for Binary Compliance) -->
-    <div class="mb-4" id="expectedValueSection" style="display: @(selectedMappingType == "BinaryCompliance" ? "block" : "none");">
-        <label for="ExpectedValue" class="form-label">
-            Expected Value <span class="text-danger">*</span>
+    <!-- Expected Value Section (for Expected mapping type) -->
+    <div class="mb-4" id="expectedValueSection" style="display: @(selectedMappingType == "Expected" ? "block" : "none");">
+        <div class="card border-info">
+            <div class="card-header bg-info-subtle">
+                <h6 class="mb-0"><i class="ri-checkbox-circle-line me-2"></i>Expected Value Configuration</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <label for="ComparisonOperator" class="form-label">
+                            Comparison <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="ComparisonOperator" name="ComparisonOperator">
+                            <option value="=" selected="@(existingMapping?.ComparisonOperator == "=")">= (Equals)</option>
+                            <option value="!=" selected="@(existingMapping?.ComparisonOperator == "!=")">!= (Not Equals)</option>
+                            <option value=">" selected="@(existingMapping?.ComparisonOperator == ">")"> &gt; (Greater Than)</option>
+                            <option value=">=" selected="@(existingMapping?.ComparisonOperator == ">=")"> &gt;= (Greater or Equal)</option>
+                            <option value="<" selected="@(existingMapping?.ComparisonOperator == "<")"> &lt; (Less Than)</option>
+                            <option value="<=" selected="@(existingMapping?.ComparisonOperator == "<=")"> &lt;= (Less or Equal)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-8">
+                        <label for="ExpectedValue" class="form-label">
+                            Expected Value <span class="text-danger">*</span>
+                        </label>
+                        <input type="text"
+                               class="form-control"
+                               id="ExpectedValue"
+                               name="ExpectedValue"
+                               value="@existingMapping?.ExpectedValue"
+                               placeholder="e.g., Yes, Compliant, True, 100" />
+                    </div>
+                </div>
+                <div class="form-text mt-2">
+                    <i class="ri-information-line me-1"></i>
+                    Define the expected value and comparison type. Field responses matching this criteria will be marked as compliant/successful.
+                </div>
+            </div>
+        </div>
+    </div>
+     <!-- Mapping Name -->
+    <div class="mb-4">
+        <label for="MappingName" class="form-label">
+            Mapping Name <span class="text-danger">*</span>
         </label>
         <input type="text" 
                class="form-control" 
-               id="ExpectedValue" 
-               name="ExpectedValue" 
-               value="@existingMapping?.ExpectedValue"
-               placeholder="e.g., Yes, Compliant, True" />
-        <div class="form-text">The value that indicates compliance (case-insensitive match).</div>
+               id="MappingName" 
+               name="MappingName" 
+               value="@defaultMappingName"
+               placeholder="Enter a descriptive name for this mapping"
+               required />
+        <div class="form-text">A descriptive name to identify this mapping in reports.</div>
     </div>
 
     <!-- Configuration Summary -->
@@ -127,8 +152,8 @@
                     <div id="summaryMappingType" class="fw-medium">@(selectedTypeInfo?.Text ?? "-")</div>
                 </div>
                 <div class="col-md-4">
-                    <small class="text-muted">Aggregation</small>
-                    <div id="summaryAggregationType" class="fw-medium">@selectedAggregationType</div>
+                    <small class="text-muted">Output Type</small>
+                    <div id="summaryOutputType" class="fw-medium">@selectedOutputType</div>
                 </div>
             </div>
         </div>
@@ -147,20 +172,59 @@ document.addEventListener('DOMContentLoaded', function() {
             const selectedOption = this.options[this.selectedIndex];
             const description = selectedOption.getAttribute('data-description') || 'Select a mapping type to see its description.';
             descriptionDiv.textContent = description;
-            
-            // Show/hide expected value for BinaryCompliance
-            if (this.value === 'BinaryCompliance') {
+
+            // Show/hide expected value section for "Expected" mapping type
+            if (this.value === 'Expected') {
                 expectedValueSection.style.display = 'block';
             } else {
                 expectedValueSection.style.display = 'none';
             }
-            
+
             // Update summary
             document.getElementById('summaryMappingType').textContent = selectedOption.text || '-';
         });
     }
     
-    // Update summary on input changes
+    // Auto-generate mapping name based on selections
+    function generateMappingName() {
+        const mappingTypeSelect = document.getElementById('MappingType');
+        const outputTypeSelect = document.getElementById('OutputType');
+        const mappingNameInput = document.getElementById('MappingName');
+        
+        if (!mappingTypeSelect || !outputTypeSelect || !mappingNameInput) return;
+        
+        const mappingType = mappingTypeSelect.value;
+        const outputType = outputTypeSelect.value;
+        const fieldDataType = '@(parentModel?.DataType ?? "Value")';
+        
+        if (mappingType && outputType) {
+            // Format: [Value] - [MappingType] ([OutputType])
+            // Example: "Text - Direct (Raw)" or "Number - Expected (Percentage)"
+            const generatedName = `${fieldDataType} - ${mappingType} (${outputType})`;
+            mappingNameInput.value = generatedName;
+            
+            // Update summary
+            document.getElementById('summaryMappingName').textContent = generatedName;
+        }
+    }
+    
+    // Attach listeners to regenerate name when selections change
+    if (mappingTypeSelect) {
+        mappingTypeSelect.addEventListener('change', generateMappingName);
+    }
+    
+    const outputTypeSelect = document.getElementById('OutputType');
+    if (outputTypeSelect) {
+        outputTypeSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            document.getElementById('summaryOutputType').textContent = selectedOption.text.split(' - ')[0] || '-';
+            
+            // Regenerate mapping name
+            generateMappingName();
+        });
+    }
+    
+    // Update summary on manual input changes
     const mappingNameInput = document.getElementById('MappingName');
     if (mappingNameInput) {
         mappingNameInput.addEventListener('input', function() {
@@ -168,12 +232,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    const aggregationSelect = document.getElementById('AggregationType');
-    if (aggregationSelect) {
-        aggregationSelect.addEventListener('change', function() {
-            const selectedOption = this.options[this.selectedIndex];
-            document.getElementById('summaryAggregationType').textContent = selectedOption.text.split(' - ')[0] || '-';
-        });
-    }
+    // Generate initial name on page load if both selections exist
+    generateMappingName();
 });
 </script>

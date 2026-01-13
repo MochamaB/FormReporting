@@ -164,6 +164,16 @@
     background-color: #324721 !important;
 }
 
+/* Apply to all soft buttons */
+[class^="btn-soft-"],
+[class*=" btn-soft-"] {
+    border-width: 1px;
+    border-style: solid;
+
+    /* Use the button text color as the border color */
+    border-color: var(--vz-btn-color);
+}
+
 /* Links */
 a {
     color: #324721;

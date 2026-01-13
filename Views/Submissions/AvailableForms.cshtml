@@ -75,6 +75,15 @@
                         </a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link @(currentTab == "statistics" ? "active" : "")" 
+                           data-bs-toggle="tab" 
+                           href="#statistics-tab" 
+                           role="tab"
+                           aria-selected="@(currentTab == "statistics" ? "true" : "false")">
+                            <i class="ri-bar-chart-box-line me-1"></i> Statistics
+                        </a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link @(currentTab == "forms" ? "active" : "")" 
                            data-bs-toggle="tab" 
                            href="#forms-tab" 
@@ -96,6 +105,38 @@
                          id="overview-tab" 
                          role="tabpanel">
                         @await Html.PartialAsync("~/Views/Submissions/Partials/_FormsOverview.cshtml")
+                    </div>
+                    
+                    <!-- ============================================================ -->
+                    <!-- STATISTICS TAB -->
+                    <!-- ============================================================ -->
+                    <div class="tab-pane fade @(currentTab == "statistics" ? "show active" : "")" 
+                         id="statistics-tab" 
+                         role="tabpanel"
+                         data-tab-group="available-forms">
+                        
+                        @{
+                            // Embed the FormStatistics dashboard for all templates (templateId = null)
+                            var dashboardBuilder = ViewContext.HttpContext.RequestServices
+                                .GetRequiredService<FormReporting.Services.Dashboard.FormStatistics.IFormStatisticsDashboardBuilder>();
+                            
+                            var dashboardConfig = await dashboardBuilder.BuildDashboardAsync(
+                                templateId: null, // All templates
+                                startDate: null,
+                                endDate: null,
+                                tenantId: null,
+                                mode: FormReporting.Models.ViewModels.Dashboard.Components.Composite.DashboardMode.Embedded);
+                            
+                            // Set ViewBag values for the embedded dashboard
+                            ViewBag.TemplateId = null;
+                            ViewBag.StartDate = null;
+                            ViewBag.EndDate = null;
+                            ViewBag.TenantId = null;
+                            ViewBag.GroupBy = "Daily";
+                            ViewBag.IsEmbedded = true;
+                        }
+                        
+                        @await Html.PartialAsync("~/Views/Dashboard/FormStatistics/Index.cshtml", dashboardConfig)
                     </div>
                     
                     <!-- ============================================================ -->

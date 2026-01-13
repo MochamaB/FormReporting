@@ -2,7 +2,7 @@
     // Step 2: Metric Definition Choice
     // Get parent model from ViewData
     var parentModel = ViewData["ParentModel"] as FormReporting.Models.ViewModels.Metrics.FieldMappingWizardViewModel;
-    var existingMapping = parentModel?.ExistingMapping;
+    var existingMapping = parentModel?.ExistingMappings?.FirstOrDefault();
     var compatibleMetrics = parentModel?.CompatibleMetrics ?? new List<FormReporting.Models.ViewModels.Metrics.CompatibleMetricViewModel>();
     
     // Determine default selection based on existing mapping

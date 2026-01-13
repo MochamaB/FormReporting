@@ -42,6 +42,7 @@ namespace FormReporting.Data.Configurations.Forms
             builder.Property(fti => fti.IsLibraryOverride).HasDefaultValue(false);
             builder.Property(fti => fti.Version).HasDefaultValue(1);
             builder.Property(fti => fti.IsActive).HasDefaultValue(true);
+            builder.Property(fti => fti.Weight).HasDefaultValue(1.0m);
             builder.Property(fti => fti.CreatedDate).HasDefaultValueSql("GETDATE()");
 
             // Relationships

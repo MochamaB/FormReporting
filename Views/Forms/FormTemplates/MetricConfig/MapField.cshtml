@@ -7,7 +7,7 @@
     Layout = "~/Views/Shared/_Layout.cshtml";
 
     // Determine if editing existing mapping
-    var isEditing = Model.ExistingMapping != null;
+    var isEditing = Model.ExistingMappings?.Any() == true;
     var pageTitle = isEditing ? "Edit Field Mapping" : "Create Field Mapping";
 
     // Build wizard configuration using VerticalWizard for step-by-step mapping
@@ -149,9 +149,9 @@
                     <!-- Hidden fields -->
                     <input type="hidden" name="ItemId" value="@Model.FieldId" />
                     <input type="hidden" name="TemplateId" value="@Model.TemplateId" />
-                    @if (Model.ExistingMapping != null)
+                    @if (Model.ExistingMappings?.Any() == true)
                     {
-                        <input type="hidden" name="MappingId" value="@Model.ExistingMapping.MappingId" />
+                        <input type="hidden" name="MappingId" value="@Model.ExistingMappings.First().MappingId" />
                     }
                     
                     <!-- Wizard Partial -->
@@ -229,9 +229,9 @@
                 errors.push({ field: 'MappingType', message: 'Please select a mapping type' });
             }
 
-            const aggregationType = document.getElementById('AggregationType')?.value;
-            if (!aggregationType) {
-                errors.push({ field: 'AggregationType', message: 'Please select an aggregation type' });
+            const outputType = document.getElementById('OutputType')?.value;
+            if (!outputType) {
+                errors.push({ field: 'OutputType', message: 'Please select an output type' });
             }
 
             return { isValid: errors.length === 0, errors };
@@ -268,12 +268,12 @@
             // Update review summary with current form values
             const mappingName = document.getElementById('MappingName')?.value || '-';
             const mappingType = document.getElementById('MappingType')?.selectedOptions[0]?.text || '-';
-            const aggregationType = document.getElementById('AggregationType')?.selectedOptions[0]?.text || '-';
+            const outputType = document.getElementById('OutputType')?.selectedOptions[0]?.text || '-';
             const metricOption = document.getElementById('MetricOption')?.value || 'standalone';
 
             document.getElementById('reviewMappingName').textContent = mappingName;
             document.getElementById('reviewMappingType').textContent = mappingType;
-            document.getElementById('reviewAggregationType').textContent = aggregationType;
+            document.getElementById('reviewOutputType').textContent = outputType;
 
             let metricText = 'Standalone (No Metric)';
             if (metricOption === 'create-new') {

@@ -19,9 +19,8 @@ namespace FormReporting.Models.ViewModels.Metrics
         [StringLength(30)]
         public string MappingType { get; set; } = string.Empty;
 
-        [Required]
         [StringLength(20)]
-        public string AggregationType { get; set; } = string.Empty;
+        public string? OutputType { get; set; } = "Raw";
 
         /// <summary>
         /// Link to existing metric (nullable for standalone mappings)
@@ -63,7 +62,7 @@ namespace FormReporting.Models.ViewModels.Metrics
         public bool NewMetricIsKPI { get; set; } = false;
 
         /// <summary>
-        /// Aggregation type for the new metric (synced from mapping's AggregationType)
+        /// Aggregation type for the new metric (at metric level, not mapping level)
         /// </summary>
         [StringLength(20)]
         public string? NewMetricAggregationType { get; set; }
@@ -83,17 +82,29 @@ namespace FormReporting.Models.ViewModels.Metrics
         public int ItemId { get; set; }
 
         /// <summary>
+        /// Optional MappingId for updating existing mappings
+        /// </summary>
+        public int? MappingId { get; set; }
+
+        /// <summary>
         /// JSON configuration for calculated metrics
         /// Example: {"formula": "(item21/item20)*100", "sourceItems": [20,21], "roundTo": 2}
         /// </summary>
         public string? TransformationLogic { get; set; }
 
         /// <summary>
-        /// Expected value for BinaryCompliance mappings
+        /// Expected value for compliance mappings
         /// Example: "Yes", "TRUE", "Compliant"
         /// </summary>
         [StringLength(100)]
         public string? ExpectedValue { get; set; }
+
+        /// <summary>
+        /// Comparison operator for expected value validation
+        /// Example: "=", ">", ">=", "<", "<=", "!="
+        /// </summary>
+        [StringLength(10)]
+        public string? ComparisonOperator { get; set; }
     }
 
     // =========================================================================
@@ -182,12 +193,15 @@ namespace FormReporting.Models.ViewModels.Metrics
         public string? MappingName { get; set; }
 
         [StringLength(20)]
-        public string? AggregationType { get; set; }
+        public string? OutputType { get; set; }
 
         public string? TransformationLogic { get; set; }
 
         [StringLength(100)]
         public string? ExpectedValue { get; set; }
+
+        [StringLength(10)]
+        public string? ComparisonOperator { get; set; }
 
         public bool? IsActive { get; set; }
     }

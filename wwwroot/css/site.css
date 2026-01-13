@@ -44,3 +44,55 @@ body {
     0% { background-position: 200% 0; }
     100% { background-position: -200% 0; }
 }
+
+/* ============================================================================
+   ICON PICKER COMPONENT
+   ============================================================================ */
+
+.icon-preview-container {
+    min-width: 42px;
+    justify-content: center;
+}
+
+.icon-preview-container i {
+    font-size: 1.25rem;
+}
+
+.icon-picker-input {
+    font-family: 'Courier New', monospace;
+}
+
+/* Modal icon grid */
+#iconPickerModal .icon-select-btn {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.15s ease;
+}
+
+#iconPickerModal .icon-select-btn:hover {
+    background-color: var(--vz-primary);
+    border-color: var(--vz-primary);
+    color: #fff;
+}
+
+#iconPickerModal .icon-select-btn.active {
+    background-color: var(--vz-primary);
+    border-color: var(--vz-primary);
+    color: #fff;
+    box-shadow: 0 0 0 3px rgba(var(--vz-primary-rgb), 0.25);
+}
+
+#iconPickerModal .icon-category h6 {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--vz-border-color);
+    padding-bottom: 0.5rem;
+}
+
+#iconPreviewSection {
+    border: 1px dashed var(--vz-border-color);
+}

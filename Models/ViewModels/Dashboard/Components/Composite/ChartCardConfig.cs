@@ -9,9 +9,9 @@ namespace FormReporting.Models.ViewModels.Dashboard.Components.Composite
     public class ChartCardConfig
     {
         /// <summary>
-        /// Unique chart identifier
+        /// Unique chart identifier (prefixed with 'chart-' for valid CSS selector)
         /// </summary>
-        public string Id { get; set; } = Guid.NewGuid().ToString("N");
+        public string Id { get; set; } = "chart-" + Guid.NewGuid().ToString("N");
 
         /// <summary>
         /// Chart title

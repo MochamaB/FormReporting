@@ -1,0 +1,104 @@
+@model DashboardConfig
+
+@{
+    var dashboardId = Model.Id;
+    var isWidget = Model.Mode == DashboardMode.Widget;
+}
+
+<div id="@dashboardId" class="dashboard-container @Model.ContainerClass" data-dashboard-mode="@Model.Mode" data-loading-strategy="@Model.LoadingStrategy">
+    
+
+
+    @* Filter Panel *@
+    @if (Model.FilterPanel != null)
+    {
+        if (Model.FilterPanel.ShowCard)
+        {
+            <div class="row mb-3">
+                <div class="col-12">
+                    @await Html.PartialAsync("~/Views/Shared/Components/Dashboard/Composite/_FilterPanel.cshtml", Model.FilterPanel)
+                </div>
+            </div>
+        }
+        else
+        {
+            @await Html.PartialAsync("~/Views/Shared/Components/Dashboard/Composite/_FilterPanel.cshtml", Model.FilterPanel)
+        }
+    }
+
+    @* Quick Stats *@
+    @if (Model.QuickStats != null)
+    {
+        <div class="row mb-3" id="@(dashboardId)-quick-stats">
+            @await Html.PartialAsync("~/Views/Shared/Components/Dashboard/Composite/_StatCardGroup.cshtml", Model.QuickStats)
+        </div>
+    }
+
+    @* Dashboard Sections *@
+    @if (Model.Sections != null && Model.Sections.Any())
+    {
+        <div class="row mb-3">
+            @foreach (var dashboardsection in Model.Sections.OrderBy(s => s.Order))
+            {
+                <div class="@dashboardsection.ColumnWidth" id="@(dashboardId)-@dashboardsection.Id-container">
+                    @if (dashboardsection.LoadMethod == SectionLoadMethod.Server && dashboardsection.Component != null)
+                    {
+                        @* Server-rendered section with data *@
+                        @if (dashboardsection.ComponentType == SectionComponentType.Chart)
+                        {
+                            @await Html.PartialAsync("~/Views/Shared/Components/Dashboard/Composite/_ChartCard.cshtml", dashboardsection.Component)
+                        }
+                        else if (dashboardsection.ComponentType == SectionComponentType.Table)
+                        {
+                            @await Html.PartialAsync("~/Views/Shared/Components/Dashboard/Composite/_DataTable.cshtml", dashboardsection.Component)
+                        }
+                        else if (dashboardsection.ComponentType == SectionComponentType.StatCards)
+                        {
+                            @await Html.PartialAsync("~/Views/Shared/Components/Dashboard/Composite/_StatCardGroup.cshtml", dashboardsection.Component)
+                        }
+                    }
+                    else if (dashboardsection.LoadMethod == SectionLoadMethod.Ajax)
+                    {
+                        @* AJAX-loaded section - show skeleton *@
+                        <div class="dashboard-section-ajax"
+                             data-section-id="@dashboardsection.Id"
+                             data-ajax-url="@dashboardsection.AjaxUrl"
+                             data-component-type="@dashboardsection.ComponentType"
+                             data-refresh-interval="@dashboardsection.RefreshInterval">
+                            @if (dashboardsection.ComponentType == SectionComponentType.Chart)
+                            {
+                                @await Html.PartialAsync("~/Views/Shared/Components/Dashboard/Skeletons/_SkeletonChart.cshtml")
+                            }
+                            else if (dashboardsection.ComponentType == SectionComponentType.Table)
+                            {
+                                @await Html.PartialAsync("~/Views/Shared/Components/Dashboard/Skeletons/_SkeletonTable.cshtml")
+                            }
+                            else
+                            {
+                                <div class="text-center p-4">
+                                    <div class="spinner-border text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        @* Manual loading - just a placeholder *@
+                        <div id="@(dashboardId)-@dashboardsection.Id"
+                             class="dashboard-section-manual"
+                             data-section-id="@dashboardsection.Id"
+                             data-component-type="@dashboardsection.ComponentType">
+                            <div class="text-center p-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Loading...</span>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
+</div>

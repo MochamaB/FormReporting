@@ -92,6 +92,7 @@ namespace FormReporting.Controllers.Metrics
                     {
                         SectionId = s.SectionId,
                         SectionName = s.SectionName,
+                        SectionDescription = s.SectionDescription ?? string.Empty,
                         DisplayOrder = s.DisplayOrder,
                         Fields = s.Items
                             .OrderBy(i => i.DisplayOrder)
@@ -168,8 +169,24 @@ namespace FormReporting.Controllers.Metrics
                 })
                 .ToListAsync();
 
-            // Get existing mapping if any
-            var existingMapping = field.MetricMappings.FirstOrDefault();
+            // Get all existing mappings for this field
+            var existingMappings = field.MetricMappings.Select(mapping => new ExistingMappingViewModel
+            {
+                MappingId = mapping.MappingId,
+                MappingName = mapping.MappingName,
+                MappingType = mapping.MappingType,
+                OutputType = mapping.OutputType,
+                ExpectedValue = mapping.ExpectedValue,
+                ComparisonOperator = mapping.ComparisonOperator,
+                TransformationLogic = mapping.TransformationLogic,
+                MetricId = mapping.MetricId,
+                MetricName = mapping.Metric?.MetricName,
+                MetricCode = mapping.Metric?.MetricCode,
+                CategoryName = mapping.Metric?.SubCategory?.Category?.CategoryName,
+                SubCategoryName = mapping.Metric?.SubCategory?.SubCategoryName,
+                UnitName = mapping.Metric?.Unit?.UnitName,
+                CreatedDate = mapping.CreatedDate
+            }).ToList();
 
             // Create ViewModel
             var viewModel = new FieldMappingWizardViewModel
@@ -195,25 +212,31 @@ namespace FormReporting.Controllers.Metrics
                     Description = GetMappingTypeDescription(t),
                     IsRecommended = t == recommendedType
                 }).ToList() ?? new List<MappingTypeOption>(),
+                ValidOutputTypes = new List<OutputTypeOption>
+                {
+                    new() { Value = "Raw", Text = "Raw Value", Description = "Use the original field value", IsRecommended = true },
+                    new() { Value = "Percentage", Text = "Percentage", Description = "Convert to percentage format" },
+                    new() { Value = "Normalized", Text = "Normalized", Description = "Normalize to 0-100 scale" }
+                },
                 RecommendedMappingType = recommendedType,
                 CompatibleMetrics = compatibleMetrics ?? new List<CompatibleMetricViewModel>(),
-                ExistingMapping = existingMapping != null ? new ExistingMappingViewModel
-                {
-                    MappingId = existingMapping.MappingId,
-                    MappingName = existingMapping.MappingName,
-                    MappingType = existingMapping.MappingType,
-                    ExpectedValue = existingMapping.ExpectedValue,
-                    MetricId = existingMapping.MetricId,
-                    MetricName = existingMapping.Metric?.MetricName,
-                    MetricCode = existingMapping.Metric?.MetricCode
-                } : null
+                ExistingMappings = existingMappings
             };
 
-            // Populate ViewBag with MetricCategories and MetricUnits for dropdowns
+            // Populate ViewBag with MetricCategories, SubCategories and MetricUnits for dropdowns
             ViewBag.MetricCategories = await _context.MetricCategories
                 .Where(c => c.IsActive)
                 .OrderBy(c => c.DisplayOrder)
                 .ToListAsync();
+
+            // Load all subcategories for client-side cascading dropdown
+            ViewBag.MetricSubCategories = await _context.MetricSubCategories
+                .Include(sc => sc.Category)
+                .Where(sc => sc.IsActive && sc.Category.IsActive)
+                .OrderBy(sc => sc.Category.DisplayOrder)
+                .ThenBy(sc => sc.DisplayOrder)
+                .ToListAsync();
+
             ViewBag.MetricUnits = await _context.MetricUnits
                 .Where(u => u.IsActive)
                 .OrderBy(u => u.DisplayOrder)
@@ -265,7 +288,7 @@ namespace FormReporting.Controllers.Metrics
                             MetricScope = "Field",
                             HierarchyLevel = 0, // Field level
                             SourceType = request.MappingType == "Calculated" ? "SystemCalculated" : "UserInput",
-                            AggregationType = request.NewMetricAggregationType ?? request.AggregationType,
+                            AggregationType = request.NewMetricAggregationType ?? "SUM",
                             IsKPI = request.NewMetricIsKPI,
                             ThresholdGreen = request.NewMetricGreen,
                             ThresholdYellow = request.NewMetricYellow,
@@ -288,28 +311,46 @@ namespace FormReporting.Controllers.Metrics
                         break;
                 }
 
-                // Check for existing mapping
-                var existingMapping = await _context.FormItemMetricMappings
-                    .FirstOrDefaultAsync(m => m.ItemId == fieldId && m.IsActive);
-
-                if (existingMapping != null)
+                // Handle multiple mappings per field
+                if (request.MappingId.HasValue)
                 {
                     // Update existing mapping
-                    existingMapping.MappingName = request.MappingName;
-                    existingMapping.MappingType = request.MappingType;
-                    existingMapping.ExpectedValue = request.ExpectedValue;
-                    existingMapping.MetricId = metricId;
-                    // Note: FormItemMetricMapping doesn't have ModifiedDate property
+                    var existingMapping = await _context.FormItemMetricMappings
+                        .FirstOrDefaultAsync(m => m.MappingId == request.MappingId.Value && m.IsActive);
+
+                    if (existingMapping != null)
+                    {
+                        existingMapping.MappingName = request.MappingName;
+                        existingMapping.MappingType = request.MappingType;
+                        existingMapping.OutputType = request.OutputType;
+                        existingMapping.ExpectedValue = request.ExpectedValue;
+                        existingMapping.ComparisonOperator = request.ComparisonOperator;
+                        existingMapping.TransformationLogic = request.TransformationLogic;
+                        existingMapping.MetricId = metricId;
+                    }
                 }
                 else
                 {
+                    // Check if mapping already exists for this field + metric combination
+                    var duplicateMapping = metricId.HasValue ? await _context.FormItemMetricMappings
+                        .FirstOrDefaultAsync(m => m.ItemId == fieldId && m.MetricId == metricId && m.IsActive) : null;
+
+                    if (duplicateMapping != null)
+                    {
+                        TempData["Error"] = "This field is already mapped to the selected metric. Use a different metric or edit the existing mapping.";
+                        return RedirectToAction(nameof(MapField), new { templateId, fieldId });
+                    }
+
                     // Create new mapping
                     var newMapping = new Models.Entities.Forms.FormItemMetricMapping
                     {
                         ItemId = fieldId,
                         MappingName = request.MappingName,
                         MappingType = request.MappingType,
+                        OutputType = request.OutputType ?? "Raw",
                         ExpectedValue = request.ExpectedValue,
+                        ComparisonOperator = request.ComparisonOperator,
+                        TransformationLogic = request.TransformationLogic,
                         MetricId = metricId,
                         IsActive = true,
                         CreatedDate = DateTime.UtcNow
@@ -434,7 +475,6 @@ namespace FormReporting.Controllers.Metrics
                     MappingId = existingMapping.MappingId,
                     MappingName = existingMapping.MappingName,
                     MappingType = existingMapping.MappingType,
-                    AggregationType = existingMapping.AggregationType,
                     MetricId = existingMapping.MetricId,
                     MetricName = existingMapping.Metric?.MetricName,
                     MetricCode = existingMapping.Metric?.MetricCode,
@@ -504,7 +544,7 @@ namespace FormReporting.Controllers.Metrics
                             MetricScope = "Section",
                             HierarchyLevel = 1, // Section level
                             SourceType = request.MappingType == "Calculated" ? "SystemCalculated" : "Aggregated",
-                            AggregationType = request.NewMetricAggregationType ?? request.AggregationType,
+                            AggregationType = request.NewMetricAggregationType ?? "SUM",
                             IsKPI = request.NewMetricIsKPI,
                             ThresholdGreen = request.NewMetricGreen,
                             ThresholdYellow = request.NewMetricYellow,
@@ -537,7 +577,6 @@ namespace FormReporting.Controllers.Metrics
                     // Update existing mapping
                     existingMapping.MappingName = request.MappingName;
                     existingMapping.MappingType = request.MappingType;
-                    existingMapping.AggregationType = request.AggregationType;
                     existingMapping.MetricId = metricId;
 
                     // Remove old sources
@@ -566,7 +605,6 @@ namespace FormReporting.Controllers.Metrics
                         SectionId = sectionId,
                         MappingName = request.MappingName,
                         MappingType = request.MappingType,
-                        AggregationType = request.AggregationType,
                         MetricId = metricId,
                         IsActive = true,
                         CreatedDate = DateTime.UtcNow
@@ -662,8 +700,24 @@ namespace FormReporting.Controllers.Metrics
                 })
                 .ToListAsync();
 
-            // Get existing mapping if any
-            var existingMapping = field.MetricMappings.FirstOrDefault();
+            // Get all existing mappings for this field
+            var existingMappings = field.MetricMappings.Select(mapping => new ExistingMappingViewModel
+            {
+                MappingId = mapping.MappingId,
+                MappingName = mapping.MappingName,
+                MappingType = mapping.MappingType,
+                OutputType = mapping.OutputType,
+                ExpectedValue = mapping.ExpectedValue,
+                ComparisonOperator = mapping.ComparisonOperator,
+                TransformationLogic = mapping.TransformationLogic,
+                MetricId = mapping.MetricId,
+                MetricName = mapping.Metric?.MetricName,
+                MetricCode = mapping.Metric?.MetricCode,
+                CategoryName = mapping.Metric?.SubCategory?.Category?.CategoryName,
+                SubCategoryName = mapping.Metric?.SubCategory?.SubCategoryName,
+                UnitName = mapping.Metric?.Unit?.UnitName,
+                CreatedDate = mapping.CreatedDate
+            }).ToList();
 
             // Create ViewModel with null-safe assignments
             var viewModel = new FieldMappingWizardViewModel
@@ -691,16 +745,7 @@ namespace FormReporting.Controllers.Metrics
                 }).ToList() ?? new List<MappingTypeOption>(),
                 RecommendedMappingType = recommendedType,
                 CompatibleMetrics = compatibleMetrics ?? new List<CompatibleMetricViewModel>(),
-                ExistingMapping = existingMapping != null ? new ExistingMappingViewModel
-                {
-                    MappingId = existingMapping.MappingId,
-                    MappingName = existingMapping.MappingName,
-                    MappingType = existingMapping.MappingType,
-                    ExpectedValue = existingMapping.ExpectedValue,
-                    MetricId = existingMapping.MetricId,
-                    MetricName = existingMapping.Metric?.MetricName,
-                    MetricCode = existingMapping.Metric?.MetricCode
-                } : null
+                ExistingMappings = existingMappings
             };
 
             // Return the wizard partial view
@@ -747,6 +792,93 @@ namespace FormReporting.Controllers.Metrics
         }
 
         // ===================================================================
+        // API ENDPOINTS FOR MULTIPLE MAPPINGS
+        // ===================================================================
+
+        /// <summary>
+        /// API: Get all mappings for a specific field
+        /// </summary>
+        [HttpGet("api/field-mappings/{fieldId}")]
+        public async Task<IActionResult> GetFieldMappings(int fieldId)
+        {
+            var mappings = await _context.FormItemMetricMappings
+                .Include(m => m.Metric)
+                    .ThenInclude(mt => mt.SubCategory)
+                        .ThenInclude(sc => sc.Category)
+                .Include(m => m.Metric.Unit)
+                .Where(m => m.ItemId == fieldId && m.IsActive)
+                .OrderBy(m => m.CreatedDate)
+                .Select(m => new
+                {
+                    m.MappingId,
+                    m.MappingName,
+                    m.MappingType,
+                    m.OutputType,
+                    m.ExpectedValue,
+                    m.ComparisonOperator,
+                    m.TransformationLogic,
+                    MetricId = m.MetricId,
+                    MetricName = m.Metric != null ? m.Metric.MetricName : null,
+                    MetricCode = m.Metric != null ? m.Metric.MetricCode : null,
+                    CategoryName = m.Metric != null && m.Metric.SubCategory != null && m.Metric.SubCategory.Category != null 
+                        ? m.Metric.SubCategory.Category.CategoryName : null,
+                    SubCategoryName = m.Metric != null && m.Metric.SubCategory != null 
+                        ? m.Metric.SubCategory.SubCategoryName : null,
+                    UnitName = m.Metric != null && m.Metric.Unit != null ? m.Metric.Unit.UnitName : null,
+                    m.CreatedDate
+                })
+                .ToListAsync();
+
+            return Json(mappings);
+        }
+
+        /// <summary>
+        /// API: Delete a specific mapping
+        /// </summary>
+        [HttpDelete("api/field-mappings/{mappingId}")]
+        public async Task<IActionResult> DeleteFieldMapping(int mappingId)
+        {
+            var mapping = await _context.FormItemMetricMappings
+                .FirstOrDefaultAsync(m => m.MappingId == mappingId && m.IsActive);
+
+            if (mapping == null)
+            {
+                return Json(new { success = false, message = "Mapping not found" });
+            }
+
+            // Soft delete
+            mapping.IsActive = false;
+            await _context.SaveChangesAsync();
+
+            return Json(new { success = true, message = "Mapping deleted successfully" });
+        }
+
+        /// <summary>
+        /// API: Get mapping types valid for a field type
+        /// </summary>
+        [HttpGet("api/mapping-types/{fieldType}")]
+        public IActionResult GetValidMappingTypes(string fieldType)
+        {
+            if (!Enum.TryParse<FormFieldType>(fieldType, out var parsedFieldType))
+            {
+                return Json(new { success = false, message = "Invalid field type" });
+            }
+
+            var validTypes = _validationService.GetValidMappingTypes(parsedFieldType);
+            var recommendedType = _validationService.GetRecommendedMappingType(parsedFieldType);
+
+            var mappingTypes = validTypes?.Select(t => new MappingTypeOption
+            {
+                Value = t,
+                Text = GetMappingTypeDisplayText(t),
+                Description = GetMappingTypeDescription(t),
+                IsRecommended = t == recommendedType
+            }).ToList() ?? new List<MappingTypeOption>();
+
+            return Json(new { success = true, mappingTypes });
+        }
+
+        // ===================================================================
         // HELPER METHODS
         // ===================================================================
 
@@ -758,9 +890,9 @@ namespace FormReporting.Controllers.Metrics
             return mappingType switch
             {
                 "Direct" => "Direct (1:1 Value)",
-                "BinaryCompliance" => "Binary Compliance (Yes/No)",
                 "Calculated" => "Calculated (Formula)",
-                "Derived" => "Derived (Complex)",
+                "Derived" => "Derived (From Other Fields)",
+                "Expected" => "Expected (Compliance Check)",
                 _ => mappingType
             };
         }
@@ -772,10 +904,10 @@ namespace FormReporting.Controllers.Metrics
         {
             return mappingType switch
             {
-                "Direct" => "Use the field value directly as the metric value",
-                "BinaryCompliance" => "Check if field value matches expected value (1 or 0)",
-                "Calculated" => "Calculate value using formula or aggregation",
-                "Derived" => "Value derived from other mappings or external sources",
+                "Direct" => "Use the field value directly as the metric value without transformation",
+                "Calculated" => "Calculate value using a formula or aggregation from this field",
+                "Derived" => "Derive value from other field mappings or computed values",
+                "Expected" => "Compare field value against expected value for compliance tracking",
                 _ => string.Empty
             };
         }

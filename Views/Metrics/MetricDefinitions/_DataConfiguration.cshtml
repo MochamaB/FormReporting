@@ -43,35 +43,22 @@
     <div class="col-md-6">
         <div class="mb-3">
             <label asp-for="UnitId" class="form-label">Unit</label>
-            <select asp-for="UnitId" class="form-select">
-                <option value="">-- Select Unit --</option>
-                @if (ViewBag.MetricUnits != null)
-                {
-                    foreach (var unit in ViewBag.MetricUnits)
-                    {
-                        <option value="@unit.UnitId">@unit.UnitName</option>
-                    }
-                }
+            <select asp-for="UnitId" id="UnitId" class="form-select" disabled>
+                <option value="">-- Select SubCategory First --</option>
             </select>
             <span asp-validation-for="UnitId" class="text-danger"></span>
-            <small class="text-muted">Unit of measurement (e.g., Percentage, Count, Score).</small>
+            <small class="text-muted">Unit of measurement based on selected subcategory.</small>
         </div>
     </div>
 
     <div class="col-md-6">
         <div class="mb-3">
             <label asp-for="AggregationType" class="form-label">Aggregation Type</label>
-            <select asp-for="AggregationType" class="form-select">
-                <option value="">-- None --</option>
-                <option value="SUM">Sum</option>
-                <option value="AVG">Average</option>
-                <option value="MAX">Maximum</option>
-                <option value="MIN">Minimum</option>
-                <option value="LAST_VALUE">Last Value</option>
-                <option value="COUNT">Count</option>
+            <select asp-for="AggregationType" id="AggregationType" class="form-select" disabled>
+                <option value="">-- Select SubCategory First --</option>
             </select>
             <span asp-validation-for="AggregationType" class="text-danger"></span>
-            <small class="text-muted">How to aggregate multiple values for reporting.</small>
+            <small class="text-muted">How to aggregate values (based on subcategory constraints).</small>
         </div>
     </div>
 </div>

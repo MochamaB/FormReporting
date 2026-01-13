@@ -197,7 +197,6 @@
                     <i class="ri-play-line me-1"></i>Actions
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end">
-                    <!-- Primary Actions -->
                     @if (draftCount > 0)
                     {
                         <li>
@@ -211,10 +210,7 @@
                             <i class="ri-play-circle-line me-2 text-primary"></i>Start New
                         </a>
                     </li>
-                    
                     <li><hr class="dropdown-divider"></li>
-                    
-                    <!-- View Actions -->
                     <li>
                         <a class="dropdown-item" href="@Url.Action("TemplateSubmissions", "Submissions", new { templateId = Model.TemplateId })">
                             <i class="ri-file-list-3-line me-2 text-info"></i>View Responses
@@ -225,29 +221,11 @@
                             <i class="ri-information-line me-2 text-secondary"></i>Form Details
                         </a>
                     </li>
-                    <li>
-                        <a class="dropdown-item" href="@Url.Action("Results", "Submissions", new { templateId = Model.TemplateId })">
-                            <i class="ri-bar-chart-box-line me-2 text-success"></i>View Results
-                        </a>
-                    </li>
-                    
                     <li><hr class="dropdown-divider"></li>
-                    
-                    <!-- Other Actions -->
                     <li>
-                        <a class="dropdown-item" href="@Url.Action("Preview", "FormTemplates", new { id = Model.TemplateId })" target="_blank">
-                            <i class="ri-eye-line me-2"></i>Preview Form
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item copy-form-link" href="#" 
+                        <a class="dropdown-item copy-form-link" href="#"
                            data-form-url="@($"{Context.Request.Scheme}://{Context.Request.Host}/f/{Model.TemplateCode}")">
                             <i class="ri-link me-2"></i>Copy Form Link
-                        </a>
-                    </li>
-                    <li>
-                        <a class="dropdown-item" href="@Url.Action("Export", "Submissions", new { templateId = Model.TemplateId })">
-                            <i class="ri-download-2-line me-2"></i>Export Data
                         </a>
                     </li>
                 </ul>

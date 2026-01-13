@@ -120,7 +120,7 @@ namespace FormReporting.Controllers.Submissions
         /// List available form templates user can fill
         /// GET /Submissions/AvailableForms
         /// </summary>
-        public async Task<IActionResult> AvailableForms(string? tab = "forms", string? category = null, string? search = null, string? type = null, int page = 1, int pageSize = 12)
+        public async Task<IActionResult> AvailableForms(string? tab = "overview", string? category = null, string? search = null, string? type = null, int page = 1, int pageSize = 12)
         {
             var userId = GetCurrentUserId();
             if (userId == 0)

@@ -1,5 +1,7 @@
 using FormReporting.Data;
+using FormReporting.Models.Entities.Forms;
 using FormReporting.Models.Entities.Identity;
+using FormReporting.Models.Entities.Organizational;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
@@ -41,6 +43,12 @@ namespace FormReporting.Services.Identity
 
             // 5. Tenant Access Claims
             claims.AddRange(await GetTenantAccessClaimsAsync(user));
+
+            // 6. Template Access Claims
+            claims.AddRange(await GetTemplateAccessClaimsAsync(user));
+
+            // 7. Region Access Claims
+            claims.AddRange(await GetRegionAccessClaimsAsync(user));
 
             return claims;
         }
@@ -258,6 +266,201 @@ namespace FormReporting.Services.Identity
         }
 
         /// <summary>
+        /// Get template access claims based on user's form assignments and role-based access
+        /// Super users get all templates, regular users get assigned + created templates
+        /// </summary>
+        public async Task<List<Claim>> GetTemplateAccessClaimsAsync(User user)
+        {
+            var claims = new List<Claim>();
+
+            try
+            {
+                // Get user with relationships for assignment checking
+                var userWithRelations = await _context.Users
+                    .Include(u => u.UserRoles)
+                    .ThenInclude(ur => ur.Role)
+                    .Include(u => u.GroupMemberships)
+                    .Include(u => u.PrimaryTenant)
+                    .FirstOrDefaultAsync(u => u.UserId == user.UserId);
+
+                if (userWithRelations == null)
+                {
+                    claims.Add(new Claim("TemplateAccessCount", "0"));
+                    claims.Add(new Claim("AssignmentCount", "0"));
+                    return claims;
+                }
+
+                var now = DateTime.UtcNow;
+                var accessibleTemplateIds = new HashSet<int>();
+                var accessType = "ASSIGNMENTS"; // Default access type
+
+                // ✅ Check for super user roles that get ALL templates
+                var superUserRoles = new[] { "SYSTEM_ADMIN", "AUDITOR" };
+                var userRoleCodes = userWithRelations.UserRoles
+                    .Select(ur => ur.Role.RoleCode)
+                    .ToList();
+
+                // ✅ SuperAdmin (hardcoded) + Super Users get ALL published templates
+                if (user.UserName.ToLower() == "superadmin" || userRoleCodes.Intersect(superUserRoles).Any())
+                {
+                    // 🚀 Super users get ALL published templates
+                    var allPublishedTemplates = await _context.FormTemplates
+                        .Where(t => t.PublishStatus == "Published")
+                        .Select(t => t.TemplateId)
+                        .ToListAsync();
+
+                    accessibleTemplateIds.UnionWith(allPublishedTemplates);
+                    accessType = "ALL_TEMPLATES";
+                    
+                    // Add bypass claim for easy identification
+                    claims.Add(new Claim("TemplateAccessBypass", accessType));
+                }
+                else
+                {
+                    // 📋 Regular users get assigned + created templates
+                    
+                    // 1. Add templates created by the user
+                    var userCreatedTemplates = await _context.FormTemplates
+                        .Where(t => t.CreatedBy == user.UserId && t.PublishStatus == "Published")
+                        .Select(t => t.TemplateId)
+                        .ToListAsync();
+
+                    accessibleTemplateIds.UnionWith(userCreatedTemplates);
+
+                    // 2. Add assigned templates
+                    var assignments = await _context.FormTemplateAssignments
+                        .Include(a => a.Template)
+                        .Where(a => a.Status == "Active" &&
+                                   a.EffectiveFrom <= now &&
+                                   (!a.EffectiveUntil.HasValue || a.EffectiveUntil >= now))
+                        .ToListAsync();
+
+                    foreach (var assignment in assignments)
+                    {
+                        var hasAccess = await CheckUserAccessForAssignment(userWithRelations, assignment);
+                        if (hasAccess)
+                        {
+                            accessibleTemplateIds.Add(assignment.TemplateId);
+                        }
+                    }
+
+                    accessType = "ASSIGNMENTS_PLUS_CREATED";
+                }
+
+                // Add template IDs as claims
+                foreach (var templateId in accessibleTemplateIds)
+                {
+                    claims.Add(new Claim("TemplateAccess", templateId.ToString()));
+                }
+
+                // Add metadata claims
+                claims.Add(new Claim("TemplateAccessCount", accessibleTemplateIds.Count.ToString()));
+                claims.Add(new Claim("TemplateAccessType", accessType));
+                claims.Add(new Claim("AssignmentCount", userWithRelations.UserRoles.Count.ToString()));
+
+                // TEMPORARY: Log template access for debugging
+                System.Diagnostics.Debug.WriteLine($"=== TEMPLATE ACCESS CLAIMS FOR USER {user.UserName} ===");
+                System.Diagnostics.Debug.WriteLine($"User ID: {user.UserId}");
+                System.Diagnostics.Debug.WriteLine($"Roles: {string.Join(", ", userRoleCodes)}");
+                System.Diagnostics.Debug.WriteLine($"Access Type: {accessType}");
+                System.Diagnostics.Debug.WriteLine($"Accessible Templates: {accessibleTemplateIds.Count}");
+                System.Diagnostics.Debug.WriteLine($"Template IDs: {string.Join(", ", accessibleTemplateIds)}");
+                System.Diagnostics.Debug.WriteLine("=============================================");
+            }
+            catch (Exception ex)
+            {
+                // Log error but don't fail login - add empty claims
+                claims.Add(new Claim("TemplateAccessCount", "0"));
+                claims.Add(new Claim("TemplateAccessType", "ERROR"));
+                claims.Add(new Claim("AssignmentCount", "0"));
+            }
+
+            return claims;
+        }
+
+        /// <summary>
+        /// Get region access claims based on user's scope
+        /// </summary>
+        public async Task<List<Claim>> GetRegionAccessClaimsAsync(User user)
+        {
+            // Get user with primary tenant
+            var userWithTenant = await _context.Users
+                .Include(u => u.PrimaryTenant)
+                .FirstOrDefaultAsync(u => u.UserId == user.UserId);
+
+            // Get highest scope level (lowest Level number = broadest access)
+            var highestScope = await _context.UserRoles
+                .Where(ur => ur.UserId == user.UserId && ur.Role.IsActive)
+                .Include(ur => ur.Role)
+                    .ThenInclude(r => r.ScopeLevel)
+                .Select(ur => ur.Role.ScopeLevel)
+                .OrderBy(sl => sl.Level)
+                .FirstOrDefaultAsync();
+
+            var claims = new List<Claim>();
+
+            if (highestScope != null && userWithTenant != null)
+            {
+                switch (highestScope.ScopeCode.ToUpper())
+                {
+                    case "GLOBAL":
+                        // All regions
+                        var allRegions = await _context.Regions
+                            .Where(r => r.IsActive)
+                            .ToListAsync();
+                        
+                        foreach (var region in allRegions)
+                        {
+                            claims.Add(new Claim("RegionAccess", region.RegionId.ToString()));
+                        }
+                        break;
+
+                    case "REGIONAL":
+                        // User's region only
+                        if (userWithTenant.PrimaryTenant?.RegionId.HasValue == true)
+                        {
+                            claims.Add(new Claim("RegionAccess", 
+                                userWithTenant.PrimaryTenant.RegionId.Value.ToString()));
+                        }
+                        break;
+
+                    case "TENANT":
+                    case "DEPARTMENT":
+                    case "TEAM":
+                        // Region of user's tenant
+                        if (userWithTenant.PrimaryTenant?.RegionId.HasValue == true)
+                        {
+                            claims.Add(new Claim("RegionAccess", 
+                                userWithTenant.PrimaryTenant.RegionId.Value.ToString()));
+                        }
+                        break;
+                }
+            }
+
+            return claims;
+        }
+
+        /// <summary>
+        /// Helper method to check if user has access to a specific assignment
+        /// Reuses logic from FormAssignmentService to avoid circular dependency
+        /// </summary>
+        private async Task<bool> CheckUserAccessForAssignment(Models.Entities.Identity.User user, FormTemplateAssignment assignment)
+        {
+            return assignment.AssignmentType switch
+            {
+                "All" => true,
+                "TenantType" => await _context.Tenants.AnyAsync(t => t.TenantId == user.TenantId && t.TenantType == assignment.TenantType),
+                "TenantGroup" => await _context.TenantGroupMembers.AnyAsync(m => m.TenantGroupId == assignment.TenantGroupId && m.TenantId == user.TenantId),
+                "SpecificTenant" => user.TenantId == assignment.TenantId,
+                "Role" => user.UserRoles.Any(ur => ur.RoleId == assignment.RoleId),
+                "Department" => user.DepartmentId == assignment.DepartmentId,
+                "UserGroup" => user.GroupMemberships.Any(m => m.UserGroupId == assignment.UserGroupId),
+                "SpecificUser" => user.UserId == assignment.UserId,
+                _ => false
+            };
+        }
+
+        /// <summary>
         /// Invalidate cached claims for a user (placeholder for future caching implementation)
         /// </summary>
         public Task InvalidateUserClaimsCacheAsync(int userId)
@@ -267,6 +470,7 @@ namespace FormReporting.Services.Identity
             return Task.CompletedTask;
         }
 
+        
         #region Current User Helpers
 
         /// <summary>

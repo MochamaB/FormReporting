@@ -228,8 +228,8 @@ namespace FormReporting.Controllers.Metrics
             var wizard = BuildMetricWizard();
             ViewData["Wizard"] = wizard;
 
-            // Populate ViewBag with MetricCategories and MetricUnits for dropdowns
-            await LoadCategoryAndUnitDropdowns();
+            // Populate ViewBag with hierarchical dropdown data
+            await LoadHierarchicalDropdowns();
 
             return View("~/Views/Metrics/MetricDefinitions/Create.cshtml", model);
         }
@@ -246,7 +246,7 @@ namespace FormReporting.Controllers.Metrics
                 // Rebuild wizard for error display
                 var wizard = BuildMetricWizard();
                 ViewData["Wizard"] = wizard;
-                await LoadCategoryAndUnitDropdowns();
+                await LoadHierarchicalDropdowns();
                 return View("~/Views/Metrics/MetricDefinitions/Create.cshtml", model);
             }
 
@@ -261,7 +261,7 @@ namespace FormReporting.Controllers.Metrics
                 // Rebuild wizard for error display
                 var wizard = BuildMetricWizard();
                 ViewData["Wizard"] = wizard;
-                await LoadCategoryAndUnitDropdowns();
+                await LoadHierarchicalDropdowns();
                 return View("~/Views/Metrics/MetricDefinitions/Create.cshtml", model);
             }
 
@@ -329,7 +329,7 @@ namespace FormReporting.Controllers.Metrics
 
             ViewBag.MetricId = id;
             ViewBag.IsEdit = true;
-            await LoadCategoryAndUnitDropdowns();
+            await LoadHierarchicalDropdowns();
 
             return View("~/Views/Metrics/MetricDefinitions/Edit.cshtml", model);
         }
@@ -345,7 +345,7 @@ namespace FormReporting.Controllers.Metrics
             {
                 ViewBag.MetricId = id;
                 ViewBag.IsEdit = true;
-                await LoadCategoryAndUnitDropdowns();
+                await LoadHierarchicalDropdowns();
                 return View("~/Views/Metrics/MetricDefinitions/Edit.cshtml", model);
             }
 
@@ -366,7 +366,7 @@ namespace FormReporting.Controllers.Metrics
                 ModelState.AddModelError("MetricCode", "A metric with this code already exists.");
                 ViewBag.MetricId = id;
                 ViewBag.IsEdit = true;
-                await LoadCategoryAndUnitDropdowns();
+                await LoadHierarchicalDropdowns();
                 return View("~/Views/Metrics/MetricDefinitions/Edit.cshtml", model);
             }
 
@@ -394,20 +394,109 @@ namespace FormReporting.Controllers.Metrics
         }
 
         /// <summary>
-        /// Load dropdown data for subcategories and units
+        /// Load hierarchical dropdown data for categories, subcategories and units
         /// </summary>
-        private async Task LoadCategoryAndUnitDropdowns()
+        private async Task LoadHierarchicalDropdowns()
         {
+            // Load categories for hierarchical selection
+            ViewBag.MetricCategories = await _context.MetricCategories
+                .Where(c => c.IsActive)
+                .OrderBy(c => c.DisplayOrder)
+                .ToListAsync();
+
+            // Load all subcategories grouped by category for client-side filtering
             ViewBag.MetricSubCategories = await _context.MetricSubCategories
                 .Include(sc => sc.Category)
                 .Where(sc => sc.IsActive && sc.Category.IsActive)
                 .OrderBy(sc => sc.Category.DisplayOrder)
                 .ThenBy(sc => sc.DisplayOrder)
                 .ToListAsync();
+
+            // Load all units for client-side filtering
             ViewBag.MetricUnits = await _context.MetricUnits
                 .Where(u => u.IsActive)
                 .OrderBy(u => u.DisplayOrder)
                 .ToListAsync();
+        }
+
+        /// <summary>
+        /// API: Get subcategories for a specific category
+        /// </summary>
+        [HttpGet("api/subcategories/{categoryId}")]
+        public async Task<IActionResult> GetSubCategories(int categoryId)
+        {
+            var subcategories = await _context.MetricSubCategories
+                .Where(sc => sc.CategoryId == categoryId && sc.IsActive)
+                .OrderBy(sc => sc.DisplayOrder)
+                .Select(sc => new
+                {
+                    sc.SubCategoryId,
+                    sc.SubCategoryCode,
+                    sc.SubCategoryName,
+                    sc.Description,
+                    sc.AllowedScopes,
+                    sc.DefaultScope,
+                    sc.AllowedDataTypes,
+                    sc.AllowedAggregationTypes,
+                    sc.DefaultDataType,
+                    sc.DefaultAggregationType,
+                    sc.DefaultUnitId,
+                    sc.SuggestedThresholdGreen,
+                    sc.SuggestedThresholdYellow,
+                    sc.SuggestedThresholdRed
+                })
+                .ToListAsync();
+
+            return Json(subcategories);
+        }
+
+        /// <summary>
+        /// API: Get units for a specific subcategory
+        /// </summary>
+        [HttpGet("api/subcategory-units/{subCategoryId}")]
+        public async Task<IActionResult> GetSubCategoryUnits(int subCategoryId)
+        {
+            var units = await _context.MetricSubCategoryUnits
+                .Include(scu => scu.Unit)
+                .Where(scu => scu.SubCategoryId == subCategoryId && scu.Unit.IsActive)
+                .OrderBy(scu => scu.DisplayOrder)
+                .Select(scu => new
+                {
+                    scu.Unit.UnitId,
+                    scu.Unit.UnitCode,
+                    scu.Unit.UnitName,
+                    scu.Unit.UnitSymbol,
+                    scu.IsDefault
+                })
+                .ToListAsync();
+
+            return Json(units);
+        }
+
+        /// <summary>
+        /// API: Validate scope constraints for a subcategory
+        /// </summary>
+        [HttpGet("api/validate-scope/{subCategoryId}/{scope}")]
+        public async Task<IActionResult> ValidateScopeConstraints(int subCategoryId, string scope)
+        {
+            var subcategory = await _context.MetricSubCategories
+                .FirstOrDefaultAsync(sc => sc.SubCategoryId == subCategoryId);
+
+            if (subcategory == null)
+            {
+                return Json(new { isValid = false, message = "Subcategory not found" });
+            }
+
+            var allowedScopes = subcategory.AllowedScopes?.Split(',').Select(s => s.Trim()).ToList() ?? new List<string>();
+            var isValid = allowedScopes.Contains(scope);
+
+            return Json(new 
+            { 
+                isValid, 
+                allowedScopes,
+                defaultScope = subcategory.DefaultScope,
+                message = isValid ? "Valid scope" : $"Invalid scope. Allowed: {string.Join(", ", allowedScopes)}"
+            });
         }
     }
 }

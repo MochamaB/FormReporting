@@ -238,8 +238,139 @@
     75% { transform: translateX(5px); }
 }
 
-/* Accordion Enhancements for Metric Configuration */
-#fieldSectionsAccordion .accordion-item,
+/* =====================================================
+   SECTION ACCORDION - Primary Styling
+   ===================================================== */
+.section-accordion .section-accordion-item {
+    border: 1px solid var(--vz-primary);
+    margin-bottom: 0.75rem;
+    border-radius: 0px !important;
+    overflow: hidden;
+    box-shadow: 0 2px 4px rgba(var(--vz-primary-rgb), 0.1);
+}
+
+.section-accordion .section-accordion-button {
+    background-color: rgba(var(--vz-primary-rgb), 0.08);
+    font-weight: 600;
+    padding: 1rem 1.25rem;
+    color: var(--vz-primary);
+    border-bottom: 1px solid transparent;
+}
+
+.section-accordion .section-accordion-button:not(.collapsed) {
+    background-color: rgba(var(--vz-primary-rgb), 0.12);
+    color: var(--vz-primary);
+    box-shadow: none;
+    border-bottom: 1px solid rgba(var(--vz-primary-rgb), 0.2);
+}
+
+.section-accordion .section-accordion-button::after {
+    filter: brightness(0) saturate(100%) invert(29%) sepia(98%) saturate(1653%) hue-rotate(206deg) brightness(97%) contrast(91%);
+}
+
+.section-accordion .section-accordion-button:focus {
+    box-shadow: 0 0 0 0.15rem rgba(var(--vz-primary-rgb), 0.15);
+    border-color: var(--vz-primary);
+}
+
+.section-accordion .section-accordion-button:hover {
+    background-color: rgba(var(--vz-primary-rgb), 0.15);
+}
+
+.section-accordion .accordion-body {
+    padding: 1rem;
+    background-color: #ffffff;
+    border-top: none;
+}
+
+.section-accordion .section-description {
+    font-size: 0.8rem;
+    line-height: 1.4;
+    opacity: 0.85;
+}
+
+/* =====================================================
+   FIELD ACCORDION - Secondary Styling (Nested)
+   ===================================================== */
+.field-accordion.accordion-flush .field-accordion-item {
+    border: 1px solid var(--vz-border-color);
+    margin-bottom: 0.5rem;
+    border-radius: 4px !important;
+    overflow: hidden;
+    background-color: #fafbfc;
+}
+
+.field-accordion .field-accordion-item:hover {
+    border-color: var(--vz-secondary);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.field-accordion .field-header-container {
+    width: 100%;
+    gap: 0.5rem;
+}
+
+.field-accordion .add-mapping-btn {
+    flex-shrink: 0;
+    margin-left: 0.5rem;
+    border-radius: 4px;
+    padding: 0.35rem 0.6rem;
+    z-index: 2;
+}
+
+.field-accordion .add-mapping-btn:hover {
+    transform: scale(1.05);
+}
+
+.field-accordion .field-accordion-button {
+    background-color: transparent;
+    font-weight: 500;
+    padding: 0.75rem 1rem;
+    font-size: 0.9rem;
+    color: var(--vz-body-color);
+}
+
+.field-accordion .field-accordion-button:not(.collapsed) {
+    background-color: rgba(var(--vz-secondary-rgb), 0.08);
+    color: var(--vz-secondary);
+    box-shadow: none;
+}
+
+.field-accordion .field-accordion-button::after {
+    width: 0.875rem;
+    height: 0.875rem;
+}
+
+.field-accordion .field-accordion-button:focus {
+    box-shadow: none;
+    border-color: transparent;
+}
+
+.field-accordion .field-accordion-button:hover {
+    background-color: rgba(var(--vz-secondary-rgb), 0.05);
+}
+
+.field-accordion .field-index {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.5rem;
+    min-width: 1.5rem;
+    text-align: center;
+}
+
+.field-accordion .field-name {
+    font-size: 0.9rem;
+}
+
+.field-accordion .accordion-body {
+    padding: 0.75rem 1rem;
+    background-color: #ffffff;
+    border-top: 1px solid var(--vz-border-color);
+}
+
+/* =====================================================
+   LEGACY SUPPORT - For existing IDs
+   ===================================================== */
+#fieldSectionsAccordion .accordion-item:not(.section-accordion-item),
 #sectionAggregationsAccordion .accordion-item {
     border: 1px solid var(--vz-darkgrey);
     margin-bottom: 0.5rem;
@@ -247,27 +378,23 @@
     overflow: hidden;
 }
 
-#fieldSectionsAccordion .accordion-button,
 #sectionAggregationsAccordion .accordion-button {
     background-color: #f8f9fa;
     font-weight: 500;
     padding: 1rem 1.25rem;
 }
 
-#fieldSectionsAccordion .accordion-button:not(.collapsed),
 #sectionAggregationsAccordion .accordion-button:not(.collapsed) {
     background-color: var(--vz-secondary-bg-subtle);
     color: var(--vz-secondary);
     box-shadow: none;
 }
 
-#fieldSectionsAccordion .accordion-button:focus,
 #sectionAggregationsAccordion .accordion-button:focus {
     box-shadow: none;
     border-color: #dee2e6;
 }
 
-#fieldSectionsAccordion .accordion-body,
 #sectionAggregationsAccordion .accordion-body {
     padding: 1rem;
     background-color: #ffffff;

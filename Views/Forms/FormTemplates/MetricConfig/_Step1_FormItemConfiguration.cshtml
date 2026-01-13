@@ -2,7 +2,7 @@
     // Step 1: Form Item Configuration
     // Get parent model from ViewData
     var parentModel = ViewData["ParentModel"] as FormReporting.Models.ViewModels.Metrics.FieldMappingWizardViewModel;
-    var existingMapping = parentModel?.ExistingMapping;
+    var existingMapping = parentModel?.ExistingMappings?.FirstOrDefault();
     var validMappingTypes = parentModel?.ValidMappingTypes ?? new List<FormReporting.Models.ViewModels.Metrics.MappingTypeOption>();
     var recommendedType = parentModel?.RecommendedMappingType;
     
@@ -75,26 +75,26 @@
         </div>
         <div class="col-md-6">
             <div class="mb-3">
-                <label class="form-label">Aggregation Type <span class="text-danger">*</span></label>
-                <select class="form-select" id="aggregationType">
+                <label class="form-label">Output Type <span class="text-danger">*</span></label>
+                <select class="form-select" id="outputType">
                     @{
-                        var aggregationTypes = new[] { "Direct", "Sum", "Count", "Avg" };
-                        var aggregationLabels = new[] { "Direct - Use field value as-is", "Sum - Add up values", "Count - Count occurrences", "Average - Calculate average" };
+                        var outputTypes = new[] { "Raw", "Percentage", "Normalized" };
+                        var outputLabels = new[] { "Raw - Use field value as-is", "Percentage - Convert to percentage", "Normalized - Scale to 0-100" };
                     }
-                    @for (int i = 0; i < aggregationTypes.Length; i++)
+                    @for (int i = 0; i < outputTypes.Length; i++)
                     {
-                        var isSelected = existingMapping?.AggregationType == aggregationTypes[i];
+                        var isSelected = existingMapping?.OutputType == outputTypes[i] || (existingMapping == null && outputTypes[i] == "Raw");
                         if (isSelected)
                         {
-                            <option value="@aggregationTypes[i]" selected>@aggregationLabels[i]</option>
+                            <option value="@outputTypes[i]" selected>@outputLabels[i]</option>
                         }
                         else
                         {
-                            <option value="@aggregationTypes[i]">@aggregationLabels[i]</option>
+                            <option value="@outputTypes[i]">@outputLabels[i]</option>
                         }
                     }
                 </select>
-                <div class="form-text">How should multiple values be combined?</div>
+                <div class="form-text">How should the field value be processed?</div>
             </div>
         </div>
     </div>
@@ -113,7 +113,7 @@
         // Get pre-selected values for summary
         var selectedMappingType = existingMapping?.MappingType ?? recommendedType ?? "-";
         var selectedMappingTypeText = validMappingTypes.FirstOrDefault(t => t.Value == selectedMappingType)?.Text ?? selectedMappingType;
-        var selectedAggregationType = existingMapping?.AggregationType ?? "Direct";
+        var selectedOutputType = existingMapping?.OutputType ?? "Raw";
     }
     <div class="card bg-light mt-4">
         <div class="card-body">
@@ -128,8 +128,8 @@
                     <div id="summaryMappingType" class="fw-medium">@selectedMappingTypeText</div>
                 </div>
                 <div class="col-md-3">
-                    <small class="text-muted">Aggregation:</small>
-                    <div id="summaryAggregationType" class="fw-medium">@selectedAggregationType</div>
+                    <small class="text-muted">Output:</small>
+                    <div id="summaryOutputType" class="fw-medium">@selectedOutputType</div>
                 </div>
             </div>
         </div>
@@ -142,11 +142,11 @@ $(document).ready(function() {
     $('#mappingName').on('input', function() {
         $('#summaryMappingName').text($(this).val() || '-');
     });
-    
+
     $('#mappingType').on('change', function() {
         const selectedText = $(this).find('option:selected').text();
         $('#summaryMappingType').text(selectedText || '-');
-        
+
         // Show/hide expected value based on mapping type
         if ($(this).val() === 'BinaryCompliance') {
             $('#expectedValueContainer').removeClass('d-none');
@@ -154,10 +154,10 @@ $(document).ready(function() {
             $('#expectedValueContainer').addClass('d-none');
         }
     });
-    
-    $('#aggregationType').on('change', function() {
+
+    $('#outputType').on('change', function() {
         const selectedText = $(this).find('option:selected').text().split(' - ')[0];
-        $('#summaryAggregationType').text(selectedText || '-');
+        $('#summaryOutputType').text(selectedText || '-');
     });
 });
 </script>

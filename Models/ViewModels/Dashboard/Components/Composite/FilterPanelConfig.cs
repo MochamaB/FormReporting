@@ -17,9 +17,14 @@ namespace FormReporting.Models.ViewModels.Dashboard.Components.Composite
         public string? Title { get; set; }
 
         /// <summary>
-        /// Filter inputs
+        /// Filter inputs (main filters, always visible)
         /// </summary>
         public List<FilterInput> Filters { get; set; } = new List<FilterInput>();
+
+        /// <summary>
+        /// Advanced filter inputs (collapsible section)
+        /// </summary>
+        public List<FilterInput>? AdvancedFilters { get; set; }
 
         /// <summary>
         /// Show in card wrapper
@@ -160,6 +165,7 @@ namespace FormReporting.Models.ViewModels.Dashboard.Components.Composite
     {
         Text,
         Select,
+        DropdownButton,  // New: Dropdown button with links (like submissions table)
         Date,
         DateRange,
         Number,

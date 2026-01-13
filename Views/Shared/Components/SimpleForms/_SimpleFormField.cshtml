@@ -201,6 +201,40 @@ else if (Model.FieldType == SimpleFieldType.File)
     </div>
 }
 
+@* ICON PICKER FIELD *@
+else if (Model.FieldType == SimpleFieldType.IconPicker)
+{
+    <div class="@Model.FormGroupClass">
+        <label for="@Model.InputId" class="@Model.LabelClass">@Model.Label</label>
+        <div class="input-group">
+            <span class="input-group-text icon-preview-container">
+                <i class="@(string.IsNullOrEmpty(Model.Value) ? "ri-image-line text-muted" : Model.Value)"
+                   id="@(Model.InputId)_preview"></i>
+            </span>
+            <input type="text"
+                   class="@Model.InputClass icon-picker-input"
+                   id="@Model.InputId"
+                   name="@Model.InputName"
+                   value="@Model.Value"
+                   placeholder="@Model.PlaceholderText"
+                   data-icon-preview="@(Model.InputId)_preview"
+                   @(Model.IsRequired ? "required" : "") />
+            <button type="button"
+                    class="btn btn-outline-secondary icon-picker-btn"
+                    data-bs-toggle="modal"
+                    data-bs-target="#iconPickerModal"
+                    data-target-input="@Model.InputId"
+                    data-target-preview="@(Model.InputId)_preview">
+                <i class="ri-search-line me-1"></i>Browse
+            </button>
+        </div>
+        @if (!string.IsNullOrEmpty(Model.HelpText))
+        {
+            <div class="form-text">@Model.HelpText</div>
+        }
+    </div>
+}
+
 @* TEXT, EMAIL, PASSWORD, NUMBER, DATE, DATETIME FIELDS *@
 else
 {

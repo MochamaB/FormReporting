@@ -1,0 +1,76 @@
+@using FormReporting.Models.ViewModels.Dashboard.Components.Composite
+@model DashboardConfig
+
+@{
+    // Dynamic title based on template and mode
+    var hasTemplate = ViewBag.TemplateId != null;
+    ViewData["Title"] = hasTemplate 
+        ? "Form Statistics - Template" 
+        : "Form Statistics - All Templates";
+}
+
+
+@* Render unified dashboard component *@
+@await Html.PartialAsync("~/Views/Shared/Components/Dashboard/Composite/_Dashboard.cshtml", Model)
+
+@* Only include Scripts section in full page mode (embedded views use their own scripts) *@
+@if (Model.Mode == DashboardMode.FullPage)
+{
+    @section Scripts {
+        <script>
+            $(document).ready(function() {
+                // Initialize dashboard based on loading strategy
+                @if (Model.LoadingStrategy == LoadingStrategy.Progressive)
+                {
+                    <text>
+                    // Progressive loading - AJAX load sections
+                    FormStatisticsDashboard.init({
+                        templateId: @(ViewBag.TemplateId ?? "null"),
+                        containerId: '@Model.Id',
+                        startDate: '@ViewBag.StartDate',
+                        endDate: '@ViewBag.EndDate',
+                        tenantId: @(ViewBag.TenantId ?? "null"),
+                        groupBy: '@(ViewBag.GroupBy ?? "Daily")',
+                        isEmbedded: false,
+                        mode: '@Model.Mode'
+                    });
+                    </text>
+                }
+                else
+                {
+                    <text>
+                    // Server-side rendering - just initialize filter handlers
+                    FormStatisticsDashboard.init({
+                        templateId: @(ViewBag.TemplateId ?? "null"),
+                        startDate: '@ViewBag.StartDate',
+                        endDate: '@ViewBag.EndDate',
+                        tenantId: @(ViewBag.TenantId ?? "null"),
+                        groupBy: '@(ViewBag.GroupBy ?? "Daily")',
+                        isEmbedded: false,
+                        mode: '@Model.Mode'
+                    });
+                    </text>
+                }
+            });
+        </script>
+    }
+}
+else
+{
+    // Embedded mode - inline script for partial views
+    <script>
+        $(document).ready(function() {
+            // Initialize embedded dashboard
+            FormStatisticsDashboard.init({
+                templateId: @(ViewBag.TemplateId ?? "null"),
+                containerId: '@Model.Id',
+                startDate: '@ViewBag.StartDate',
+                endDate: '@ViewBag.EndDate',
+                tenantId: @(ViewBag.TenantId ?? "null"),
+                groupBy: '@(ViewBag.GroupBy ?? "Daily")',
+                isEmbedded: @(ViewBag.IsEmbedded?.ToString().ToLower() ?? "false"),
+                mode: '@Model.Mode'
+            });
+        });
+    </script>
+}

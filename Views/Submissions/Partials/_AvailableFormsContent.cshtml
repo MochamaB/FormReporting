@@ -215,9 +215,50 @@
                                 <span class="text-muted">v@(template.Version)</span>
                             </td>
                             <td>
-                                <a href="@Url.Action("Start", "Submissions", new { templateId = template.TemplateId })" class="btn btn-sm btn-primary">
-                                    <i class="ri-play-line me-1"></i>Start
-                                </a>
+                                @{
+                                    var tableStats = submissionStats.ContainsKey(template.TemplateId)
+                                        ? submissionStats[template.TemplateId]
+                                        : new TemplateSubmissionStats();
+                                    var tableDraftCount = tableStats.DraftCount;
+                                }
+                                <div class="dropdown">
+                                    <button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                        <i class="ri-play-line me-1"></i>Actions
+                                    </button>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        @if (tableDraftCount > 0)
+                                        {
+                                            <li>
+                                                <a class="dropdown-item" href="@Url.Action("Form", "Submissions", new { templateCode = template.TemplateCode })">
+                                                    <i class="ri-draft-line me-2 text-warning"></i>Resume Draft (@tableDraftCount)
+                                                </a>
+                                            </li>
+                                        }
+                                        <li>
+                                            <a class="dropdown-item" href="@Url.Action("Start", "Submissions", new { templateId = template.TemplateId })">
+                                                <i class="ri-play-circle-line me-2 text-primary"></i>Start New
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <a class="dropdown-item" href="@Url.Action("TemplateSubmissions", "Submissions", new { templateId = template.TemplateId })">
+                                                <i class="ri-file-list-3-line me-2 text-info"></i>View Responses
+                                            </a>
+                                        </li>
+                                        <li>
+                                            <a class="dropdown-item" href="@Url.Action("Details", "FormTemplates", new { id = template.TemplateId })">
+                                                <i class="ri-information-line me-2 text-secondary"></i>Form Details
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li>
+                                            <a class="dropdown-item copy-form-link" href="#"
+                                               data-form-url="@($"{Context.Request.Scheme}://{Context.Request.Host}/f/{template.TemplateCode}")">
+                                                <i class="ri-link me-2"></i>Copy Form Link
+                                            </a>
+                                        </li>
+                                    </ul>
+                                </div>
                             </td>
                         </tr>
                     }

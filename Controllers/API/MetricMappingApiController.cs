@@ -895,9 +895,10 @@ namespace FormReporting.Controllers.API
                     mapping.MetricId = dto.MetricId;
                     mapping.MappingName = dto.MappingName;
                     mapping.MappingType = dto.MappingType;
+                    mapping.OutputType = dto.OutputType ?? "Raw";
                     mapping.TransformationLogic = dto.TransformationLogic;
                     mapping.ExpectedValue = dto.ExpectedValue;
-                    // Note: FormItemMetricMapping doesn't have ModifiedDate property
+                    mapping.ComparisonOperator = dto.ComparisonOperator;
                 }
                 else
                 {
@@ -908,8 +909,10 @@ namespace FormReporting.Controllers.API
                         MetricId = dto.MetricId,
                         MappingName = dto.MappingName,
                         MappingType = dto.MappingType,
+                        OutputType = dto.OutputType ?? "Raw",
                         TransformationLogic = dto.TransformationLogic,
                         ExpectedValue = dto.ExpectedValue,
+                        ComparisonOperator = dto.ComparisonOperator,
                         IsActive = true,
                         CreatedDate = DateTime.UtcNow
                     };

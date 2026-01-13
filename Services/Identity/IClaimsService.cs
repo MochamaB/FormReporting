@@ -51,6 +51,21 @@ namespace FormReporting.Services.Identity
         Task<List<Claim>> GetScopeClaimsAsync(User user);
 
         /// <summary>
+        /// Get template access claims based on user's scope and tenant access
+        /// Templates are filtered by tenant access and published status
+        /// </summary>
+        /// <param name="user">User entity</param>
+        /// <returns>List of template access claims</returns>
+        Task<List<Claim>> GetTemplateAccessClaimsAsync(User user);
+
+        /// <summary>
+        /// Get region access claims based on user's scope
+        /// </summary>
+        /// <param name="user">User entity</param>
+        /// <returns>List of region access claims</returns>
+        Task<List<Claim>> GetRegionAccessClaimsAsync(User user);
+
+        /// <summary>
         /// Invalidate cached claims for a user (when roles/permissions change)
         /// </summary>
         /// <param name="userId">User ID</param>

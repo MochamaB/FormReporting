@@ -69,8 +69,8 @@
                             <div id="reviewMappingType" class="fw-medium">-</div>
                         </div>
                         <div class="col-6 mb-2">
-                            <small class="text-muted">Aggregation</small>
-                            <div id="reviewAggregationType" class="fw-medium">-</div>
+                            <small class="text-muted">Output Type</small>
+                            <div id="reviewOutputType" class="fw-medium">-</div>
                         </div>
                     </div>
                 </div>
@@ -112,19 +112,19 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateReviewSummary() {
         const mappingName = document.getElementById('MappingName')?.value || '-';
         const mappingTypeSelect = document.getElementById('MappingType');
-        const aggregationSelect = document.getElementById('AggregationType');
+        const outputTypeSelect = document.getElementById('OutputType');
         const metricOptionSelect = document.getElementById('MetricOption');
 
         document.getElementById('reviewMappingName').textContent = mappingName;
-        
+
         if (mappingTypeSelect) {
             const selectedType = mappingTypeSelect.options[mappingTypeSelect.selectedIndex];
             document.getElementById('reviewMappingType').textContent = selectedType?.text || '-';
         }
-        
-        if (aggregationSelect) {
-            const selectedAgg = aggregationSelect.options[aggregationSelect.selectedIndex];
-            document.getElementById('reviewAggregationType').textContent = selectedAgg?.text?.split(' - ')[0] || '-';
+
+        if (outputTypeSelect) {
+            const selectedOutput = outputTypeSelect.options[outputTypeSelect.selectedIndex];
+            document.getElementById('reviewOutputType').textContent = selectedOutput?.text?.split(' - ')[0] || '-';
         }
 
         if (metricOptionSelect) {

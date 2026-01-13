@@ -35,6 +35,15 @@ namespace FormReporting.Models.Entities.Forms
         [Range(1, 3)]
         public int ColumnLayout { get; set; } = 1; // 1 = Single Column, 2 = Two Columns, 3 = Three Columns
 
+        // ===== SCORING FIELDS =====
+        /// <summary>
+        /// Weight/importance of this section in template overall score calculations
+        /// Used for weighted averages when calculating template scores
+        /// Default: 1.0 (equal weight)
+        /// </summary>
+        [Column(TypeName = "decimal(5,4)")]
+        public decimal Weight { get; set; } = 1.0m;
+
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
         public DateTime ModifiedDate { get; set; } = DateTime.Now;

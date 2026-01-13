@@ -1,68 +1,84 @@
 @model FormReporting.Models.ViewModels.Metrics.MetricConfigurationViewModel
 
+<style>
+/* Hide default Bootstrap accordion arrow */
+.field-accordion-button::after {
+    display: none;
+}
+
+/* Custom Toggle Icon Button Styling */
+.accordion-toggle-icon {
+    color: #6c757d;
+    text-decoration: none;
+    border: none;
+    background: transparent;
+    padding: 0.25rem 0.5rem;
+}
+
+.accordion-toggle-icon:hover {
+    color: #0d6efd;
+    background-color: rgba(13, 110, 253, 0.05);
+    border-radius: 4px;
+}
+
+/* Rotate arrow icon when accordion is expanded */
+.accordion-toggle-icon i {
+    transition: transform 0.3s ease;
+    transform: rotate(0deg);
+    display: inline-block; /* Required for transform to work */
+    font-size: 1.25rem;
+}
+
+/* When accordion is expanded (collapsed class is removed by Bootstrap) */
+.accordion-toggle-icon:not(.collapsed) i {
+    transform: rotate(180deg);
+}
+
+/* Alternative: Also target aria-expanded for additional specificity */
+button.accordion-toggle-icon[aria-expanded="true"] i {
+    transform: rotate(180deg);
+}
+
+</style>
+
 <!-- Field-Level Metrics Step -->
 <div class="field-level-step">
     
 
-    <!-- Progress Overview -->
-    <div class="row mb-4">
-        <div class="col-md-4">
-            <div class="card border-0 bg-primary-subtle">
-                <div class="card-body text-center py-3">
-                    <div class="progress mb-2" style="height: 6px;">
-                        <div class="progress-bar bg-primary" role="progressbar" style="width: @(Model.FieldProgress)%"></div>
-                    </div>
-                    <div class="fw-bold text-primary">@Model.ConfiguredFields/@Model.TotalFields</div>
-                    <small class="text-muted">Fields Mapped</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card border-0 bg-info-subtle">
-                <div class="card-body text-center py-3">
-                    <div class="fw-bold text-info">@Model.Sections.Sum(s => s.ConfiguredFieldCount)</div>
-                    <small class="text-muted">Total Mappings</small>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-4">
-            <div class="card border-0 bg-success-subtle">
-                <div class="card-body text-center py-3">
-                    <div class="fw-bold text-success">@Model.Sections.Count(s => s.ConfiguredFieldCount > 0)</div>
-                    <small class="text-muted">Active Sections</small>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Sections with Fields - Accordion Layout -->
-    <div class="accordion accordion-flush" id="fieldSectionsAccordion">
+    <!-- Sections with Fields - Nested Accordion Layout -->
+    <div class="accordion section-accordion" id="fieldSectionsAccordion">
         @{ var sectionIndex = 0; }
         @foreach (var templateSection in Model.Sections.OrderBy(s => s.DisplayOrder))
         {
-            var collapseId = $"section-collapse-{templateSection.SectionId}";
-            var headerId = $"section-header-{templateSection.SectionId}";
+            var sectionCollapseId = $"section-collapse-{templateSection.SectionId}";
+            var sectionHeaderId = $"section-header-{templateSection.SectionId}";
             var isFirstSection = sectionIndex == 0;
             var statusClass = templateSection.ConfiguredFieldCount == templateSection.TotalFieldCount ? "success" : templateSection.ConfiguredFieldCount > 0 ? "warning" : "secondary";
-            
-            <div class="accordion-item">
-                <h2 class="accordion-header" id="@headerId">
-                    <button class="accordion-button @(isFirstSection ? "" : "collapsed")" type="button" 
-                            data-bs-toggle="collapse" data-bs-target="#@collapseId" 
-                            aria-expanded="@(isFirstSection ? "true" : "false")" aria-controls="@collapseId">
+
+            <div class="accordion-item section-accordion-item">
+                <h2 class="accordion-header" id="@sectionHeaderId">
+                    <button class="accordion-button section-accordion-button @(isFirstSection ? "" : "collapsed")" type="button"
+                            data-bs-toggle="collapse" data-bs-target="#@sectionCollapseId"
+                            aria-expanded="@(isFirstSection ? "true" : "false")" aria-controls="@sectionCollapseId">
                         <div class="d-flex justify-content-between align-items-center w-100 me-3">
                             <div class="d-flex align-items-center">
-                                <i class="ri-layout-grid-line me-2 text-primary"></i>
-                                <strong>@templateSection.SectionName</strong>
+                                <i class="ri-layout-grid-line me-2 text-primary fs-3"></i>
+                                <div>
+                                    <strong class = "fs-5">@templateSection.SectionName</strong>
+                                    @if (!string.IsNullOrEmpty(templateSection.SectionDescription))
+                                    {
+                                        <div class="section-description text-muted small mt-1">@templateSection.SectionDescription</div>
+                                    }
+                                </div>
                             </div>
                             <div class="d-flex align-items-center">
                                 <span class="badge bg-@statusClass me-2">
-                                    @templateSection.ConfiguredFieldCount/@templateSection.TotalFieldCount
+                                    @templateSection.ConfiguredFieldCount/@templateSection.TotalFieldCount Fields Mapped
                                 </span>
                                 @if (templateSection.TotalFieldCount > 0)
                                 {
-                                    <div class="progress me-2" style="width: 60px; height: 6px;">
-                                        <div class="progress-bar bg-@statusClass" role="progressbar" 
+                                    <div class="progress me-2" style="width: 80px; height: 8px;">
+                                        <div class="progress-bar bg-@statusClass" role="progressbar"
                                              style="width: @((decimal)templateSection.ConfiguredFieldCount / templateSection.TotalFieldCount * 100)%"></div>
                                     </div>
                                 }
@@ -70,121 +86,179 @@
                         </div>
                     </button>
                 </h2>
-                <div id="@collapseId" class="accordion-collapse collapse @(isFirstSection ? "show" : "")" 
-                     aria-labelledby="@headerId" data-bs-parent="#fieldSectionsAccordion">
+                <div id="@sectionCollapseId" class="accordion-collapse collapse @(isFirstSection ? "show" : "")" 
+                     aria-labelledby="@sectionHeaderId" data-bs-parent="#fieldSectionsAccordion">
                     <div class="accordion-body">
                         @if (templateSection.Fields.Any())
                         {
-                            <div class="table-responsive">
-                                <table class="table table-sm table-hover mb-0">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>Field Name</th>
-                                            <th>Type</th>
-                                            <th>Required</th>
-                                            <th>Status</th>
-                                            <th>Metric</th>
-                                            <th>Mapping Type</th>
-                                            <th class="text-end">Actions</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach (var field in templateSection.Fields)
-                                        {
-                                            var fieldTypeClass = GetFieldTypeClass(field.DataType);
-                                            <tr data-field-id="@field.ItemId" class="@(field.Mapping != null ? "table-success-subtle" : "")">
-                                                <td>
-                                                    <div class="d-flex align-items-center">
-                                                        <i class="ri-input-field me-2 text-muted"></i>
-                                                        <div>
-                                                            <strong>@field.ItemName</strong>
-                                                            @if (!string.IsNullOrEmpty(field.ItemCode))
-                                                            {
-                                                                <br><small class="text-muted">@field.ItemCode</small>
-                                                            }
+                            <!-- Nested Field Accordion -->
+                            <div class="accordion accordion-flush field-accordion" id="fieldsAccordion-@templateSection.SectionId">
+                                @{ var fieldIndex = 0; }
+                                @foreach (var field in templateSection.Fields.OrderBy(f => f.DisplayOrder))
+                                {
+                                    var fieldCollapseId = $"field-collapse-{field.ItemId}";
+                                    var fieldHeaderId = $"field-header-{field.ItemId}";
+                                    var fieldTypeClass = GetFieldTypeClass(field.DataType);
+                                    var mappingCount = field.Mappings?.Count ?? 0;
+                                    var fieldStatusClass = mappingCount > 0 ? "success" : "secondary";
+
+                                    <div class="accordion-item field-accordion-item">
+                                        <h2 class="accordion-header" id="@fieldHeaderId">
+                                            <div class="d-flex align-items-center field-header-container">
+
+                                                <!-- Accordion Button (no default arrow) -->
+                                                <button class="accordion-button field-accordion-button collapsed flex-grow-1 pe-3"
+                                                        type="button"
+                                                        data-bs-toggle="collapse"
+                                                        data-bs-target="#@fieldCollapseId"
+                                                        aria-expanded="false"
+                                                        aria-controls="@fieldCollapseId">
+
+                                                    <div class="d-flex justify-content-between align-items-center w-100">
+                                                        <div class="d-flex align-items-center">
+                                                            <span class="badge bg-light text-dark me-2 field-index">
+                                                                @(fieldIndex + 1)
+                                                            </span>
+
+                                                            <i class="ri-input-field me-2 text-secondary"></i>
+
+                                                            <div>
+                                                                <strong class="field-name">@field.ItemName</strong>
+                                                                <span class="badge @fieldTypeClass ms-2">@field.DataType</span>
+
+                                                                @if (field.IsRequired)
+                                                                {
+                                                                    <i class="ri-asterisk text-danger ms-1" title="Required"></i>
+                                                                }
+                                                            </div>
                                                         </div>
-                                                    </div>
-                                                </td>
-                                                <td>
-                                                    <span class="badge @fieldTypeClass">@field.DataType</span>
-                                                </td>
-                                                <td>
-                                                    @if (field.IsRequired)
-                                                    {
-                                                        <i class="ri-checkbox-circle-fill text-danger" title="Required"></i>
-                                                    }
-                                                    else
-                                                    {
-                                                        <i class="ri-checkbox-blank-circle-line text-muted" title="Optional"></i>
-                                                    }
-                                                </td>
-                                                <td>
-                                                    @if (field.Mapping != null)
-                                                    {
-                                                        <span class="badge mapping-status-configured">
-                                                            <i class="ri-check-line me-1"></i>Mapped
+
+                                                        <span class="badge bg-@fieldStatusClass-subtle text-@fieldStatusClass">
+                                                            <i class="ri-link me-1"></i>@mappingCount Mapping@(mappingCount != 1 ? "s" : "")
                                                         </span>
-                                                    }
-                                                    else
-                                                    {
-                                                        <span class="badge mapping-status-unmapped">
-                                                            <i class="ri-time-line me-1"></i>Unmapped
-                                                        </span>
-                                                    }
-                                                </td>
-                                                <td>
-                                                    @if (field.Mapping?.Metric != null)
-                                                    {
-                                                        <div>
-                                                            <strong>@field.Mapping.Metric.MetricName</strong>
-                                                            <br><small class="text-muted">@field.Mapping.Metric.MetricCode</small>
-                                                        </div>
-                                                    }
-                                                    else
-                                                    {
-                                                        <span class="text-muted">-</span>
-                                                    }
-                                                </td>
-                                                <td>
-                                                    @if (field.Mapping != null)
-                                                    {
-                                                        <span class="badge bg-info-subtle text-info">@field.Mapping.MappingType</span>
-                                                    }
-                                                    else
-                                                    {
-                                                        <span class="text-muted">-</span>
-                                                    }
-                                                </td>
-                                                <td class="text-end">
-                                                    <div class="btn-group btn-group-sm" role="group">
-                                                        @if (field.Mapping != null)
-                                                        {
-                                                            <a href="@Url.Action("MapField", "MetricMapping", new { templateId = Model.TemplateId, fieldId = field.ItemId })" 
-                                                               class="btn btn-outline-primary"
-                                                               title="Edit Mapping">
-                                                                <i class="ri-edit-line"></i>
-                                                            </a>
-                                                            <button type="button" class="btn btn-outline-danger btn-delete-field-mapping" 
-                                                                    data-field-id="@field.ItemId" 
-                                                                    data-mapping-id="@field.Mapping.MappingId"
-                                                                    title="Delete Mapping">
-                                                                <i class="ri-delete-bin-line"></i>
-                                                            </button>
-                                                        }
-                                                        else
-                                                        {
-                                                            <a href="@Url.Action("MapField", "MetricMapping", new { templateId = Model.TemplateId, fieldId = field.ItemId })" 
-                                                               class="btn btn-primary"
-                                                               title="Add Mapping">
-                                                                <i class="ri-add-line me-1"></i>Map
-                                                            </a>
-                                                        }
                                                     </div>
-                                                </td>
-                                            </tr>
-                                        }
-                                    </tbody>
-                                </table>
+                                                </button>
+
+                                                <!-- Add Mapping Button (before arrow) -->
+                                                <a href="@Url.Action("MapField", "MetricMapping",
+                                                        new { templateId = Model.TemplateId, fieldId = field.ItemId })"
+                                                class="btn btn-soft-success btn-sm ms-2 add-mapping-btn"
+                                                title="Add Metric Mapping">
+                                                    <i class="ri-add-line me-1"></i>Add Mapping
+                                                </a>
+
+                                                <!-- Custom Collapse Icon -->
+                                                <button class="btn btn-link px-2 accordion-toggle-icon"
+                                                        type="button"
+                                                        data-bs-toggle="collapse"
+                                                        data-bs-target="#@fieldCollapseId">
+                                                    <i class="ri-arrow-down-s-line"></i>
+                                                </button>
+
+                                            </div>
+                                        </h2>
+
+                                        <div id="@fieldCollapseId" class="accordion-collapse collapse" 
+                                             aria-labelledby="@fieldHeaderId" data-bs-parent="#fieldsAccordion-@templateSection.SectionId">
+                                            <div class="accordion-body">
+                                                @if (field.Mappings?.Any() == true)
+                                                {
+                                                    <!-- Existing Mappings Table -->
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm table-hover mb-0">
+                                                            <thead class="table-light">
+                                                                <tr>
+                                                                    <th>Mapping Name</th>
+                                                                    <th>Metric</th>
+                                                                    <th>Type</th>
+                                                                    <th>Output</th>
+                                                                    <th>Category</th>
+                                                                    <th class="text-end">Actions</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach (var mapping in field.Mappings.OrderBy(m => m.CreatedDate))
+                                                                {
+                                                                    <tr>
+                                                                        <td>
+                                                                            <strong>@mapping.MappingName</strong>
+                                                                            @if (!string.IsNullOrEmpty(mapping.TransformationLogic))
+                                                                            {
+                                                                                <br><small class="text-muted">Has transformation</small>
+                                                                            }
+                                                                        </td>
+                                                                        <td>
+                                                                            @if (mapping.Metric != null)
+                                                                            {
+                                                                                <div>
+                                                                                    <strong>@mapping.Metric.MetricName</strong>
+                                                                                    <br><small class="text-muted">@mapping.Metric.MetricCode</small>
+                                                                                </div>
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                <span class="text-muted">Standalone</span>
+                                                                            }
+                                                                        </td>
+                                                                        <td>
+                                                                            <span class="badge bg-info-subtle text-info">@mapping.MappingType</span>
+                                                                        </td>
+                                                                        <td>
+                                                                            <span class="badge bg-primary-subtle text-primary">@(mapping.OutputType ?? "Raw")</span>
+                                                                        </td>
+                                                                        <td>
+                                                                            @if (mapping.Metric?.SubCategory != null)
+                                                                            {
+                                                                                <small class="text-muted">
+                                                                                    @mapping.Metric.SubCategory.Category.CategoryName
+                                                                                    <br>@mapping.Metric.SubCategory.SubCategoryName
+                                                                                </small>
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                <span class="text-muted">-</span>
+                                                                            }
+                                                                        </td>
+                                                                        <td class="text-end">
+                                                                            <div class="btn-group btn-group-sm" role="group">
+                                                                                <a href="@Url.Action("MapField", "MetricMapping", new { templateId = Model.TemplateId, fieldId = field.ItemId, mappingId = mapping.MappingId })" 
+                                                                                   class="btn btn-outline-primary"
+                                                                                   title="Edit Mapping">
+                                                                                    <i class="ri-edit-line"></i>
+                                                                                </a>
+                                                                                <button type="button" class="btn btn-outline-danger btn-delete-mapping" 
+                                                                                        data-mapping-id="@mapping.MappingId"
+                                                                                        data-field-name="@field.ItemName"
+                                                                                        data-mapping-name="@mapping.MappingName"
+                                                                                        title="Delete Mapping">
+                                                                                    <i class="ri-delete-bin-line"></i>
+                                                                                </button>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                }
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                }
+                                                else
+                                                {
+                                                    <!-- No Mappings State -->
+                                                    <div class="text-center py-4">
+                                                        <i class="ri-bar-chart-line text-muted" style="font-size: 2rem;"></i>
+                                                        <h6 class="text-muted mt-2">No Metric Mappings</h6>
+                                                        <p class="text-muted mb-3 small">This field has no metric mappings configured yet.</p>
+                                                        <a href="@Url.Action("MapField", "MetricMapping", new { templateId = Model.TemplateId, fieldId = field.ItemId })" 
+                                                           class="btn btn-outline-success btn-sm">
+                                                            <i class="ri-add-line me-1"></i>Add First Mapping
+                                                        </a>
+                                                    </div>
+                                                }
+                                            </div>
+                                        </div>
+                                    </div>
+                                    fieldIndex++;
+                                }
                             </div>
                         }
                         else
