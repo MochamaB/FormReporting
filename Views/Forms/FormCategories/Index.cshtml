@@ -102,7 +102,7 @@
                     Text = "View Details",
                     IconClass = "ri-eye-line",
                     ColorClass = "primary",
-                    UrlTemplate = $"javascript:viewCategoryDetails({categoryId})",
+                    UrlTemplate = Url.Action("Details", "FormCategories", new { id = categoryId }) ?? $"/Forms/FormCategories/Details/{categoryId}",
                     IconOnly = true
                 },
                 new RowActionConfig
@@ -351,11 +351,6 @@
                 alert('An error occurred while deleting the category.');
             });
         });
-
-        // View category details (placeholder)
-        function viewCategoryDetails(categoryId) {
-            alert('View details functionality will be implemented later. Category ID: ' + categoryId);
-        }
     </script>
 }
 

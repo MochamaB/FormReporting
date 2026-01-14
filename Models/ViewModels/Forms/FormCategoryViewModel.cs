@@ -115,4 +115,80 @@ namespace FormReporting.Models.ViewModels.Forms
         public int InactiveCategories { get; set; }
         public int TotalForms { get; set; }
     }
+
+    /// <summary>
+    /// View model for form category details page with template lists and pagination
+    /// </summary>
+    public class FormCategoryDetailsViewModel
+    {
+        // ============================================================================
+        // CATEGORY DETAILS (reuse existing FormCategoryViewModel properties)
+        // ============================================================================
+        
+        public int CategoryId { get; set; }
+        public string CategoryName { get; set; } = string.Empty;
+        public string CategoryCode { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public string? IconClass { get; set; }
+        public string? Color { get; set; }
+        public int DisplayOrder { get; set; }
+        public bool IsActive { get; set; }
+        public DateTime CreatedDate { get; set; }
+        public DateTime ModifiedDate { get; set; }
+        
+        // ============================================================================
+        // TEMPLATE STATISTICS
+        // ============================================================================
+        
+        public int TotalTemplates { get; set; }
+        public int PublishedTemplates { get; set; }
+        public int DraftTemplates { get; set; }
+        public int ArchivedTemplates { get; set; }
+        
+        // ============================================================================
+        // CURRENT TAB DATA (server-side loaded templates)
+        // ============================================================================
+        
+        public string ActiveTab { get; set; } = "published";
+        public List<FormTemplateViewModel> Templates { get; set; } = new();
+        
+        // ============================================================================
+        // PAGINATION & FILTERING
+        // ============================================================================
+        
+        public int CurrentPage { get; set; } = 1;
+        public int TotalPages { get; set; } = 1;
+        public int TotalRecords { get; set; } = 0;
+        public int PageSize { get; set; } = 10;
+        public string? CurrentSearch { get; set; }
+        public string? CurrentStatus { get; set; }
+        
+        // ============================================================================
+        // COMPUTED PROPERTIES
+        // ============================================================================
+        
+        /// <summary>
+        /// Status badge for the category
+        /// </summary>
+        public string StatusBadge => IsActive 
+            ? "<span class='badge bg-success-subtle text-success'>Active</span>" 
+            : "<span class='badge bg-danger-subtle text-danger'>Inactive</span>";
+        
+        /// <summary>
+        /// Icon preview HTML
+        /// </summary>
+        public string IconPreview => !string.IsNullOrEmpty(IconClass) 
+            ? $"<i class='{IconClass}'></i>" 
+            : "<i class='ri-folder-line'></i>";
+        
+        /// <summary>
+        /// Summary statistics badges
+        /// </summary>
+        public string StatisticsBadges => $@"
+            <span class='badge bg-primary-subtle text-primary me-1'>{TotalTemplates} Total</span>
+            <span class='badge bg-success-subtle text-success me-1'>{PublishedTemplates} Published</span>
+            <span class='badge bg-warning-subtle text-warning me-1'>{DraftTemplates} Draft</span>
+            <span class='badge bg-secondary-subtle text-secondary'>{ArchivedTemplates} Archived</span>
+        ";
+    }
 }

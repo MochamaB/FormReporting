@@ -1,0 +1,69 @@
+@model FormReporting.Models.ViewModels.Forms.FormCategoryDetailsViewModel
+@using FormReporting.Models.ViewModels.Components
+@using FormReporting.Extensions
+
+@{
+    ViewData["Title"] = Model.CategoryName;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- Category Header Card -->
+<div class="card bg-secondary-subtle border-0 mb-4" style="margin-top:-1.5rem;margin-left:-1.5rem;margin-right:-1.5rem">
+    <div class="card-body">
+        <div class="d-flex align-items-start">
+            <!-- Icon -->
+            <div class="flex-shrink-0 me-3">
+                <div class="avatar-lg">
+                    <div class="avatar-title bg-primary-subtle text-primary rounded fs-2">
+                        @Html.Raw(Model.IconPreview)
+                    </div>
+                </div>
+            </div>
+            <!-- Main Content -->
+            <div class="flex-grow-1">
+                <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+                    <div class="me-3">
+                        <h3 class="mb-1 fw-semibold text-dark">@Model.CategoryName</h3>
+                        <p class="text-muted mb-2">@Model.Description</p>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <span class="badge bg-primary-subtle text-primary">@Model.CategoryCode</span>
+                            @Html.Raw(Model.StatusBadge)
+                            @Html.Raw(Model.StatisticsBadges)
+                        </div>
+                    </div>
+                    <!-- Action Buttons -->
+                    <div class="d-flex gap-2">
+                        <a href="@Url.Action("Edit", new { id = Model.CategoryId })" class="btn btn-primary">
+                            <i class="ri-pencil-line me-1"></i>Edit Category
+                        </a>
+                        <a href="@Url.Action("Index")" class="btn btn-secondary">
+                            <i class="ri-arrow-left-line me-1"></i>Back to Categories
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Template Table -->
+<div class="row">
+    <div class="col-12">
+        <partial name="~/Views/Forms/FormCategories/Partials/_TemplateTablePartial.cshtml" model="Model" />
+    </div>
+</div>
+
+<!-- Modal Container -->
+<div id="modalContainer"></div>
+
+@section Scripts {
+    <script>
+        // Delete template function
+        function deleteTemplate(templateId, templateName) {
+            if (confirm(`Are you sure you want to delete "${templateName}"? This action cannot be undone.`)) {
+                // Implement delete logic
+                window.location.href = `/Forms/FormTemplates/Delete/${templateId}`;
+            }
+        }
+    </script>
+}

@@ -195,6 +195,127 @@ namespace FormReporting.Controllers.Forms
         }
 
         /// <summary>
+        /// Display form category details with template lists by status
+        /// </summary>
+        [HttpGet("Details/{id}")]
+        public async Task<IActionResult> Details(int id, string? status = null, string? search = null, int? page = null)
+        {
+            // Get category details first (without templates)
+            var category = await _context.FormCategories
+                .FirstOrDefaultAsync(c => c.CategoryId == id);
+            
+            if (category == null)
+            {
+                TempData["ErrorMessage"] = "Form category not found.";
+                return RedirectToAction(nameof(Index));
+            }
+
+            // Parse query parameters for tab navigation
+            var activeTab = status?.ToLower() ?? "published";
+            var currentPage = page ?? 1;
+            var pageSize = 10;
+
+            // Build EF query for templates (database-side filtering)
+            var templatesQuery = _context.FormTemplates
+                .Include(t => t.Creator) // Include FIRST
+                .Where(t => t.CategoryId == id); // Then filter
+
+            // Apply status filter
+            if (!string.IsNullOrEmpty(status))
+            {
+                templatesQuery = templatesQuery.Where(t => t.PublishStatus == status);
+            }
+
+            // Apply search filter
+            if (!string.IsNullOrEmpty(search))
+            {
+                templatesQuery = templatesQuery.Where(t => 
+                    t.TemplateName.Contains(search) || 
+                    t.TemplateCode.Contains(search) ||
+                    (t.Description != null && t.Description.Contains(search)));
+            }
+
+            // Order and paginate
+            var totalTemplates = await templatesQuery.CountAsync();
+            var totalPages = (int)Math.Ceiling(totalTemplates / (double)pageSize);
+            var skip = (currentPage - 1) * pageSize;
+
+            var templates = await templatesQuery
+                .OrderBy(t => t.TemplateName)
+                .Skip(skip)
+                .Take(pageSize)
+                .Select(t => new FormTemplateViewModel
+                {
+                    TemplateId = t.TemplateId,
+                    TemplateName = t.TemplateName,
+                    TemplateCode = t.TemplateCode,
+                    Description = t.Description,
+                    TemplateType = t.TemplateType,
+                    Version = t.Version,
+                    PublishStatus = t.PublishStatus,
+                    IsActive = t.IsActive,
+                    ModifiedDate = t.ModifiedDate,
+                    CreatedBy = t.Creator != null ? $"{t.Creator.FirstName} {t.Creator.LastName}" : "System",
+                    SubmissionCount = 0, // TODO: Calculate from submissions if needed
+                    SubmissionMode = t.SubmissionMode,
+                    AllowAnonymousAccess = t.AllowAnonymousAccess
+                })
+                .ToListAsync();
+
+            // Calculate template statistics (separate queries for efficiency)
+            var allTemplatesCount = await _context.FormTemplates
+                .Where(t => t.CategoryId == id)
+                .CountAsync();
+            
+            var publishedTemplatesCount = await _context.FormTemplates
+                .Where(t => t.CategoryId == id && t.PublishStatus == "Published")
+                .CountAsync();
+            
+            var draftTemplatesCount = await _context.FormTemplates
+                .Where(t => t.CategoryId == id && t.PublishStatus == "Draft")
+                .CountAsync();
+            
+            var archivedTemplatesCount = await _context.FormTemplates
+                .Where(t => t.CategoryId == id && t.PublishStatus == "Archived")
+                .CountAsync();
+
+            // Build ViewModel
+            var viewModel = new FormCategoryDetailsViewModel
+            {
+                CategoryId = category.CategoryId,
+                CategoryName = category.CategoryName,
+                CategoryCode = category.CategoryCode,
+                Description = category.Description,
+                IconClass = category.IconClass,
+                Color = category.Color,
+                DisplayOrder = category.DisplayOrder,
+                IsActive = category.IsActive,
+                CreatedDate = category.CreatedDate,
+                ModifiedDate = category.ModifiedDate,
+                
+                // Template statistics
+                TotalTemplates = allTemplatesCount,
+                PublishedTemplates = publishedTemplatesCount,
+                DraftTemplates = draftTemplatesCount,
+                ArchivedTemplates = archivedTemplatesCount,
+                
+                // Current tab data
+                ActiveTab = activeTab,
+                Templates = templates,
+                
+                // Pagination data
+                CurrentPage = currentPage,
+                TotalPages = totalPages,
+                TotalRecords = totalTemplates,
+                PageSize = pageSize,
+                CurrentSearch = search,
+                CurrentStatus = status
+            };
+
+            return View("~/Views/Forms/FormCategories/Details.cshtml", viewModel);
+        }
+
+        /// <summary>
         /// Delete a form category
         /// </summary>
         [HttpPost("Delete/{id}")]

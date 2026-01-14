@@ -1,0 +1,253 @@
+@model FormReporting.Models.ViewModels.Forms.FormCategoryDetailsViewModel
+@using FormReporting.Extensions
+@using FormReporting.Models.ViewModels.Components
+
+@{
+    // Build DataTable configuration using server-side pattern
+    var tableConfig = new DataTableConfig
+    {
+        TableId = "templatesTable",
+        Columns = new List<string> {
+            "#",
+            "Template",
+            "Type",
+            "Version",
+            "Created",
+            "Status",
+            "Actions"
+        },
+        EnableSearch = true,
+        SearchBox = new SearchBoxConfig
+        {
+            ParameterName = "search",
+            PlaceholderText = "Search templates...",
+            CurrentValue = Model.CurrentSearch,
+            ActionUrl = Url.Action("Details", "FormCategories", new { id = Model.CategoryId, status = Model.CurrentStatus }) ?? $"/Forms/FormCategories/Details/{Model.CategoryId}"
+        },
+        FilterDropdowns = new List<FilterDropdownConfig>
+        {
+            new FilterDropdownConfig
+            {
+                Label = "Status",
+                Options = new List<FilterOption>
+                {
+                    new FilterOption
+                    {
+                        Text = "Published",
+                        Value = "Published",
+                        Url = Url.Action("Details", "FormCategories", new { id = Model.CategoryId, status = "Published", search = Model.CurrentSearch }),
+                        IsActive = Model.CurrentStatus == "Published"
+                    },
+                    new FilterOption
+                    {
+                        Text = "Draft",
+                        Value = "Draft",
+                        Url = Url.Action("Details", "FormCategories", new { id = Model.CategoryId, status = "Draft", search = Model.CurrentSearch }),
+                        IsActive = Model.CurrentStatus == "Draft"
+                    },
+                    new FilterOption
+                    {
+                        Text = "Archived",
+                        Value = "Archived",
+                        Url = Url.Action("Details", "FormCategories", new { id = Model.CategoryId, status = "Archived", search = Model.CurrentSearch }),
+                        IsActive = Model.CurrentStatus == "Archived"
+                    },
+                    new FilterOption
+                    {
+                        Text = "All",
+                        Value = "",
+                        Url = Url.Action("Details", "FormCategories", new { id = Model.CategoryId, search = Model.CurrentSearch }),
+                        IsActive = string.IsNullOrEmpty(Model.CurrentStatus)
+                    }
+                }
+            }
+        },
+        CreateButtonText = "Create Template",
+        CreateButtonUrl = Url.Action("Create", "FormTemplates", new { categoryId = Model.CategoryId }) ?? $"/Forms/FormTemplates/Create?categoryId={Model.CategoryId}",
+        ShowPagination = true,
+        CurrentPage = Model.CurrentPage,
+        TotalPages = Model.TotalPages,
+        TotalRecords = Model.TotalRecords,
+        PageSize = Model.PageSize
+    };
+
+    var table = tableConfig.BuildDataTable();
+    int startingNumber = ((Model.CurrentPage - 1) * Model.PageSize) + 1;
+}
+
+<style>
+.table-container {
+    min-height: 400px;
+}
+
+.table-container .table-responsive {
+    min-height: 350px;
+}
+
+.table-container tbody {
+    min-height: 300px;
+}
+
+.table-container tbody tr:last-child {
+    border-bottom: 1px solid var(--vz-border-color);
+}
+</style>
+
+<!-- DataTable Component -->
+<div class="card">
+    <!-- Card Header: Search, Filters, Create Button -->
+    <div class="card-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap w-100 gap-2">
+            <!-- Left: Search and Filters -->
+            <div class="d-flex gap-2 flex-wrap align-items-center">
+                @if (table.SearchBox != null)
+                {
+                    <partial name="~/Views/Shared/Components/DataTable/_SearchBox.cshtml" model="table.SearchBox" />
+                }
+
+                @if (table.FilterDropdowns != null && table.FilterDropdowns.Any())
+                {
+                    foreach (var filterDropdown in table.FilterDropdowns)
+                    {
+                        <partial name="~/Views/Shared/Components/DataTable/_FilterDropdown.cshtml" model="filterDropdown" />
+                    }
+                }
+            </div>
+
+            <!-- Right: Create Button -->
+            <div class="d-flex gap-2">
+                @if (!string.IsNullOrEmpty(table.CreateButtonText))
+                {
+                    <a href="@table.CreateButtonUrl" class="btn btn-primary">
+                        <i class="ri-add-line me-1"></i>@table.CreateButtonText
+                    </a>
+                }
+            </div>
+        </div>
+    </div>
+
+    <!-- Card Body: Table with fixed height -->
+    <div class="card-body p-0 table-container">
+        <div class="table-responsive">
+            <table class="@table.TableClasses" id="@table.TableId">
+                <thead class="bg-light">
+                    <tr>
+                        @foreach (var column in table.Columns)
+                        {
+                            <th>@column</th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (Model.Templates.Any())
+                    {
+                        @for (int i = 0; i < Model.Templates.Count; i++)
+                        {
+                            var template = Model.Templates[i];
+                            var rowNumber = startingNumber + i;
+                            <tr>
+                                <td>@rowNumber</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <div class="flex-shrink-0 me-2">
+                                            <div class="avatar-sm">
+                                                <div class="avatar-title bg-primary-subtle text-primary rounded fs-2">
+                                                    <i class="ri-file-list-line"></i>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            <h6 class="mb-0">@template.TemplateName</h6>
+                                            <small class="text-muted">@template.TemplateCode</small>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td>@Html.Raw(template.TypeBadge)</td>
+                                <td>v@(template.Version)</td>
+                                <td>@template.ModifiedDate.ToString("MMM dd, yyyy")</td>
+                                <td>@Html.Raw(template.StatusBadge)</td>
+                                <td>
+                                    <div class="d-flex gap-1">
+                                        <a href="@Url.Action("Details", "FormTemplates", new { id = template.TemplateId })" 
+                                           class="btn btn-sm btn-soft-primary" 
+                                           title="View Details">
+                                            <i class="ri-eye-line"></i>
+                                        </a>
+                                        @if (template.PublishStatus == "Draft")
+                                        {
+                                            <a href="@Url.Action("Edit", "FormTemplates", new { id = template.TemplateId })" 
+                                               class="btn btn-sm btn-soft-success" 
+                                               title="Edit Template">
+                                                <i class="ri-pencil-line"></i>
+                                            </a>
+                                        }
+                                        <button type="button" 
+                                                class="btn btn-sm btn-soft-danger" 
+                                                title="Delete"
+                                                onclick="deleteTemplate(@template.TemplateId, '@template.TemplateName')">
+                                            <i class="ri-delete-bin-line"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                        }
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="@table.Columns.Count" class="text-center py-4">
+                                <div class="text-muted">
+                                    <i class="ri-inbox-line fs-1 mb-2"></i>
+                                    <p>No templates found for this status.</p>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Card Footer: Pagination -->
+    @if (table.ShowPagination && table.TotalPages > 1)
+    {
+        <div class="card-footer">
+            <nav aria-label="Templates pagination">
+                <ul class="pagination pagination-separated mb-0">
+                    <!-- Previous -->
+                    @if (Model.CurrentPage > 1)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" href="@Url.Action("Details", "FormCategories", new { id = Model.CategoryId, status = Model.CurrentStatus, search = Model.CurrentSearch, page = Model.CurrentPage - 1 })">
+                                <i class="ri-arrow-left-s-line"></i>
+                            </a>
+                        </li>
+                    }
+
+                    <!-- Page Numbers -->
+                    @{
+                        var startPage = Math.Max(1, Model.CurrentPage - 2);
+                        var endPage = Math.Min(Model.TotalPages, Model.CurrentPage + 2);
+                        
+                        for (int i = startPage; i <= endPage; i++)
+                        {
+                            <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                                <a class="page-link" href="@Url.Action("Details", "FormCategories", new { id = Model.CategoryId, status = Model.CurrentStatus, search = Model.CurrentSearch, page = i })">@i</a>
+                            </li>
+                        }
+                    }
+
+                    <!-- Next -->
+                    @if (Model.CurrentPage < Model.TotalPages)
+                    {
+                        <li class="page-item">
+                            <a class="page-link" href="@Url.Action("Details", "FormCategories", new { id = Model.CategoryId, status = Model.CurrentStatus, search = Model.CurrentSearch, page = Model.CurrentPage + 1 })">
+                                <i class="ri-arrow-right-s-line"></i>
+                            </a>
+                        </li>
+                    }
+                </ul>
+            </nav>
+        </div>
+    }
+</div>
