@@ -361,7 +361,192 @@
             margin-bottom: 20px;
         }
 
-        /* Responsive */
+        /* Authentication Progress Loader */
+        .auth-progress {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: var(--vz-light);
+            border-radius: 10px;
+            border: 1px solid var(--vz-light-border-subtle);
+            animation: slideUp 0.3s ease-out;
+        }
+
+        @@keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .auth-progress-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+
+        .auth-progress-icon {
+            margin-right: 0.75rem;
+        }
+
+        .auth-progress-icon .spinner-border {
+            width: 1.2rem;
+            height: 1.2rem;
+        }
+
+        .auth-progress-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--vz-primary);
+            margin: 0;
+        }
+
+        .auth-progress-steps {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .auth-step {
+            display: flex;
+            align-items: center;
+            padding: 0.5rem;
+            background: white;
+            border-radius: 6px;
+            border: 1px solid var(--vz-light-border-subtle);
+            transition: all 0.3s ease;
+        }
+
+        .auth-step.active {
+            border-color: var(--vz-primary);
+            background: var(--vz-primary-bg-subtle);
+        }
+
+        .auth-step.completed {
+            border-color: var(--vz-success);
+            background: var(--vz-success-bg-subtle);
+        }
+
+        .step-indicator {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: var(--vz-darkgrey);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 0.75rem;
+            transition: all 0.3s ease;
+            color: white;
+        }
+
+        .auth-step.active .step-indicator {
+            background: var(--vz-primary);
+            color: white;
+        }
+
+        .auth-step.completed .step-indicator {
+            background: var(--vz-success);
+            color: white;
+        }
+
+        .step-indicator i {
+            font-size: 0.85rem;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-name {
+            font-weight: 500;
+            color: var(--vz-light-text-emphasis);
+            display: block;
+            margin-bottom: 0.2rem;
+            font-size: 0.85rem;
+        }
+
+        .auth-step.active .step-name {
+            color: var(--vz-primary-text-emphasis);
+        }
+
+        .auth-step.completed .step-name {
+            color: var(--vz-success-text-emphasis);
+        }
+
+        .step-progress-bar {
+            height: 3px;
+            background: var(--vz-darkgrey);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .step-progress-fill {
+            height: 100%;
+            width: 0;
+            background: var(--vz-primary);
+            border-radius: 2px;
+            transition: width 0.5s ease;
+        }
+
+        .auth-step.completed .step-progress-fill {
+            background: var(--vz-success);
+            width: 100%;
+        }
+
+        .auth-step.active .step-progress-fill {
+            animation: progressPulse 1.5s ease-in-out infinite;
+        }
+
+        @@keyframes progressPulse {
+            0%, 100% { width: 30%; }
+            50% { width: 70%; }
+        }
+
+        .auth-progress-details {
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--vz-light-border-subtle);
+            text-align: center;
+        }
+
+        .auth-progress-details small {
+            font-size: 0.75rem;
+        }
+
+        /* Responsive adjustments */
+        @@media (max-width: 576px) {
+            .auth-progress {
+                margin-top: 1rem;
+                padding: 0.75rem;
+            }
+            
+            .auth-step {
+                padding: 0.4rem;
+            }
+            
+            .step-indicator {
+                width: 24px;
+                height: 24px;
+                margin-right: 0.5rem;
+            }
+            
+            .step-indicator i {
+                font-size: 0.75rem;
+            }
+            
+            .step-name {
+                font-size: 0.8rem;
+            }
+            
+            .auth-progress-title {
+                font-size: 0.85rem;
+            }
+        }
         @@media (max-width: 992px) {
             .auth-left {
                 display: none;
@@ -469,12 +654,81 @@
             </div>
             <div class="auth-form-container">
                 @RenderBody()
+                
+                <!-- Authentication Progress Loader -->
+                <div id="auth-progress" class="auth-progress" style="display: none;">
+                    <div class="auth-progress-header">
+                        <div class="auth-progress-icon">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Authenticating...</span>
+                            </div>
+                        </div>
+                        <h6 class="auth-progress-title">Authenticating...</h6>
+                    </div>
+                    
+                    <div class="auth-progress-steps">
+                        <div class="auth-step" data-step="validate">
+                            <div class="step-indicator">
+                                <i class="ri-user-check-line"></i>
+                            </div>
+                            <div class="step-content">
+                                <span class="step-name">Validating credentials</span>
+                                <div class="step-progress-bar">
+                                    <div class="step-progress-fill"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="auth-step" data-step="claims">
+                            <div class="step-indicator">
+                                <i class="ri-shield-check-line"></i>
+                            </div>
+                            <div class="step-content">
+                                <span class="step-name">Building permissions</span>
+                                <div class="step-progress-bar">
+                                    <div class="step-progress-fill"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="auth-step" data-step="session">
+                            <div class="step-indicator">
+                                <i class="ri-lock-line"></i>
+                            </div>
+                            <div class="step-content">
+                                <span class="step-name">Creating session</span>
+                                <div class="step-progress-bar">
+                                    <div class="step-progress-fill"></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="auth-step" data-step="complete">
+                            <div class="step-indicator">
+                                <i class="ri-check-line"></i>
+                            </div>
+                            <div class="step-content">
+                                <span class="step-name">Almost done...</span>
+                                <div class="step-progress-bar">
+                                    <div class="step-progress-fill"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="auth-progress-details">
+                        <small class="text-muted" id="progress-message">Setting up your personalized workspace...</small>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Auth Progress Script -->
+    <script src="~/assets/js/auth-progress.js"></script>
     
     <!-- Slider Script -->
     <script>

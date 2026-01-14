@@ -32,7 +32,7 @@
     </div>
 }
 
-<form asp-action="Login" asp-controller="Account" method="post">
+<form asp-action="Login" asp-controller="Account" method="post" id="loginForm">
     <input type="hidden" asp-for="ReturnUrl" />
     
     <div class="mb-3">
@@ -82,9 +82,9 @@
         </a>
     </div>
 
-    <button type="submit" class="btn btn-login w-100">
+    <button type="submit" class="btn btn-login w-100" id="loginSubmitBtn">
         <i class="fas fa-sign-in-alt me-2"></i>
-        Sign In
+        <span id="btn-text">Sign In</span>
     </button>
 </form>
 
@@ -112,6 +112,64 @@
                 passwordInput.type = 'password';
                 toggleIcon.classList.remove('fa-eye-slash');
                 toggleIcon.classList.add('fa-eye');
+            }
+        });
+
+        // Login form with progress tracking
+        document.addEventListener('DOMContentLoaded', function() {
+            const loginForm = document.querySelector('#loginForm');
+            const submitBtn = document.querySelector('#loginSubmitBtn');
+            const btnText = document.querySelector('#btn-text');
+            
+            if (loginForm) {
+                loginForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    
+                    if (!window.authProgress) {
+                        console.error('AuthProgressController not found');
+                        return;
+                    }
+                    
+                    // Show progress
+                    window.authProgress.show();
+                    window.authProgress.setStep('validate', 'Validating your credentials...');
+                    
+                    // Disable submit button
+                    submitBtn.disabled = true;
+                    const originalContent = btnText.innerHTML;
+                    btnText.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Signing in...';
+                    
+                    try {
+                        const formData = new FormData(loginForm);
+                        const response = await fetch(loginForm.action, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'RequestVerificationToken': formData.get('__RequestVerificationToken'),
+                                'X-Progress-Tracking': 'true'
+                            }
+                        });
+                        
+                        if (response.redirected) {
+                            window.authProgress.setStep('complete', 'Authentication successful!');
+                            window.authProgress.updateMessage('Redirecting to your dashboard...');
+                            
+                            setTimeout(() => {
+                                window.location.href = response.url;
+                            }, 1000);
+                        } else {
+                            // Login failed - show the form again with errors
+                            const html = await response.text();
+                            document.documentElement.innerHTML = html;
+                            window.authProgress.hide();
+                        }
+                    } catch (error) {
+                        console.error('Login error:', error);
+                        window.authProgress.hide();
+                        submitBtn.disabled = false;
+                        btnText.innerHTML = originalContent;
+                    }
+                });
             }
         });
     </script>
