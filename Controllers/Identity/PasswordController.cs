@@ -252,7 +252,7 @@ namespace FormReporting.Controllers.Identity
                 _logger.LogInformation("Password changed for user: {UserId}", userId);
 
                 TempData["SuccessMessage"] = "Password changed successfully.";
-                return RedirectToAction("Index", "Dashboard");
+                return RedirectToAction("AvailableForms", "Submissions");
             }
             catch (Exception ex)
             {

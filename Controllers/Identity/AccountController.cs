@@ -208,9 +208,9 @@ namespace FormReporting.Controllers.Identity
                 }
             }
 
-            // Default: Redirect to dashboard if no valid returnUrl
-            _logger.LogInformation("Redirecting to default dashboard (no valid return URL)");
-            return RedirectToAction("Index", "Dashboard");
+            // Default: Redirect to available forms if no valid returnUrl
+            _logger.LogInformation("Redirecting to available forms (no valid return URL)");
+            return RedirectToAction("AvailableForms", "Submissions");
         }
 
         /// <summary>

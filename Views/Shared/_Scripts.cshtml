@@ -61,5 +61,17 @@
         const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
         popoverTriggerList.forEach(el => new bootstrap.Popover(el));
     });
+    //dropdown visibility
+    document.addEventListener('shown.bs.dropdown', function (event) {
+    const menu = event.target.querySelector('.dropdown-menu');
+    if (menu) {
+        document.body.appendChild(menu);
+        const rect = event.target.getBoundingClientRect();
+        menu.style.position = 'absolute';
+        menu.style.top = `${rect.bottom + window.scrollY}px`;
+        menu.style.left = `${rect.left + window.scrollX}px`;
+        menu.style.zIndex = 1055;
+    }
+});
 </script>
 <script src="~/assets/js/app.js"></script>

@@ -31,21 +31,11 @@
                         @await Html.PartialAsync("Partials/_SubmissionsTable", Model)
                     </div>
                     <div class="tab-pane fade @(Model.ActiveTab == "summary" ? "show active" : "")" id="summary-tab" role="tabpanel">
-                        
-                        @if (Model.TemplateId > 0)
-                        {
-                            @await Html.PartialAsync("~/Views/Dashboard/FormStatistics/Index.cshtml", 
-                                await ViewContext.HttpContext.RequestServices
-                                    .GetRequiredService<FormReporting.Services.Dashboard.FormStatistics.IFormStatisticsDashboardBuilder>()
-                                    .BuildDashboardAsync(Model.TemplateId, mode: FormReporting.Models.ViewModels.Dashboard.Components.Composite.DashboardMode.Embedded))
-                        }
-                        else
-                        {
-                            <div class="text-center py-5">
-                                <i class="ri-error-warning-line fs-1 text-muted"></i>
-                                <p class="text-muted mt-2">Template information not available</p>
-                            </div>
-                        }
+                        <!-- Dashboard placeholder - will be implemented with new dashboard system -->
+                        <div class="text-center py-5">
+                            <i class="ri-bar-chart-grouped-line fs-1 text-muted"></i>
+                            <p class="text-muted mt-2">Form statistics dashboard coming soon</p>
+                        </div>
                     </div>
                 </div>
             </div>

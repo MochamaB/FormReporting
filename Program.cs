@@ -53,14 +53,6 @@ builder.Services.AddScoped<IFormItemOptionTemplateService, FormItemOptionTemplat
 builder.Services.AddScoped<IFormSubmissionService, FormSubmissionService>();
 builder.Services.AddScoped<IFormResponseService, FormResponseService>();
 builder.Services.AddScoped<IFormScoreCalculationService, FormScoreCalculationService>();
-builder.Services.AddScoped<IFormSubmissionStatisticsService, FormSubmissionStatisticsService>();
-
-// Dashboard builder services
-builder.Services.AddScoped<FormReporting.Services.Dashboard.Common.StatCardBuilder>();
-builder.Services.AddScoped<FormReporting.Services.Dashboard.Common.ChartBuilder>();
-builder.Services.AddScoped<FormReporting.Services.Dashboard.Common.TableBuilder>();
-builder.Services.AddScoped<FormReporting.Services.Dashboard.FormStatistics.IFormStatisticsDashboardBuilder, 
-    FormReporting.Services.Dashboard.FormStatistics.FormStatisticsDashboardBuilder>();
 
 // Assignment & Workflow services
 builder.Services.AddScoped<IFormAssignmentService, FormAssignmentService>();
@@ -82,9 +74,6 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<FormReporting.Services.Organizational.ITenantService, FormReporting.Services.Organizational.TenantService>();
 builder.Services.AddScoped<FormReporting.Services.Organizational.IDepartmentService, FormReporting.Services.Organizational.DepartmentService>();
 builder.Services.AddScoped<FormReporting.Services.Organizational.IRegionService, FormReporting.Services.Organizational.RegionService>();
-
-// Dashboard filter services
-builder.Services.AddScoped<FormReporting.Services.Dashboard.IFilterService, FormReporting.Services.Dashboard.FilterService>();
 
 // Register authentication services
 builder.Services.AddScoped<IAuthenticationService, AuthenticationService>();

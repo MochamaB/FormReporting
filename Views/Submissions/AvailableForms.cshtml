@@ -110,33 +110,15 @@
                     <!-- ============================================================ -->
                     <!-- STATISTICS TAB -->
                     <!-- ============================================================ -->
-                    <div class="tab-pane fade @(currentTab == "statistics" ? "show active" : "")" 
-                         id="statistics-tab" 
+                    <div class="tab-pane fade @(currentTab == "statistics" ? "show active" : "")"
+                         id="statistics-tab"
                          role="tabpanel"
                          data-tab-group="available-forms">
-                        
-                        @{
-                            // Embed the FormStatistics dashboard for all templates (templateId = null)
-                            var dashboardBuilder = ViewContext.HttpContext.RequestServices
-                                .GetRequiredService<FormReporting.Services.Dashboard.FormStatistics.IFormStatisticsDashboardBuilder>();
-                            
-                            var dashboardConfig = await dashboardBuilder.BuildDashboardAsync(
-                                templateId: null, // All templates
-                                startDate: null,
-                                endDate: null,
-                                tenantId: null,
-                                mode: FormReporting.Models.ViewModels.Dashboard.Components.Composite.DashboardMode.Embedded);
-                            
-                            // Set ViewBag values for the embedded dashboard
-                            ViewBag.TemplateId = null;
-                            ViewBag.StartDate = null;
-                            ViewBag.EndDate = null;
-                            ViewBag.TenantId = null;
-                            ViewBag.GroupBy = "Daily";
-                            ViewBag.IsEmbedded = true;
-                        }
-                        
-                        @await Html.PartialAsync("~/Views/Dashboard/FormStatistics/Index.cshtml", dashboardConfig)
+                        <!-- Dashboard placeholder - will be implemented with new dashboard system -->
+                        <div class="text-center py-5">
+                            <i class="ri-bar-chart-grouped-line fs-1 text-muted"></i>
+                            <p class="text-muted mt-2">Form statistics dashboard coming soon</p>
+                        </div>
                     </div>
                     
                     <!-- ============================================================ -->

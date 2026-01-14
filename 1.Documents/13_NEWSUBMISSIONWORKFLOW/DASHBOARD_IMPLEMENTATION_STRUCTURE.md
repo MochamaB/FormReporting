@@ -15,12 +15,13 @@ FormReporting/
 │           ├── DashboardLayoutViewModel.cs       [core - layout config]
 │           ├── WidgetPositionViewModel.cs        [core - widget positioning]
 │           ├── ContextSelectorViewModel.cs       [core - dropdown options]
-│           ├── StatCardDataViewModel.cs          [data - for StatCard]
-│           ├── ChartDataViewModel.cs             [data - for Bar/Line/Pie/Doughnut]
-│           ├── GaugeDataViewModel.cs             [data - for Gauge/ProgressBar]
-│           ├── TableDataViewModel.cs             [data - for DataTable]
-│           ├── ListDataViewModel.cs              [data - for List]
-│           └── SparklineDataViewModel.cs         [data - for Sparkline]
+            ├── Widgets
+│                      ├── StatCardDataViewModel.cs    [data - for StatCard]
+│                      ├── ChartDataViewModel.cs       [data - for Bar/Line/Pie/Doughnut]
+│                      ├── GaugeDataViewModel.cs       [data - for Gauge/ProgressBar]
+│                      ├── TableDataViewModel.cs       [data - for DataTable]
+│                      ├── ListDataViewModel.cs        [data - for List]
+│                      └── SparklineDataViewModel.cs   [data - for Sparkline]
 │
 ├── Models/
 │   └── Common/

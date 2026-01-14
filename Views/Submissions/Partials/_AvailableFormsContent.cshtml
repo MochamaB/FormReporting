@@ -154,6 +154,7 @@
                     <th>Form Name</th>
                     <th>Category</th>
                     <th>Type</th>
+                    <th>Submission Mode</th>
                     <th>Version</th>
                     <th style="width: 120px;">Actions</th>
                 </tr>
@@ -162,7 +163,7 @@
                 @if (Model == null || Model.Count == 0)
                 {
                     <tr>
-                        <td colspan="6" class="text-center py-5">
+                        <td colspan="7" class="text-center py-5">
                             <div class="d-flex flex-column align-items-center">
                                 <img src="~/assets/images/svg/emptyform.svg" alt="No forms" style="max-width: 200px; height: auto;" class="mb-3" />
                                 @if (!string.IsNullOrEmpty(currentType) || !string.IsNullOrEmpty(currentSearch) || !string.IsNullOrEmpty(currentCategory))
@@ -212,6 +213,9 @@
                                 <span class="badge @GetTypeBadgeClass(template.TemplateType)">@template.TemplateType</span>
                             </td>
                             <td>
+                                <span class="text-muted">@template.SubmissionMode</span>
+                            </td>
+                            <td>
                                 <span class="text-muted">v@(template.Version)</span>
                             </td>
                             <td>
@@ -222,7 +226,12 @@
                                     var tableDraftCount = tableStats.DraftCount;
                                 }
                                 <div class="dropdown">
-                                    <button class="btn btn-sm btn-primary dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <button class="btn btn-primary dropdown-toggle" 
+                                            type="button" 
+                                            data-bs-toggle="dropdown" 
+                                            data-bs-boundary="viewport"
+                                            data-bs-display="static"
+                                            aria-expanded="false">
                                         <i class="ri-play-line me-1"></i>Actions
                                     </button>
                                     <ul class="dropdown-menu dropdown-menu-end">
