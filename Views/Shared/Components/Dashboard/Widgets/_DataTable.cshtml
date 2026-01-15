@@ -1,0 +1,171 @@
+@using FormReporting.Models.Common
+@using FormReporting.Models.ViewModels.Dashboard
+@using FormReporting.Models.ViewModels.Dashboard.Widgets
+@model WidgetViewModel
+
+@{
+    var data = Model.Data as TableDataViewModel ?? new TableDataViewModel();
+
+    var tableClasses = new List<string> { "table", "align-middle", "table-nowrap", "mb-0" };
+    if (data.Striped) tableClasses.Add("table-striped");
+    if (data.Hover) tableClasses.Add("table-hover");
+    if (data.Compact) tableClasses.Add("table-sm");
+}
+
+<div class="card card-height-100">
+    <div class="card-header align-items-center d-flex">
+        <h4 class="card-title mb-0 flex-grow-1">@Model.Title</h4>
+        @if (!string.IsNullOrEmpty(Model.Subtitle))
+        {
+            <span class="text-muted fs-13">@Model.Subtitle</span>
+        }
+        @if (Model.CanRefresh)
+        {
+            <div class="flex-shrink-0 ms-2">
+                <button type="button" class="btn btn-soft-primary btn-sm widget-refresh"
+                        data-widget-key="@Model.Key" title="Refresh">
+                    <i class="ri-refresh-line"></i>
+                </button>
+            </div>
+        }
+    </div>
+
+    <div class="card-body p-0">
+        @if (!data.HasRows)
+        {
+            <div class="text-center py-4">
+                <div class="avatar-md mx-auto mb-3">
+                    <div class="avatar-title bg-light text-muted rounded-circle fs-1">
+                        <i class="ri-table-line"></i>
+                    </div>
+                </div>
+                <p class="text-muted mb-0">@data.EmptyMessage</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="@string.Join(" ", tableClasses)">
+                    <thead class="text-muted bg-light-subtle">
+                        <tr>
+                            @foreach (var column in data.Columns)
+                            {
+                                var alignClass = column.Align switch
+                                {
+                                    "center" => "text-center",
+                                    "right" => "text-end",
+                                    _ => ""
+                                };
+                                var hideClass = column.HideOnMobile ? "d-none d-md-table-cell" : "";
+                                var widthStyle = !string.IsNullOrEmpty(column.Width) ? $"width: {column.Width}" : "";
+
+                                <th class="@alignClass @hideClass @column.CssClass" style="@widthStyle">
+                                    @column.Header
+                                </th>
+                            }
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in data.Rows)
+                        {
+                            var rowClass = row.CssClass ?? "";
+                            var clickableClass = row.IsClickable ? "cursor-pointer" : "";
+
+                            <tr class="@rowClass @clickableClass" @(row.IsClickable ? $"onclick=\"window.location='{row.ClickUrl}'\"" : "")>
+                                @foreach (var column in data.Columns)
+                                {
+                                    var cell = row.Cells.GetValueOrDefault(column.Key) ?? new TableCellViewModel();
+                                    var alignClass = column.Align switch
+                                    {
+                                        "center" => "text-center",
+                                        "right" => "text-end",
+                                        _ => ""
+                                    };
+                                    var hideClass = column.HideOnMobile ? "d-none d-md-table-cell" : "";
+
+                                    <td class="@alignClass @hideClass @cell.CssClass">
+                                        @if (!string.IsNullOrEmpty(cell.Icon))
+                                        {
+                                            <i class="@cell.Icon @(cell.IconColor ?? "text-muted") me-1"></i>
+                                        }
+
+                                        @if (!string.IsNullOrEmpty(cell.BadgeColor))
+                                        {
+                                            <span class="badge bg-@(cell.BadgeColor)-subtle text-@(cell.BadgeColor)">
+                                                @cell.Value
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            @cell.Value
+                                        }
+                                    </td>
+                                }
+                            </tr>
+                        }
+                    </tbody>
+
+                    @if (data.FooterRow != null)
+                    {
+                        <tfoot class="table-light">
+                            <tr class="fw-semibold">
+                                @foreach (var column in data.Columns)
+                                {
+                                    var cell = data.FooterRow.Cells.GetValueOrDefault(column.Key) ?? new TableCellViewModel();
+                                    var alignClass = column.Align switch
+                                    {
+                                        "center" => "text-center",
+                                        "right" => "text-end",
+                                        _ => ""
+                                    };
+                                    <td class="@alignClass">@cell.Value</td>
+                                }
+                            </tr>
+                        </tfoot>
+                    }
+                </table>
+            </div>
+
+            @if (data.ShowPagination && data.TotalPages > 1)
+            {
+                <div class="card-footer border-top-dashed py-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div class="text-muted small">
+                            Showing @((data.CurrentPage - 1) * data.PageSize + 1) to
+                            @Math.Min(data.CurrentPage * data.PageSize, data.TotalCount) of @data.TotalCount
+                        </div>
+                        <nav>
+                            <ul class="pagination pagination-sm mb-0">
+                                <li class="page-item @(data.CurrentPage == 1 ? "disabled" : "")">
+                                    <a class="page-link" href="#" data-page="@(data.CurrentPage - 1)">
+                                        <i class="ri-arrow-left-s-line"></i>
+                                    </a>
+                                </li>
+                                @for (int i = 1; i <= Math.Min(data.TotalPages, 5); i++)
+                                {
+                                    <li class="page-item @(i == data.CurrentPage ? "active" : "")">
+                                        <a class="page-link" href="#" data-page="@i">@i</a>
+                                    </li>
+                                }
+                                <li class="page-item @(data.CurrentPage == data.TotalPages ? "disabled" : "")">
+                                    <a class="page-link" href="#" data-page="@(data.CurrentPage + 1)">
+                                        <i class="ri-arrow-right-s-line"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.DrillDownUrl))
+    {
+        <div class="card-footer border-top-dashed py-2">
+            <a href="@Model.DrillDownUrl" class="text-primary fw-medium">
+                View All <i class="ri-arrow-right-line align-middle"></i>
+            </a>
+        </div>
+    }
+</div>

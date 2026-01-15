@@ -1,0 +1,34 @@
+@using FormReporting.Models.ViewModels.Dashboard
+@model WidgetViewModel
+
+<div class="card h-100 border-danger">
+    @if (!string.IsNullOrEmpty(Model.Title))
+    {
+        <div class="card-header bg-danger-subtle">
+            <h4 class="card-title mb-0 text-danger">
+                <i class="ri-error-warning-line me-1"></i>
+                @Model.Title
+            </h4>
+        </div>
+    }
+    <div class="card-body d-flex align-items-center justify-content-center" style="min-height: 150px;">
+        <div class="text-center py-4">
+            <div class="avatar-md mx-auto mb-3">
+                <div class="avatar-title bg-danger-subtle text-danger rounded-circle fs-1">
+                    <i class="ri-error-warning-line"></i>
+                </div>
+            </div>
+            <h5 class="text-danger mb-1">Error Loading Widget</h5>
+            <p class="text-muted mb-3">
+                @(Model.ErrorMessage ?? "An unexpected error occurred while loading this widget.")
+            </p>
+            @if (Model.CanRefresh)
+            {
+                <button type="button" class="btn btn-sm btn-danger widget-refresh" data-widget-key="@Model.Key">
+                    <i class="ri-refresh-line me-1"></i>
+                    Retry
+                </button>
+            }
+        </div>
+    </div>
+</div>

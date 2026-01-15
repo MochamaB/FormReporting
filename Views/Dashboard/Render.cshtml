@@ -1,0 +1,111 @@
+@using FormReporting.Models.ViewModels.Dashboard
+@model DashboardViewModel
+
+@{
+    ViewData["Title"] = Model.Title;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+
+@if (!string.IsNullOrEmpty(Model.Description))
+{
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info alert-dismissible fade show mb-3" role="alert">
+                <i class="ri-information-line me-2"></i>
+                @Model.Description
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        </div>
+    </div>
+}
+
+<div class="dashboard-wrapper" data-dashboard-key="@Model.Key">
+    @await Html.PartialAsync("~/Views/Shared/Components/Dashboard/_DashboardLayout.cshtml", Model)
+</div>
+
+@section Styles {
+    <link rel="stylesheet" href="~/assets/css/dashboard/dashboard.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/assets/css/dashboard/widget-states.css" asp-append-version="true" />
+}
+
+@section Scripts {
+    <!-- ApexCharts for chart widgets -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+    <script>
+        // Dashboard configuration
+        const dashboardConfig = {
+            key: '@Model.Key',
+            refreshUrl: '/api/dashboard/refresh',
+            widgetUrl: '/api/dashboard/widget'
+        };
+
+        // Counter animation for stat cards
+        document.addEventListener('DOMContentLoaded', function() {
+            const counterElements = document.querySelectorAll('.counter-value');
+            counterElements.forEach(function(el) {
+                const target = el.getAttribute('data-target');
+                if (target && !isNaN(parseFloat(target))) {
+                    animateCounter(el, parseFloat(target));
+                }
+            });
+        });
+
+        function animateCounter(element, target) {
+            const duration = 1000;
+            const start = 0;
+            const startTime = performance.now();
+            const isDecimal = target % 1 !== 0;
+
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easeOut = 1 - Math.pow(1 - progress, 3);
+                const current = start + (target - start) * easeOut;
+
+                if (isDecimal) {
+                    element.textContent = current.toFixed(1);
+                } else {
+                    element.textContent = Math.round(current).toLocaleString();
+                }
+
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                }
+            }
+
+            requestAnimationFrame(update);
+        }
+
+        // Widget refresh functionality
+        document.querySelectorAll('.widget-refresh').forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                const widgetKey = this.getAttribute('data-widget-key');
+                refreshWidget(widgetKey);
+            });
+        });
+
+        async function refreshWidget(widgetKey) {
+            const container = document.querySelector(`[data-widget-key="${widgetKey}"]`);
+            if (!container) return;
+
+            // Show loading state
+            container.classList.add('widget-refreshing');
+
+            try {
+                const response = await fetch(`${dashboardConfig.widgetUrl}?key=${widgetKey}`);
+                if (response.ok) {
+                    const data = await response.json();
+                    // Widget content will be updated via partial reload in Phase 4
+                    console.log('Widget refreshed:', widgetKey, data);
+                }
+            } catch (error) {
+                console.error('Error refreshing widget:', error);
+            } finally {
+                container.classList.remove('widget-refreshing');
+            }
+        }
+    </script>
+}

@@ -1,0 +1,89 @@
+@using FormReporting.Models.Common
+@using FormReporting.Models.ViewModels.Dashboard
+@using FormReporting.Models.ViewModels.Dashboard.Widgets
+@model WidgetViewModel
+
+@{
+    var data = Model.Data as StatCardDataViewModel ?? new StatCardDataViewModel();
+
+    // Map icon color to Velzon subtle background classes
+    var bgClass = data.IconColor switch
+    {
+        "primary" => "bg-primary-subtle",
+        "secondary" => "bg-secondary-subtle",
+        "success" => "bg-success-subtle",
+        "danger" => "bg-danger-subtle",
+        "warning" => "bg-warning-subtle",
+        "info" => "bg-info-subtle",
+        _ => "bg-primary-subtle"
+    };
+
+    var textClass = data.IconColor switch
+    {
+        "primary" => "text-primary",
+        "secondary" => "text-secondary",
+        "success" => "text-success",
+        "danger" => "text-danger",
+        "warning" => "text-warning",
+        "info" => "text-info",
+        _ => "text-primary"
+    };
+
+    var hasTrend = data.TrendValue.HasValue && !string.IsNullOrEmpty(data.TrendDirection);
+}
+
+<div class="card card-animate h-100">
+    <div class="card-body">
+        <div class="d-flex justify-content-between">
+            <div class="flex-grow-1">
+                <p class="fw-medium text-muted mb-0">@data.Label</p>
+                <h2 class="mt-4 ff-secondary fw-semibold mb-0">
+                    <span class="counter-value" data-target="@data.Value">@data.Value</span>
+                </h2>
+
+                @if (hasTrend)
+                {
+                    <p class="mb-0 text-muted mt-2">
+                        <span class="badge bg-light @data.TrendColorClass mb-0">
+                            <i class="@data.TrendIconClass align-middle"></i>
+                            @data.TrendValue?.ToString("N1")%
+                        </span>
+                        @if (!string.IsNullOrEmpty(data.TrendLabel))
+                        {
+                            <span class="ms-1">@data.TrendLabel</span>
+                        }
+                    </p>
+                }
+                else if (!string.IsNullOrEmpty(data.SecondaryValue))
+                {
+                    <p class="mb-0 text-muted mt-2">
+                        <small>@data.SecondaryValue</small>
+                    </p>
+                }
+            </div>
+
+            @if (!string.IsNullOrEmpty(data.Icon))
+            {
+                <div class="flex-shrink-0">
+                    <div class="avatar-sm">
+                        <span class="avatar-title @bgClass rounded-circle fs-2">
+                            <i class="@data.Icon @textClass"></i>
+                        </span>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (!string.IsNullOrEmpty(data.FooterText))
+        {
+            <div class="mt-3 pt-2 border-top">
+                <small class="text-muted">@data.FooterText</small>
+            </div>
+        }
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.DrillDownUrl))
+    {
+        <a href="@Model.DrillDownUrl" class="stretched-link"></a>
+    }
+</div>

@@ -1,0 +1,56 @@
+@using FormReporting.Models.Common
+@using FormReporting.Models.ViewModels.Dashboard
+@model WidgetViewModel
+
+@{
+    var icon = Model.Type switch
+    {
+        WidgetType.StatCard => "ri-bar-chart-box-line",
+        WidgetType.BarChart => "ri-bar-chart-2-line",
+        WidgetType.LineChart => "ri-line-chart-line",
+        WidgetType.PieChart => "ri-pie-chart-line",
+        WidgetType.DoughnutChart => "ri-donut-chart-line",
+        WidgetType.Gauge => "ri-dashboard-3-line",
+        WidgetType.ProgressBar => "ri-progress-1-line",
+        WidgetType.DataTable => "ri-table-line",
+        WidgetType.List => "ri-list-check-2",
+        WidgetType.Sparkline => "ri-pulse-line",
+        _ => "ri-database-2-line"
+    };
+
+    var message = Model.Type switch
+    {
+        WidgetType.DataTable => "No records found",
+        WidgetType.List => "No items to display",
+        _ => "No data available"
+    };
+}
+
+<div class="card h-100">
+    @if (!string.IsNullOrEmpty(Model.Title))
+    {
+        <div class="card-header">
+            <h4 class="card-title mb-0">@Model.Title</h4>
+        </div>
+    }
+    <div class="card-body d-flex align-items-center justify-content-center" style="min-height: 150px;">
+        <div class="text-center py-4">
+            <div class="avatar-md mx-auto mb-3">
+                <div class="avatar-title bg-light text-muted rounded-circle fs-1">
+                    <i class="@icon"></i>
+                </div>
+            </div>
+            <h5 class="text-muted fw-normal mb-1">@message</h5>
+            <p class="text-muted mb-0 small">
+                @if (Model.Type == WidgetType.StatCard)
+                {
+                    <text>The metric has no value yet</text>
+                }
+                else
+                {
+                    <text>Check back later or adjust your filters</text>
+                }
+            </p>
+        </div>
+    </div>
+</div>

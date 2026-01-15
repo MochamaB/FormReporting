@@ -1,0 +1,59 @@
+@using FormReporting.Models.Common
+@using FormReporting.Models.ViewModels.Dashboard
+@model DashboardViewModel
+
+@{
+    var layout = Model.Layout;
+    var gapStyle = $"--row-gap: {layout.RowGap}; --col-gap: {layout.ColumnGap};";
+}
+
+<div class="dashboard-container" style="@gapStyle">
+    @if (Model.HasFilterBar && Model.Filters != null)
+    {
+        <div class="dashboard-filters mb-3">
+            @* Filter bar will be implemented in Phase 4 *@
+            @await Html.PartialAsync("~/Views/Shared/Components/Dashboard/_FilterBar.cshtml", Model.Filters)
+        </div>
+    }
+
+    @if (Model.HasContextSelector && Model.ContextType != ContextType.None)
+    {
+        <div class="dashboard-context mb-3">
+            @* Context selector will be implemented in Phase 4 *@
+        </div>
+    }
+
+    <div class="row g-3">
+        @foreach (var widget in Model.Widgets.OrderBy(w => w.Order))
+        {
+            var colClass = GetColumnClass(widget.Size);
+            <div class="@colClass">
+                @await Html.PartialAsync("~/Views/Shared/Components/Dashboard/_WidgetContainer.cshtml", widget)
+            </div>
+        }
+    </div>
+
+    @if (Model.LastRefreshed.HasValue)
+    {
+        <div class="dashboard-footer mt-3 text-muted small">
+            <i class="ri-refresh-line me-1"></i>
+            Last updated: @Model.LastRefreshed.Value.ToString("MMM dd, yyyy HH:mm")
+        </div>
+    }
+</div>
+
+@functions {
+    string GetColumnClass(WidgetSize size)
+    {
+        return size switch
+        {
+            WidgetSize.XSmall => "col-md-4 col-lg-2",      // 2 cols on lg
+            WidgetSize.Small => "col-md-6 col-lg-3",       // 3 cols on lg
+            WidgetSize.Medium => "col-md-6 col-lg-4",      // 4 cols on lg
+            WidgetSize.Large => "col-md-12 col-lg-6",      // 6 cols on lg
+            WidgetSize.XLarge => "col-md-12 col-lg-8",     // 8 cols on lg
+            WidgetSize.Full => "col-12",                   // 12 cols
+            _ => "col-md-6 col-lg-4"
+        };
+    }
+}

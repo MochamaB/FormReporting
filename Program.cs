@@ -91,6 +91,11 @@ builder.Services.AddScoped<FormReporting.Services.Notifications.Providers.INotif
 builder.Services.AddScoped<FormReporting.Services.Notifications.Providers.INotificationProvider, FormReporting.Services.Notifications.Providers.InAppProvider>();
 // Future providers can be added here: SmsProvider, PushProvider, WhatsAppProvider, etc.
 
+// Dashboard services
+builder.Services.AddScoped<FormReporting.Services.Dashboard.IDashboardService, FormReporting.Services.Dashboard.DashboardService>();
+// Widget data providers will be registered here as they are implemented (Phase 2+)
+// builder.Services.AddScoped<FormReporting.Services.Dashboard.IWidgetDataProvider, FormReporting.Services.Dashboard.Providers.FormWidgetProvider>();
+
 var app = builder.Build();
 
 // Seed database

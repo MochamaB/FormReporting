@@ -508,4 +508,91 @@ namespace FormReporting.Models.Common
         Latest = 6
     }
 
+    // ============================================================================
+    // DASHBOARD ENUMS
+    // ============================================================================
+
+    /// <summary>
+    /// Types of dashboard widgets
+    /// </summary>
+    public enum WidgetType
+    {
+        StatCard = 1,
+        BarChart = 2,
+        LineChart = 3,
+        PieChart = 4,
+        DoughnutChart = 5,
+        Gauge = 6,
+        ProgressBar = 7,
+        DataTable = 8,
+        List = 9,
+        Sparkline = 10
+    }
+
+    /// <summary>
+    /// Widget sizes mapped to 12-column grid system
+    /// </summary>
+    public enum WidgetSize
+    {
+        /// <summary>2 columns - extra small widgets</summary>
+        XSmall = 2,
+        /// <summary>3 columns - small stat cards</summary>
+        Small = 3,
+        /// <summary>4 columns - medium widgets (1/3 width)</summary>
+        Medium = 4,
+        /// <summary>6 columns - large widgets (half width)</summary>
+        Large = 6,
+        /// <summary>8 columns - extra large widgets (2/3 width)</summary>
+        XLarge = 8,
+        /// <summary>12 columns - full width widgets</summary>
+        Full = 12
+    }
+
+    /// <summary>
+    /// Dashboard layout modes for widget placement
+    /// </summary>
+    public enum LayoutMode
+    {
+        /// <summary>Widgets flow automatically by Order property</summary>
+        Auto = 1,
+        /// <summary>Widgets placed at exact Row/Column positions</summary>
+        Fixed = 2,
+        /// <summary>Some widgets fixed, others auto-fill remaining space</summary>
+        Mixed = 3
+    }
+
+    /// <summary>
+    /// Context types for filtering dashboard data to a specific entity
+    /// </summary>
+    public enum ContextType
+    {
+        /// <summary>No context filtering - shows all data</summary>
+        None = 0,
+        /// <summary>Filter by specific form template</summary>
+        FormTemplate = 1,
+        /// <summary>Filter by specific tenant</summary>
+        Tenant = 2,
+        /// <summary>Filter by specific region</summary>
+        Region = 3,
+        /// <summary>Filter by hardware category</summary>
+        HardwareCategory = 4,
+        /// <summary>Filter by ticket category</summary>
+        TicketCategory = 5
+    }
+
+    /// <summary>
+    /// Widget loading/data states for UI rendering
+    /// </summary>
+    public enum WidgetStatus
+    {
+        /// <summary>Data is being fetched - show skeleton/shimmer</summary>
+        Loading = 1,
+        /// <summary>No data available - show empty state message</summary>
+        Empty = 2,
+        /// <summary>Error occurred - show error message with retry</summary>
+        Error = 3,
+        /// <summary>Data loaded successfully - show widget content</summary>
+        Success = 4
+    }
+
 }

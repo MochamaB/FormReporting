@@ -1,0 +1,170 @@
+/* ============================================================================
+   WIDGET STATE STYLES
+   Phase 1 - Loading, Empty, Error, Success states
+   ============================================================================ */
+
+/* ============================================================================
+   LOADING STATE
+   ============================================================================ */
+
+.widget-loading .card {
+    background: var(--vz-card-bg);
+}
+
+/* Skeleton/Shimmer Animation */
+.widget-loading .placeholder {
+    background: linear-gradient(
+        90deg,
+        var(--vz-light) 25%,
+        rgba(255, 255, 255, 0.5) 50%,
+        var(--vz-light) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+/* Pulse animation for spinners */
+.widget-loading .spinner-border {
+    animation: spinner-border 0.75s linear infinite, pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+    0%, 100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* ============================================================================
+   EMPTY STATE
+   ============================================================================ */
+
+.widget-empty .card {
+    background: var(--vz-card-bg);
+    border: 1px dashed var(--vz-border-color);
+}
+
+.widget-empty .avatar-title {
+    background: var(--vz-light) !important;
+    color: var(--vz-secondary) !important;
+}
+
+/* ============================================================================
+   ERROR STATE
+   ============================================================================ */
+
+.widget-error .card {
+    border-color: rgba(var(--vz-danger-rgb), 0.3);
+}
+
+.widget-error .card-header {
+    background: rgba(var(--vz-danger-rgb), 0.1);
+    border-bottom-color: rgba(var(--vz-danger-rgb), 0.2);
+}
+
+/* Shake animation on error */
+.widget-error .avatar-title {
+    animation: shake 0.5s ease-in-out;
+}
+
+@keyframes shake {
+    0%, 100% {
+        transform: translateX(0);
+    }
+    10%, 30%, 50%, 70%, 90% {
+        transform: translateX(-2px);
+    }
+    20%, 40%, 60%, 80% {
+        transform: translateX(2px);
+    }
+}
+
+/* ============================================================================
+   SUCCESS STATE
+   ============================================================================ */
+
+.widget-success .card {
+    /* Normal card styling - no special treatment needed */
+}
+
+/* ============================================================================
+   REFRESHING STATE (overlay)
+   ============================================================================ */
+
+.widget-refreshing {
+    position: relative;
+}
+
+.widget-refreshing::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.7);
+    z-index: 10;
+    border-radius: var(--vz-card-border-radius);
+}
+
+.widget-refreshing::before {
+    content: "";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 30px;
+    height: 30px;
+    margin: -15px 0 0 -15px;
+    border: 3px solid var(--vz-primary);
+    border-top-color: transparent;
+    border-radius: 50%;
+    z-index: 11;
+    animation: spinner-border 0.75s linear infinite;
+}
+
+/* ============================================================================
+   PLACEHOLDER IMPROVEMENTS
+   ============================================================================ */
+
+/* Better placeholder sizing */
+.placeholder-glow .placeholder {
+    border-radius: 4px;
+}
+
+.placeholder-sm {
+    height: 0.8rem;
+}
+
+.placeholder-lg {
+    height: 1.5rem;
+}
+
+/* ============================================================================
+   DARK MODE SUPPORT
+   ============================================================================ */
+
+[data-bs-theme="dark"] .widget-loading .placeholder {
+    background: linear-gradient(
+        90deg,
+        var(--vz-dark) 25%,
+        rgba(255, 255, 255, 0.1) 50%,
+        var(--vz-dark) 75%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+}
+
+[data-bs-theme="dark"] .widget-refreshing::after {
+    background: rgba(0, 0, 0, 0.7);
+}

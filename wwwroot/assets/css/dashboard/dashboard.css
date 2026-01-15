@@ -1,0 +1,112 @@
+/* ============================================================================
+   DASHBOARD LAYOUT STYLES
+   Phase 1 - Grid layout and widget container styles
+   ============================================================================ */
+
+/* Dashboard Container */
+.dashboard-container {
+    --row-gap: 1rem;
+    --col-gap: 1rem;
+}
+
+.dashboard-wrapper {
+    min-height: 400px;
+}
+
+/* Widget Container */
+.widget-container {
+    height: 100%;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.widget-container.widget-refreshing {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+/* Card Animations (Velzon style) */
+.card-animate {
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.card-animate:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
+}
+
+/* Card Height Utilities */
+.card-height-100 {
+    height: 100%;
+}
+
+/* Dashboard Footer */
+.dashboard-footer {
+    padding-top: 1rem;
+    border-top: 1px dashed var(--vz-border-color);
+}
+
+/* Widget Refresh Button */
+.widget-refresh {
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+
+.widget-refresh:hover {
+    opacity: 1;
+}
+
+/* Cursor Utility */
+.cursor-pointer {
+    cursor: pointer;
+}
+
+/* ============================================================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================================================ */
+
+/* Mobile: Stack widgets vertically */
+@media (max-width: 767.98px) {
+    .dashboard-container .row > [class*="col-"] {
+        margin-bottom: 1rem;
+    }
+
+    .card-animate:hover {
+        transform: none;
+    }
+}
+
+/* Tablet adjustments */
+@media (min-width: 768px) and (max-width: 991.98px) {
+    .dashboard-container .row > [class*="col-lg-3"] {
+        flex: 0 0 50%;
+        max-width: 50%;
+    }
+}
+
+/* ============================================================================
+   WIDGET TYPE SPECIFIC STYLES
+   ============================================================================ */
+
+/* StatCard specific */
+.widget-container[data-widget-type="StatCard"] .card {
+    min-height: 140px;
+}
+
+/* Chart widgets */
+.widget-container[data-widget-type="BarChart"] .card,
+.widget-container[data-widget-type="LineChart"] .card,
+.widget-container[data-widget-type="PieChart"] .card,
+.widget-container[data-widget-type="DoughnutChart"] .card {
+    min-height: 350px;
+}
+
+/* Table widgets */
+.widget-container[data-widget-type="DataTable"] .card {
+    min-height: 300px;
+}
+
+/* Gauge widgets */
+.widget-container[data-widget-type="Gauge"] .card,
+.widget-container[data-widget-type="ProgressBar"] .card {
+    min-height: 200px;
+}

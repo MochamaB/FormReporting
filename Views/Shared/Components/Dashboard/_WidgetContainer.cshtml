@@ -1,0 +1,61 @@
+@using Microsoft.AspNetCore.Html
+@using FormReporting.Models.Common
+@using FormReporting.Models.ViewModels.Dashboard
+@model WidgetViewModel
+
+@{
+    var statusClass = Model.Status switch
+    {
+        WidgetStatus.Loading => "widget-loading",
+        WidgetStatus.Empty => "widget-empty",
+        WidgetStatus.Error => "widget-error",
+        WidgetStatus.Success => "widget-success",
+        _ => ""
+    };
+}
+
+<div class="widget-container @statusClass @Model.CssClass"
+     data-widget-key="@Model.Key"
+     data-widget-type="@Model.Type">
+
+    @switch (Model.Status)
+    {
+        case WidgetStatus.Loading:
+            @await Html.PartialAsync("~/Views/Shared/Components/Dashboard/_WidgetLoading.cshtml", Model)
+            break;
+
+        case WidgetStatus.Empty:
+            @await Html.PartialAsync("~/Views/Shared/Components/Dashboard/_WidgetEmpty.cshtml", Model)
+            break;
+
+        case WidgetStatus.Error:
+            @await Html.PartialAsync("~/Views/Shared/Components/Dashboard/_WidgetError.cshtml", Model)
+            break;
+
+        case WidgetStatus.Success:
+            @await RenderWidgetByType(Model)
+            break;
+    }
+</div>
+
+@functions {
+    async Task<IHtmlContent> RenderWidgetByType(WidgetViewModel widget)
+    {
+        var partialPath = widget.Type switch
+        {
+            WidgetType.StatCard => "~/Views/Shared/Components/Dashboard/Widgets/_StatCard.cshtml",
+            WidgetType.BarChart => "~/Views/Shared/Components/Dashboard/Widgets/_BarChart.cshtml",
+            WidgetType.LineChart => "~/Views/Shared/Components/Dashboard/Widgets/_LineChart.cshtml",
+            WidgetType.PieChart => "~/Views/Shared/Components/Dashboard/Widgets/_PieChart.cshtml",
+            WidgetType.DoughnutChart => "~/Views/Shared/Components/Dashboard/Widgets/_DoughnutChart.cshtml",
+            WidgetType.Gauge => "~/Views/Shared/Components/Dashboard/Widgets/_Gauge.cshtml",
+            WidgetType.ProgressBar => "~/Views/Shared/Components/Dashboard/Widgets/_ProgressBar.cshtml",
+            WidgetType.DataTable => "~/Views/Shared/Components/Dashboard/Widgets/_DataTable.cshtml",
+            WidgetType.List => "~/Views/Shared/Components/Dashboard/Widgets/_List.cshtml",
+            WidgetType.Sparkline => "~/Views/Shared/Components/Dashboard/Widgets/_Sparkline.cshtml",
+            _ => "~/Views/Shared/Components/Dashboard/Widgets/_StatCard.cshtml"
+        };
+
+        return await Html.PartialAsync(partialPath, widget);
+    }
+}

@@ -1,0 +1,88 @@
+@using FormReporting.Models.ViewModels.Dashboard
+@model DashboardFilterViewModel
+
+@*
+    Filter Bar - Placeholder for Phase 4
+    This partial will contain date range pickers, tenant/region dropdowns, etc.
+*@
+
+<div class="card">
+    <div class="card-body py-2">
+        <div class="d-flex align-items-center gap-3 flex-wrap">
+            <div class="d-flex align-items-center text-muted">
+                <i class="ri-filter-3-line me-1"></i>
+                <span class="fw-medium">Filters:</span>
+            </div>
+
+            @if (Model.HasActiveFilters)
+            {
+                @if (Model.StartDate.HasValue && Model.EndDate.HasValue)
+                {
+                    <span class="badge bg-primary-subtle text-primary">
+                        <i class="ri-calendar-line me-1"></i>
+                        @Model.StartDate.Value.ToString("MMM dd") - @Model.EndDate.Value.ToString("MMM dd, yyyy")
+                        <button type="button" class="btn-close btn-close-sm ms-1" aria-label="Remove"></button>
+                    </span>
+                }
+
+                @if (!string.IsNullOrEmpty(Model.DatePreset))
+                {
+                    <span class="badge bg-info-subtle text-info">
+                        @Model.DatePreset.Replace("-", " ").ToUpper()
+                    </span>
+                }
+
+                <button type="button" class="btn btn-sm btn-link text-danger p-0" id="clearFilters">
+                    Clear All
+                </button>
+            }
+            else
+            {
+                <span class="text-muted small">No filters applied</span>
+            }
+
+            <div class="ms-auto">
+                <button type="button" class="btn btn-sm btn-soft-primary" data-bs-toggle="collapse" data-bs-target="#filterPanel">
+                    <i class="ri-equalizer-line me-1"></i>
+                    More Filters
+                </button>
+            </div>
+        </div>
+
+        <div class="collapse mt-3" id="filterPanel">
+            <div class="row g-3">
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Date Range</label>
+                    <select class="form-select form-select-sm" id="datePreset">
+                        <option value="">All Time</option>
+                        <option value="today">Today</option>
+                        <option value="yesterday">Yesterday</option>
+                        <option value="this-week">This Week</option>
+                        <option value="last-week">Last Week</option>
+                        <option value="this-month">This Month</option>
+                        <option value="last-month">Last Month</option>
+                        <option value="this-quarter">This Quarter</option>
+                        <option value="this-year">This Year</option>
+                        <option value="custom">Custom Range...</option>
+                    </select>
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">Start Date</label>
+                    <input type="date" class="form-control form-control-sm" id="startDate"
+                           value="@Model.StartDate?.ToString("yyyy-MM-dd")">
+                </div>
+                <div class="col-md-3">
+                    <label class="form-label small text-muted">End Date</label>
+                    <input type="date" class="form-control form-control-sm" id="endDate"
+                           value="@Model.EndDate?.ToString("yyyy-MM-dd")">
+                </div>
+                <div class="col-md-3 d-flex align-items-end">
+                    <button type="button" class="btn btn-sm btn-primary w-100" id="applyFilters">
+                        <i class="ri-filter-line me-1"></i>
+                        Apply Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
